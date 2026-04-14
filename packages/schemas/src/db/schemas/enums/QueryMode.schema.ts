@@ -1,5 +1,5 @@
-import * as z from 'zod';
+import * as z from "zod";
 
-export const QueryModeSchema = z.enum(['default', 'insensitive'])
+export const QueryModeSchema = z.enum(["default", "insensitive"]);
 
 export type QueryMode = z.infer<typeof QueryModeSchema>;

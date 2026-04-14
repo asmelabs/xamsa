@@ -1,3 +1,3 @@
 {
-  "extends": "@xamsa/config/tsconfig.base.json"
+	"extends": "@xamsa/config/tsconfig.base.json"
 }

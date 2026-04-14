@@ -1,20 +1,20 @@
 "use client";
 
 import { Form as FormPrimitive } from "@base-ui/react/form";
-import type React from "react";
 import { cn } from "@xamsa/ui/lib/utils";
+import type React from "react";
 
 export function Form({
-  className,
-  ...props
+	className,
+	...props
 }: FormPrimitive.Props): React.ReactElement {
-  return (
-    <FormPrimitive
-      className={cn("flex w-full flex-col gap-4", className)}
-      data-slot="form"
-      {...props}
-    />
-  );
+	return (
+		<FormPrimitive
+			className={cn("flex w-full flex-col gap-4", className)}
+			data-slot="form"
+			{...props}
+		/>
+	);
 }
 
 export { FormPrimitive };
