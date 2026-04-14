@@ -7,11 +7,12 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { env } from "@xamsa/env/web";
 import { Toaster } from "@xamsa/ui/components/sonner";
-
+import { PostHogProvider } from "posthog-js/react";
 import type { orpc } from "@/utils/orpc";
-
 import appCss from "../index.css?url";
+
 export interface RouterAppContext {
 	orpc: typeof orpc;
 	queryClient: QueryClient;
@@ -42,20 +43,41 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 	component: RootDocument,
 });
 
+const postHogOptions = {
+	api_host: env.VITE_PUBLIC_POSTHOG_HOST,
+	defaults: "2026-01-30",
+} as const;
+
 function RootDocument() {
+	const isProd = import.meta.env.PROD;
+	const app = (
+		<>
+			<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
+				<Outlet />
+			</div>
+			<Toaster richColors />
+			<TanStackRouterDevtools position="bottom-left" />
+			<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+			<Scripts />
+		</>
+	);
+
 	return (
 		<html lang="en" className="dark">
 			<head>
 				<HeadContent />
 			</head>
 			<body className="relative">
-				<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
-					<Outlet />
-				</div>
-				<Toaster richColors />
-				<TanStackRouterDevtools position="bottom-left" />
-				<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-				<Scripts />
+				{isProd && env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ? (
+					<PostHogProvider
+						apiKey={env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN}
+						options={postHogOptions}
+					>
+						{app}
+					</PostHogProvider>
+				) : (
+					app
+				)}
 			</body>
 		</html>
 	);
