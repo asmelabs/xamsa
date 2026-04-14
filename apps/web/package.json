@@ -33,6 +33,7 @@
 		"lucide-react": "catalog:",
 		"next-themes": "catalog:",
 		"nitro": "^3.0.260311-beta",
+		"posthog-js": "^1.368.2",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"sonner": "catalog:",
