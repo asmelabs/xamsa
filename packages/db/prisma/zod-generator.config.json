@@ -1,0 +1,16 @@
+{
+	"output": "../../schemas/src/db",
+	"safety": {
+		"skipManifest": true
+	},
+	"mode": "custom",
+	"pureModels": true,
+	"variants": {
+		"pure": { "enabled": true },
+		"input": { "enabled": false },
+		"result": { "enabled": false }
+	},
+	"emit": { "objects": false, "crud": false, "variants": false },
+	"optionalFieldBehavior": "nullish",
+	"dateTimeStrategy": "coerce"
+}

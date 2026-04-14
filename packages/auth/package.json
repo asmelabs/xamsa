@@ -1,0 +1,27 @@
+{
+	"name": "@xamsa/auth",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {
+		"generate": "DATABASE_URL=file:../db/dev.db BETTER_AUTH_URL=http://localhost:3001 BETTER_AUTH_SECRET=thissecretmustbeatleast32characters CORS_ORIGIN=http://localhost:3000 bun x @better-auth/cli generate --config=./src/index.ts --output=../db/prisma/schema/auth.preview.prisma"
+	},
+	"dependencies": {
+		"@better-auth/infra": "^0.2.2",
+		"@xamsa/db": "workspace:*",
+		"@xamsa/env": "workspace:*",
+		"better-auth": "catalog:",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@xamsa/config": "workspace:*",
+		"typescript": "^5"
+	}
+}

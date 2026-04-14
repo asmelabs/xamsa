@@ -1,0 +1,29 @@
+{
+	"name": "@xamsa/api",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@xamsa/schemas": "workspace:*",
+		"@orpc/client": "catalog:",
+		"@orpc/openapi": "catalog:",
+		"@orpc/server": "catalog:",
+		"@orpc/zod": "catalog:",
+		"@xamsa/auth": "workspace:*",
+		"@xamsa/db": "workspace:*",
+		"@xamsa/env": "workspace:*",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@xamsa/config": "workspace:*",
+		"typescript": "^5"
+	}
+}

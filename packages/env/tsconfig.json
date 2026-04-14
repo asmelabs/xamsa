@@ -1,0 +1,3 @@
+{
+  "extends": "@xamsa/config/tsconfig.base.json"
+}

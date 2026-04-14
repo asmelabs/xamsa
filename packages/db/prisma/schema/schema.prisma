@@ -1,0 +1,14 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator zod {
+  provider = "prisma-zod-generator"
+  config   = "./zod-generator.config.json"
+}

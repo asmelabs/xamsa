@@ -1,0 +1,34 @@
+{
+  "name": "@xamsa/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "postinstall": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "catalog:",
+    "@xamsa/env": "workspace:*",
+    "dotenv": "catalog:",
+    "pg": "^8.17.1",
+    "prisma-zod-generator": "^2.1.4",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0",
+    "@xamsa/config": "workspace:*",
+    "prisma": "^7.2.0",
+    "typescript": "^5"
+  }
+}
