@@ -12,6 +12,7 @@ import { Toaster } from "@xamsa/ui/components/sonner";
 import { PostHogProvider } from "posthog-js/react";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
+
 export interface RouterAppContext {
 	orpc: typeof orpc;
 	queryClient: QueryClient;
@@ -48,24 +49,35 @@ const postHogOptions = {
 } as const;
 
 function RootDocument() {
+	const isProd = import.meta.env.PROD;
+	const app = (
+		<>
+			<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
+				<Outlet />
+			</div>
+			<Toaster richColors />
+			<TanStackRouterDevtools position="bottom-left" />
+			<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+			<Scripts />
+		</>
+	);
+
 	return (
 		<html lang="en" className="dark">
 			<head>
 				<HeadContent />
 			</head>
 			<body className="relative">
-				<PostHogProvider
-					apiKey={env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN}
-					options={postHogOptions}
-				>
-					<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
-						<Outlet />
-					</div>
-					<Toaster richColors />
-					<TanStackRouterDevtools position="bottom-left" />
-					<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-					<Scripts />
-				</PostHogProvider>
+				{isProd && env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ? (
+					<PostHogProvider
+						apiKey={env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN}
+						options={postHogOptions}
+					>
+						{app}
+					</PostHogProvider>
+				) : (
+					app
+				)}
 			</body>
 		</html>
 	);
