@@ -10,7 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayIndexRouteImport } from './routes/play/index'
+import { Route as PacksIndexRouteImport } from './routes/packs/index'
+import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
@@ -22,9 +26,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayIndexRoute = PlayIndexRouteImport.update({
+  id: '/play/',
+  path: '/play/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksIndexRoute = PacksIndexRouteImport.update({
+  id: '/packs/',
+  path: '/packs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardIndexRoute = LeaderboardIndexRouteImport.update({
+  id: '/leaderboard/',
+  path: '/leaderboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/auth/',
   path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -58,7 +82,11 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/leaderboard/': typeof LeaderboardIndexRoute
+  '/packs/': typeof PacksIndexRoute
+  '/play/': typeof PlayIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
 }
@@ -67,7 +95,11 @@ export interface FileRoutesByTo {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/u/$username': typeof UUsernameRoute
   '/auth': typeof AuthIndexRoute
+  '/leaderboard': typeof LeaderboardIndexRoute
+  '/packs': typeof PacksIndexRoute
+  '/play': typeof PlayIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
 }
@@ -77,7 +109,11 @@ export interface FileRoutesById {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/leaderboard/': typeof LeaderboardIndexRoute
+  '/packs/': typeof PacksIndexRoute
+  '/play/': typeof PlayIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
 }
@@ -88,7 +124,11 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
+    | '/u/$username'
     | '/auth/'
+    | '/leaderboard/'
+    | '/packs/'
+    | '/play/'
     | '/api/auth/$'
     | '/api/rpc/$'
   fileRoutesByTo: FileRoutesByTo
@@ -97,7 +137,11 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
+    | '/u/$username'
     | '/auth'
+    | '/leaderboard'
+    | '/packs'
+    | '/play'
     | '/api/auth/$'
     | '/api/rpc/$'
   id:
@@ -106,7 +150,11 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
+    | '/u/$username'
     | '/auth/'
+    | '/leaderboard/'
+    | '/packs/'
+    | '/play/'
     | '/api/auth/$'
     | '/api/rpc/$'
   fileRoutesById: FileRoutesById
@@ -116,7 +164,11 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  UUsernameRoute: typeof UUsernameRoute
   AuthIndexRoute: typeof AuthIndexRoute
+  LeaderboardIndexRoute: typeof LeaderboardIndexRoute
+  PacksIndexRoute: typeof PacksIndexRoute
+  PlayIndexRoute: typeof PlayIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
@@ -130,11 +182,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play/': {
+      id: '/play/'
+      path: '/play'
+      fullPath: '/play/'
+      preLoaderRoute: typeof PlayIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/': {
+      id: '/packs/'
+      path: '/packs'
+      fullPath: '/packs/'
+      preLoaderRoute: typeof PacksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard/': {
+      id: '/leaderboard/'
+      path: '/leaderboard'
+      fullPath: '/leaderboard/'
+      preLoaderRoute: typeof LeaderboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/': {
       id: '/auth/'
       path: '/auth'
       fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/register': {
@@ -180,7 +260,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  UUsernameRoute: UUsernameRoute,
   AuthIndexRoute: AuthIndexRoute,
+  LeaderboardIndexRoute: LeaderboardIndexRoute,
+  PacksIndexRoute: PacksIndexRoute,
+  PlayIndexRoute: PlayIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

@@ -11,6 +11,7 @@ import { env } from "@xamsa/env/web";
 import { Toaster } from "@xamsa/ui/components/sonner";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { PostHogProvider } from "posthog-js/react";
+import { BottomTabMenu } from "@/components/bottom-tab-menu";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
 
@@ -54,8 +55,9 @@ function RootDocument() {
 	const app = (
 		<>
 			<NuqsAdapter>
-				<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
+				<div className="relative isolate min-h-svh pb-16">
 					<Outlet />
+					<BottomTabMenu />
 				</div>
 				<Toaster richColors position="top-center" />
 				<TanStackRouterDevtools position="bottom-left" />

@@ -1,6 +1,5 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { RegisterInputSchema } from "@xamsa/schemas/modules/auth/register";
-import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
 	FrameFooter,
@@ -18,8 +17,6 @@ import { LoadingButton } from "./loading-button";
 import { PasswordInput } from "./password-input";
 
 export function RegisterForm() {
-	const navigate = useNavigate();
-
 	const [showVerificationEmailSent, setShowVerificationEmailSent] =
 		useState(false);
 	const [resendCountdown, setResendCountdown] = useState(5);
