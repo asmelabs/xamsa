@@ -44,6 +44,7 @@
         "@xamsa/schemas": "workspace:*",
         "@xamsa/ui": "workspace:*",
         "better-auth": "catalog:",
+        "date-fns": "^4.1.0",
         "dotenv": "catalog:",
         "lucide-react": "catalog:",
         "next-themes": "catalog:",
@@ -53,6 +54,7 @@
         "react": "catalog:",
         "react-dom": "catalog:",
         "react-hook-form": "^7.72.1",
+        "react-hotkeys-hook": "^5.2.4",
         "sonner": "catalog:",
         "tailwindcss": "catalog:",
         "vite-tsconfig-paths": "^5.1.4",
@@ -84,6 +86,7 @@
         "@xamsa/db": "workspace:*",
         "@xamsa/env": "workspace:*",
         "@xamsa/schemas": "workspace:*",
+        "@xamsa/utils": "workspace:*",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
@@ -193,6 +196,18 @@
         "@xamsa/config": "workspace:*",
         "tailwindcss": "catalog:",
         "typescript": "^5.9.3",
+      },
+    },
+    "packages/utils": {
+      "name": "@xamsa/utils",
+      "dependencies": {
+        "@xamsa/env": "workspace:*",
+        "dotenv": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@xamsa/config": "workspace:*",
+        "typescript": "^5",
       },
     },
   },
@@ -933,6 +948,8 @@
     "@xamsa/schemas": ["@xamsa/schemas@workspace:packages/schemas"],
 
     "@xamsa/ui": ["@xamsa/ui@workspace:packages/ui"],
+
+    "@xamsa/utils": ["@xamsa/utils@workspace:packages/utils"],
 
     "@xmldom/is-dom-node": ["@xmldom/is-dom-node@1.0.1", "", {}, "sha512-CJDxIgE5I0FH+ttq/Fxy6nRpxP70+e2O048EPe85J2use3XKdatVM7dDVvFNjQudd9B49NPoZ+8PG49zj4Er8Q=="],
 
@@ -1791,6 +1808,8 @@
     "react-dom": ["react-dom@19.2.5", "", { "dependencies": { "scheduler": "^0.27.0" }, "peerDependencies": { "react": "^19.2.5" } }, "sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag=="],
 
     "react-hook-form": ["react-hook-form@7.72.1", "", { "peerDependencies": { "react": "^16.8.0 || ^17 || ^18 || ^19" } }, "sha512-RhwBoy2ygeVZje+C+bwJ8g0NjTdBmDlJvAUHTxRjTmSUKPYsKfMphkS2sgEMotsY03bP358yEYlnUeZy//D9Ig=="],
+
+    "react-hotkeys-hook": ["react-hotkeys-hook@5.2.4", "", { "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-BgKg+A1+TawkYluh5Bo4cTmcgMN5L29uhJbDUQdHwPX+qgXRjIPYU5kIDHyxnAwCkCBiu9V5OpB2mpyeluVF2A=="],
 
     "react-is": ["react-is@17.0.2", "", {}, "sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w=="],
 

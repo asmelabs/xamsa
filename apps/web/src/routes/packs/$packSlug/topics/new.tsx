@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CreatePackForm } from "@/components/create-pack-form";
+import { CreateTopicForm } from "@/components/create-topic-form";
 
-const title = "Create a new pack";
+const title = "Create a new topic";
 const description =
-	"Create a new pack on Xamsa. With packs you can create topics and questions, then have fun games with your friends.";
+	"Create a new topic for the pack on Xamsa. Topics have 5 questions and are the fundamental parts of the games.";
 
-export const Route = createFileRoute("/packs/new/")({
+export const Route = createFileRoute("/packs/$packSlug/topics/new")({
 	component: RouteComponent,
 	head: () => ({
 		meta: [
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/packs/new/")({
 			{
 				name: "keywords",
 				content:
-					"xamsa, create pack, create topic, create question, pack, topic, question, game, fun, friends",
+					"xamsa, create topic, create question, pack, topic, question, game, fun, friends",
 			},
 			{
 				name: "og:title",
@@ -32,9 +32,11 @@ export const Route = createFileRoute("/packs/new/")({
 });
 
 function RouteComponent() {
+	const { packSlug } = Route.useParams();
+
 	return (
 		<div className="container mx-auto max-w-5xl py-10">
-			<CreatePackForm />
+			<CreateTopicForm packSlug={packSlug} />
 		</div>
 	);
 }

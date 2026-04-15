@@ -19,8 +19,10 @@ import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
+import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as PacksPackSlugTopicsNewRouteImport } from './routes/packs/$packSlug/topics/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,6 +74,11 @@ const PacksNewIndexRoute = PacksNewIndexRouteImport.update({
   path: '/packs/new/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PacksPackSlugIndexRoute = PacksPackSlugIndexRouteImport.update({
+  id: '/packs/$packSlug/',
+  path: '/packs/$packSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -80,6 +87,11 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksPackSlugTopicsNewRoute = PacksPackSlugTopicsNewRouteImport.update({
+  id: '/packs/$packSlug/topics/new',
+  path: '/packs/$packSlug/topics/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -95,7 +107,9 @@ export interface FileRoutesByFullPath {
   '/play/': typeof PlayIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
+  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,7 +123,9 @@ export interface FileRoutesByTo {
   '/play': typeof PlayIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
+  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,7 +140,9 @@ export interface FileRoutesById {
   '/play/': typeof PlayIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
+  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,7 +158,9 @@ export interface FileRouteTypes {
     | '/play/'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/packs/$packSlug/'
     | '/packs/new/'
+    | '/packs/$packSlug/topics/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -154,7 +174,9 @@ export interface FileRouteTypes {
     | '/play'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/packs/$packSlug'
     | '/packs/new'
+    | '/packs/$packSlug/topics/new'
   id:
     | '__root__'
     | '/'
@@ -168,7 +190,9 @@ export interface FileRouteTypes {
     | '/play/'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/packs/$packSlug/'
     | '/packs/new/'
+    | '/packs/$packSlug/topics/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,7 +207,9 @@ export interface RootRouteChildren {
   PlayIndexRoute: typeof PlayIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
+  PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
+  PacksPackSlugTopicsNewRoute: typeof PacksPackSlugTopicsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksNewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/packs/$packSlug/': {
+      id: '/packs/$packSlug/'
+      path: '/packs/$packSlug'
+      fullPath: '/packs/$packSlug/'
+      preLoaderRoute: typeof PacksPackSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
@@ -270,6 +303,13 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/new': {
+      id: '/packs/$packSlug/topics/new'
+      path: '/packs/$packSlug/topics/new'
+      fullPath: '/packs/$packSlug/topics/new'
+      preLoaderRoute: typeof PacksPackSlugTopicsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -287,7 +327,9 @@ const rootRouteChildren: RootRouteChildren = {
   PlayIndexRoute: PlayIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
+  PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
+  PacksPackSlugTopicsNewRoute: PacksPackSlugTopicsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

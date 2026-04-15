@@ -55,7 +55,7 @@ function RootDocument() {
 	const app = (
 		<>
 			<NuqsAdapter>
-				<div className="relative isolate min-h-svh pb-16">
+				<div className="relative isolate mx-auto min-h-svh max-w-4xl px-4 py-4 pb-16 md:px-0">
 					<Outlet />
 					<BottomTabMenu />
 				</div>

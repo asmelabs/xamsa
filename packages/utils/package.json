@@ -1,5 +1,5 @@
 {
-	"name": "@xamsa/api",
+	"name": "@xamsa/utils",
 	"type": "module",
 	"exports": {
 		".": {
@@ -11,14 +11,6 @@
 	},
 	"scripts": {},
 	"dependencies": {
-		"@xamsa/utils": "workspace:*",
-		"@xamsa/schemas": "workspace:*",
-		"@orpc/client": "catalog:",
-		"@orpc/openapi": "catalog:",
-		"@orpc/server": "catalog:",
-		"@orpc/zod": "catalog:",
-		"@xamsa/auth": "workspace:*",
-		"@xamsa/db": "workspace:*",
 		"@xamsa/env": "workspace:*",
 		"dotenv": "catalog:",
 		"zod": "catalog:"

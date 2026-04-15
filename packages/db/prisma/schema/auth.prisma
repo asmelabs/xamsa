@@ -21,6 +21,8 @@ model User {
   sessions   Session[]
   accounts   Account[]
   twofactors TwoFactor[]
+  packs      Pack[]
+  ratings    PackRating[]
 
   @@map("user")
 }

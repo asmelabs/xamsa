@@ -28,8 +28,10 @@
 		"@xamsa/api": "workspace:*",
 		"@xamsa/auth": "workspace:*",
 		"@xamsa/env": "workspace:*",
+		"@xamsa/schemas": "workspace:*",
 		"@xamsa/ui": "workspace:*",
 		"better-auth": "catalog:",
+		"date-fns": "^4.1.0",
 		"dotenv": "catalog:",
 		"lucide-react": "catalog:",
 		"next-themes": "catalog:",
@@ -39,11 +41,11 @@
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"react-hook-form": "^7.72.1",
+		"react-hotkeys-hook": "^5.2.4",
 		"sonner": "catalog:",
 		"tailwindcss": "catalog:",
 		"vite-tsconfig-paths": "^5.1.4",
-		"zod": "catalog:",
-		"@xamsa/schemas": "workspace:*"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@tanstack/react-query-devtools": "^5.91.1",

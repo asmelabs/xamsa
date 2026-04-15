@@ -1,0 +1,15 @@
+export const COMMON_PACK_SLUGS = [
+	"new",
+	"top",
+	"all",
+	"create",
+	"update",
+	"delete",
+	"search",
+	"login",
+	"register",
+	"auth",
+	"packs",
+	"pack",
+	"package",
+];
