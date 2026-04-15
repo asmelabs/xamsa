@@ -19,16 +19,16 @@ import { PasswordInput } from "./password-input";
 export function RegisterForm() {
 	const [showVerificationEmailSent, setShowVerificationEmailSent] =
 		useState(false);
-	const [resendCountdown, setResendCountdown] = useState(5);
+	const [resendCountdown, setResendCountdown] = useState(0);
 
 	useEffect(() => {
-		if (resendCountdown > 0) {
-			const interval = setInterval(() => {
-				setResendCountdown((prev) => prev - 1);
-			}, 1000);
+		if (resendCountdown <= 0) return;
 
-			return () => clearInterval(interval);
-		}
+		const interval = setInterval(() => {
+			setResendCountdown((prev) => prev - 1);
+		}, 1000);
+
+		return () => clearInterval(interval);
 	}, [resendCountdown]);
 
 	const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +76,7 @@ export function RegisterForm() {
 			}
 
 			setShowVerificationEmailSent(true);
+			setResendCountdown(60);
 		} catch (error) {
 			form.resetField("password");
 			form.resetField("confirmPassword");
@@ -110,29 +111,42 @@ export function RegisterForm() {
 	};
 
 	if (showVerificationEmailSent) {
+		const email = form.getValues("email");
+
 		return (
 			<div className="flex min-h-screen flex-col items-center justify-center gap-3">
 				<Frame className="w-full max-w-lg">
 					<FrameHeader>
-						<FrameTitle>Verify your email</FrameTitle>
+						<FrameTitle>Check your inbox</FrameTitle>
 					</FrameHeader>
-					<FramePanel>
+					<FramePanel className="space-y-3">
 						<p>
-							We've sent a verification email to your email address. Please
-							click the link in the email to verify your account.
+							We've sent a verification link to{" "}
+							<span className="font-medium text-foreground">{email}</span>
+						</p>
+						<p className="text-muted-foreground text-sm">
+							Click the link in the email to activate your account. If you don't
+							see it, check your spam folder.
 						</p>
 					</FramePanel>
 					<FrameFooter>
-						<div className="flex justify-end">
+						<div className="flex items-center justify-between">
+							<button
+								type="button"
+								onClick={() => setShowVerificationEmailSent(false)}
+								className="text-muted-foreground text-sm hover:underline"
+							>
+								Wrong email?
+							</button>
 							<LoadingButton
 								isLoading={isResending}
-								loadingText="Resending..."
+								loadingText="Sending..."
 								disabled={resendCountdown > 0}
 								onClick={onResendVerificationEmail}
 							>
 								{resendCountdown > 0
-									? `Resend in ${resendCountdown} seconds`
-									: "Resend verification email"}
+									? `Resend in ${resendCountdown}s`
+									: "Resend email"}
 							</LoadingButton>
 						</div>
 					</FrameFooter>

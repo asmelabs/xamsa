@@ -37,6 +37,10 @@ export function BottomTabMenu() {
 	const { data: session } = authClient.useSession();
 	const location = useLocation();
 
+	const redirectUrl = location.pathname.startsWith("/auth")
+		? undefined
+		: location.pathname;
+
 	return (
 		<nav className="fixed right-0 bottom-0 left-0 z-50 flex justify-center pb-[env(safe-area-inset-bottom)]">
 			<div className="flex w-full max-w-lg items-center justify-around border-border/50 border-t bg-background/80 px-2 py-1 backdrop-blur-xl backdrop-saturate-150 md:mx-4 md:mb-3 md:rounded-2xl md:border md:border-border/30 md:shadow-black/5 md:shadow-lg">
@@ -82,18 +86,13 @@ export function BottomTabMenu() {
 						)}
 					</TabLink>
 				) : (
-					<Link
+					<TabLink
 						to="/auth/login"
-						search={{ redirect_url: location.pathname }}
-						className="group relative flex flex-col items-center justify-center gap-1 px-3 py-1.5 text-muted-foreground/70 transition-all duration-200 group-active:scale-90"
+						search={{ redirect_url: redirectUrl }}
+						label="Authenticate"
 					>
-						<div className="flex size-18 items-center justify-center rounded-xl">
-							<User className="size-6" strokeWidth={1.75} />
-						</div>
-						<span className="font-medium text-[10px] leading-none tracking-wide">
-							Login
-						</span>
-					</Link>
+						<User className="size-6" strokeWidth={1.75} />
+					</TabLink>
 				)}
 			</div>
 		</nav>
