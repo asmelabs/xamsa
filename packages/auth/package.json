@@ -18,6 +18,7 @@
 		"@xamsa/db": "workspace:*",
 		"@xamsa/env": "workspace:*",
 		"better-auth": "catalog:",
+		"@xamsa/utils": "workspace:*",
 		"dotenv": "catalog:",
 		"zod": "catalog:"
 	},

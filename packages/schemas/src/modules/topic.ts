@@ -1,10 +1,15 @@
 import z from "zod";
 import {
+	PaginationInputSchema,
+	PaginationOutputSchema,
+} from "../common/pagination";
+import {
 	PackSchema,
 	QuestionSchema,
 	TopicSchema,
 	UserSchema,
 } from "../db/schemas/models";
+import { topicPeriod, topicSearch, topicSort } from "./listings/topic";
 
 export const CreateTopicInputSchema = TopicSchema.pick({
 	name: true,
@@ -63,3 +68,25 @@ export const FindOneTopicOutputSchema = TopicSchema.pick({
 
 export type FindOneTopicInputType = z.infer<typeof FindOneTopicInputSchema>;
 export type FindOneTopicOutputType = z.infer<typeof FindOneTopicOutputSchema>;
+
+export const ListTopicsFiltersSchema = z.object({
+	packs: z.array(PackSchema.shape.slug),
+});
+export const ListTopicsInputSchema = ListTopicsFiltersSchema.partial()
+	.extend(PaginationInputSchema.shape)
+	.extend(topicSort.shape())
+	.extend(topicSearch.shape())
+	.extend(topicPeriod.shape());
+
+export const ListTopicsOutputSchema = PaginationOutputSchema(
+	TopicSchema.pick({
+		slug: true,
+		name: true,
+		description: true,
+		order: true,
+	}),
+);
+
+export type ListTopicsFiltersType = z.infer<typeof ListTopicsFiltersSchema>;
+export type ListTopicsInputType = z.infer<typeof ListTopicsInputSchema>;
+export type ListTopicsOutputType = z.infer<typeof ListTopicsOutputSchema>;

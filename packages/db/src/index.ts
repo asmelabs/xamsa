@@ -1,6 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { env } from "@xamsa/env/server";
-
 import { PrismaClient } from "../prisma/generated/client";
 
 export function createPrismaClient() {
@@ -11,4 +10,6 @@ export function createPrismaClient() {
 }
 
 const prisma = createPrismaClient();
+
+export type { Prisma } from "../prisma/generated/client";
 export default prisma;

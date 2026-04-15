@@ -1,11 +1,11 @@
 import {
 	CreateTopicInputSchema,
 	CreateTopicOutputSchema,
-	FindOneTopicInputSchema,
-	FindOneTopicOutputSchema,
+	ListTopicsInputSchema,
+	ListTopicsOutputSchema,
 } from "@xamsa/schemas/modules/topic";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { createTopic, findOneTopic } from "./service";
+import { createTopic, listTopics } from "./service";
 
 export const topicRouter = {
 	create: protectedProcedure
@@ -15,11 +15,11 @@ export const topicRouter = {
 			async ({ input, context }) =>
 				await createTopic(input, context.session.user.id),
 		),
-	// findOne: publicProcedure
-	// 	.input(FindOneTopicInputSchema)
-	// 	.output(FindOneTopicOutputSchema)
-	// 	.handler(
-	// 		async ({ input, context }) =>
-	// 			await findOneTopic(input, context.session?.user.id),
-	// 	),
+	list: publicProcedure
+		.input(ListTopicsInputSchema)
+		.output(ListTopicsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await listTopics(input, context.session?.user.id),
+		),
 };

@@ -2,6 +2,7 @@ import { dash } from "@better-auth/infra";
 import { createPrismaClient } from "@xamsa/db";
 import { env } from "@xamsa/env/server";
 import { sendEmailVerificationEmail } from "@xamsa/mail/auth";
+import { hash, verify } from "@xamsa/utils/bcrypt";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import {
@@ -31,6 +32,11 @@ export function createAuth() {
 			enabled: true,
 			requireEmailVerification: true,
 			revokeSessionsOnPasswordReset: true,
+
+			password: {
+				hash: async (password) => await hash(password),
+				verify: async (data) => await verify(data.password, data.hash),
+			},
 		},
 
 		emailVerification: {

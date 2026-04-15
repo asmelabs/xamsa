@@ -12,6 +12,7 @@
 	"scripts": {},
 	"dependencies": {
 		"@xamsa/env": "workspace:*",
+		"@xamsa/db": "workspace:*",
 		"dotenv": "catalog:",
 		"zod": "catalog:"
 	},

@@ -22,6 +22,7 @@ import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
 import { Route as PacksPackSlugTopicsNewRouteImport } from './routes/packs/$packSlug/topics/new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -89,6 +90,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PacksPackSlugEditIndexRoute = PacksPackSlugEditIndexRouteImport.update({
+  id: '/packs/$packSlug/edit/',
+  path: '/packs/$packSlug/edit/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PacksPackSlugTopicsNewRoute = PacksPackSlugTopicsNewRouteImport.update({
   id: '/packs/$packSlug/topics/new',
   path: '/packs/$packSlug/topics/new',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
+  '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
+  '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
+  '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/'
     | '/packs/new/'
     | '/packs/$packSlug/topics/new'
+    | '/packs/$packSlug/edit/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug'
     | '/packs/new'
     | '/packs/$packSlug/topics/new'
+    | '/packs/$packSlug/edit'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/'
     | '/packs/new/'
     | '/packs/$packSlug/topics/new'
+    | '/packs/$packSlug/edit/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
   PacksPackSlugTopicsNewRoute: typeof PacksPackSlugTopicsNewRoute
+  PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/packs/$packSlug/edit/': {
+      id: '/packs/$packSlug/edit/'
+      path: '/packs/$packSlug/edit'
+      fullPath: '/packs/$packSlug/edit/'
+      preLoaderRoute: typeof PacksPackSlugEditIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/topics/new': {
       id: '/packs/$packSlug/topics/new'
       path: '/packs/$packSlug/topics/new'
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
   PacksPackSlugTopicsNewRoute: PacksPackSlugTopicsNewRoute,
+  PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

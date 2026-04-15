@@ -31,6 +31,10 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 				content: "width=device-width, initial-scale=1; user-scalable=no",
 			},
 			{
+				name: "color-scheme",
+				content: "dark",
+			},
+			{
 				title: "Xamsa",
 			},
 		],
@@ -68,8 +72,16 @@ function RootDocument() {
 	);
 
 	return (
-		<html lang="en" className="dark">
+		<html lang="en" className="dark" style={{ colorScheme: "dark" }}>
 			<head>
+				<style
+					dangerouslySetInnerHTML={{
+						__html: `
+html.dark{--background:color-mix(in srgb,#0a0a0a 95%,#fff);--foreground:#f5f5f5;--border:rgba(255,255,255,.06);--card:color-mix(in srgb,var(--background) 98%,#fff);--card-foreground:#f5f5f5;--popover:color-mix(in srgb,var(--background) 98%,#fff);--popover-foreground:#f5f5f5;--input:rgba(255,255,255,.08);--ring:#737373}
+html.dark body{background:var(--background);color:var(--foreground)}
+html.dark *{border-color:var(--border)}`,
+					}}
+				/>
 				<HeadContent />
 			</head>
 			<body className="relative">

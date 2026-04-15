@@ -6,9 +6,7 @@ enum PackVisibility {
 enum PackStatus {
   draft // the author is working on the pack
   published // the author has published the pack
-  disabled // pack is visible but not playable
   archived // the author has archived the pack
-  deleted // the author has deleted the pack
 }
 
 enum PackLanguage {
@@ -32,9 +30,14 @@ model Pack {
   image       String? /// @zod.string().url("Invalid image URL")
   language    PackLanguage @default(az)
 
+  /// stats ///
   averageRating Float @default(0) @map("average_rating")
   totalRatings  Int   @default(0) @map("total_ratings")
   totalPlays    Int   @default(0) @map("total_plays")
+
+  /// config ///
+  allowOthersHost Boolean @default(false) @map("allow_others_host") // other people can also host a game with this pack
+  showTopicsInfo  Boolean @default(true) @map("show_topics_info") // will show list of topics in the pack page
 
   authorId String @map("author_id")
   author   User   @relation(fields: [authorId], references: [id])

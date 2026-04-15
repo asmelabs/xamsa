@@ -14,7 +14,7 @@ const BREAKPOINTS = {
 
 type Breakpoint = keyof typeof BREAKPOINTS;
 
-type BreakpointQuery =
+export type BreakpointQuery =
 	| Breakpoint
 	| `max-${Breakpoint}`
 	| `${Breakpoint}:max-${Breakpoint}`;

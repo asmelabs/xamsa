@@ -1,10 +1,13 @@
 import { ORPCError } from "@orpc/server";
 import prisma from "@xamsa/db";
+import type { PackStatus } from "@xamsa/schemas/db/schemas/enums/PackStatus.schema";
 import type {
 	CreatePackInputType,
 	CreatePackOutputType,
 	FindOnePackInputType,
 	FindOnePackOutputType,
+	UpdatePackStatusInputType,
+	UpdatePackStatusOutputType,
 } from "@xamsa/schemas/modules/pack";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
 import { COMMON_PACK_SLUGS } from "./utils";
@@ -41,6 +44,49 @@ export async function createPack(
 	return pack;
 }
 
+export async function updatePackStatus(
+	input: UpdatePackStatusInputType,
+	userId: string,
+): Promise<UpdatePackStatusOutputType> {
+	const pack = await prisma.pack.findUnique({
+		where: {
+			slug: input.slug,
+			authorId: userId,
+		},
+		select: {
+			id: true,
+			status: true,
+		},
+	});
+
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: `Pack with slug ${input.slug} not found`,
+		});
+	}
+
+	if (pack.status === input.status) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Pack is already in the desired status",
+		});
+	}
+
+	const updatedPack = await prisma.pack.update({
+		where: {
+			id: pack.id,
+			authorId: userId,
+		},
+		data: {
+			status: input.status,
+		},
+		select: {
+			slug: true,
+		},
+	});
+
+	return updatedPack;
+}
+
 export async function findOnePack(
 	input: FindOnePackInputType,
 	userId?: string,
@@ -56,10 +102,7 @@ export async function findOnePack(
 					],
 				},
 				{
-					OR: [
-						{ status: { in: ["published", "disabled"] } },
-						{ status: { in: ["archived", "draft"] }, authorId: userId },
-					],
+					OR: [{ status: "published" }, { authorId: userId }],
 				},
 			],
 		},
@@ -69,6 +112,7 @@ export async function findOnePack(
 					topics: true,
 				},
 			},
+			authorId: true,
 			createdAt: true,
 			name: true,
 			slug: true,
@@ -94,5 +138,14 @@ export async function findOnePack(
 		});
 	}
 
-	return pack as FindOnePackOutputType;
+	const { authorId, status: packStatus, ...rest } = pack;
+
+	const status = packStatus as Exclude<PackStatus, "deleted">;
+	const isAuthor = authorId === userId;
+
+	return {
+		...rest,
+		status,
+		isAuthor,
+	};
 }
