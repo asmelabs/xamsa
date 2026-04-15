@@ -9,6 +9,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { env } from "@xamsa/env/web";
 import { Toaster } from "@xamsa/ui/components/sonner";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { PostHogProvider } from "posthog-js/react";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
@@ -52,13 +53,15 @@ function RootDocument() {
 	const isProd = import.meta.env.PROD;
 	const app = (
 		<>
-			<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
-				<Outlet />
-			</div>
-			<Toaster richColors />
-			<TanStackRouterDevtools position="bottom-left" />
-			<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-			<Scripts />
+			<NuqsAdapter>
+				<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
+					<Outlet />
+				</div>
+				<Toaster richColors position="top-center" />
+				<TanStackRouterDevtools position="bottom-left" />
+				<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+				<Scripts />
+			</NuqsAdapter>
 		</>
 	);
 

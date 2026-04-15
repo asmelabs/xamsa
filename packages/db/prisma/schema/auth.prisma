@@ -9,10 +9,10 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  username String  @unique
-  email    String  @unique
-  name     String
-  image    String?
+  username String  @unique /// @zod.string().min(3, "Username must be at least 3 characters long").max(30, "Username must be less than 30 characters long").regex(/^[a-z][a-z0-9]+$/, "Username must contain only lowercase letters and numbers and cannot start with a number")
+  email    String  @unique /// @zod.email("Invalid email address")
+  name     String /// @zod.string().min(3, "Name must be at least 3 characters long").max(100, "Name must be less than 100 characters long")
+  image    String? /// @zod.string().url("Invalid image URL")
   role     Role    @default(user)
 
   emailVerified    Boolean  @default(false) @map("email_verified")
@@ -55,6 +55,7 @@ model Account {
   refreshToken String? @map("refresh_token")
   idToken      String? @map("id_token")
   scope        String? @map("scope")
+  /// @zod.string().min(7, "Password must be at least 7 characters long").max(100, "Password must be less than 100 characters long").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{7,}$/, "Password must contain at least one uppercase letter, one lowercase letter, and one digit")
   password     String? @map("password")
 
   userId String @map("user_id")

@@ -11,6 +11,7 @@
 		"@better-auth/infra": "^0.2.2",
 		"@fontsource-variable/geist": "^5.2.8",
 		"@fontsource/geist-mono": "^5.2.7",
+		"@hookform/resolvers": "^5.2.2",
 		"@orpc/client": "catalog:",
 		"@orpc/openapi": "catalog:",
 		"@orpc/server": "catalog:",
@@ -33,13 +34,16 @@
 		"lucide-react": "catalog:",
 		"next-themes": "catalog:",
 		"nitro": "^3.0.260311-beta",
+		"nuqs": "^2.8.9",
 		"posthog-js": "^1.368.2",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"react-hook-form": "^7.72.1",
 		"sonner": "catalog:",
 		"tailwindcss": "catalog:",
 		"vite-tsconfig-paths": "^5.1.4",
-		"zod": "catalog:"
+		"zod": "catalog:",
+		"@xamsa/schemas": "workspace:*"
 	},
 	"devDependencies": {
 		"@tanstack/react-query-devtools": "^5.91.1",

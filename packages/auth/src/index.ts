@@ -1,6 +1,7 @@
 import { dash } from "@better-auth/infra";
 import { createPrismaClient } from "@xamsa/db";
 import { env } from "@xamsa/env/server";
+import { sendEmailVerificationEmail } from "@xamsa/mail/auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import {
@@ -30,6 +31,21 @@ export function createAuth() {
 			enabled: true,
 			requireEmailVerification: true,
 			revokeSessionsOnPasswordReset: true,
+		},
+
+		emailVerification: {
+			sendOnSignUp: true,
+
+			async sendVerificationEmail({ url, user }) {
+				if (env.NODE_ENV === "production") {
+					await sendEmailVerificationEmail(user.name, user.email, url);
+				} else {
+					console.log("=== === === === ===");
+					console.log("Sending verification email to", user.email);
+					console.log("URL:", url);
+					console.log("=== === === === ===");
+				}
+			},
 		},
 
 		secret: env.BETTER_AUTH_SECRET,
@@ -66,6 +82,7 @@ export function createAuth() {
 					returned: true,
 					required: true,
 					input: false,
+					defaultValue: "user",
 				},
 			},
 		},
