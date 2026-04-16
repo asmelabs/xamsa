@@ -6,12 +6,15 @@ import { packSort } from "@xamsa/schemas/modules/listings/pack";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import {
 	parseAsArrayOf,
+	parseAsBoolean,
+	parseAsFloat,
 	parseAsInteger,
 	parseAsStringEnum,
 	useQueryState,
 } from "nuqs";
 import { useEffect, useRef } from "react";
 import { PackCard } from "@/components/pack-card";
+import { PackFilters } from "@/components/pack-filters";
 import { SearchBar } from "@/components/search-bar";
 import { useSearchQuery } from "@/hooks/use-search-query";
 import { useSortQuery } from "@/hooks/use-sort-query";
@@ -26,13 +29,14 @@ function RouteComponent() {
 	const [limit] = useQueryState("limit", parseAsInteger.withDefault(10));
 	const { sort, dir } = useSortQuery(packSort.options, packSort.defaultOption);
 
-	const [languages] = useQueryState(
-		"lang",
-		parseAsArrayOf(parseAsStringEnum(PackLanguageSchema.options)),
+	const [minAverageRating] = useQueryState(
+		"min_average_rating",
+		parseAsFloat.withDefault(0),
 	);
-	const [statuses] = useQueryState(
-		"status",
-		parseAsArrayOf(parseAsStringEnum(PackStatusSchema.options)),
+	const [minPlays] = useQueryState("min_plays", parseAsInteger.withDefault(0));
+	const [hasRatings] = useQueryState(
+		"has_ratings",
+		parseAsBoolean.withDefault(false),
 	);
 
 	const {
@@ -51,8 +55,9 @@ function RouteComponent() {
 				limit,
 				sort,
 				dir,
-				languages: languages ?? undefined,
-				statuses: statuses ?? undefined,
+				minAverageRating,
+				minPlays,
+				hasRatings,
 			}),
 			getNextPageParam: (lastPage) => lastPage.metadata.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
@@ -84,6 +89,7 @@ function RouteComponent() {
 				placeholder="Search packs..."
 				containerClassName="mx-auto max-w-xl"
 			/>
+			<PackFilters />
 
 			{isLoading ? (
 				<div className="flex justify-center py-12">
