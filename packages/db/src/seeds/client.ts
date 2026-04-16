@@ -7,6 +7,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../prisma/generated/client";
 
 const adapter = new PrismaPg({
+	// biome-ignore lint/style/noNonNullAssertion: database url is guaranteed to be set
 	connectionString: process.env.DATABASE_URL!,
 });
 

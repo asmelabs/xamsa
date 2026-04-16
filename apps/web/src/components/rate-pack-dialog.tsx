@@ -3,10 +3,8 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { CreatePackRatingInputSchema } from "@xamsa/schemas/modules/pack-rating";
 import { Button } from "@xamsa/ui/components/button";
 import { Rating } from "@xamsa/ui/components/rating";
-import { Textarea } from "@xamsa/ui/components/textarea";
 import { StarIcon } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
@@ -27,8 +25,6 @@ export function RatePackDialog({ packSlug }: RatePackDialogProps) {
 		"rate-pack",
 		parseAsBoolean.withDefault(false),
 	);
-	const [rating, setRating] = useState(0);
-	const [feedback, setFeedback] = useState("");
 
 	const form = useAppForm({
 		schema: CreatePackRatingInputSchema.omit({ pack: true }),

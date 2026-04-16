@@ -2,7 +2,6 @@ import z from "zod";
 import {
 	CursorPaginationInputSchema,
 	CursorPaginationOutputSchema,
-	PaginationInputSchema,
 } from "../common/pagination";
 import { CountSchema } from "../common/utils";
 import { PackLanguageSchema } from "../db/schemas/enums/PackLanguage.schema";
