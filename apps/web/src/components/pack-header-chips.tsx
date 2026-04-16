@@ -1,42 +1,51 @@
 import type { PackLanguage } from "@xamsa/schemas/db/schemas/enums/PackLanguage.schema";
+import type { PackStatus } from "@xamsa/schemas/db/schemas/enums/PackStatus.schema";
 import type { PackVisibility } from "@xamsa/schemas/db/schemas/enums/PackVisibility.schema";
-import { Badge, type BadgeProps } from "@xamsa/ui/components/badge";
-import { Globe, Lock } from "lucide-react";
+import { Badge } from "@xamsa/ui/components/badge";
+import { Layers, Lock } from "lucide-react";
 
 const languageLabels: Record<string, string> = {
-	az: "Azerbaijani",
+	az: "Azərbaycanca",
 	en: "English",
-	ru: "Russian",
-	tr: "Turkish",
+	ru: "Русский",
+	tr: "Türkçe",
 };
 
+const statusConfig = {
+	draft: { label: "Draft", variant: "outline" },
+	published: { label: "Published", variant: "success" },
+	archived: { label: "Archived", variant: "info" },
+} as const;
+
 interface PackHeaderChipsProps {
+	status: PackStatus;
 	visibility: PackVisibility;
 	language: PackLanguage;
 	totalTopics: number;
-	variant: BadgeProps["variant"];
-	label: string;
 }
 
 export function PackHeaderChips({
+	status,
 	visibility,
 	language,
 	totalTopics,
-	variant,
-	label,
 }: PackHeaderChipsProps) {
 	const isPrivate = visibility === "private";
+	const { label, variant } = statusConfig[status];
 
 	return (
-		<div className="flex flex-wrap items-center gap-2">
+		<div className="flex flex-wrap items-center gap-1.5">
 			<Badge variant={variant}>{label}</Badge>
-			<Badge variant="outline">
-				{isPrivate ? <Lock className="size-3" /> : <Globe className="size-3" />}
-				{isPrivate ? "Private" : "Public"}
-			</Badge>
+			{isPrivate && (
+				<Badge variant="outline">
+					<Lock className="size-3" />
+					Private
+				</Badge>
+			)}
 			<Badge variant="outline">{languageLabels[language] ?? language}</Badge>
 			<Badge variant="outline">
-				Total {totalTopics} {totalTopics === 1 ? "topic" : "topics"}
+				<Layers className="size-3" />
+				{totalTopics} {totalTopics === 1 ? "topic" : "topics"}
 			</Badge>
 		</div>
 	);

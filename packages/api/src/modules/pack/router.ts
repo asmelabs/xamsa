@@ -1,13 +1,23 @@
 import {
 	CreatePackInputSchema,
 	CreatePackOutputSchema,
+	DeletePackInputSchema,
+	DeletePackOutputSchema,
 	FindOnePackInputSchema,
 	FindOnePackOutputSchema,
+	ListPacksInputSchema,
+	ListPacksOutputSchema,
 	UpdatePackStatusInputSchema,
 	UpdatePackStatusOutputSchema,
 } from "@xamsa/schemas/modules/pack";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { createPack, findOnePack, updatePackStatus } from "./service";
+import {
+	createPack,
+	deletePack,
+	findOnePack,
+	listPacks,
+	updatePackStatus,
+} from "./service";
 
 export const packRouter = {
 	create: protectedProcedure
@@ -30,5 +40,19 @@ export const packRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await findOnePack(input, context.session?.user.id),
+		),
+	list: publicProcedure
+		.input(ListPacksInputSchema)
+		.output(ListPacksOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await listPacks(input, context.session?.user.id),
+		),
+	delete: protectedProcedure
+		.input(DeletePackInputSchema)
+		.output(DeletePackOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await deletePack(input, context.session.user.id),
 		),
 };

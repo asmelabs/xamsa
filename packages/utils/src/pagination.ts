@@ -75,10 +75,13 @@ class CursorPagination {
 	) {
 		const { data } = CursorPaginationInputSchema.safeParse({
 			cursor:
-				typeof inputOrCursor === "string"
+				typeof inputOrCursor === "string" || !inputOrCursor
 					? inputOrCursor
 					: inputOrCursor?.cursor,
-			limit: typeof inputOrCursor === "string" ? limit : inputOrCursor?.limit,
+			limit:
+				typeof inputOrCursor === "string" || !inputOrCursor
+					? limit
+					: inputOrCursor?.limit,
 		});
 
 		this.cursor = data?.cursor;
@@ -97,10 +100,14 @@ class CursorPagination {
 		};
 	}
 
-	use() {
+	use<K extends string = "id">(cursorField?: K) {
+		const field = cursorField ?? ("id" as K);
+
 		return {
 			take: this.limit + 1,
-			...(this.cursor ? { cursor: { id: this.cursor }, skip: 1 } : {}),
+			...(this.cursor
+				? { cursor: { [field]: this.cursor } as Record<K, string>, skip: 1 }
+				: {}),
 		};
 	}
 

@@ -1,13 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { CreateTopicInputSchema } from "@xamsa/schemas/modules/topic";
-import { Button } from "@xamsa/ui/components/button";
 import {
-	Card,
-	CardHeader,
-	CardPanel,
-	CardTitle,
-} from "@xamsa/ui/components/card";
+	Carousel,
+	type CarouselApi,
+	CarouselContent,
+	CarouselItem,
+	CarouselNext,
+	CarouselPrevious,
+} from "@xamsa/ui/components/carousel";
 import {
 	Frame,
 	FrameFooter,
@@ -17,15 +18,13 @@ import {
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
 import { Textarea } from "@xamsa/ui/components/textarea";
-import { Plus, Trash2 } from "lucide-react";
+import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
+import { Check } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useEffect } from "react";
-import { useFieldArray } from "react-hook-form";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpc } from "@/utils/orpc";
-
-const MAX_QUESTIONS = 5;
 
 const emptyQuestion = {
 	text: "",
@@ -41,6 +40,8 @@ interface CreateTopicFormProps {
 
 export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const navigate = useNavigate();
+	const [api, setApi] = useState<CarouselApi>();
+	const [currentSlide, setCurrentSlide] = useState(0);
 
 	const [defaultName] = useQueryState("name");
 	const [defaultDescription] = useQueryState("description");
@@ -50,13 +51,10 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 		defaultValues: {
 			name: defaultName || "",
 			description: defaultDescription || "",
-			questions: [] as (typeof emptyQuestion)[],
+			questions: Array.from({ length: QUESTIONS_PER_TOPIC }, () => ({
+				...emptyQuestion,
+			})),
 		},
-	});
-
-	const { fields, append, remove } = useFieldArray({
-		control: form.control,
-		name: "questions",
 	});
 
 	const { mutate: createTopic, isPending } = useMutation({
@@ -77,23 +75,39 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 		async (values) => {
 			createTopic({ ...values, pack: packSlug });
 		},
-		(e) => {
-			console.warn(e);
+		(errors) => {
+			// Navigate to the first question with an error
+			if (errors.questions) {
+				const questions = errors.questions as Record<string, unknown>[];
+				const firstErrorIndex = questions.findIndex((q) => q !== undefined);
+				if (firstErrorIndex !== -1) {
+					api?.scrollTo(firstErrorIndex);
+					toast.error(`Question ${firstErrorIndex + 1} has errors`);
+					return;
+				}
+			}
 
-			if (e.questions) {
-				return toast.error(e.questions.message);
+			if (errors.name) {
+				toast.error("Please fill in the topic name");
 			}
 		},
 	);
 
-	const canAddMore = fields.length < MAX_QUESTIONS;
-	const remaining = MAX_QUESTIONS - fields.length;
+	// Track which questions are filled (have both text and answer)
+	const questions = form.watch("questions");
+	const questionStatus = questions.map(
+		(q) => q.text.trim().length > 0 && q.answer.trim().length > 0,
+	);
+	const filledCount = questionStatus.filter(Boolean).length;
 
 	useEffect(() => {
-		if (form.formState.errors.questions?.root?.message) {
-			toast.error(form.formState.errors.questions?.root?.message);
-		}
-	}, [form.formState.errors.questions?.root?.message]);
+		if (!api) return;
+		const onSelect = () => setCurrentSlide(api.selectedScrollSnap());
+		api.on("select", onSelect);
+		return () => {
+			api.off("select", onSelect);
+		};
+	}, [api]);
 
 	return (
 		<Frame>
@@ -127,84 +141,111 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 					</form.Input>
 				</FramePanel>
 
-				<FramePanel className="space-y-3">
+				<FramePanel className="space-y-4">
 					<div className="flex items-center justify-between">
 						<p className="font-semibold text-sm">
 							Questions{" "}
 							<span className="font-normal text-muted-foreground">
-								({fields.length}/{MAX_QUESTIONS})
+								({filledCount}/{QUESTIONS_PER_TOPIC})
 							</span>
 						</p>
-						{canAddMore && (
-							<Button
-								variant="outline"
-								size="sm"
-								type="button"
-								onClick={() => append(emptyQuestion)}
-							>
-								<Plus />
-								Add
-							</Button>
-						)}
 					</div>
 
-					{fields.length === 0 && (
-						<button
-							type="button"
-							onClick={() => append(emptyQuestion)}
-							className="flex w-full flex-col items-center gap-2 rounded-xl border border-border border-dashed py-8 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-						>
-							<Plus className="size-5" />
-							<span className="text-sm">
-								Add your first question ({remaining} required)
-							</span>
-						</button>
-					)}
-					{fields.map((field, index) => (
-						<Card key={field.id}>
-							<CardHeader className="flex flex-row items-center justify-between py-3">
-								<CardTitle className="text-sm">Question {index + 1}</CardTitle>
-								<Button
-									variant="ghost"
-									size="icon-xs"
-									type="button"
-									onClick={() => remove(index)}
-								>
-									<Trash2 />
-								</Button>
-							</CardHeader>
-							<CardPanel className="space-y-3 pt-0">
-								<form.Input name={`questions.${index}.text`} label="Text">
-									{(f) => (
-										<Textarea
-											{...f}
-											placeholder="Enter question text"
-											maxLength={1000}
-											rows={2}
-										/>
-									)}
-								</form.Input>
-								<form.Input name={`questions.${index}.answer`} label="Answer">
-									{(f) => (
-										<Input
-											{...f}
-											placeholder="Enter the correct answer"
-											maxLength={250}
-										/>
-									)}
-								</form.Input>
-							</CardPanel>
-						</Card>
-					))}
-					{fields.length > 0 && canAddMore && (
-						<p className="text-center text-muted-foreground text-xs">
-							{remaining} more question{remaining !== 1 && "s"} needed
-						</p>
-					)}
+					{/* Dot indicators */}
+					<div className="flex items-center justify-center gap-2">
+						{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, i) => (
+							<button
+								key={i}
+								type="button"
+								onClick={() => api?.scrollTo(i)}
+								className={`flex size-7 items-center justify-center rounded-full border text-xs transition-all ${
+									currentSlide === i
+										? "border-primary bg-primary text-primary-foreground"
+										: questionStatus[i]
+											? "border-primary/50 bg-primary/10 text-primary"
+											: "border-border text-muted-foreground"
+								}`}
+							>
+								{questionStatus[i] ? <Check className="size-3.5" /> : i + 1}
+							</button>
+						))}
+					</div>
+
+					{/* Carousel */}
+					<Carousel
+						setApi={setApi}
+						opts={{ watchDrag: false }}
+						className="mx-auto w-full"
+					>
+						<CarouselContent>
+							{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, index) => (
+								<CarouselItem key={index}>
+									<div className="space-y-5 px-1">
+										<form.Input
+											name={`questions.${index}.text`}
+											label={`Question ${index + 1}`}
+										>
+											{(f) => (
+												<Textarea
+													{...f}
+													placeholder="Enter question text"
+													maxLength={1000}
+													rows={3}
+												/>
+											)}
+										</form.Input>
+
+										<form.Input
+											name={`questions.${index}.answer`}
+											label="Answer"
+										>
+											{(f) => (
+												<Input
+													{...f}
+													placeholder="Enter the correct answer"
+													maxLength={250}
+												/>
+											)}
+										</form.Input>
+
+										<form.Input
+											name={`questions.${index}.explanation`}
+											label="Explanation (optional)"
+										>
+											{(f) => (
+												<Textarea
+													{...f}
+													value={f.value || ""}
+													placeholder="Optional note about the answer for the host"
+													maxLength={1000}
+													rows={2}
+												/>
+											)}
+										</form.Input>
+									</div>
+								</CarouselItem>
+							))}
+						</CarouselContent>
+
+						<div className="mt-4 flex items-center justify-between">
+							<CarouselPrevious
+								className="static translate-y-0"
+								type="button"
+							/>
+							<p className="text-muted-foreground text-xs">
+								{currentSlide + 1} of {QUESTIONS_PER_TOPIC}
+							</p>
+							<CarouselNext className="static translate-y-0" type="button" />
+						</div>
+					</Carousel>
 				</FramePanel>
 
 				<FrameFooter>
-					<form.Submit isLoading={isPending} loadingText="Creating topic...">
+					<form.Submit
+						isLoading={isPending}
+						loadingText="Creating topic..."
+						disabled={filledCount < QUESTIONS_PER_TOPIC}
+					>
 						Create Topic
 					</form.Submit>
 				</FrameFooter>

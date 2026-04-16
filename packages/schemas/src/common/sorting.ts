@@ -25,6 +25,9 @@ export function defineSorting<TOrderBy>() {
 		const dirSchema = z.enum(["asc", "desc"]);
 
 		return {
+			options: keys,
+			defaultOption: defaultKey,
+
 			schema: (defaultValue?: TKeys) =>
 				sortSchema.default(defaultValue ?? defaultKey),
 

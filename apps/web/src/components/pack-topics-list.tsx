@@ -9,29 +9,38 @@ import {
 } from "@xamsa/ui/components/alert";
 import { Button } from "@xamsa/ui/components/button";
 import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@xamsa/ui/components/empty";
+import {
 	Frame,
 	FrameFooter,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
-import {
-	Pagination,
-	PaginationNext,
-	PaginationPrevious,
-} from "@xamsa/ui/components/pagination";
 import { Spinner } from "@xamsa/ui/components/spinner";
-import { ChevronLeftIcon } from "lucide-react";
+import {
+	ChevronLeftIcon,
+	ChevronRight,
+	ChevronRightIcon,
+	InboxIcon,
+	PlusIcon,
+} from "lucide-react";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { orpc } from "@/utils/orpc";
 
 interface PackTopicsListProps {
 	packSlug: string;
+	isAuthor: boolean;
 }
 
-export function PackTopicsList({ packSlug }: PackTopicsListProps) {
-	const [page] = useQueryState("page", parseAsInteger.withDefault(1));
+export function PackTopicsList({ packSlug, isAuthor }: PackTopicsListProps) {
+	const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
 	const {
 		data: topics,
@@ -49,72 +58,126 @@ export function PackTopicsList({ packSlug }: PackTopicsListProps) {
 		retry: false,
 	});
 
-	const pagination = useMemo(() => topics?.metadata, [topics]);
+	useEffect(() => {
+		if (!topics?.metadata) return;
+		const { totalPages } = topics.metadata;
+
+		if (page > 1 && page > totalPages) {
+			setPage(totalPages > 0 ? totalPages : null);
+		}
+	}, [topics?.metadata, page, setPage]);
+
+	const pagination = topics?.metadata;
+	const hasPagination =
+		pagination &&
+		(pagination.prevPage !== null || pagination.nextPage !== null);
 
 	return (
 		<Frame>
-			<FrameHeader>
-				<FrameTitle>Topics of this pack</FrameTitle>
+			<FrameHeader className="flex items-center justify-between">
+				<FrameTitle>
+					Topics
+					{pagination && pagination.total > 0 && (
+						<span className="ml-1.5 font-normal text-muted-foreground text-sm">
+							({pagination.total})
+						</span>
+					)}
+				</FrameTitle>
+				{pagination && pagination.totalPages > 1 && (
+					<span className="text-muted-foreground text-xs">
+						Page {pagination.page} of {pagination.totalPages}
+					</span>
+				)}
 			</FrameHeader>
+
 			<FramePanel>
 				{isLoading ? (
-					<Spinner className="mx-auto" />
+					<div className="flex justify-center py-12">
+						<Spinner />
+					</div>
 				) : error ? (
-					<Alert>
-						<AlertTitle>Error occured</AlertTitle>
+					<Alert variant="error">
+						<AlertTitle>Failed to load topics</AlertTitle>
 						<AlertDescription>
-							An unknown error occurred while fetching topics of this pack.
+							Something went wrong. Please try refreshing the page.
 						</AlertDescription>
 					</Alert>
+				) : topics?.items.length === 0 ? (
+					<Empty className="py-10 md:py-12">
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<InboxIcon />
+							</EmptyMedia>
+							<EmptyTitle>No topics yet</EmptyTitle>
+							<EmptyDescription>
+								This pack doesn't have any topics. Topics will appear here once
+								they're added.
+							</EmptyDescription>
+						</EmptyHeader>
+						{isAuthor && (
+							<Button
+								variant="outline"
+								render={
+									<Link
+										to="/packs/$packSlug/topics/new"
+										params={{ packSlug }}
+									/>
+								}
+							>
+								<PlusIcon />
+								Add first topic
+							</Button>
+						)}
+					</Empty>
 				) : (
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+					<div className="space-y-2">
 						{topics?.items.map((topic) => (
-							<TopicCard key={topic.slug} topic={topic} />
+							<TopicCard key={topic.slug} topic={topic} packSlug={packSlug} />
 						))}
 					</div>
 				)}
 			</FramePanel>
-			{pagination && (
+
+			{hasPagination && (
 				<FrameFooter>
-					<Pagination className="justify-end gap-2">
-						{pagination.prevPage !== null && (
-							<PaginationPrevious
+					<div className="flex items-center justify-between">
+						{pagination.prevPage !== null ? (
+							<Button
+								variant="outline"
+								size="sm"
 								render={
-									<Button
-										variant="outline"
-										render={
-											<Link
-												to={"/packs/$packSlug"}
-												params={{ packSlug }}
-												search={{
-													page: pagination.prevPage,
-												}}
-											/>
-										}
-									>
-										<ChevronLeftIcon />
-										Previous
-									</Button>
-								}
-							/>
-						)}
-						{pagination.nextPage !== null && (
-							<PaginationNext
-								render={
-									<Button
-										variant="outline"
-										render={
-											<Link
-												to={"/packs/$packSlug"}
-												params={{ packSlug }}
-												search={{ page: pagination.nextPage }}
-											/>
-										}
+									<Link
+										to="/packs/$packSlug"
+										params={{ packSlug }}
+										search={{ page: pagination.prevPage }}
 									/>
 								}
-							/>
+							>
+								<ChevronLeftIcon />
+								Previous
+							</Button>
+						) : (
+							<div />
 						)}
-					</Pagination>
+						{pagination.nextPage !== null ? (
+							<Button
+								variant="outline"
+								size="sm"
+								render={
+									<Link
+										to="/packs/$packSlug"
+										params={{ packSlug }}
+										search={{ page: pagination.nextPage }}
+									/>
+								}
+							>
+								Next
+								<ChevronRightIcon />
+							</Button>
+						) : (
+							<div />
+						)}
+					</div>
 				</FrameFooter>
 			)}
 		</Frame>
@@ -123,21 +186,29 @@ export function PackTopicsList({ packSlug }: PackTopicsListProps) {
 
 function TopicCard({
 	topic,
+	packSlug,
 }: {
 	topic: GetPaginatedItem<ListTopicsOutputType>;
+	packSlug: string;
 }) {
 	return (
-		<div className="rounded-xl border border-border p-4">
-			<h3 className="font-semibold text-lg">
-				#{topic.order}. {topic.name}
-			</h3>
-			{topic.description && (
-				<p className="text-muted-foreground text-sm">
-					{topic.description.length > 100
-						? `${topic.description.slice(0, 100)}...`
-						: topic.description}
-				</p>
-			)}
-		</div>
+		<Link
+			to="/packs/$packSlug/topics/$topicSlug"
+			params={{ packSlug, topicSlug: topic.slug }}
+			className="group flex items-center gap-4 rounded-xl border border-border p-4 transition-colors hover:border-primary/30 hover:bg-primary/3"
+		>
+			<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted font-semibold text-muted-foreground text-sm transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+				{topic.order}
+			</div>
+			<div className="min-w-0 flex-1">
+				<h3 className="truncate font-medium text-sm">{topic.name}</h3>
+				{topic.description && (
+					<p className="mt-0.5 truncate text-muted-foreground text-xs">
+						{topic.description}
+					</p>
+				)}
+			</div>
+			<ChevronRight className="size-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
+		</Link>
 	);
 }

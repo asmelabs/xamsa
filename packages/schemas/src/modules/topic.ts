@@ -69,6 +69,9 @@ export const FindOneTopicOutputSchema = TopicSchema.pick({
 export type FindOneTopicInputType = z.infer<typeof FindOneTopicInputSchema>;
 export type FindOneTopicOutputType = z.infer<typeof FindOneTopicOutputSchema>;
 
+/**
+ * LIST
+ */
 export const ListTopicsFiltersSchema = z.object({
 	packs: z.array(PackSchema.shape.slug),
 });
