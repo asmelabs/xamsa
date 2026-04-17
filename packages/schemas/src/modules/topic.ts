@@ -93,3 +93,29 @@ export const ListTopicsOutputSchema = PaginationOutputSchema(
 export type ListTopicsFiltersType = z.infer<typeof ListTopicsFiltersSchema>;
 export type ListTopicsInputType = z.infer<typeof ListTopicsInputSchema>;
 export type ListTopicsOutputType = z.infer<typeof ListTopicsOutputSchema>;
+
+/**
+ * REORDER
+ */
+export const UpdateTopicsOrderInputSchema = z.object({
+	pack: PackSchema.shape.slug,
+	topics: z
+		.array(
+			TopicSchema.pick({
+				slug: true,
+				order: true,
+			}),
+		)
+		.min(1, "At least one topic is required"),
+});
+
+export const UpdateTopicsOrderOutputSchema = z.object({
+	updated: z.number().int(),
+});
+
+export type UpdateTopicsOrderInputType = z.infer<
+	typeof UpdateTopicsOrderInputSchema
+>;
+export type UpdateTopicsOrderOutputType = z.infer<
+	typeof UpdateTopicsOrderOutputSchema
+>;

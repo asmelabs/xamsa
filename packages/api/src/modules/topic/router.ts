@@ -3,9 +3,11 @@ import {
 	CreateTopicOutputSchema,
 	ListTopicsInputSchema,
 	ListTopicsOutputSchema,
+	UpdateTopicsOrderInputSchema,
+	UpdateTopicsOrderOutputSchema,
 } from "@xamsa/schemas/modules/topic";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { createTopic, listTopics } from "./service";
+import { createTopic, listTopics, updateTopicsOrder } from "./service";
 
 export const topicRouter = {
 	create: protectedProcedure
@@ -21,5 +23,12 @@ export const topicRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await listTopics(input, context.session?.user.id),
+		),
+	updateOrder: protectedProcedure
+		.input(UpdateTopicsOrderInputSchema)
+		.output(UpdateTopicsOrderOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await updateTopicsOrder(input, context.session.user.id),
 		),
 };

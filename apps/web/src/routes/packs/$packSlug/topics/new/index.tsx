@@ -5,7 +5,7 @@ const title = "Create a new topic";
 const description =
 	"Create a new topic for the pack on Xamsa. Topics have 5 questions and are the fundamental parts of the games.";
 
-export const Route = createFileRoute("/packs/$packSlug/topics/new")({
+export const Route = createFileRoute("/packs/$packSlug/topics/new/")({
 	component: RouteComponent,
 	head: () => ({
 		meta: [

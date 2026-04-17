@@ -10,6 +10,8 @@ import type {
 	CreateTopicOutputType,
 	ListTopicsInputType,
 	ListTopicsOutputType,
+	UpdateTopicsOrderInputType,
+	UpdateTopicsOrderOutputType,
 } from "@xamsa/schemas/modules/topic";
 import { definePagination } from "@xamsa/utils/pagination";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
@@ -159,4 +161,72 @@ export async function listTopics(
 	]);
 
 	return p.output(topics, total);
+}
+
+export async function updateTopicsOrder(
+	input: UpdateTopicsOrderInputType,
+	userId: string,
+): Promise<UpdateTopicsOrderOutputType> {
+	const pack = await prisma.pack.findUnique({
+		where: {
+			slug: input.pack,
+			authorId: userId,
+			status: "draft",
+		},
+		select: {
+			id: true,
+			_count: { select: { topics: true } },
+		},
+	});
+
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Pack not found or you don't have permission to edit it",
+		});
+	}
+
+	const orders = input.topics.map((t) => t.order);
+
+	if (new Set(orders).size !== orders.length) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Duplicate order values are not allowed",
+		});
+	}
+
+	const existingTopics = await prisma.topic.findMany({
+		where: {
+			packId: pack.id,
+			slug: { in: input.topics.map((t) => t.slug) },
+		},
+		select: { slug: true },
+	});
+
+	if (existingTopics.length !== input.topics.length) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "One or more topics do not belong to this pack",
+		});
+	}
+
+	await prisma.$transaction([
+		// First pass: set all to negative temp values to avoid conflicts
+		...input.topics.map((topic, i) =>
+			prisma.topic.update({
+				where: {
+					packId_slug: { packId: pack.id, slug: topic.slug },
+				},
+				data: { order: -(i + 1) },
+			}),
+		),
+		// Second pass: set actual values
+		...input.topics.map((topic) =>
+			prisma.topic.update({
+				where: {
+					packId_slug: { packId: pack.id, slug: topic.slug },
+				},
+				data: { order: topic.order },
+			}),
+		),
+	]);
+
+	return { updated: input.topics.length };
 }

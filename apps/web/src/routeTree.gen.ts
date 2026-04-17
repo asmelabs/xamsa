@@ -22,9 +22,11 @@ import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
-import { Route as PacksPackSlugTopicsNewRouteImport } from './routes/packs/$packSlug/topics/new'
+import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
+import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -91,20 +93,33 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PacksPackSlugTopicsIndexRoute =
+  PacksPackSlugTopicsIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/',
+    path: '/packs/$packSlug/topics/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PacksPackSlugEditIndexRoute = PacksPackSlugEditIndexRouteImport.update({
   id: '/packs/$packSlug/edit/',
   path: '/packs/$packSlug/edit/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PacksPackSlugTopicsNewRoute = PacksPackSlugTopicsNewRouteImport.update({
-  id: '/packs/$packSlug/topics/new',
-  path: '/packs/$packSlug/topics/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const PacksPackSlugTopicsNewIndexRoute =
+  PacksPackSlugTopicsNewIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/new/',
+    path: '/packs/$packSlug/topics/new/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PacksPackSlugTopicsTopicSlugIndexRoute =
   PacksPackSlugTopicsTopicSlugIndexRouteImport.update({
     id: '/packs/$packSlug/topics/$topicSlug/',
     path: '/packs/$packSlug/topics/$topicSlug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsEditReorderIndexRoute =
+  PacksPackSlugTopicsEditReorderIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/edit/reorder/',
+    path: '/packs/$packSlug/topics/edit/reorder/',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -122,9 +137,11 @@ export interface FileRoutesByFullPath {
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
-  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
+  '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,9 +157,11 @@ export interface FileRoutesByTo {
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
-  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
+  '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
   '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/edit/reorder': typeof PacksPackSlugTopicsEditReorderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -159,9 +178,11 @@ export interface FileRoutesById {
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
-  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
+  '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,9 +200,11 @@ export interface FileRouteTypes {
     | '/api/rpc/$'
     | '/packs/$packSlug/'
     | '/packs/new/'
-    | '/packs/$packSlug/topics/new'
     | '/packs/$packSlug/edit/'
+    | '/packs/$packSlug/topics/'
     | '/packs/$packSlug/topics/$topicSlug/'
+    | '/packs/$packSlug/topics/new/'
+    | '/packs/$packSlug/topics/edit/reorder/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -197,9 +220,11 @@ export interface FileRouteTypes {
     | '/api/rpc/$'
     | '/packs/$packSlug'
     | '/packs/new'
-    | '/packs/$packSlug/topics/new'
     | '/packs/$packSlug/edit'
+    | '/packs/$packSlug/topics'
     | '/packs/$packSlug/topics/$topicSlug'
+    | '/packs/$packSlug/topics/new'
+    | '/packs/$packSlug/topics/edit/reorder'
   id:
     | '__root__'
     | '/'
@@ -215,9 +240,11 @@ export interface FileRouteTypes {
     | '/api/rpc/$'
     | '/packs/$packSlug/'
     | '/packs/new/'
-    | '/packs/$packSlug/topics/new'
     | '/packs/$packSlug/edit/'
+    | '/packs/$packSlug/topics/'
     | '/packs/$packSlug/topics/$topicSlug/'
+    | '/packs/$packSlug/topics/new/'
+    | '/packs/$packSlug/topics/edit/reorder/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -234,9 +261,11 @@ export interface RootRouteChildren {
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
-  PacksPackSlugTopicsNewRoute: typeof PacksPackSlugTopicsNewRoute
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
+  PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
   PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  PacksPackSlugTopicsNewIndexRoute: typeof PacksPackSlugTopicsNewIndexRoute
+  PacksPackSlugTopicsEditReorderIndexRoute: typeof PacksPackSlugTopicsEditReorderIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -332,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/packs/$packSlug/topics/': {
+      id: '/packs/$packSlug/topics/'
+      path: '/packs/$packSlug/topics'
+      fullPath: '/packs/$packSlug/topics/'
+      preLoaderRoute: typeof PacksPackSlugTopicsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/edit/': {
       id: '/packs/$packSlug/edit/'
       path: '/packs/$packSlug/edit'
@@ -339,11 +375,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksPackSlugEditIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/packs/$packSlug/topics/new': {
-      id: '/packs/$packSlug/topics/new'
+    '/packs/$packSlug/topics/new/': {
+      id: '/packs/$packSlug/topics/new/'
       path: '/packs/$packSlug/topics/new'
-      fullPath: '/packs/$packSlug/topics/new'
-      preLoaderRoute: typeof PacksPackSlugTopicsNewRouteImport
+      fullPath: '/packs/$packSlug/topics/new/'
+      preLoaderRoute: typeof PacksPackSlugTopicsNewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packs/$packSlug/topics/$topicSlug/': {
@@ -351,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/packs/$packSlug/topics/$topicSlug'
       fullPath: '/packs/$packSlug/topics/$topicSlug/'
       preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/edit/reorder/': {
+      id: '/packs/$packSlug/topics/edit/reorder/'
+      path: '/packs/$packSlug/topics/edit/reorder'
+      fullPath: '/packs/$packSlug/topics/edit/reorder/'
+      preLoaderRoute: typeof PacksPackSlugTopicsEditReorderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -370,10 +413,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
-  PacksPackSlugTopicsNewRoute: PacksPackSlugTopicsNewRoute,
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
+  PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
   PacksPackSlugTopicsTopicSlugIndexRoute:
     PacksPackSlugTopicsTopicSlugIndexRoute,
+  PacksPackSlugTopicsNewIndexRoute: PacksPackSlugTopicsNewIndexRoute,
+  PacksPackSlugTopicsEditReorderIndexRoute:
+    PacksPackSlugTopicsEditReorderIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
