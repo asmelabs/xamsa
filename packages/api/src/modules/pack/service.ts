@@ -190,6 +190,7 @@ export async function listPacks(
 		minAverageRating,
 		minPlays,
 		hasRatings,
+		onlyMyPacks,
 	} = input;
 
 	const p = defineCursorPagination(cursor, limit);
@@ -203,7 +204,12 @@ export async function listPacks(
 			searchWhere ?? {},
 			periodWhere ?? {},
 			{
-				authorId: authors ? { in: authors } : undefined,
+				authorId:
+					onlyMyPacks === true && userId
+						? { equals: userId }
+						: authors
+							? { in: authors }
+							: undefined,
 				language: languages ? { in: languages } : undefined,
 				visibility: visibilities ? { in: visibilities } : undefined,
 				status: statuses ? { in: statuses } : undefined,

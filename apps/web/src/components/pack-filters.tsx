@@ -11,14 +11,13 @@ import {
 } from "@xamsa/ui/components/number-field";
 import {
 	Select,
-	SelectContent,
 	SelectItem,
 	SelectPopup,
 	SelectTrigger,
 	SelectValue,
 } from "@xamsa/ui/components/select";
 import { Switch } from "@xamsa/ui/components/switch";
-import { formatCase, toCase } from "@xamsa/utils/case-formatters";
+import { formatCase } from "@xamsa/utils/case-formatters";
 import { FilterIcon } from "lucide-react";
 import {
 	parseAsBoolean,
@@ -29,7 +28,11 @@ import {
 import { useSortQuery } from "@/hooks/use-sort-query";
 import { BetterDialog } from "./better-dialog";
 
-export function PackFilters() {
+interface PackFiltersProps {
+	isAuthenticated: boolean;
+}
+
+export function PackFilters({ isAuthenticated }: PackFiltersProps) {
 	const [filtersOpened, setFiltersOpened] = useQueryState(
 		"pack-filters-opened",
 		parseAsBoolean.withDefault(false),
@@ -51,13 +54,19 @@ export function PackFilters() {
 		"has_ratings",
 		parseAsBoolean.withDefault(false),
 	);
+	const [onlyMyPacks, setOnlyMyPacks] = useQueryState(
+		"only_my_packs",
+		parseAsBoolean.withDefault(false),
+	);
 
-	const hasFilters = minPlays > 0 || minAverageRating > 0 || hasRatings;
+	const hasFilters =
+		minPlays > 0 || minAverageRating > 0 || hasRatings || onlyMyPacks;
 
 	const handleReset = () => {
 		setMinPlays(0);
 		setMinAverageRating(0);
 		setHasRatings(false);
+		setOnlyMyPacks(false);
 
 		setFiltersOpened(false);
 	};
@@ -135,6 +144,21 @@ export function PackFilters() {
 						</p>
 					</div>
 				</div>
+				{isAuthenticated && (
+					<div className="space-y-2">
+						<Label htmlFor="only-my-packs">Only my packs</Label>
+						<div className="flex items-center gap-2">
+							<Switch
+								id="only-my-packs"
+								checked={onlyMyPacks}
+								onCheckedChange={(checked) => setOnlyMyPacks(checked ?? false)}
+							/>
+							<p className="text-muted-foreground text-sm">
+								See only packs you have created.
+							</p>
+						</div>
+					</div>
+				)}
 			</BetterDialog>
 			<Select
 				value={sort}

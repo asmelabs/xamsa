@@ -16,15 +16,25 @@ import { useEffect, useRef } from "react";
 import { PackCard } from "@/components/pack-card";
 import { PackFilters } from "@/components/pack-filters";
 import { SearchBar } from "@/components/search-bar";
+import { getUser } from "@/functions/get-user";
 import { useSearchQuery } from "@/hooks/use-search-query";
 import { useSortQuery } from "@/hooks/use-sort-query";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/")({
 	component: RouteComponent,
+	beforeLoad: async () => {
+		const session = await getUser();
+		return { session };
+	},
+	loader: async ({ context }) => {
+		return context.session;
+	},
 });
 
 function RouteComponent() {
+	const session = Route.useLoaderData();
+
 	const [, query] = useSearchQuery();
 	const [limit] = useQueryState("limit", parseAsInteger.withDefault(10));
 	const { sort, dir } = useSortQuery(packSort.options, packSort.defaultOption);
@@ -36,6 +46,10 @@ function RouteComponent() {
 	const [minPlays] = useQueryState("min_plays", parseAsInteger.withDefault(0));
 	const [hasRatings] = useQueryState(
 		"has_ratings",
+		parseAsBoolean.withDefault(false),
+	);
+	const [onlyMyPacks] = useQueryState(
+		"only_my_packs",
 		parseAsBoolean.withDefault(false),
 	);
 
@@ -58,6 +72,7 @@ function RouteComponent() {
 				minAverageRating,
 				minPlays,
 				hasRatings,
+				onlyMyPacks: !session ? undefined : onlyMyPacks,
 			}),
 			getNextPageParam: (lastPage) => lastPage.metadata.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
@@ -89,7 +104,7 @@ function RouteComponent() {
 				placeholder="Search packs..."
 				containerClassName="mx-auto max-w-xl"
 			/>
-			<PackFilters />
+			<PackFilters isAuthenticated={!!session} />
 
 			{isLoading ? (
 				<div className="flex justify-center py-12">

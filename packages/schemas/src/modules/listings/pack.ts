@@ -9,6 +9,7 @@ export const packSort = defineSorting<Prisma.PackOrderByWithRelationInput>()({
 		oldest: { createdAt: "asc" },
 		popular: { totalPlays: "desc" },
 		best: { averageRating: "desc" },
+		largest: { topics: { _count: "desc" } },
 	},
 	default: "newest",
 });

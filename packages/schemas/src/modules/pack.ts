@@ -126,6 +126,7 @@ export const ListPacksFiltersSchema = z.object({
 	minAverageRating: z.number().min(0).max(5).default(0),
 	minPlays: z.number().int().min(0).default(0),
 	hasRatings: z.boolean(),
+	onlyMyPacks: z.boolean(),
 });
 export const ListPacksInputSchema = ListPacksFiltersSchema.partial()
 	.extend(CursorPaginationInputSchema.shape)
