@@ -1,7 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { packSort } from "@xamsa/schemas/modules/listings/pack";
+import { Button } from "@xamsa/ui/components/button";
 import { Spinner } from "@xamsa/ui/components/spinner";
+import { PlusIcon } from "lucide-react";
 import {
 	parseAsBoolean,
 	parseAsFloat,
@@ -96,6 +98,13 @@ function RouteComponent() {
 
 	return (
 		<div className="container mx-auto max-w-7xl space-y-6 py-10">
+			<div className="flex items-center justify-between">
+				<h1 className="font-bold text-2xl">List of packs</h1>
+				<Button render={<Link to="/packs/new" />}>
+					<PlusIcon />
+					Create pack
+				</Button>
+			</div>
 			<SearchBar
 				placeholder="Search packs..."
 				containerClassName="mx-auto max-w-xl"

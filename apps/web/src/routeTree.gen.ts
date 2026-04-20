@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as PlayIndexRouteImport } from './routes/play/index'
 import { Route as PacksIndexRouteImport } from './routes/packs/index'
 import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index'
@@ -35,6 +36,11 @@ import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRout
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayIndexRoute = PlayIndexRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard/': typeof LeaderboardIndexRoute
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardIndexRoute
   '/packs': typeof PacksIndexRoute
   '/play': typeof PlayIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/leaderboard/': typeof LeaderboardIndexRoute
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/leaderboard/'
     | '/packs/'
     | '/play/'
+    | '/settings/'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/packs/$packSlug/'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/packs'
     | '/play'
+    | '/settings'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/packs/$packSlug'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/leaderboard/'
     | '/packs/'
     | '/play/'
+    | '/settings/'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/packs/$packSlug/'
@@ -309,6 +321,7 @@ export interface RootRouteChildren {
   LeaderboardIndexRoute: typeof LeaderboardIndexRoute
   PacksIndexRoute: typeof PacksIndexRoute
   PlayIndexRoute: typeof PlayIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play/': {
@@ -493,6 +513,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardIndexRoute: LeaderboardIndexRoute,
   PacksIndexRoute: PacksIndexRoute,
   PlayIndexRoute: PlayIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,

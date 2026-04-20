@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { CreatePackForm } from "@/components/create-pack-form";
+import { getUser } from "@/functions/get-user";
 
 const title = "Create a new pack";
 const description =
@@ -7,6 +8,22 @@ const description =
 
 export const Route = createFileRoute("/packs/new/")({
 	component: RouteComponent,
+	beforeLoad: async () => {
+		const session = await getUser();
+		return { session };
+	},
+	loader: async ({ context }) => {
+		if (!context.session) {
+			throw redirect({
+				to: "/auth/login",
+				search: {
+					redirect_url: "/packs/new",
+				},
+			});
+		}
+
+		return context.session.user;
+	},
 	head: () => ({
 		meta: [
 			{ title },
