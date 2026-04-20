@@ -144,3 +144,14 @@ export function formatEnumValue(
 ) {
 	return formatCase(value, from, to);
 }
+
+export function formattedEnum<T extends readonly string[]>(
+	enumValues: T,
+	to: Case = "title",
+	from: Case = "snake",
+) {
+	return enumValues.map<{ value: T[number]; label: string }>((value) => ({
+		value,
+		label: formatEnumValue(value, to, from),
+	}));
+}

@@ -116,11 +116,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 			</FrameHeader>
 			<form onSubmit={onSubmit} className="space-y-4">
 				<FramePanel className="space-y-4">
-					<form.Input
-						name="name"
-						label="Name"
-						description="You will not be able to change the name later, so choose wisely."
-					>
+					<form.Input name="name" label="Name">
 						{(field) => (
 							<Input
 								{...field}

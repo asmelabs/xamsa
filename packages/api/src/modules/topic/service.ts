@@ -8,8 +8,14 @@ import {
 import type {
 	CreateTopicInputType,
 	CreateTopicOutputType,
+	DeleteTopicInputType,
+	DeleteTopicOutputType,
+	FindOneTopicInputType,
+	FindOneTopicOutputType,
 	ListTopicsInputType,
 	ListTopicsOutputType,
+	UpdateTopicInputType,
+	UpdateTopicOutputType,
 	UpdateTopicsOrderInputType,
 	UpdateTopicsOrderOutputType,
 } from "@xamsa/schemas/modules/topic";
@@ -229,4 +235,171 @@ export async function updateTopicsOrder(
 	]);
 
 	return { updated: input.topics.length };
+}
+
+export async function findOneTopic(
+	input: FindOneTopicInputType,
+	userId?: string,
+): Promise<FindOneTopicOutputType> {
+	const topic = await prisma.topic.findFirst({
+		where: {
+			slug: input.slug,
+			pack: {
+				slug: input.pack,
+				OR: [
+					{ visibility: "public", status: "published" },
+					{ authorId: userId ?? "" },
+				],
+			},
+		},
+		select: {
+			slug: true,
+			name: true,
+			order: true,
+			description: true,
+			questions: {
+				select: {
+					text: true,
+					slug: true,
+					order: true,
+				},
+				orderBy: { order: "asc" },
+			},
+			pack: {
+				select: {
+					slug: true,
+					name: true,
+					status: true,
+					visibility: true,
+					authorId: true,
+					author: {
+						select: {
+							name: true,
+							username: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!topic) {
+		throw new ORPCError("NOT_FOUND", {
+			message: `Topic with slug "${input.slug}" not found`,
+		});
+	}
+
+	const isAuthor = !!userId && topic.pack.authorId === userId;
+
+	const { authorId, ...pack } = topic.pack;
+
+	return {
+		...topic,
+		isAuthor,
+		pack,
+		questions: isAuthor ? topic.questions : [],
+	};
+}
+
+export async function updateTopic(
+	input: UpdateTopicInputType,
+	userId: string,
+): Promise<UpdateTopicOutputType> {
+	const { slug, pack: packSlug, ...data } = input;
+
+	const pack = await prisma.pack.findUnique({
+		where: {
+			slug: packSlug,
+			authorId: userId,
+			status: "draft",
+		},
+		select: {
+			id: true,
+		},
+	});
+
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Pack not found or you don't have permission to edit it",
+		});
+	}
+
+	const topic = await prisma.topic.findFirst({
+		where: { slug, packId: pack.id },
+		select: {
+			id: true,
+			name: true,
+			slug: true,
+		},
+	});
+
+	if (!topic) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Topic not found or you don't have permission to edit it",
+		});
+	}
+
+	let newSlug = topic.slug;
+	if (data.name && data.name !== topic.name) {
+		newSlug = await generateUniqueSlug(
+			data.name,
+			async (slug) =>
+				!!(await prisma.topic.findFirst({
+					where: {
+						packId: pack.id,
+						slug,
+					},
+				})),
+		);
+	}
+
+	const updatedTopic = await prisma.topic.update({
+		where: { id: topic.id },
+		data: {
+			...data,
+			slug: newSlug,
+		},
+		select: {
+			slug: true,
+		},
+	});
+
+	return updatedTopic;
+}
+
+export async function deleteTopic(
+	input: DeleteTopicInputType,
+	userId: string,
+): Promise<DeleteTopicOutputType> {
+	const topic = await prisma.topic.findFirst({
+		select: {
+			id: true,
+			slug: true,
+		},
+		where: {
+			slug: input.slug,
+			name: input.name, // for extra security
+			pack: {
+				slug: input.pack,
+				authorId: userId,
+				status: "draft",
+			},
+		},
+	});
+
+	if (!topic) {
+		throw new ORPCError("NOT_FOUND", {
+			message: `Topic with slug ${input.slug} not found or you don't have permission to delete it`,
+		});
+	}
+
+	await prisma.topic.delete({
+		where: {
+			id: topic.id,
+		},
+	});
+
+	return {
+		slug: topic.slug,
+	};
 }

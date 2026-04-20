@@ -1,15 +1,11 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { PackLanguageSchema } from "@xamsa/schemas/db/schemas/enums/PackLanguage.schema";
-import { PackStatusSchema } from "@xamsa/schemas/db/schemas/enums/PackStatus.schema";
 import { packSort } from "@xamsa/schemas/modules/listings/pack";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import {
-	parseAsArrayOf,
 	parseAsBoolean,
 	parseAsFloat,
 	parseAsInteger,
-	parseAsStringEnum,
 	useQueryState,
 } from "nuqs";
 import { useEffect, useRef } from "react";

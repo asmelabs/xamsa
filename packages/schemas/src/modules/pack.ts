@@ -56,9 +56,6 @@ export const UpdatePackInputSchema = PackSchema.pick({
 	language: true,
 	visibility: true,
 })
-	.extend({
-		status: PackStatusSchema.exclude(["draft"]),
-	})
 	.partial()
 	.required({ slug: true });
 

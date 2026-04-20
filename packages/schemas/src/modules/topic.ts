@@ -38,6 +38,8 @@ export type CreateTopicOutputType = z.infer<typeof CreateTopicOutputSchema>;
 
 export const FindOneTopicInputSchema = TopicSchema.pick({
 	slug: true,
+}).extend({
+	pack: PackSchema.shape.slug,
 });
 
 export const FindOneTopicOutputSchema = TopicSchema.pick({
@@ -46,6 +48,7 @@ export const FindOneTopicOutputSchema = TopicSchema.pick({
 	order: true,
 	description: true,
 }).extend({
+	isAuthor: z.boolean(),
 	questions: z.array(
 		QuestionSchema.pick({
 			text: true,
@@ -95,6 +98,27 @@ export type ListTopicsInputType = z.infer<typeof ListTopicsInputSchema>;
 export type ListTopicsOutputType = z.infer<typeof ListTopicsOutputSchema>;
 
 /**
+ * UPDATE
+ */
+export const UpdateTopicInputSchema = TopicSchema.pick({
+	slug: true,
+	name: true,
+	description: true,
+})
+	.extend({
+		pack: PackSchema.shape.slug,
+	})
+	.partial()
+	.required({ slug: true, pack: true });
+
+export const UpdateTopicOutputSchema = TopicSchema.pick({
+	slug: true,
+});
+
+export type UpdateTopicInputType = z.infer<typeof UpdateTopicInputSchema>;
+export type UpdateTopicOutputType = z.infer<typeof UpdateTopicOutputSchema>;
+
+/**
  * REORDER
  */
 export const UpdateTopicsOrderInputSchema = z.object({
@@ -119,3 +143,20 @@ export type UpdateTopicsOrderInputType = z.infer<
 export type UpdateTopicsOrderOutputType = z.infer<
 	typeof UpdateTopicsOrderOutputSchema
 >;
+
+/**
+ * DELETE
+ */
+export const DeleteTopicInputSchema = TopicSchema.pick({
+	slug: true,
+	name: true,
+}).extend({
+	pack: PackSchema.shape.slug,
+});
+
+export const DeleteTopicOutputSchema = TopicSchema.pick({
+	slug: true,
+});
+
+export type DeleteTopicInputType = z.infer<typeof DeleteTopicInputSchema>;
+export type DeleteTopicOutputType = z.infer<typeof DeleteTopicOutputSchema>;

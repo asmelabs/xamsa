@@ -37,9 +37,14 @@ import { orpc } from "@/utils/orpc";
 interface PackTopicsListProps {
 	packSlug: string;
 	isAuthor: boolean;
+	limit?: number;
 }
 
-export function PackTopicsList({ packSlug, isAuthor }: PackTopicsListProps) {
+export function PackTopicsList({
+	packSlug,
+	isAuthor,
+	limit = 10,
+}: PackTopicsListProps) {
 	const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
 	const {
@@ -51,7 +56,7 @@ export function PackTopicsList({ packSlug, isAuthor }: PackTopicsListProps) {
 			input: {
 				packs: [packSlug],
 				page,
-				limit: 10,
+				limit,
 			},
 		}),
 		enabled: !!packSlug,

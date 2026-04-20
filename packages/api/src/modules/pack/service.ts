@@ -15,6 +15,8 @@ import type {
 	FindOnePackOutputType,
 	ListPacksInputType,
 	ListPacksOutputType,
+	UpdatePackInputType,
+	UpdatePackOutputType,
 	UpdatePackStatusInputType,
 	UpdatePackStatusOutputType,
 } from "@xamsa/schemas/modules/pack";
@@ -52,6 +54,39 @@ export async function createPack(
 	});
 
 	return pack;
+}
+
+export async function updatePack(
+	input: UpdatePackInputType,
+	userId: string,
+): Promise<UpdatePackOutputType> {
+	const { slug, ...data } = input;
+
+	const pack = await prisma.pack.findUnique({
+		where: {
+			slug,
+			authorId: userId,
+		},
+		select: {
+			id: true,
+		},
+	});
+
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: `Pack with slug ${input.slug} not found`,
+		});
+	}
+
+	const updatedPack = await prisma.pack.update({
+		where: { id: pack.id },
+		data,
+		select: {
+			slug: true,
+		},
+	});
+
+	return updatedPack;
 }
 
 export async function updatePackStatus(

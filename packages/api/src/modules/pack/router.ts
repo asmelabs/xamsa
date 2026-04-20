@@ -7,6 +7,8 @@ import {
 	FindOnePackOutputSchema,
 	ListPacksInputSchema,
 	ListPacksOutputSchema,
+	UpdatePackInputSchema,
+	UpdatePackOutputSchema,
 	UpdatePackStatusInputSchema,
 	UpdatePackStatusOutputSchema,
 } from "@xamsa/schemas/modules/pack";
@@ -16,6 +18,7 @@ import {
 	deletePack,
 	findOnePack,
 	listPacks,
+	updatePack,
 	updatePackStatus,
 } from "./service";
 
@@ -26,6 +29,13 @@ export const packRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await createPack(input, context.session.user.id),
+		),
+	update: protectedProcedure
+		.input(UpdatePackInputSchema)
+		.output(UpdatePackOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await updatePack(input, context.session.user.id),
 		),
 	updateStatus: protectedProcedure
 		.input(UpdatePackStatusInputSchema)

@@ -27,6 +27,8 @@ import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$pack
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
 import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
+import { Route as PacksPackSlugTopicsTopicSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/edit/index'
+import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -122,6 +124,18 @@ const PacksPackSlugTopicsEditReorderIndexRoute =
     path: '/packs/$packSlug/topics/edit/reorder/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PacksPackSlugTopicsTopicSlugEditIndexRoute =
+  PacksPackSlugTopicsTopicSlugEditIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/edit/',
+    path: '/packs/$packSlug/topics/$topicSlug/edit/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute =
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/',
+    path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -141,7 +155,9 @@ export interface FileRoutesByFullPath {
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,7 +177,9 @@ export interface FileRoutesByTo {
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
   '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/edit': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -182,7 +200,9 @@ export interface FileRoutesById {
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -204,7 +224,9 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/topics/'
     | '/packs/$packSlug/topics/$topicSlug/'
     | '/packs/$packSlug/topics/new/'
+    | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -224,7 +246,9 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/topics'
     | '/packs/$packSlug/topics/$topicSlug'
     | '/packs/$packSlug/topics/new'
+    | '/packs/$packSlug/topics/$topicSlug/edit'
     | '/packs/$packSlug/topics/edit/reorder'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
   id:
     | '__root__'
     | '/'
@@ -244,7 +268,9 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/topics/'
     | '/packs/$packSlug/topics/$topicSlug/'
     | '/packs/$packSlug/topics/new/'
+    | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -265,7 +291,9 @@ export interface RootRouteChildren {
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
   PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
   PacksPackSlugTopicsNewIndexRoute: typeof PacksPackSlugTopicsNewIndexRoute
+  PacksPackSlugTopicsTopicSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   PacksPackSlugTopicsEditReorderIndexRoute: typeof PacksPackSlugTopicsEditReorderIndexRoute
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -396,6 +424,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksPackSlugTopicsEditReorderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/packs/$packSlug/topics/$topicSlug/edit/': {
+      id: '/packs/$packSlug/topics/$topicSlug/edit/'
+      path: '/packs/$packSlug/topics/$topicSlug/edit'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/edit/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': {
+      id: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
+      path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -418,8 +460,12 @@ const rootRouteChildren: RootRouteChildren = {
   PacksPackSlugTopicsTopicSlugIndexRoute:
     PacksPackSlugTopicsTopicSlugIndexRoute,
   PacksPackSlugTopicsNewIndexRoute: PacksPackSlugTopicsNewIndexRoute,
+  PacksPackSlugTopicsTopicSlugEditIndexRoute:
+    PacksPackSlugTopicsTopicSlugEditIndexRoute,
   PacksPackSlugTopicsEditReorderIndexRoute:
     PacksPackSlugTopicsEditReorderIndexRoute,
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute:
+    PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
