@@ -2,7 +2,9 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
 import { LogOutIcon, SettingsIcon, ShieldCheckIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { LoadingButton } from "@/components/loading-button";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
@@ -57,8 +59,8 @@ const roleConfig = {
 };
 
 function RouteComponent() {
-	const navigate = Route.useNavigate();
 	const { profile, isOwner } = Route.useLoaderData();
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
 	const role = roleConfig[profile.role];
 	const initials = profile.name
@@ -69,12 +71,15 @@ function RouteComponent() {
 		.toUpperCase();
 
 	const handleLogout = async () => {
+		setIsLoggingOut(true);
+
 		try {
 			await authClient.signOut();
 			toast.success("Signed out");
-			navigate({ to: "/" });
+			window.location.href = "/";
 		} catch {
 			toast.error("Failed to sign out. Please try again.");
+			setIsLoggingOut(false);
 		}
 	};
 
@@ -135,10 +140,16 @@ function RouteComponent() {
 			{/* Owner-only logout */}
 			{isOwner && (
 				<div className="flex justify-center">
-					<Button variant="ghost" size="sm" onClick={handleLogout}>
+					<LoadingButton
+						variant="ghost"
+						size="sm"
+						onClick={handleLogout}
+						isLoading={isLoggingOut}
+						loadingText="Signing out..."
+					>
 						<LogOutIcon />
 						Sign out
-					</Button>
+					</LoadingButton>
 				</div>
 			)}
 		</div>

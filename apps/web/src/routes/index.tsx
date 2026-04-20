@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Card,
@@ -6,7 +6,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@xamsa/ui/components/card";
-import { Package, Play, Trophy, User } from "lucide-react";
+import { LogInIcon, Package, Play, Trophy, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { getUser } from "@/functions/get-user";
 
@@ -19,13 +19,7 @@ export const Route = createFileRoute("/")({
 		return { session };
 	},
 	loader: async ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: "/auth/login",
-			});
-		}
-
-		return context.session.user;
+		return context.session?.user;
 	},
 	component: HomeComponent,
 });
@@ -64,21 +58,30 @@ function HomeComponent() {
 		<div className="flex flex-col gap-8 py-10">
 			<div className="space-y-2">
 				<h1 className="font-bold text-2xl tracking-tight">
-					Welcome back, {user.name}
+					{user?.name ? `Welcome back, ${user.name}` : "Welcome to Xamsa"}
 				</h1>
 				<p className="text-muted-foreground">
-					Pick up where you left off or explore something new.
+					{user?.name
+						? "Pick up where you left off or explore something new."
+						: "Explore the world of Xamsa and start your journey."}
 				</p>
 			</div>
 
-			<Button
-				size="xl"
-				className="w-full"
-				render={<Link to="/play" />}
-			>
-				<Play className="size-5 fill-current" />
-				Start Playing
-			</Button>
+			{user ? (
+				<Button size="xl" className="w-full" render={<Link to="/play" />}>
+					<Play className="size-5 fill-current" />
+					Start Playing
+				</Button>
+			) : (
+				<Button
+					size="xl"
+					className="w-full"
+					render={<Link to="/auth/login" search={{ redirect_url: "/play" }} />}
+				>
+					<LogInIcon className="size-5 fill-current" />
+					Login to start playing
+				</Button>
+			)}
 
 			<div className="space-y-3">
 				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
@@ -95,15 +98,17 @@ function HomeComponent() {
 						to="/leaderboard"
 						icon={<Trophy className="size-5" strokeWidth={1.75} />}
 						title="Leaderboard"
-						description="See who's on top and compete for the best scores."
+						description="See who's on top and compete for the best scores. (not implemented yet)"
 					/>
-					<NavCard
-						to="/u/$username"
-						params={{ username: user.username }}
-						icon={<User className="size-5" strokeWidth={1.75} />}
-						title="Your Profile"
-						description="View your stats, packs, and account settings."
-					/>
+					{user && (
+						<NavCard
+							to="/u/$username"
+							params={{ username: user.username }}
+							icon={<User className="size-5" strokeWidth={1.75} />}
+							title="Your Profile"
+							description="View your stats, packs, and account settings."
+						/>
+					)}
 				</div>
 			</div>
 		</div>
