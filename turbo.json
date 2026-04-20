@@ -1,6 +1,19 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"ui": "tui",
+	"globalEnv": [
+		"DATABASE_URL",
+		"BETTER_AUTH_SECRET",
+		"BETTER_AUTH_URL",
+		"BETTER_AUTH_API_KEY",
+		"CORS_ORIGIN",
+		"ABLY_API_KEY",
+		"EMAIL_FROM",
+		"RESEND_API_KEY",
+		"BCRYPT_SALT_ROUNDS",
+		"VITE_PUBLIC_POSTHOG_PROJECT_TOKEN",
+		"VITE_PUBLIC_POSTHOG_HOST"
+	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
