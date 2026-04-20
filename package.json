@@ -29,7 +29,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "turbo dev",
-		"build": "turbo build",
+		"build": "turbo db:deploy && turbo build",
 		"check-types": "turbo check-types",
 		"dev:web": "turbo -F web dev",
 		"db:push": "turbo -F @xamsa/db db:push",
