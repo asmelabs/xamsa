@@ -2,11 +2,18 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
+	FrameFooter,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
-import { ArrowLeftIcon, ChevronRight, EyeOff, PencilIcon } from "lucide-react";
+import {
+	ArrowLeftIcon,
+	ArrowUpDown,
+	ChevronRight,
+	EyeOff,
+	PencilIcon,
+} from "lucide-react";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/$packSlug/topics/$topicSlug/")({
@@ -100,6 +107,7 @@ function RouteComponent() {
 						)}
 					</FrameTitle>
 				</FrameHeader>
+
 				<FramePanel>
 					{!topic.isAuthor ? (
 						<div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
@@ -140,6 +148,22 @@ function RouteComponent() {
 						</div>
 					)}
 				</FramePanel>
+				{topic.isAuthor && topic.pack.status === "draft" && (
+					<FrameFooter>
+						<Button
+							variant="outline"
+							render={
+								<Link
+									to="/packs/$packSlug/topics/$topicSlug/questions/edit/reorder"
+									params={{ packSlug, topicSlug: topic.slug }}
+								/>
+							}
+						>
+							<ArrowUpDown />
+							Reorder Questions
+						</Button>
+					</FrameFooter>
+				)}
 			</Frame>
 		</div>
 	);

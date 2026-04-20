@@ -330,6 +330,7 @@ export async function updateTopic(
 			id: true,
 			name: true,
 			slug: true,
+			packId: true,
 		},
 	});
 
@@ -344,10 +345,9 @@ export async function updateTopic(
 		newSlug = await generateUniqueSlug(
 			data.name,
 			async (slug) =>
-				!!(await prisma.topic.findFirst({
+				!!(await prisma.topic.findUnique({
 					where: {
-						packId: pack.id,
-						slug,
+						packId_slug: { packId: pack.id, slug },
 					},
 				})),
 		);
