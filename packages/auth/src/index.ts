@@ -33,6 +33,18 @@ export function createAuth() {
 			requireEmailVerification: true,
 			revokeSessionsOnPasswordReset: true,
 
+			async sendResetPassword({ url, user }) {
+				if (env.NODE_ENV === "production") {
+					// await sendEmailResetPassword(user.name, user.email, url);
+					console.log("not implemented");
+				} else {
+					console.log("=== === === === ===");
+					console.log("Sending reset password email to", user.email);
+					console.log("URL:", url);
+					console.log("=== === === === ===");
+				}
+			},
+
 			password: {
 				hash: async (password) => await hash(password),
 				verify: async (data) => await verify(data.password, data.hash),

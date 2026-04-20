@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LoginInputSchema } from "@xamsa/schemas/modules/auth/login";
+import { ForgotPasswordInputSchema } from "@xamsa/schemas/modules/auth/forgot-password";
 import {
 	Frame,
 	FrameFooter,
@@ -13,21 +13,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
-import { PasswordInput } from "./password-input";
 
-export function LoginForm() {
+export function ForgotPasswordForm() {
+	const [defaultEmail] = useQueryState("email", parseAsString.withDefault(""));
+	const [redirectURL] = useQueryState("redirect_url");
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [defaultEmail] = useQueryState("email", parseAsString.withDefault(""));
-	const [callbackURL] = useQueryState("redirect_url");
-
 	const form = useAppForm({
-		schema: LoginInputSchema,
+		schema: ForgotPasswordInputSchema,
 		defaultValues: {
-			rememberMe: true,
 			email: defaultEmail,
-			password: "",
 		},
 	});
 
@@ -35,18 +31,38 @@ export function LoginForm() {
 		setIsLoading(true);
 
 		try {
-			const result = await authClient.signIn.email({
-				...values,
-				callbackURL: callbackURL || undefined,
+			const resetPasswordURL = new URL(
+				"/auth/reset-password",
+				window.location.origin,
+			);
+			if (redirectURL) {
+				resetPasswordURL.searchParams.set("redirect_url", redirectURL);
+			}
+			if (values.email) {
+				resetPasswordURL.searchParams.set("email", values.email);
+			}
+
+			const result = await authClient.requestPasswordReset({
+				email: values.email,
+				redirectTo: resetPasswordURL.toString(),
 			});
 
 			if (result.error) {
 				throw new Error(result.error.message || result.error.statusText);
 			}
 
-			navigate({ to: callbackURL || "/", replace: true });
+			toast.success(
+				"Password reset email sent. Check your email for the reset link. If you don't see it, check your spam folder.",
+			);
+
+			navigate({
+				to: "/auth/login",
+				search: {
+					redirect_url: redirectURL || undefined,
+					email: values.email || undefined,
+				},
+			});
 		} catch (error) {
-			form.resetField("password");
 			toast.error((error as Error).message || "An unknown error occurred");
 		} finally {
 			setIsLoading(false);
@@ -57,50 +73,30 @@ export function LoginForm() {
 		<div className="flex min-h-screen flex-col items-center justify-center gap-3">
 			<Frame className="w-full max-w-lg">
 				<FrameHeader>
-					<FrameTitle>Login to your account</FrameTitle>
+					<FrameTitle>Send a password reset email</FrameTitle>
 				</FrameHeader>
 				<form onSubmit={onSubmit}>
 					<FramePanel className="space-y-4">
 						<form.Input name="email" label="Email">
 							{(field) => <Input {...field} placeholder="Enter your email" />}
 						</form.Input>
-						<form.Input
-							name="password"
-							label={
-								<div className="flex w-full items-center justify-between">
-									<p>Password</p>
-									<Link
-										to="/auth/forgot-password"
-										search={{
-											email: form.watch("email") || undefined,
-											redirect_url: callbackURL || undefined,
-										}}
-										className="text-muted-foreground text-xs underline"
-									>
-										Forgot password?
-									</Link>
-								</div>
-							}
-						>
-							{(field) => (
-								<PasswordInput {...field} placeholder="Enter your password" />
-							)}
-						</form.Input>
 					</FramePanel>
 
 					<FrameFooter>
 						<div className="flex justify-end">
-							<form.Submit isLoading={isLoading}>Login</form.Submit>
+							<form.Submit isLoading={isLoading} loadingText="Sending...">
+								Send
+							</form.Submit>
 						</div>
 					</FrameFooter>
 				</form>
 			</Frame>
 			<Link
-				to="/auth/register"
-				search={{ redirect_url: callbackURL || undefined }}
+				to="/auth/login"
+				search={{ redirect_url: redirectURL || undefined }}
 				className="text-muted-foreground text-sm hover:underline"
 			>
-				Don't have an account? Register
+				Back to login
 			</Link>
 		</div>
 	);
