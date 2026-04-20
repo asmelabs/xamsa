@@ -12,7 +12,11 @@ export const getRouter = () => {
 		scrollRestoration: true,
 		defaultPreloadStaleTime: 0,
 		context: { orpc, queryClient },
-		defaultPendingComponent: () => <Spinner />,
+		defaultPendingComponent: () => (
+			<div className="flex h-screen items-center justify-center">
+				<Spinner />
+			</div>
+		),
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 		Wrap: ({ children }) => (
 			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

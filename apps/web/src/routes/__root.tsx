@@ -9,7 +9,9 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { env } from "@xamsa/env/web";
 import { Toaster } from "@xamsa/ui/components/sonner";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { PostHogProvider } from "posthog-js/react";
+import { BottomTabMenu } from "@/components/bottom-tab-menu";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
 
@@ -27,6 +29,10 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 			{
 				name: "viewport",
 				content: "width=device-width, initial-scale=1; user-scalable=no",
+			},
+			{
+				name: "color-scheme",
+				content: "dark",
 			},
 			{
 				title: "Xamsa",
@@ -52,19 +58,30 @@ function RootDocument() {
 	const isProd = import.meta.env.PROD;
 	const app = (
 		<>
-			<div className="relative isolate grid h-svh grid-rows-[auto_1fr]">
-				<Outlet />
-			</div>
-			<Toaster richColors />
-			<TanStackRouterDevtools position="bottom-left" />
-			<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-			<Scripts />
+			<NuqsAdapter>
+				<div className="relative isolate mx-auto min-h-svh max-w-4xl px-4 py-4 pb-16 md:px-0">
+					<Outlet />
+					<BottomTabMenu />
+				</div>
+				<Toaster richColors position="top-center" />
+				<TanStackRouterDevtools position="bottom-left" />
+				<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+				<Scripts />
+			</NuqsAdapter>
 		</>
 	);
 
 	return (
-		<html lang="en" className="dark">
+		<html lang="en" className="dark" style={{ colorScheme: "dark" }}>
 			<head>
+				<style
+					dangerouslySetInnerHTML={{
+						__html: `
+html.dark{--background:color-mix(in srgb,#0a0a0a 95%,#fff);--foreground:#f5f5f5;--border:rgba(255,255,255,.06);--card:color-mix(in srgb,var(--background) 98%,#fff);--card-foreground:#f5f5f5;--popover:color-mix(in srgb,var(--background) 98%,#fff);--popover-foreground:#f5f5f5;--input:rgba(255,255,255,.08);--ring:#737373}
+html.dark body{background:var(--background);color:var(--foreground)}
+html.dark *{border-color:var(--border)}`,
+					}}
+				/>
 				<HeadContent />
 			</head>
 			<body className="relative">

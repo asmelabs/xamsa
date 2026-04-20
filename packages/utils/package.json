@@ -1,0 +1,25 @@
+{
+	"name": "@xamsa/utils",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@xamsa/env": "workspace:*",
+		"@xamsa/schemas": "workspace:*",
+		"bcryptjs": "^3.0.3",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@types/bcryptjs": "^3.0.0",
+		"@xamsa/config": "workspace:*",
+		"typescript": "^5"
+	}
+}

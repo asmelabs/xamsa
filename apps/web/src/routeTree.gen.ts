@@ -10,12 +10,93 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as PlayIndexRouteImport } from './routes/play/index'
+import { Route as PacksIndexRouteImport } from './routes/packs/index'
+import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index'
+import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as UUsernameRouteImport } from './routes/u/$username'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
+import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
+import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
+import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
+import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
+import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
+import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
+import { Route as PacksPackSlugTopicsTopicSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/edit/index'
+import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/index'
+import { Route as PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/index'
+import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayIndexRoute = PlayIndexRouteImport.update({
+  id: '/play/',
+  path: '/play/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksIndexRoute = PacksIndexRouteImport.update({
+  id: '/packs/',
+  path: '/packs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardIndexRoute = LeaderboardIndexRouteImport.update({
+  id: '/leaderboard/',
+  path: '/leaderboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksNewIndexRoute = PacksNewIndexRouteImport.update({
+  id: '/packs/new/',
+  path: '/packs/new/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksPackSlugIndexRoute = PacksPackSlugIndexRouteImport.update({
+  id: '/packs/$packSlug/',
+  path: '/packs/$packSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordIndexRoute = AuthResetPasswordIndexRouteImport.update({
+  id: '/auth/reset-password/',
+  path: '/auth/reset-password/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
@@ -28,35 +109,245 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PacksPackSlugTopicsIndexRoute =
+  PacksPackSlugTopicsIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/',
+    path: '/packs/$packSlug/topics/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugEditIndexRoute = PacksPackSlugEditIndexRouteImport.update({
+  id: '/packs/$packSlug/edit/',
+  path: '/packs/$packSlug/edit/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksPackSlugTopicsNewIndexRoute =
+  PacksPackSlugTopicsNewIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/new/',
+    path: '/packs/$packSlug/topics/new/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsTopicSlugIndexRoute =
+  PacksPackSlugTopicsTopicSlugIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/',
+    path: '/packs/$packSlug/topics/$topicSlug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsEditReorderIndexRoute =
+  PacksPackSlugTopicsEditReorderIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/edit/reorder/',
+    path: '/packs/$packSlug/topics/edit/reorder/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsTopicSlugEditIndexRoute =
+  PacksPackSlugTopicsTopicSlugEditIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/edit/',
+    path: '/packs/$packSlug/topics/$topicSlug/edit/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute =
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/',
+    path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute =
+  PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/',
+    path: '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute =
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/',
+    path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/u/$username': typeof UUsernameRoute
+  '/auth/': typeof AuthIndexRoute
+  '/leaderboard/': typeof LeaderboardIndexRoute
+  '/packs/': typeof PacksIndexRoute
+  '/play/': typeof PlayIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
+  '/packs/new/': typeof PacksNewIndexRoute
+  '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
+  '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
+  '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/': typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/u/$username': typeof UUsernameRoute
+  '/auth': typeof AuthIndexRoute
+  '/leaderboard': typeof LeaderboardIndexRoute
+  '/packs': typeof PacksIndexRoute
+  '/play': typeof PlayIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/auth/reset-password': typeof AuthResetPasswordIndexRoute
+  '/packs/$packSlug': typeof PacksPackSlugIndexRoute
+  '/packs/new': typeof PacksNewIndexRoute
+  '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
+  '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
+  '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/edit': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
+  '/packs/$packSlug/topics/edit/reorder': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder': typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/u/$username': typeof UUsernameRoute
+  '/auth/': typeof AuthIndexRoute
+  '/leaderboard/': typeof LeaderboardIndexRoute
+  '/packs/': typeof PacksIndexRoute
+  '/play/': typeof PlayIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
+  '/packs/new/': typeof PacksNewIndexRoute
+  '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
+  '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
+  '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
+  '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/': typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/auth/$' | '/api/rpc/$'
+  fullPaths:
+    | '/'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/register'
+    | '/u/$username'
+    | '/auth/'
+    | '/leaderboard/'
+    | '/packs/'
+    | '/play/'
+    | '/settings/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/auth/reset-password/'
+    | '/packs/$packSlug/'
+    | '/packs/new/'
+    | '/packs/$packSlug/edit/'
+    | '/packs/$packSlug/topics/'
+    | '/packs/$packSlug/topics/$topicSlug/'
+    | '/packs/$packSlug/topics/new/'
+    | '/packs/$packSlug/topics/$topicSlug/edit/'
+    | '/packs/$packSlug/topics/edit/reorder/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/auth/$' | '/api/rpc/$'
-  id: '__root__' | '/' | '/api/auth/$' | '/api/rpc/$'
+  to:
+    | '/'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/register'
+    | '/u/$username'
+    | '/auth'
+    | '/leaderboard'
+    | '/packs'
+    | '/play'
+    | '/settings'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/auth/reset-password'
+    | '/packs/$packSlug'
+    | '/packs/new'
+    | '/packs/$packSlug/edit'
+    | '/packs/$packSlug/topics'
+    | '/packs/$packSlug/topics/$topicSlug'
+    | '/packs/$packSlug/topics/new'
+    | '/packs/$packSlug/topics/$topicSlug/edit'
+    | '/packs/$packSlug/topics/edit/reorder'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit'
+    | '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/register'
+    | '/u/$username'
+    | '/auth/'
+    | '/leaderboard/'
+    | '/packs/'
+    | '/play/'
+    | '/settings/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/auth/reset-password/'
+    | '/packs/$packSlug/'
+    | '/packs/new/'
+    | '/packs/$packSlug/edit/'
+    | '/packs/$packSlug/topics/'
+    | '/packs/$packSlug/topics/$topicSlug/'
+    | '/packs/$packSlug/topics/new/'
+    | '/packs/$packSlug/topics/$topicSlug/edit/'
+    | '/packs/$packSlug/topics/edit/reorder/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/'
+    | '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  UUsernameRoute: typeof UUsernameRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+  LeaderboardIndexRoute: typeof LeaderboardIndexRoute
+  PacksIndexRoute: typeof PacksIndexRoute
+  PlayIndexRoute: typeof PlayIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
+  AuthResetPasswordIndexRoute: typeof AuthResetPasswordIndexRoute
+  PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
+  PacksNewIndexRoute: typeof PacksNewIndexRoute
+  PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
+  PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
+  PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  PacksPackSlugTopicsNewIndexRoute: typeof PacksPackSlugTopicsNewIndexRoute
+  PacksPackSlugTopicsTopicSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
+  PacksPackSlugTopicsEditReorderIndexRoute: typeof PacksPackSlugTopicsEditReorderIndexRoute
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
+  PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,6 +357,90 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play/': {
+      id: '/play/'
+      path: '/play'
+      fullPath: '/play/'
+      preLoaderRoute: typeof PlayIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/': {
+      id: '/packs/'
+      path: '/packs'
+      fullPath: '/packs/'
+      preLoaderRoute: typeof PacksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard/': {
+      id: '/leaderboard/'
+      path: '/leaderboard'
+      fullPath: '/leaderboard/'
+      preLoaderRoute: typeof LeaderboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/new/': {
+      id: '/packs/new/'
+      path: '/packs/new'
+      fullPath: '/packs/new/'
+      preLoaderRoute: typeof PacksNewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/': {
+      id: '/packs/$packSlug/'
+      path: '/packs/$packSlug'
+      fullPath: '/packs/$packSlug/'
+      preLoaderRoute: typeof PacksPackSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reset-password/': {
+      id: '/auth/reset-password/'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password/'
+      preLoaderRoute: typeof AuthResetPasswordIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rpc/$': {
@@ -82,13 +457,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/packs/$packSlug/topics/': {
+      id: '/packs/$packSlug/topics/'
+      path: '/packs/$packSlug/topics'
+      fullPath: '/packs/$packSlug/topics/'
+      preLoaderRoute: typeof PacksPackSlugTopicsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/edit/': {
+      id: '/packs/$packSlug/edit/'
+      path: '/packs/$packSlug/edit'
+      fullPath: '/packs/$packSlug/edit/'
+      preLoaderRoute: typeof PacksPackSlugEditIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/new/': {
+      id: '/packs/$packSlug/topics/new/'
+      path: '/packs/$packSlug/topics/new'
+      fullPath: '/packs/$packSlug/topics/new/'
+      preLoaderRoute: typeof PacksPackSlugTopicsNewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/$topicSlug/': {
+      id: '/packs/$packSlug/topics/$topicSlug/'
+      path: '/packs/$packSlug/topics/$topicSlug'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/edit/reorder/': {
+      id: '/packs/$packSlug/topics/edit/reorder/'
+      path: '/packs/$packSlug/topics/edit/reorder'
+      fullPath: '/packs/$packSlug/topics/edit/reorder/'
+      preLoaderRoute: typeof PacksPackSlugTopicsEditReorderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/$topicSlug/edit/': {
+      id: '/packs/$packSlug/topics/$topicSlug/edit/'
+      path: '/packs/$packSlug/topics/$topicSlug/edit'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/edit/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': {
+      id: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
+      path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/': {
+      id: '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/'
+      path: '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/': {
+      id: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/'
+      path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit'
+      fullPath: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/'
+      preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+  UUsernameRoute: UUsernameRoute,
+  AuthIndexRoute: AuthIndexRoute,
+  LeaderboardIndexRoute: LeaderboardIndexRoute,
+  PacksIndexRoute: PacksIndexRoute,
+  PlayIndexRoute: PlayIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
+  AuthResetPasswordIndexRoute: AuthResetPasswordIndexRoute,
+  PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
+  PacksNewIndexRoute: PacksNewIndexRoute,
+  PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
+  PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
+  PacksPackSlugTopicsTopicSlugIndexRoute:
+    PacksPackSlugTopicsTopicSlugIndexRoute,
+  PacksPackSlugTopicsNewIndexRoute: PacksPackSlugTopicsNewIndexRoute,
+  PacksPackSlugTopicsTopicSlugEditIndexRoute:
+    PacksPackSlugTopicsTopicSlugEditIndexRoute,
+  PacksPackSlugTopicsEditReorderIndexRoute:
+    PacksPackSlugTopicsEditReorderIndexRoute,
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute:
+    PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute,
+  PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute:
+    PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute,
+  PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute:
+    PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,12 +14,17 @@
 		"db:generate": "prisma generate",
 		"db:migrate": "prisma migrate dev",
 		"postinstall": "prisma generate",
-		"db:studio": "prisma studio"
+		"db:studio": "prisma studio",
+		"db:seed": "bun run src/seeds/seed-users.ts && bun run src/seeds/seed-packs.ts",
+		"db:seed:users": "bun run src/seeds/seed-users.ts",
+		"db:seed:packs": "bun run src/seeds/seed-packs.ts"
 	},
 	"dependencies": {
+		"@faker-js/faker": "^10.4.0",
 		"@prisma/adapter-pg": "^7.2.0",
 		"@prisma/client": "catalog:",
 		"@xamsa/env": "workspace:*",
+		"bcryptjs": "^3.0.3",
 		"dotenv": "catalog:",
 		"pg": "^8.17.1",
 		"prisma-zod-generator": "^2.1.4",

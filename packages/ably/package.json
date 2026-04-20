@@ -1,0 +1,23 @@
+{
+	"name": "@xamsa/ably",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@xamsa/env": "workspace:*",
+		"ably": "^2.21.0",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@xamsa/config": "workspace:*",
+		"typescript": "^5"
+	}
+}

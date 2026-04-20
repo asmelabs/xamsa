@@ -41,6 +41,10 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"a11y": {
+				"noLabelWithoutControl": "off",
+				"useAriaPropsSupportedByRole": "off"
+			},
 			"correctness": {
 				"useExhaustiveDependencies": "info"
 			},

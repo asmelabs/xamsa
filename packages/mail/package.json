@@ -1,0 +1,23 @@
+{
+	"name": "@xamsa/mail",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@xamsa/env": "workspace:*",
+		"dotenv": "catalog:",
+		"resend": "^6.11.0",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@xamsa/config": "workspace:*",
+		"typescript": "^5"
+	}
+}
