@@ -16,3 +16,17 @@ export type FindOneProfileInputType = z.infer<typeof FindOneProfileInputSchema>;
 export type FindOneProfileOutputType = z.infer<
 	typeof FindOneProfileOutputSchema
 >;
+
+/**
+ * UPDATE
+ */
+export const UpdateProfileInputSchema = UserSchema.pick({
+	name: true,
+}).partial();
+
+export const UpdateProfileOutputSchema = UserSchema.pick({
+	username: true,
+});
+
+export type UpdateProfileInputType = z.infer<typeof UpdateProfileInputSchema>;
+export type UpdateProfileOutputType = z.infer<typeof UpdateProfileOutputSchema>;

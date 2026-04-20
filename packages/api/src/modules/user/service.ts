@@ -3,6 +3,8 @@ import prisma from "@xamsa/db";
 import type {
 	FindOneProfileInputType,
 	FindOneProfileOutputType,
+	UpdateProfileInputType,
+	UpdateProfileOutputType,
 } from "@xamsa/schemas/modules/user";
 
 export async function findOneProfile(
@@ -27,4 +29,31 @@ export async function findOneProfile(
 	}
 
 	return profile;
+}
+
+export async function updateProfile(
+	input: UpdateProfileInputType,
+	userId: string,
+): Promise<UpdateProfileOutputType> {
+	const user = await prisma.user.findUnique({
+		where: {
+			id: userId,
+		},
+	});
+
+	if (!user) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "You are not authorized to update this profile",
+		});
+	}
+
+	const updatedUser = await prisma.user.update({
+		where: { id: userId },
+		data: input,
+		select: {
+			username: true,
+		},
+	});
+
+	return updatedUser;
 }
