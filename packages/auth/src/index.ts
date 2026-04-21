@@ -13,6 +13,14 @@ import {
 } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
+const trustedOrigins = env.NODE_ENV === "production" ? [
+	"https://xamsa.site",
+	"https://www.xamsa.site",
+] : [
+	"http://localhost:3000",
+	"http://localhost:3001",
+];
+
 export function createAuth() {
 	const prisma = createPrismaClient();
 
@@ -27,7 +35,7 @@ export function createAuth() {
 			joins: true,
 		},
 
-		trustedOrigins: env.CORS_ORIGIN,
+		trustedOrigins,
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,
