@@ -11,6 +11,7 @@
 	},
 	"scripts": {},
 	"dependencies": {
+		"@xamsa/ably": "workspace:*",
 		"@xamsa/utils": "workspace:*",
 		"@xamsa/schemas": "workspace:*",
 		"@orpc/client": "catalog:",

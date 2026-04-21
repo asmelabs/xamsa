@@ -141,7 +141,7 @@ function RouteComponent() {
 						{pack.author.name}
 					</Link>
 					<span className="mx-1.5">·</span>
-					{format(pack.createdAt, "dd MMMM yyyy")}
+					{pack.publishedAt ? format(pack.publishedAt, "dd MMMM yyyy") : "—"}
 				</p>
 			</div>
 

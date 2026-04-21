@@ -1,0 +1,325 @@
+import z from "zod";
+import { GameStatusSchema } from "../db/schemas/enums/GameStatus.schema";
+import {
+	ClickSchema,
+	GameSchema,
+	PackSchema,
+	PlayerSchema,
+	QuestionSchema,
+	TopicSchema,
+	UserSchema,
+} from "../db/schemas/models";
+
+export const CreateGameInputSchema = z.object({
+	pack: PackSchema.shape.slug,
+});
+
+export const CreateGameOutputSchema = GameSchema.pick({
+	code: true,
+});
+
+export type CreateGameInputType = z.infer<typeof CreateGameInputSchema>;
+export type CreateGameOutputType = z.infer<typeof CreateGameOutputSchema>;
+
+/**
+ * DELETE
+ */
+export const DeleteGameInputSchema = GameSchema.pick({
+	code: true,
+});
+
+export const DeleteGameOutputSchema = GameSchema.pick({
+	code: true,
+});
+
+export type DeleteGameInputType = z.infer<typeof DeleteGameInputSchema>;
+export type DeleteGameOutputType = z.infer<typeof DeleteGameOutputSchema>;
+
+/**
+ * UPDATE STATUS
+ */
+export const UpdateGameStatusInputSchema = GameSchema.pick({
+	code: true,
+}).extend({
+	status: GameStatusSchema.exclude(["waiting"]),
+});
+
+export const UpdateGameStatusOutputSchema = GameSchema.pick({
+	code: true,
+});
+
+export type UpdateGameStatusInputType = z.infer<
+	typeof UpdateGameStatusInputSchema
+>;
+export type UpdateGameStatusOutputType = z.infer<
+	typeof UpdateGameStatusOutputSchema
+>;
+
+/**
+ * FIND ONE
+ */
+export const FindOneGameInputSchema = GameSchema.pick({
+	code: true,
+});
+
+const GameClickSchema = ClickSchema.pick({
+	id: true,
+	position: true,
+	status: true,
+	clickedAt: true,
+	playerId: true,
+}).extend({
+	_intentId: z.string().nullish(),
+	_isTentative: z.boolean().nullish(),
+});
+
+const GameHostClickSchema = ClickSchema.pick({
+	id: true,
+	position: true,
+	status: true,
+	clickedAt: true,
+	answeredAt: true,
+	reactionMs: true,
+	pointsAwarded: true,
+	playerId: true,
+}).extend({
+	_intentId: z.string().nullish(),
+	_isTentative: z.boolean().nullish(),
+});
+
+const GamePlayerSchema = PlayerSchema.pick({
+	id: true,
+	score: true,
+	rank: true,
+	status: true,
+	joinedAt: true,
+	leftAt: true,
+	peakScore: true,
+	lowestScore: true,
+	totalClicks: true,
+	correctAnswers: true,
+	incorrectAnswers: true,
+	expiredClicks: true,
+	firstClicks: true,
+	lastClicks: true,
+	fastestClickMs: true,
+	averageClickMs: true,
+	longestCorrectStreak: true,
+	longestWrongStreak: true,
+	topicsPlayed: true,
+}).extend({
+	user: UserSchema.pick({
+		username: true,
+		name: true,
+		image: true,
+	}),
+});
+
+export const FindOneGameOutputSchema = GameSchema.pick({
+	code: true,
+	status: true,
+	startedAt: true,
+	finishedAt: true,
+	pausedAt: true,
+	currentTopicOrder: true,
+	currentQuestionOrder: true,
+	isQuestionRevealed: true,
+	hostId: true,
+}).extend({
+	currentTopic: TopicSchema.pick({
+		slug: true,
+		name: true,
+		order: true,
+		description: true,
+	}).nullable(),
+
+	currentQuestion: z
+		.object({
+			order: z.number().int(),
+			points: z.number().int(),
+			text: z.string().nullable(),
+			answer: z.string().nullable(),
+			explanation: z.string().nullable(),
+		})
+		.nullable(),
+
+	isHost: z.boolean(),
+
+	players: z.array(GamePlayerSchema),
+	clicks: z.array(GameClickSchema),
+	myPlayer: GamePlayerSchema.nullable(),
+
+	hostData: z
+		.object({
+			currentQuestion: QuestionSchema.pick({
+				order: true,
+				text: true,
+				answer: true,
+				acceptableAnswers: true,
+				explanation: true,
+			}).nullable(),
+
+			clickDetails: z.array(GameHostClickSchema),
+		})
+		.nullable(),
+
+	pack: PackSchema.pick({
+		slug: true,
+		name: true,
+		description: true,
+		language: true,
+	}).extend({
+		author: UserSchema.pick({
+			username: true,
+			name: true,
+		}),
+	}),
+
+	packTotalTopics: z.number().int(),
+
+	winnerId: z.string().nullable(),
+});
+
+export type FindOneGameInputType = z.infer<typeof FindOneGameInputSchema>;
+export type FindOneGameOutputType = z.infer<typeof FindOneGameOutputSchema>;
+
+/**
+ * START
+ */
+export const GameStartInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+export const GameStartOutputSchema = GameSchema.pick({
+	code: true,
+	status: true,
+	startedAt: true,
+	currentTopicOrder: true,
+	currentQuestionOrder: true,
+});
+
+export type GameStartInputType = z.infer<typeof GameStartInputSchema>;
+export type GameStartOutputType = z.infer<typeof GameStartOutputSchema>;
+
+/**
+ * REVEAL QUESTION
+ */
+export const RevealQuestionInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+export const RevealQuestionOutputSchema = z.object({
+	order: z.number().int(),
+	text: z.string(),
+	answer: z.string(),
+});
+
+export type RevealQuestionInputType = z.infer<typeof RevealQuestionInputSchema>;
+export type RevealQuestionOutputType = z.infer<
+	typeof RevealQuestionOutputSchema
+>;
+
+/**
+ * ADVANCE QUESTION
+ */
+export const AdvanceQuestionInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+const HostCurrentQuestionSchema = QuestionSchema.pick({
+	order: true,
+	text: true,
+	answer: true,
+	acceptableAnswers: true,
+	explanation: true,
+});
+
+const AdvanceCurrentTopicSchema = TopicSchema.pick({
+	slug: true,
+	name: true,
+	order: true,
+	description: true,
+});
+
+export const AdvanceQuestionOutputSchema = z.object({
+	currentTopicOrder: z.number().int(),
+	currentQuestionOrder: z.number().int(),
+	isQuestionRevealed: z.boolean(),
+	currentTopic: AdvanceCurrentTopicSchema.nullable(),
+	currentQuestionPublic: z.object({
+		order: z.number().int(),
+		points: z.number().int(),
+	}),
+	hostCurrentQuestion: HostCurrentQuestionSchema.nullable(),
+});
+
+export type AdvanceQuestionInputType = z.infer<
+	typeof AdvanceQuestionInputSchema
+>;
+export type AdvanceQuestionOutputType = z.infer<
+	typeof AdvanceQuestionOutputSchema
+>;
+
+/**
+ * COMPLETE GAME
+ */
+export const CompleteGameInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+export const CompleteGameOutputSchema = z.object({
+	status: z.literal("completed"),
+	finishedAt: z.date(),
+	winnerId: z.string().nullable(),
+	playerRanks: z.array(
+		z.object({
+			id: z.string(),
+			rank: z.number().int(),
+			score: z.number().int(),
+		}),
+	),
+});
+
+export type CompleteGameInputType = z.infer<typeof CompleteGameInputSchema>;
+export type CompleteGameOutputType = z.infer<typeof CompleteGameOutputSchema>;
+
+/**
+ * LEAVE AS HOST
+ *
+ * Host-initiated abandonment. Finalizes the game with whatever stats are in
+ * flight. Mirrors CompleteGame's shape so clients can reuse the same reducer.
+ */
+export const LeaveAsHostInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+export const LeaveAsHostOutputSchema = CompleteGameOutputSchema;
+
+export type LeaveAsHostInputType = z.infer<typeof LeaveAsHostInputSchema>;
+export type LeaveAsHostOutputType = z.infer<typeof LeaveAsHostOutputSchema>;
+
+/**
+ * HANDLE HOST DISCONNECT
+ *
+ * Called by players when they observe the host drop out of the Ably
+ * presence set. Server enforces a short grace period and re-checks presence
+ * before finalizing so briefly disconnected hosts (refresh / network blip)
+ * aren't treated as abandonment.
+ */
+export const HandleHostDisconnectInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+export const HandleHostDisconnectOutputSchema = z.object({
+	status: z.enum(["active", "paused", "waiting", "completed", "aborted"]),
+	finalized: z.boolean(),
+	winnerId: z.string().nullable().optional(),
+	finishedAt: z.date().nullable().optional(),
+});
+
+export type HandleHostDisconnectInputType = z.infer<
+	typeof HandleHostDisconnectInputSchema
+>;
+export type HandleHostDisconnectOutputType = z.infer<
+	typeof HandleHostDisconnectOutputSchema
+>;

@@ -1,4 +1,14 @@
 import { env } from "@xamsa/env/server";
-import { Resend } from "resend";
+import {
+  MailerSend,
+  Sender,
+} from "mailersend"
 
-export const resend = new Resend(env.RESEND_API_KEY);
+export const sentFrom = new Sender(
+  env.EMAIL_FROM,
+  "Xamsa"
+)
+
+export const mailer = new MailerSend({
+  apiKey: env.MAILERSEND_API_KEY,
+})

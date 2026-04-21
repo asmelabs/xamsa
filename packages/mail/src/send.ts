@@ -1,35 +1,40 @@
-import { env } from "@xamsa/env/server";
-import type { CreateEmailOptions } from "resend";
-import { resend } from "./client";
+import { EmailParams, Recipient } from "mailersend";
+import { mailer, sentFrom } from "./client";
 
-const from = `Xamsa <${env.EMAIL_FROM}>`;
+type EmailTo = string | {
+	name: string;
+	email: string;
+};
+interface SendEmailOptions {
+	to: EmailTo | EmailTo[];
+	subject: string;
+	html: string;
 
-export async function sendEmail(payload: CreateEmailOptions) {
-	const { data, error } = await resend.emails.send({
-		from,
-		...payload,
-	});
-
-	if (error) {
-		throw new Error(error.message);
-	}
-
-	return data;
 }
 
-export async function sendBatchEmails(
-	payload: Omit<CreateEmailOptions, "attachments" | "scheduledAt" | "from">[],
-) {
-	const { data, error } = await resend.batch.send(
-		payload.map((p) => ({
-			from,
-			...p,
-		})),
-	);
-
-	if (error) {
-		throw new Error(error.message);
+const getRecipient = (to: EmailTo) => {
+	if (typeof to === "string") {
+		return new Recipient(to);
 	}
 
-	return data;
+	return new Recipient(to.email, to.name);
+}
+
+export async function sendEmail(options: SendEmailOptions) {
+	const { to, subject, html } = options;	
+	
+	const recipients = Array.isArray(to) ? to.map(getRecipient) : [getRecipient(to)];
+	
+	const emailParams = new EmailParams()
+		.setFrom(sentFrom)
+		.setTo(recipients)
+		.setSubject(subject)
+		.setHtml(html)
+
+		try {
+			return await mailer.email.send(emailParams);
+		} catch (error) {
+			console.error("Failed to send email", emailParams, error);
+			throw error;
+		};
 }

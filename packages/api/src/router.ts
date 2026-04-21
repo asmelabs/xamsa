@@ -1,6 +1,9 @@
 import type { RouterClient } from "@orpc/server";
+import { clickRouter } from "./modules/click/router";
+import { gameRouter } from "./modules/game/router";
 import { packRouter } from "./modules/pack/router";
 import { packRatingRouter } from "./modules/pack-rating/router";
+import { playerRouter } from "./modules/player/router";
 import { questionRouter } from "./modules/question/router";
 import { topicRouter } from "./modules/topic/router";
 import { userRouter } from "./modules/user/router";
@@ -9,8 +12,11 @@ export const appRouter = {
 	user: userRouter,
 	pack: packRouter,
 	packRating: packRatingRouter,
+	game: gameRouter,
 	topic: topicRouter,
 	question: questionRouter,
+	player: playerRouter,
+	click: clickRouter,
 };
 
 export type AppRouter = typeof appRouter;

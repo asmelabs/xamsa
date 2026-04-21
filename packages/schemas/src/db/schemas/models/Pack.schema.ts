@@ -7,6 +7,7 @@ export const PackSchema = z.object({
   id: z.string(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  publishedAt: z.coerce.date().nullish(),
   visibility: PackVisibilitySchema.default("public"),
   status: PackStatusSchema.default("draft"),
   slug: z.string(),

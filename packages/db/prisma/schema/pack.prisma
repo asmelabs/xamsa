@@ -17,9 +17,10 @@ enum PackLanguage {
 }
 
 model Pack {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  publishedAt DateTime? @map("published_at")
 
   visibility PackVisibility @default(public)
   status     PackStatus     @default(draft)

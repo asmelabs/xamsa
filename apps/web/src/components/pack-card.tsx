@@ -98,7 +98,9 @@ export function PackCard({ pack }: PackCardProps) {
 						</Link>
 					</span>
 					<span className="text-[11px] text-muted-foreground">
-						{formatDistanceToNow(pack.createdAt, { addSuffix: true })}
+						{pack.publishedAt
+							? formatDistanceToNow(pack.publishedAt, { addSuffix: true })
+							: "—"}
 					</span>
 				</div>
 			</Link>

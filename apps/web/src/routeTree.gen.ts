@@ -9,11 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as PlayIndexRouteImport } from './routes/play/index'
 import { Route as PacksIndexRouteImport } from './routes/packs/index'
 import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index'
+import { Route as JoinIndexRouteImport } from './routes/join/index'
+import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -21,9 +24,11 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
+import { Route as GCodeIndexRouteImport } from './routes/g/$code/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as PlayNewPackSlugIndexRouteImport } from './routes/play/new/$packSlug/index'
 import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
@@ -34,6 +39,11 @@ import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImp
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/index'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,10 +69,20 @@ const LeaderboardIndexRoute = LeaderboardIndexRouteImport.update({
   path: '/leaderboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthIndexRoute = AuthIndexRouteImport.update({
-  id: '/auth/',
-  path: '/auth/',
+const JoinIndexRoute = JoinIndexRouteImport.update({
+  id: '/join/',
+  path: '/join/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryIndexRoute = HistoryIndexRouteImport.update({
+  id: '/history/',
+  path: '/history/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
 } as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
@@ -70,19 +90,19 @@ const UUsernameRoute = UUsernameRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/auth/register',
-  path: '/auth/register',
-  getParentRoute: () => rootRouteImport,
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
-  id: '/auth/forgot-password',
-  path: '/auth/forgot-password',
-  getParentRoute: () => rootRouteImport,
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
 } as any)
 const PacksNewIndexRoute = PacksNewIndexRouteImport.update({
   id: '/packs/new/',
@@ -94,10 +114,15 @@ const PacksPackSlugIndexRoute = PacksPackSlugIndexRouteImport.update({
   path: '/packs/$packSlug/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthResetPasswordIndexRoute = AuthResetPasswordIndexRouteImport.update({
-  id: '/auth/reset-password/',
-  path: '/auth/reset-password/',
+const GCodeIndexRoute = GCodeIndexRouteImport.update({
+  id: '/g/$code/',
+  path: '/g/$code/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordIndexRoute = AuthResetPasswordIndexRouteImport.update({
+  id: '/reset-password/',
+  path: '/reset-password/',
+  getParentRoute: () => AuthRoute,
 } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
@@ -107,6 +132,11 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayNewPackSlugIndexRoute = PlayNewPackSlugIndexRouteImport.update({
+  id: '/play/new/$packSlug/',
+  path: '/play/new/$packSlug/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PacksPackSlugTopicsIndexRoute =
@@ -165,11 +195,14 @@ const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/history/': typeof HistoryIndexRoute
+  '/join/': typeof JoinIndexRoute
   '/leaderboard/': typeof LeaderboardIndexRoute
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
@@ -177,10 +210,12 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
+  '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
@@ -196,6 +231,8 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth': typeof AuthIndexRoute
+  '/history': typeof HistoryIndexRoute
+  '/join': typeof JoinIndexRoute
   '/leaderboard': typeof LeaderboardIndexRoute
   '/packs': typeof PacksIndexRoute
   '/play': typeof PlayIndexRoute
@@ -203,10 +240,12 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
+  '/g/$code': typeof GCodeIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
+  '/play/new/$packSlug': typeof PlayNewPackSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewIndexRoute
   '/packs/$packSlug/topics/$topicSlug/edit': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
@@ -218,11 +257,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/history/': typeof HistoryIndexRoute
+  '/join/': typeof JoinIndexRoute
   '/leaderboard/': typeof LeaderboardIndexRoute
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
@@ -230,10 +272,12 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
+  '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
@@ -246,11 +290,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/u/$username'
     | '/auth/'
+    | '/history/'
+    | '/join/'
     | '/leaderboard/'
     | '/packs/'
     | '/play/'
@@ -258,10 +305,12 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
+    | '/g/$code/'
     | '/packs/$packSlug/'
     | '/packs/new/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
+    | '/play/new/$packSlug/'
     | '/packs/$packSlug/topics/$topicSlug/'
     | '/packs/$packSlug/topics/new/'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
@@ -277,6 +326,8 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/u/$username'
     | '/auth'
+    | '/history'
+    | '/join'
     | '/leaderboard'
     | '/packs'
     | '/play'
@@ -284,10 +335,12 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password'
+    | '/g/$code'
     | '/packs/$packSlug'
     | '/packs/new'
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
+    | '/play/new/$packSlug'
     | '/packs/$packSlug/topics/$topicSlug'
     | '/packs/$packSlug/topics/new'
     | '/packs/$packSlug/topics/$topicSlug/edit'
@@ -298,11 +351,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/u/$username'
     | '/auth/'
+    | '/history/'
+    | '/join/'
     | '/leaderboard/'
     | '/packs/'
     | '/play/'
@@ -310,10 +366,12 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
+    | '/g/$code/'
     | '/packs/$packSlug/'
     | '/packs/new/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
+    | '/play/new/$packSlug/'
     | '/packs/$packSlug/topics/$topicSlug/'
     | '/packs/$packSlug/topics/new/'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
@@ -325,22 +383,22 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
-  AuthLoginRoute: typeof AuthLoginRoute
-  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthRoute: typeof AuthRouteWithChildren
   UUsernameRoute: typeof UUsernameRoute
-  AuthIndexRoute: typeof AuthIndexRoute
+  HistoryIndexRoute: typeof HistoryIndexRoute
+  JoinIndexRoute: typeof JoinIndexRoute
   LeaderboardIndexRoute: typeof LeaderboardIndexRoute
   PacksIndexRoute: typeof PacksIndexRoute
   PlayIndexRoute: typeof PlayIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
-  AuthResetPasswordIndexRoute: typeof AuthResetPasswordIndexRoute
+  GCodeIndexRoute: typeof GCodeIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
+  PlayNewPackSlugIndexRoute: typeof PlayNewPackSlugIndexRoute
   PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
   PacksPackSlugTopicsNewIndexRoute: typeof PacksPackSlugTopicsNewIndexRoute
   PacksPackSlugTopicsTopicSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
@@ -352,6 +410,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -387,12 +452,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeaderboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/': {
+      id: '/join/'
+      path: '/join'
+      fullPath: '/join/'
+      preLoaderRoute: typeof JoinIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history/': {
+      id: '/history/'
+      path: '/history'
+      fullPath: '/history/'
+      preLoaderRoute: typeof HistoryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/': {
       id: '/auth/'
-      path: '/auth'
+      path: '/'
       fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/u/$username': {
       id: '/u/$username'
@@ -403,24 +482,24 @@ declare module '@tanstack/react-router' {
     }
     '/auth/register': {
       id: '/auth/register'
-      path: '/auth/register'
+      path: '/register'
       fullPath: '/auth/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/login': {
       id: '/auth/login'
-      path: '/auth/login'
+      path: '/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
-      path: '/auth/forgot-password'
+      path: '/forgot-password'
       fullPath: '/auth/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/packs/new/': {
       id: '/packs/new/'
@@ -436,12 +515,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksPackSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$code/': {
+      id: '/g/$code/'
+      path: '/g/$code'
+      fullPath: '/g/$code/'
+      preLoaderRoute: typeof GCodeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/reset-password/': {
       id: '/auth/reset-password/'
-      path: '/auth/reset-password'
+      path: '/reset-password'
       fullPath: '/auth/reset-password/'
       preLoaderRoute: typeof AuthResetPasswordIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -455,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play/new/$packSlug/': {
+      id: '/play/new/$packSlug/'
+      path: '/play/new/$packSlug'
+      fullPath: '/play/new/$packSlug/'
+      preLoaderRoute: typeof PlayNewPackSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packs/$packSlug/topics/': {
@@ -523,24 +616,42 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+  AuthResetPasswordIndexRoute: typeof AuthResetPasswordIndexRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-  UUsernameRoute: UUsernameRoute,
   AuthIndexRoute: AuthIndexRoute,
+  AuthResetPasswordIndexRoute: AuthResetPasswordIndexRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
+  UUsernameRoute: UUsernameRoute,
+  HistoryIndexRoute: HistoryIndexRoute,
+  JoinIndexRoute: JoinIndexRoute,
   LeaderboardIndexRoute: LeaderboardIndexRoute,
   PacksIndexRoute: PacksIndexRoute,
   PlayIndexRoute: PlayIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
-  AuthResetPasswordIndexRoute: AuthResetPasswordIndexRoute,
+  GCodeIndexRoute: GCodeIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
   PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
+  PlayNewPackSlugIndexRoute: PlayNewPackSlugIndexRoute,
   PacksPackSlugTopicsTopicSlugIndexRoute:
     PacksPackSlugTopicsTopicSlugIndexRoute,
   PacksPackSlugTopicsNewIndexRoute: PacksPackSlugTopicsNewIndexRoute,

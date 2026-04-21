@@ -5,8 +5,8 @@ import { defineSorting } from "../../common/sorting";
 
 export const packSort = defineSorting<Prisma.PackOrderByWithRelationInput>()({
 	values: {
-		newest: { createdAt: "desc" },
-		oldest: { createdAt: "asc" },
+		newest: { publishedAt: "desc" },
+		oldest: { publishedAt: "asc" },
 		popular: { totalPlays: "desc" },
 		best: { averageRating: "desc" },
 		largest: { topics: { _count: "desc" } },

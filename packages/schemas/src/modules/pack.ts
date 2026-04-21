@@ -89,7 +89,6 @@ export const FindOnePackInputSchema = PackSchema.pick({
 });
 
 export const FindOnePackOutputSchema = PackSchema.pick({
-	createdAt: true,
 	name: true,
 	slug: true,
 	description: true,
@@ -98,6 +97,7 @@ export const FindOnePackOutputSchema = PackSchema.pick({
 	averageRating: true,
 	totalPlays: true,
 	totalRatings: true,
+	publishedAt: true,
 	status: true,
 }).extend({
 	isAuthor: z.boolean(),
@@ -139,7 +139,7 @@ export const ListPacksOutputSchema = CursorPaginationOutputSchema(
 		averageRating: true,
 		totalPlays: true,
 		totalRatings: true,
-		createdAt: true,
+		publishedAt: true,
 		language: true,
 		status: true,
 		visibility: true,

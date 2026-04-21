@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { LeaveReasonSchema } from '../enums/LeaveReason.schema';
 import { PlayerStatusSchema } from '../enums/PlayerStatus.schema';
 
 export const PlayerSchema = z.object({
@@ -8,7 +9,8 @@ export const PlayerSchema = z.object({
   joinedAt: z.coerce.date(),
   startedAt: z.coerce.date().nullish(),
   leftAt: z.coerce.date().nullish(),
-  status: PlayerStatusSchema.default("spectating"),
+  leaveReason: LeaveReasonSchema.nullish(),
+  status: PlayerStatusSchema.default("playing"),
   nickname: z.string().nullish(),
   gameId: z.string(),
   userId: z.string(),

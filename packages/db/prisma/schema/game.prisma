@@ -1,3 +1,8 @@
+enum LeaveReason {
+  voluntary // the player voluntarily left the game
+  kicked // the player was kicked from the game
+}
+
 enum GameStatus {
   waiting // the game is waiting for players to join
   active // the game is active 
@@ -80,21 +85,20 @@ model GameSettings {
 }
 
 enum PlayerStatus {
-  spectating // not playing the game currently
   playing // playing the game currently
-  kicked // kicked from the game (cannot come back)
-  left // left the game
+  left // left the game or was kicked from the game
 }
 
 model Player {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  joinedAt  DateTime  @default(now()) @map("joined_at")
-  startedAt DateTime? @map("started_at")
-  leftAt    DateTime? @map("left_at")
+  id          String       @id @default(uuid())
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  joinedAt    DateTime     @default(now()) @map("joined_at")
+  startedAt   DateTime?    @map("started_at")
+  leftAt      DateTime?    @map("left_at")
+  leaveReason LeaveReason? @map("leave_reason")
 
-  status   PlayerStatus @default(spectating)
+  status   PlayerStatus @default(playing)
   nickname String?      @map("nickname")
 
   gameId String @map("game_id")
