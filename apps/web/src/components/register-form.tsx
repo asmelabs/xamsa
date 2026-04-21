@@ -212,7 +212,6 @@ export function RegisterForm() {
 					<FrameFooter>
 						<div className="flex justify-end">
 							<form.Submit
-								disabled={isLoading || !form.formState.isValid}
 								isLoading={isLoading}
 							>
 								Register

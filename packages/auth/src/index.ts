@@ -27,7 +27,7 @@ export function createAuth() {
 			joins: true,
 		},
 
-		trustedOrigins: [env.CORS_ORIGIN],
+		trustedOrigins: env.CORS_ORIGIN,
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,
