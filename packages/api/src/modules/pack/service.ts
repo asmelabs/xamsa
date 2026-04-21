@@ -101,6 +101,7 @@ export async function updatePackStatus(
 		select: {
 			id: true,
 			status: true,
+			publishedAt: true,
 		},
 	});
 
@@ -116,6 +117,9 @@ export async function updatePackStatus(
 		});
 	}
 
+	const newPublishedAt =
+		input.status === "published" && !pack.publishedAt ? new Date() : undefined;
+
 	const updatedPack = await prisma.pack.update({
 		where: {
 			id: pack.id,
@@ -123,6 +127,7 @@ export async function updatePackStatus(
 		},
 		data: {
 			status: input.status,
+			publishedAt: newPublishedAt,
 		},
 		select: {
 			slug: true,
@@ -158,7 +163,7 @@ export async function findOnePack(
 				},
 			},
 			authorId: true,
-			createdAt: true,
+			publishedAt: true,
 			name: true,
 			slug: true,
 			language: true,
@@ -274,7 +279,7 @@ export async function listPacks(
 			totalRatings: true,
 			status: true,
 			visibility: true,
-			createdAt: true,
+			publishedAt: true,
 			language: true,
 			_count: {
 				select: {
@@ -303,13 +308,29 @@ export async function deletePack(
 			name: input.name, // for extra security
 			authorId: userId,
 		},
+		select: {
+			id: true,
+			slug: true,
+		},
 	});
-
-	// TODO: after implementing games, prevent deleting packs with ongoing games
 
 	if (!pack) {
 		throw new ORPCError("NOT_FOUND", {
 			message: `Pack with slug ${input.slug} not found`,
+		});
+	}
+
+	const activeGame = await prisma.game.findFirst({
+		where: {
+			packId: pack.id,
+			status: { not: "completed" },
+		},
+	});
+
+	if (activeGame) {
+		throw new ORPCError("BAD_REQUEST", {
+			message:
+				"Pack has ongoing games. You cannot delete it until all games are completed.",
 		});
 	}
 

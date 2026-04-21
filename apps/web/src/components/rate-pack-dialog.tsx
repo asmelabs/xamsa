@@ -14,9 +14,15 @@ import { LoadingButton } from "./loading-button";
 
 interface RatePackDialogProps {
 	packSlug: string;
+	/**
+	 * When true, mounts the dialog without rendering its built-in trigger
+	 * button. Callers can then open the dialog by toggling the shared
+	 * `rate-pack` query param themselves.
+	 */
+	hideTrigger?: boolean;
 }
 
-export function RatePackDialog({ packSlug }: RatePackDialogProps) {
+export function RatePackDialog({ packSlug, hideTrigger }: RatePackDialogProps) {
 	const { data: session } = authClient.useSession();
 	const user = session?.user;
 	const router = useRouter();
@@ -64,9 +70,11 @@ export function RatePackDialog({ packSlug }: RatePackDialogProps) {
 			opened={opened}
 			setOpened={(open) => setOpened(open ?? false)}
 			trigger={
-				<Button size="icon" variant="outline">
-					<StarIcon />
-				</Button>
+				hideTrigger ? undefined : (
+					<Button size="icon" variant="outline">
+						<StarIcon />
+					</Button>
+				)
 			}
 			title="Rate this pack"
 			description="How would you rate this pack from 1 to 5?"

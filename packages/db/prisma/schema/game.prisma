@@ -1,0 +1,291 @@
+enum LeaveReason {
+  voluntary // the player voluntarily left the game
+  kicked // the player was kicked from the game
+}
+
+enum GameStatus {
+  waiting // the game is waiting for players to join
+  active // the game is active 
+  paused // the game is paused 
+  completed // the game is completed 
+}
+
+model Game {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now()) @map("created_at") // ->waiting
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  startedAt  DateTime? @map("started_at") // initially waiting->active
+  finishedAt DateTime? @map("finished_at") // ...->completed
+  pausedAt   DateTime? @map("paused_at") // ...->paused
+
+  code   String     @unique
+  status GameStatus @default(waiting)
+
+  hostId String @map("host_id")
+  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  packId String @map("pack_id")
+  pack   Pack   @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  /// current position ///
+  currentRoundOrder    Int?    @map("current_round_order")
+  currentTopicOrder    Int?    @map("current_topic_order")
+  currentQuestionOrder Int?    @map("current_question_order")
+  isQuestionRevealed   Boolean @default(false) @map("is_question_revealed")
+
+  /// player counts - useful for lobby listing ///
+  totalActivePlayers Int @default(0) @map("total_active_players") // active players
+  totalSpectators    Int @default(0) @map("total_spectators") // spectators
+
+  /// content played ///
+  totalTopics           Int @default(0) @map("total_topics") // topics actually played through
+  totalQuestions        Int @default(0) @map("total_questions") // questions actually played through
+  totalSkippedQuestions Int @default(0) @map("total_skipped_questions") // questions where no one got it right
+
+  /// answers ///
+  totalAnswers          Int @default(0) @map("total_answers") // all resolved clicks (correct+wrong+expired)
+  totalCorrectAnswers   Int @default(0) @map("total_correct_answers")
+  totalIncorrectAnswers Int @default(0) @map("total_incorrect_answers")
+  totalExpiredAnswers   Int @default(0) @map("total_expired_answers")
+
+  /// point totals — useful for "points awarded this game" ///
+  totalPointsAwarded  Int @default(0) @map("total_points_awarded") // sum of positive score changes
+  totalPointsDeducted Int @default(0) @map("total_points_deducted") // sum of negative score changes
+
+  /// duration in seconds — derivable from timestamps but stored for sort/filter queries ///
+  durationSeconds Int? @map("duration_seconds")
+
+  /// winner ///
+  winnerId String? @unique @map("winner_id")
+  winner   Player? @relation("GameWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+
+  settings GameSettings?
+  players  Player[]
+  clicks   Click[]
+  topics   GameTopic[]
+
+  @@index([code])
+  @@index([status])
+  @@index([hostId])
+  @@index([packId])
+  @@map("game")
+}
+
+model GameSettings {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  gameId String @unique @map("game_id")
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  allowLaterJoins Boolean @default(true) @map("allow_later_joins") // allow players to join the game after it has started
+
+  @@map("game_settings")
+}
+
+enum PlayerStatus {
+  playing // playing the game currently
+  left // left the game or was kicked from the game
+}
+
+model Player {
+  id          String       @id @default(uuid())
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  joinedAt    DateTime     @default(now()) @map("joined_at")
+  startedAt   DateTime?    @map("started_at")
+  leftAt      DateTime?    @map("left_at")
+  leaveReason LeaveReason? @map("leave_reason")
+
+  status   PlayerStatus @default(playing)
+  nickname String?      @map("nickname")
+
+  gameId String @map("game_id")
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// score & rank ///
+  score       Int  @default(0)
+  rank        Int? // 1st, 2nd, 3rd... set when game ends
+  peakScore   Int  @default(0) @map("peak_score") // highest score during game
+  lowestScore Int  @default(0) @map("lowest_score") // lowest score during game (can go negative)
+
+  /// answer stats ///
+  totalClicks      Int @default(0) @map("total_clicks")
+  correctAnswers   Int @default(0) @map("correct_answers")
+  incorrectAnswers Int @default(0) @map("incorrect_answers")
+  expiredClicks    Int @default(0) @map("expired_clicks")
+
+  /// buzz behavior ///
+  firstClicks Int @default(0) @map("first_clicks") // how many times first in queue
+  lastClicks  Int @default(0) @map("last_clicks") // how many times last in queue
+
+  /// timing (milliseconds) ///
+  fastestClickMs Int?   @map("fastest_click_ms")
+  averageClickMs Float? @map("average_click_ms")
+
+  /// streak tracking — useful for awards like hot_streak/cold_streak ///
+  currentCorrectStreak Int @default(0) @map("current_correct_streak")
+  longestCorrectStreak Int @default(0) @map("longest_correct_streak")
+  currentWrongStreak   Int @default(0) @map("current_wrong_streak")
+  longestWrongStreak   Int @default(0) @map("longest_wrong_streak")
+
+  /// topic participation ///
+  topicsPlayed Int @default(0) @map("topics_played") // how many topics they participated in
+
+  /// achievements earned this game — JSON array of achievement codes ///
+  achievements String[] @default([]) // e.g. ["ace", "lightning", "sniper"]
+
+  winningGame  Game?          @relation("GameWinner")
+  clicks       Click[]
+  questionWins GameQuestion[] @relation("QuestionWinner")
+
+  @@unique([userId, gameId])
+  @@index([gameId])
+  @@index([gameId, score]) // for leaderboard queries
+  @@index([userId])
+  @@map("player")
+}
+
+enum ClickStatus {
+  pending // player buzzed, hasn't been called yet (default on create)
+  correct // host marked correct
+  wrong // host marked wrong
+  expired // question ended before this buzz was answered (didn't get to them)
+}
+
+model Click {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  clickedAt  DateTime  @map("clicked_at") // client timestamp, for fair ordering
+  answeredAt DateTime? @map("answered_at") // when host resolved
+
+  status ClickStatus @default(pending)
+
+  playerId String @map("player_id")
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  gameId String @map("game_id")
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  topicId String @map("topic_id")
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  questionId String   @map("question_id")
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  position Int // queue position (1 = first to buzz)
+
+  /// derived metrics — stored for query performance ///
+  reactionMs    Int? @map("reaction_ms") // time from question shown to click (ms)
+  pointsAwarded Int  @default(0) @map("points_awarded") // +positive if correct, -negative if wrong, 0 if expired
+
+  @@unique([playerId, gameId, questionId])
+  @@index([gameId, questionId, position]) // for rendering queue in order
+  @@index([gameId, status])
+  @@index([playerId])
+  @@index([questionId])
+  @@map("click")
+}
+
+model GameTopic {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  startedAt  DateTime? @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  gameId String @map("game_id")
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  topicId String @map("topic_id")
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  order Int // play order within the game (1..n)
+
+  /// question stats ///
+  totalQuestionsAnswered Int @default(0) @map("total_questions_answered") // had a correct answer
+  totalQuestionsSkipped  Int @default(0) @map("total_questions_skipped") // no correct answer
+
+  /// answer stats ///
+  totalClicks           Int @default(0) @map("total_clicks")
+  totalCorrectAnswers   Int @default(0) @map("total_correct_answers")
+  totalIncorrectAnswers Int @default(0) @map("total_incorrect_answers")
+  totalExpiredClicks    Int @default(0) @map("total_expired_clicks")
+
+  /// point totals ///
+  totalPointsAwarded  Int @default(0) @map("total_points_awarded")
+  totalPointsDeducted Int @default(0) @map("total_points_deducted")
+
+  /// top scorer for this topic ///
+  topScorerId     String? @map("top_scorer_id") // Player.id
+  topScorerPoints Int     @default(0) @map("top_scorer_points")
+
+  /// duration (seconds) ///
+  durationSeconds Int? @map("duration_seconds")
+
+  questions GameQuestion[]
+
+  @@unique([gameId, topicId])
+  @@unique([gameId, order])
+  @@index([gameId])
+  @@index([topicId])
+  @@map("game_topic")
+}
+
+model GameQuestion {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  startedAt  DateTime? @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  gameTopicId String    @map("game_topic_id")
+  gameTopic   GameTopic @relation(fields: [gameTopicId], references: [id], onDelete: Cascade)
+
+  questionId String   @map("question_id")
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  order  Int // 1..5 within the topic
+  points Int // point value (order * 100 for roundless)
+
+  /// resolution state ///
+  status      GameQuestionStatus @default(pending)
+  wasRevealed Boolean            @default(false) @map("was_revealed") // answer shown at the end
+  wasSkipped  Boolean            @default(false) @map("was_skipped") // host skipped without reveal
+
+  /// outcome ///
+  winnerId String? @map("winner_id") // Player.id who answered correctly, null if nobody
+  winner   Player? @relation("QuestionWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+
+  /// stats ///
+  totalClicks           Int @default(0) @map("total_clicks")
+  totalCorrectAnswers   Int @default(0) @map("total_correct_answers") // 0 or 1 really, but count for consistency
+  totalIncorrectAnswers Int @default(0) @map("total_incorrect_answers")
+  totalExpiredClicks    Int @default(0) @map("total_expired_clicks")
+
+  /// timing ///
+  firstBuzzMs     Int? @map("first_buzz_ms") // fastest reaction time on this question
+  durationSeconds Int? @map("duration_seconds") // how long the question took
+
+  @@unique([gameTopicId, questionId])
+  @@unique([gameTopicId, order])
+  @@index([gameTopicId])
+  @@index([questionId])
+  @@index([winnerId])
+  @@map("game_question")
+}
+
+enum GameQuestionStatus {
+  pending // not yet played
+  active // currently being played
+  answered // someone got it right
+  revealed // answer shown, nobody got it right
+  skipped // moved on without revealing
+}

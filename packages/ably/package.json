@@ -2,12 +2,8 @@
 	"name": "@xamsa/ably",
 	"type": "module",
 	"exports": {
-		".": {
-			"default": "./src/index.ts"
-		},
-		"./*": {
-			"default": "./src/*.ts"
-		}
+		"./server": "./src/server.ts",
+		"./channels": "./src/channels.ts"
 	},
 	"scripts": {},
 	"dependencies": {

@@ -7,13 +7,22 @@ export const channels = {
 } as const;
 
 export const GAME_EVENTS = {
-	CLICK: "click",
-	CLICK_RESET: "click:reset",
+	BUZZ_INTENT: "buzz:intent",
 
-	GAME_START: "game:start",
-	GAME_END: "game:end",
-	GAME_PAUSE: "game:pause",
-	GAME_RESUME: "game:resume",
+	CLICK_NEW: "click:new",
+	CLICK_RESOLVE_INTENT: "click:resolve:intent",
+	CLICK_RESOLVED: "click:resolved",
+
+	QUESTION_REVEAL_INTENT: "question:reveal:intent",
+	QUESTION_REVEALED: "question:revealed",
+	QUESTION_ADVANCE_INTENT: "question:advance:intent",
+	QUESTION_ADVANCED: "question:advanced",
+
+	GAME_STARTED: "game:start",
+	GAME_COMPLETE_INTENT: "game:complete:intent",
+	GAME_ENDED: "game:end",
+	GAME_PAUSED: "game:pause",
+	GAME_RESUMED: "game:resume",
 
 	TOPIC_START: "topic:start",
 	TOPIC_END: "topic:end",
@@ -26,9 +35,8 @@ export const GAME_EVENTS = {
 
 	SCORE_UPDATE: "score:update",
 
-	PLAYER_JOIN: "player:join",
-	PLAYER_LEAVE: "player:leave",
-	PLAYER_KICK: "player:kick",
+	PLAYER_JOINED: "player:joined",
+	PLAYER_LEFT: "player:left",
 };
 
 export const ClickMessageSchema = z.object({

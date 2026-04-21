@@ -18,11 +18,51 @@ model User {
   emailVerified    Boolean  @default(false) @map("email_verified")
   twoFactorEnabled Boolean? @default(false) @map("two_factor_enabled")
 
+  /// progression ///
+  xp    Int @default(0)
+  level Int @default(1)
+
+  /// elo ///
+  elo       Int @default(1000)
+  peakElo   Int @default(1000) @map("peak_elo")
+  lowestElo Int @default(1000) @map("lowest_elo")
+
+  /// game counts ///
+  totalGamesHosted    Int @default(0) @map("total_games_hosted")
+  totalGamesPlayed    Int @default(0) @map("total_games_played")
+  totalGamesSpectated Int @default(0) @map("total_games_spectated") // start to finish spectating
+
+  /// performance ///
+  totalPointsEarned Int @default(0) @map("total_points_earned")
+  totalWins         Int @default(0) @map("total_wins")
+  totalPodiums      Int @default(0) @map("total_podiums") // top-3
+  totalLastPlaces   Int @default(0) @map("total_last_places")
+
+  /// content counts (cumilative) ///
+  totalTopicsPlayed    Int @default(0) @map("total_topics_played")
+  totalQuestionsPlayed Int @default(0) @map("total_questions_played")
+
+  /// answers ///
+  totalCorrectAnswers   Int @default(0) @map("total_correct_answers")
+  totalIncorrectAnswers Int @default(0) @map("total_incorrect_answers")
+  totalExpiredAnswers   Int @default(0) @map("total_expired_answers")
+  totalFirstClicks      Int @default(0) @map("total_first_clicks")
+
+  /// time spent (seconds) ///
+  totalTimeSpentPlaying    Int @default(0) @map("total_time_spent_playing")
+  totalTimeSpentHosting    Int @default(0) @map("total_time_spent_hosting")
+  totalTimeSpentSpectating Int @default(0) @map("total_time_spent_spectating")
+
+  /// content creation ///
+  totalPacksPublished Int @default(0) @map("total_packs_published")
+
   sessions   Session[]
   accounts   Account[]
   twofactors TwoFactor[]
   packs      Pack[]
   ratings    PackRating[]
+  hosted     Game[]
+  players    Player[]
 
   @@map("user")
 }

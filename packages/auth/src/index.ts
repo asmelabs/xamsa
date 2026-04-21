@@ -1,7 +1,7 @@
 import { dash } from "@better-auth/infra";
 import { createPrismaClient } from "@xamsa/db";
 import { env } from "@xamsa/env/server";
-import { sendEmailVerificationEmail } from "@xamsa/mail/auth";
+import { sendEmailVerificationEmail, sendPasswordResetEmail } from "@xamsa/mail/auth";
 import { hash, verify } from "@xamsa/utils/bcrypt";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -35,8 +35,7 @@ export function createAuth() {
 
 			async sendResetPassword({ url, user }) {
 				if (env.NODE_ENV === "production") {
-					// await sendEmailResetPassword(user.name, user.email, url);
-					console.log("not implemented");
+					await sendPasswordResetEmail(user.email, user.name, url);
 				} else {
 					console.log("=== === === === ===");
 					console.log("Sending reset password email to", user.email);
@@ -56,7 +55,7 @@ export function createAuth() {
 
 			async sendVerificationEmail({ url, user }) {
 				if (env.NODE_ENV === "production") {
-					await sendEmailVerificationEmail(user.name, user.email, url);
+					await sendEmailVerificationEmail(user.email, user.name, url);
 				} else {
 					console.log("=== === === === ===");
 					console.log("Sending verification email to", user.email);

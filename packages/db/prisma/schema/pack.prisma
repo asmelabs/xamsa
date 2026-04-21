@@ -17,9 +17,10 @@ enum PackLanguage {
 }
 
 model Pack {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  publishedAt DateTime? @map("published_at")
 
   visibility PackVisibility @default(public)
   status     PackStatus     @default(draft)
@@ -44,6 +45,7 @@ model Pack {
 
   ratings PackRating[]
   topics  Topic[]
+  games   Game[]
 
   @@index([slug])
   @@index([authorId])
@@ -83,9 +85,12 @@ model Topic {
   name        String /// @zod.string().min(2, "Name must be at least 2 characters long").max(100, "Name must be less than 100 characters long")
   description String? /// @zod.string().max(1000, "Description must be less than 1000 characters")
 
-  packId    String     @map("pack_id")
-  pack      Pack       @relation(fields: [packId], references: [id], onDelete: Cascade)
+  packId String @map("pack_id")
+  pack   Pack   @relation(fields: [packId], references: [id], onDelete: Cascade)
+
   questions Question[]
+  clicks    Click[]
+  games     GameTopic[]
 
   @@unique([packId, order])
   @@unique([packId, slug])
@@ -108,8 +113,10 @@ model Question {
   acceptableAnswers String[] @map("acceptable_answers") /// @zod.max(5, "Acceptable answers must be less than or equal to 5")
   explanation       String? /// @zod.string().max(1000, "Explanation must be less than 1000 characters")
 
-  topicId String @map("topic_id")
-  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topicId       String         @map("topic_id")
+  topic         Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  clicks        Click[]
+  gameQuestions GameQuestion[]
 
   @@unique([topicId, order])
   @@unique([topicId, slug])
