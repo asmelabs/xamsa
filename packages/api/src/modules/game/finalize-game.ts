@@ -1,4 +1,10 @@
 import type { Prisma } from "@xamsa/db";
+import { calculateEloDeltas } from "@xamsa/utils/elo";
+import {
+	computeGamePlayerXpDelta,
+	computeLevelFromXp,
+	HOST_FULL_GAME_COMPLETION_XP_BONUS,
+} from "@xamsa/utils/progression";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 
 export type FinalizeGameResult = {
@@ -23,21 +29,6 @@ export type FinalizeGameOptions = {
 	 */
 	now?: Date;
 };
-
-/**
- * Per-player XP formula: base score plus bonuses for podium finishes.
- * Keep this simple — can be iterated on later.
- */
-function computeXpDelta(rank: number, score: number): number {
-	const clamped = Math.max(0, score);
-	if (rank === 1) return clamped + 200;
-	if (rank <= 3) return clamped + 100;
-	return clamped;
-}
-
-function computeLevelFromXp(xp: number): number {
-	return Math.max(1, Math.floor(xp / 1000) + 1);
-}
 
 /**
  * FINALIZE GAME
@@ -293,19 +284,60 @@ export async function finalizeGame(
 		where: { gameTopic: { gameId } },
 	});
 
+	// Elo: snapshot ratings before any user row changes; skip for abandoned games.
+	const rankedUserIds = ranked.map((p) => p.userId);
+	const ratingByUserId = new Map<string, number>();
+	if (!force && rankedUserIds.length >= 2) {
+		const usersForElo = await tx.user.findMany({
+			where: { id: { in: rankedUserIds } },
+			select: { id: true, elo: true },
+		});
+		for (const u of usersForElo) {
+			ratingByUserId.set(u.id, u.elo);
+		}
+	}
+	const eloRows =
+		!force && rankedUserIds.length >= 2
+			? ranked.map((p, i) => ({
+					userId: p.userId,
+					rank: i + 1,
+					score: p.score,
+					ratingBefore: ratingByUserId.get(p.userId) ?? 1000,
+				}))
+			: [];
+	const eloDeltas =
+		eloRows.length >= 2
+			? calculateEloDeltas(eloRows, { forceAborted: false })
+			: new Map<string, number>();
+
 	for (let i = 0; i < ranked.length; i++) {
 		const p = ranked[i];
 		if (!p) continue;
 		const rank = i + 1;
 
-		const xpDelta = computeXpDelta(rank, p.score);
+		const xpDelta = computeGamePlayerXpDelta(rank, p.score);
 
 		const currentUser = await tx.user.findUnique({
 			where: { id: p.userId },
-			select: { xp: true },
+			select: { xp: true, elo: true, peakElo: true, lowestElo: true },
 		});
 		const newXp = (currentUser?.xp ?? 0) + xpDelta;
 		const newLevel = computeLevelFromXp(newXp);
+
+		const eloDelta = eloDeltas.get(p.userId) ?? 0;
+		let eloPatch: {
+			elo: number;
+			peakElo: number;
+			lowestElo: number;
+		} | null = null;
+		if (!force && rankedUserIds.length >= 2 && currentUser) {
+			const nextElo = currentUser.elo + eloDelta;
+			eloPatch = {
+				elo: nextElo,
+				peakElo: Math.max(currentUser.peakElo, nextElo),
+				lowestElo: Math.min(currentUser.lowestElo, nextElo),
+			};
+		}
 
 		await tx.user.update({
 			where: { id: p.userId },
@@ -326,19 +358,37 @@ export async function finalizeGame(
 				totalTimeSpentPlaying: { increment: durationSeconds },
 				xp: newXp,
 				level: newLevel,
-				// TODO: elo update — needs a proper rank-based formula.
+				...(eloPatch ?? {}),
 			},
 		});
 	}
 
 	// 6. Roll up host stats onto the host User row.
-	await tx.user.update({
-		where: { id: game.hostId },
-		data: {
-			totalGamesHosted: { increment: 1 },
-			totalTimeSpentHosting: { increment: durationSeconds },
-		},
-	});
+	if (!force) {
+		const hostUser = await tx.user.findUnique({
+			where: { id: game.hostId },
+			select: { xp: true },
+		});
+		const newHostXp =
+			(hostUser?.xp ?? 0) + HOST_FULL_GAME_COMPLETION_XP_BONUS;
+		await tx.user.update({
+			where: { id: game.hostId },
+			data: {
+				totalGamesHosted: { increment: 1 },
+				totalTimeSpentHosting: { increment: durationSeconds },
+				xp: newHostXp,
+				level: computeLevelFromXp(newHostXp),
+			},
+		});
+	} else {
+		await tx.user.update({
+			where: { id: game.hostId },
+			data: {
+				totalGamesHosted: { increment: 1 },
+				totalTimeSpentHosting: { increment: durationSeconds },
+			},
+		});
+	}
 
 	// 7. Finalize the Game row.
 	await tx.game.update({
