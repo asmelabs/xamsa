@@ -1,7 +1,7 @@
 import { dash } from "@better-auth/infra";
 import { createPrismaClient } from "@xamsa/db";
 import { env } from "@xamsa/env/server";
-import { sendEmailVerificationEmail, sendPasswordResetEmail } from "@xamsa/mail/auth";
+// import { sendEmailVerificationEmail, sendPasswordResetEmail } from "@xamsa/mail/auth";
 import { hash, verify } from "@xamsa/utils/bcrypt";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -38,19 +38,19 @@ export function createAuth() {
 		trustedOrigins,
 		emailAndPassword: {
 			enabled: true,
-			requireEmailVerification: true,
+			requireEmailVerification: false,
 			revokeSessionsOnPasswordReset: true,
 
-			async sendResetPassword({ url, user }) {
-				if (env.NODE_ENV === "production") {
-					await sendPasswordResetEmail(user.email, user.name, url);
-				} else {
-					console.log("=== === === === ===");
-					console.log("Sending reset password email to", user.email);
-					console.log("URL:", url);
-					console.log("=== === === === ===");
-				}
-			},
+			// async sendResetPassword({ url, user }) {
+			// 	if (env.NODE_ENV === "production") {
+			// 		await sendPasswordResetEmail(user.email, user.name, url);
+			// 	} else {
+			// 		console.log("=== === === === ===");
+			// 		console.log("Sending reset password email to", user.email);
+			// 		console.log("URL:", url);
+			// 		console.log("=== === === === ===");
+			// 	}
+			// },
 
 			password: {
 				hash: async (password) => await hash(password),
@@ -58,20 +58,20 @@ export function createAuth() {
 			},
 		},
 
-		emailVerification: {
-			sendOnSignUp: true,
+		// emailVerification: {
+		// 	sendOnSignUp: true,
 
-			async sendVerificationEmail({ url, user }) {
-				if (env.NODE_ENV === "production") {
-					await sendEmailVerificationEmail(user.email, user.name, url);
-				} else {
-					console.log("=== === === === ===");
-					console.log("Sending verification email to", user.email);
-					console.log("URL:", url);
-					console.log("=== === === === ===");
-				}
-			},
-		},
+		// 	async sendVerificationEmail({ url, user }) {
+		// 		if (env.NODE_ENV === "production") {
+		// 			await sendEmailVerificationEmail(user.email, user.name, url);
+		// 		} else {
+		// 			console.log("=== === === === ===");
+		// 			console.log("Sending verification email to", user.email);
+		// 			console.log("URL:", url);
+		// 			console.log("=== === === === ===");
+		// 		}
+		// 	},
+		// },
 
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,
