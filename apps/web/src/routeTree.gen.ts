@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhatsNewIndexRouteImport } from './routes/whats-new/index'
@@ -18,6 +19,7 @@ import { Route as PacksIndexRouteImport } from './routes/packs/index'
 import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index'
 import { Route as JoinIndexRouteImport } from './routes/join/index'
 import { Route as HistoryIndexRouteImport } from './routes/history/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -27,6 +29,13 @@ import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksBulkNewIndexRouteImport } from './routes/packs/bulk-new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
 import { Route as GCodeIndexRouteImport } from './routes/g/$code/index'
+import { Route as DashboardUsersIndexRouteImport } from './routes/dashboard/users/index'
+import { Route as DashboardTopicsIndexRouteImport } from './routes/dashboard/topics/index'
+import { Route as DashboardQuestionsIndexRouteImport } from './routes/dashboard/questions/index'
+import { Route as DashboardPacksIndexRouteImport } from './routes/dashboard/packs/index'
+import { Route as DashboardJobsIndexRouteImport } from './routes/dashboard/jobs/index'
+import { Route as DashboardGamesIndexRouteImport } from './routes/dashboard/games/index'
+import { Route as DashboardClicksIndexRouteImport } from './routes/dashboard/clicks/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -43,6 +52,11 @@ import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImp
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/index'
 
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -88,6 +102,11 @@ const HistoryIndexRoute = HistoryIndexRouteImport.update({
   path: '/history/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -132,6 +151,41 @@ const GCodeIndexRoute = GCodeIndexRouteImport.update({
   id: '/g/$code/',
   path: '/g/$code/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardUsersIndexRoute = DashboardUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTopicsIndexRoute = DashboardTopicsIndexRouteImport.update({
+  id: '/topics/',
+  path: '/topics/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardQuestionsIndexRoute = DashboardQuestionsIndexRouteImport.update({
+  id: '/questions/',
+  path: '/questions/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardPacksIndexRoute = DashboardPacksIndexRouteImport.update({
+  id: '/packs/',
+  path: '/packs/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardJobsIndexRoute = DashboardJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardGamesIndexRoute = DashboardGamesIndexRouteImport.update({
+  id: '/games/',
+  path: '/games/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardClicksIndexRoute = DashboardClicksIndexRouteImport.update({
+  id: '/clicks/',
+  path: '/clicks/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const AuthResetPasswordIndexRoute = AuthResetPasswordIndexRouteImport.update({
   id: '/reset-password/',
@@ -221,11 +275,13 @@ const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/join/': typeof JoinIndexRoute
   '/leaderboard/': typeof LeaderboardIndexRoute
@@ -236,6 +292,13 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/dashboard/clicks/': typeof DashboardClicksIndexRoute
+  '/dashboard/games/': typeof DashboardGamesIndexRoute
+  '/dashboard/jobs/': typeof DashboardJobsIndexRoute
+  '/dashboard/packs/': typeof DashboardPacksIndexRoute
+  '/dashboard/questions/': typeof DashboardQuestionsIndexRoute
+  '/dashboard/topics/': typeof DashboardTopicsIndexRoute
+  '/dashboard/users/': typeof DashboardUsersIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
@@ -260,6 +323,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth': typeof AuthIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/history': typeof HistoryIndexRoute
   '/join': typeof JoinIndexRoute
   '/leaderboard': typeof LeaderboardIndexRoute
@@ -270,6 +334,13 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
+  '/dashboard/clicks': typeof DashboardClicksIndexRoute
+  '/dashboard/games': typeof DashboardGamesIndexRoute
+  '/dashboard/jobs': typeof DashboardJobsIndexRoute
+  '/dashboard/packs': typeof DashboardPacksIndexRoute
+  '/dashboard/questions': typeof DashboardQuestionsIndexRoute
+  '/dashboard/topics': typeof DashboardTopicsIndexRoute
+  '/dashboard/users': typeof DashboardUsersIndexRoute
   '/g/$code': typeof GCodeIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new': typeof PacksBulkNewIndexRoute
@@ -291,11 +362,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/join/': typeof JoinIndexRoute
   '/leaderboard/': typeof LeaderboardIndexRoute
@@ -306,6 +379,13 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/dashboard/clicks/': typeof DashboardClicksIndexRoute
+  '/dashboard/games/': typeof DashboardGamesIndexRoute
+  '/dashboard/jobs/': typeof DashboardJobsIndexRoute
+  '/dashboard/packs/': typeof DashboardPacksIndexRoute
+  '/dashboard/questions/': typeof DashboardQuestionsIndexRoute
+  '/dashboard/topics/': typeof DashboardTopicsIndexRoute
+  '/dashboard/users/': typeof DashboardUsersIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
@@ -328,11 +408,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/dashboard'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/u/$username'
     | '/auth/'
+    | '/dashboard/'
     | '/history/'
     | '/join/'
     | '/leaderboard/'
@@ -343,6 +425,13 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
+    | '/dashboard/clicks/'
+    | '/dashboard/games/'
+    | '/dashboard/jobs/'
+    | '/dashboard/packs/'
+    | '/dashboard/questions/'
+    | '/dashboard/topics/'
+    | '/dashboard/users/'
     | '/g/$code/'
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
@@ -367,6 +456,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/u/$username'
     | '/auth'
+    | '/dashboard'
     | '/history'
     | '/join'
     | '/leaderboard'
@@ -377,6 +467,13 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password'
+    | '/dashboard/clicks'
+    | '/dashboard/games'
+    | '/dashboard/jobs'
+    | '/dashboard/packs'
+    | '/dashboard/questions'
+    | '/dashboard/topics'
+    | '/dashboard/users'
     | '/g/$code'
     | '/packs/$packSlug'
     | '/packs/bulk-new'
@@ -397,11 +494,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/dashboard'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/u/$username'
     | '/auth/'
+    | '/dashboard/'
     | '/history/'
     | '/join/'
     | '/leaderboard/'
@@ -412,6 +511,13 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
+    | '/dashboard/clicks/'
+    | '/dashboard/games/'
+    | '/dashboard/jobs/'
+    | '/dashboard/packs/'
+    | '/dashboard/questions/'
+    | '/dashboard/topics/'
+    | '/dashboard/users/'
     | '/g/$code/'
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
@@ -433,6 +539,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
+  DashboardRoute: typeof DashboardRouteWithChildren
   UUsernameRoute: typeof UUsernameRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   JoinIndexRoute: typeof JoinIndexRoute
@@ -463,6 +570,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -526,6 +640,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/auth/': {
       id: '/auth/'
       path: '/'
@@ -588,6 +709,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/g/$code/'
       preLoaderRoute: typeof GCodeIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/users/': {
+      id: '/dashboard/users/'
+      path: '/users'
+      fullPath: '/dashboard/users/'
+      preLoaderRoute: typeof DashboardUsersIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/topics/': {
+      id: '/dashboard/topics/'
+      path: '/topics'
+      fullPath: '/dashboard/topics/'
+      preLoaderRoute: typeof DashboardTopicsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/questions/': {
+      id: '/dashboard/questions/'
+      path: '/questions'
+      fullPath: '/dashboard/questions/'
+      preLoaderRoute: typeof DashboardQuestionsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/packs/': {
+      id: '/dashboard/packs/'
+      path: '/packs'
+      fullPath: '/dashboard/packs/'
+      preLoaderRoute: typeof DashboardPacksIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/jobs/': {
+      id: '/dashboard/jobs/'
+      path: '/jobs'
+      fullPath: '/dashboard/jobs/'
+      preLoaderRoute: typeof DashboardJobsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/games/': {
+      id: '/dashboard/games/'
+      path: '/games'
+      fullPath: '/dashboard/games/'
+      preLoaderRoute: typeof DashboardGamesIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/clicks/': {
+      id: '/dashboard/clicks/'
+      path: '/clicks'
+      fullPath: '/dashboard/clicks/'
+      preLoaderRoute: typeof DashboardClicksIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/auth/reset-password/': {
       id: '/auth/reset-password/'
@@ -715,9 +885,36 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface DashboardRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardClicksIndexRoute: typeof DashboardClicksIndexRoute
+  DashboardGamesIndexRoute: typeof DashboardGamesIndexRoute
+  DashboardJobsIndexRoute: typeof DashboardJobsIndexRoute
+  DashboardPacksIndexRoute: typeof DashboardPacksIndexRoute
+  DashboardQuestionsIndexRoute: typeof DashboardQuestionsIndexRoute
+  DashboardTopicsIndexRoute: typeof DashboardTopicsIndexRoute
+  DashboardUsersIndexRoute: typeof DashboardUsersIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardClicksIndexRoute: DashboardClicksIndexRoute,
+  DashboardGamesIndexRoute: DashboardGamesIndexRoute,
+  DashboardJobsIndexRoute: DashboardJobsIndexRoute,
+  DashboardPacksIndexRoute: DashboardPacksIndexRoute,
+  DashboardQuestionsIndexRoute: DashboardQuestionsIndexRoute,
+  DashboardTopicsIndexRoute: DashboardTopicsIndexRoute,
+  DashboardUsersIndexRoute: DashboardUsersIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
+  DashboardRoute: DashboardRouteWithChildren,
   UUsernameRoute: UUsernameRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   JoinIndexRoute: JoinIndexRoute,
