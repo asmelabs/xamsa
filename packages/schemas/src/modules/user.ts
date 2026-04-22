@@ -11,6 +11,11 @@ export const FindOneProfileOutputSchema = UserSchema.pick({
 	name: true,
 	image: true,
 	role: true,
+	xp: true,
+	level: true,
+	elo: true,
+	peakElo: true,
+	lowestElo: true,
 });
 
 export type FindOneProfileInputType = z.infer<typeof FindOneProfileInputSchema>;

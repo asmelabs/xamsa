@@ -1,9 +1,11 @@
+import { getLevelProgress } from "@xamsa/utils/levels";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
-import { LogOutIcon, SettingsIcon, ShieldCheckIcon } from "lucide-react";
+import { BarChart3Icon, LogOutIcon, SettingsIcon, ShieldCheckIcon, ZapIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { StatTile } from "@/components/home/stat-tile";
 import { LoadingButton } from "@/components/loading-button";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
@@ -61,6 +63,11 @@ const roleConfig = {
 function RouteComponent() {
 	const { profile, isOwner } = Route.useLoaderData();
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const levelProgress = getLevelProgress(profile.xp);
+	const xpToNext =
+		!levelProgress.isMaxLevel && levelProgress.xpForCurrentLevel > 0
+			? levelProgress.xpForCurrentLevel - levelProgress.xpIntoLevel
+			: null;
 
 	const role = roleConfig[profile.role];
 	const initials = profile.name
@@ -130,10 +137,57 @@ function RouteComponent() {
 				)}
 			</div>
 
-			{/* Placeholder for future sections: packs, stats, achievements */}
+			<section className="space-y-4">
+				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+					Progress
+				</h2>
+				<div className="grid gap-3 sm:grid-cols-2">
+					<div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:col-span-2">
+						<div className="flex flex-wrap items-end justify-between gap-2">
+							<div>
+								<div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
+									<ZapIcon className="size-3.5" strokeWidth={1.75} />
+									<span>Level {levelProgress.level}</span>
+								</div>
+								<p className="font-semibold text-foreground text-lg leading-tight">
+									{levelProgress.name}
+								</p>
+							</div>
+							<p className="text-muted-foreground text-sm tabular-nums">
+								{profile.xp.toLocaleString()} XP
+							</p>
+						</div>
+						<div className="space-y-1.5">
+							<div className="h-2 overflow-hidden rounded-full bg-muted">
+								<div
+									className="h-full rounded-full bg-primary transition-[width]"
+									style={{
+										width: `${Math.round(levelProgress.pct * 100)}%`,
+									}}
+								/>
+							</div>
+							{xpToNext !== null && (
+								<p className="text-muted-foreground text-xs">
+									{xpToNext.toLocaleString()} XP to next level
+								</p>
+							)}
+							{levelProgress.isMaxLevel && (
+								<p className="text-muted-foreground text-xs">Max level</p>
+							)}
+						</div>
+					</div>
+					<StatTile
+						icon={BarChart3Icon}
+						label="Elo"
+						value={profile.elo.toLocaleString()}
+						hint={`Peak ${profile.peakElo.toLocaleString()} · Low ${profile.lowestElo.toLocaleString()}`}
+					/>
+				</div>
+			</section>
+
 			<div className="rounded-xl border border-border border-dashed p-10 text-center">
 				<p className="text-muted-foreground text-sm">
-					Stats, packs, and game history will appear here soon.
+					Packs and game history will appear here soon.
 				</p>
 			</div>
 
