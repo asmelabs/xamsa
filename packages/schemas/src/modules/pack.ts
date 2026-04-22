@@ -1,4 +1,5 @@
 import z from "zod";
+import { BULK_PACKS_MAX } from "../common/bulk";
 import {
 	CursorPaginationInputSchema,
 	CursorPaginationOutputSchema,
@@ -26,6 +27,24 @@ export const CreatePackOutputSchema = PackSchema.pick({
 
 export type CreatePackInputType = z.infer<typeof CreatePackInputSchema>;
 export type CreatePackOutputType = z.infer<typeof CreatePackOutputSchema>;
+
+/**
+ * BULK CREATE (multiple draft packs)
+ */
+export const BulkCreatePacksInputSchema = z.object({
+	packs: z.array(CreatePackInputSchema).min(1).max(BULK_PACKS_MAX),
+});
+
+export const BulkCreatePacksOutputSchema = z.object({
+	created: z.array(PackSchema.pick({ slug: true })),
+});
+
+export type BulkCreatePacksInputType = z.infer<
+	typeof BulkCreatePacksInputSchema
+>;
+export type BulkCreatePacksOutputType = z.infer<
+	typeof BulkCreatePacksOutputSchema
+>;
 
 /**
  * UPDATE STATUS

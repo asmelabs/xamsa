@@ -1,8 +1,10 @@
 import z from "zod";
+import { BULK_TOPICS_MAX, BULK_TOPICS_MAX_TSUAL_IMPORT } from "../common/bulk";
 import {
 	PaginationInputSchema,
 	PaginationOutputSchema,
 } from "../common/pagination";
+import { PackLanguageSchema } from "../db/schemas/enums/PackLanguage.schema";
 import {
 	PackSchema,
 	QuestionSchema,
@@ -11,22 +13,28 @@ import {
 } from "../db/schemas/models";
 import { topicPeriod, topicSearch, topicSort } from "./listings/topic";
 
-export const CreateTopicInputSchema = TopicSchema.pick({
+const createTopicQuestionRowSchema = QuestionSchema.pick({
+	text: true,
+	answer: true,
+	acceptableAnswers: true,
+	description: true,
+	explanation: true,
+});
+
+const createTopicQuestionsArraySchema = z
+	.array(createTopicQuestionRowSchema)
+	.length(5, "Each topic must have 5 questions");
+
+/** One topic (name + 5 questions) without pack; used by create, bulk, and AI output. */
+export const CreateTopicPayloadSchema = TopicSchema.pick({
 	name: true,
 	description: true,
 }).extend({
+	questions: createTopicQuestionsArraySchema,
+});
+
+export const CreateTopicInputSchema = CreateTopicPayloadSchema.extend({
 	pack: PackSchema.shape.slug,
-	questions: z
-		.array(
-			QuestionSchema.pick({
-				text: true,
-				answer: true,
-				acceptableAnswers: true,
-				description: true,
-				explanation: true,
-			}),
-		)
-		.length(5, "Each topic must have 5 questions"),
 });
 
 export const CreateTopicOutputSchema = TopicSchema.pick({
@@ -35,6 +43,112 @@ export const CreateTopicOutputSchema = TopicSchema.pick({
 
 export type CreateTopicInputType = z.infer<typeof CreateTopicInputSchema>;
 export type CreateTopicOutputType = z.infer<typeof CreateTopicOutputSchema>;
+export type CreateTopicPayloadType = z.infer<typeof CreateTopicPayloadSchema>;
+
+/**
+ * BULK CREATE (single pack, many topics)
+ * — Default max: `BULK_TOPICS_MAX` (20).
+ * — With `importedFromTsualPackageId` (3sual import): `BULK_TOPICS_MAX_TSUAL_IMPORT` (200).
+ */
+export const BulkCreateTopicsInputSchema = z
+	.object({
+		pack: PackSchema.shape.slug,
+		topics: z.array(CreateTopicPayloadSchema).min(1),
+		/** 3sual `package.id` if topics came from a moderator import (records UserTsualPackageImport) */
+		importedFromTsualPackageId: z.number().int().positive().optional(),
+	})
+	.superRefine((data, ctx) => {
+		const cap =
+			data.importedFromTsualPackageId != null
+				? BULK_TOPICS_MAX_TSUAL_IMPORT
+				: BULK_TOPICS_MAX;
+		if (data.topics.length > cap) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.too_big,
+				inclusive: true,
+				maximum: cap,
+				origin: "array",
+				message:
+					data.importedFromTsualPackageId != null
+						? `Ən çoxu ${String(cap)} mövzu (3sual import).`
+						: `Ən çoxu ${String(cap)} mövzu bir dəfəyə (əl ilə).`,
+				path: ["topics"],
+			});
+		}
+	});
+
+export const BulkCreateTopicsOutputSchema = z.object({
+	created: z.array(TopicSchema.pick({ slug: true })),
+});
+
+export type BulkCreateTopicsInputType = z.infer<
+	typeof BulkCreateTopicsInputSchema
+>;
+export type BulkCreateTopicsOutputType = z.infer<
+	typeof BulkCreateTopicsOutputSchema
+>;
+
+export const StartBulkCreateJobOutputSchema = z.object({
+	jobId: z.string().uuid(),
+});
+
+export const GetBulkCreateJobInputSchema = z.object({
+	jobId: z.string().uuid(),
+});
+
+export const TopicBulkJobStatusSchema = z.enum([
+	"pending",
+	"running",
+	"completed",
+	"failed",
+]);
+
+export const GetBulkCreateJobOutputSchema = z.object({
+	status: TopicBulkJobStatusSchema,
+	totalTopics: z.number().int().min(0),
+	errorMessage: z.string().nullable(),
+	result: BulkCreateTopicsOutputSchema.nullable(),
+	updatedAt: z.coerce.date(),
+});
+
+export type GetBulkCreateJobInputType = z.infer<
+	typeof GetBulkCreateJobInputSchema
+>;
+export type GetBulkCreateJobOutputType = z.infer<
+	typeof GetBulkCreateJobOutputSchema
+>;
+
+/**
+ * AI: generate 5 questions for a topic (no DB write; server validates output).
+ */
+export const GenerateTopicQuestionsInputSchema = z.object({
+	pack: PackSchema.shape.slug,
+	topicName: z.string().min(1, "Topic name is required").max(100),
+	topicDescription: z.string().max(1000).optional(),
+	/** If omitted, the pack’s language is used. */
+	language: PackLanguageSchema.optional(),
+});
+
+export const GenerateTopicQuestionsOutputSchema = z.object({
+	questions: createTopicQuestionsArraySchema,
+});
+
+export type GenerateTopicQuestionsInputType = z.infer<
+	typeof GenerateTopicQuestionsInputSchema
+>;
+export type GenerateTopicQuestionsOutputType = z.infer<
+	typeof GenerateTopicQuestionsOutputSchema
+>;
+
+export const GetAiTopicQuotaOutputSchema = z.object({
+	used: z.number().int().min(0),
+	limit: z.number().int().min(0),
+	resetsAt: z.string(),
+});
+
+export type GetAiTopicQuotaOutputType = z.infer<
+	typeof GetAiTopicQuotaOutputSchema
+>;
 
 export const FindOneTopicInputSchema = TopicSchema.pick({
 	slug: true,

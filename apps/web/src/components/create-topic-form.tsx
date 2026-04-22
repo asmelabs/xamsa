@@ -1,6 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { CreateTopicInputSchema } from "@xamsa/schemas/modules/topic";
+import { Button } from "@xamsa/ui/components/button";
 import {
 	Carousel,
 	type CarouselApi,
@@ -19,11 +20,12 @@ import {
 import { Input } from "@xamsa/ui/components/input";
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
+import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 const emptyQuestion = {
@@ -40,6 +42,8 @@ interface CreateTopicFormProps {
 
 export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+	const { data: session } = authClient.useSession();
 	const [api, setApi] = useState<CarouselApi>();
 	const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -57,6 +61,11 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 		},
 	});
 
+	const { data: aiQuota } = useQuery({
+		...orpc.topic.getAiQuota.queryOptions({ input: {} }),
+		enabled: !!session?.user,
+	});
+
 	const { mutate: createTopic, isPending } = useMutation({
 		...orpc.topic.create.mutationOptions(),
 		onSuccess({ slug }) {
@@ -68,6 +77,29 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 			toast.error(
 				error.message || "An unknown error occurred. Please try again.",
 			);
+		},
+	});
+
+	const { mutate: generateWithAi, isPending: isAiPending } = useMutation({
+		...orpc.topic.generateQuestions.mutationOptions(),
+		onSuccess(data) {
+			data.questions.forEach((q, i) => {
+				form.setValue(`questions.${i}.text`, q.text);
+				form.setValue(`questions.${i}.answer`, q.answer);
+				form.setValue(
+					`questions.${i}.acceptableAnswers`,
+					q.acceptableAnswers ?? [],
+				);
+				form.setValue(`questions.${i}.description`, q.description ?? "");
+				form.setValue(`questions.${i}.explanation`, q.explanation ?? "");
+			});
+			void queryClient.invalidateQueries({
+				queryKey: orpc.topic.getAiQuota.queryKey({ input: {} }),
+			});
+			toast.success("AI draft added — review facts before saving.");
+		},
+		onError(error) {
+			toast.error(error.message || "AI generation failed. Please try again.");
 		},
 	});
 
@@ -94,11 +126,25 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	);
 
 	// Track which questions are filled (have both text and answer)
-	const questions = form.watch("questions");
+	const [topicName, topicDescription, questions] = form.watch([
+		"name",
+		"description",
+		"questions",
+	]);
 	const questionStatus = questions.map(
 		(q) => q.text.trim().length > 0 && q.answer.trim().length > 0,
 	);
 	const filledCount = questionStatus.filter(Boolean).length;
+
+	const aiRemaining = aiQuota
+		? Math.max(0, aiQuota.limit - aiQuota.used)
+		: null;
+	const aiDisabled =
+		!session?.user ||
+		!topicName?.trim() ||
+		aiRemaining === 0 ||
+		isAiPending ||
+		isPending;
 
 	useEffect(() => {
 		if (!api) return;
@@ -113,6 +159,17 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 		<Frame>
 			<FrameHeader>
 				<FrameTitle>Create a new topic</FrameTitle>
+				<p className="text-muted-foreground text-sm">
+					Need many topics?{" "}
+					<Link
+						className="text-primary underline"
+						to="/packs/$packSlug/topics/bulk"
+						params={{ packSlug }}
+					>
+						Create several at once
+					</Link>
+					.
+				</p>
 			</FrameHeader>
 			<form onSubmit={onSubmit} className="space-y-4">
 				<FramePanel className="space-y-4">
@@ -135,6 +192,34 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 							/>
 						)}
 					</form.Input>
+					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+						{aiQuota && (
+							<p className="text-muted-foreground text-xs">
+								AI generations today: {String(aiQuota.used)} /{" "}
+								{String(aiQuota.limit)} (resets{" "}
+								{new Date(aiQuota.resetsAt).toUTCString()} UTC)
+							</p>
+						)}
+						<Button
+							type="button"
+							variant="secondary"
+							disabled={aiDisabled}
+							onClick={() => {
+								generateWithAi({
+									pack: packSlug,
+									topicName: topicName.trim(),
+									topicDescription: topicDescription?.trim() || undefined,
+								});
+							}}
+						>
+							<Sparkles className="mr-1.5 size-4" />
+							{isAiPending ? "Generating…" : "Generate with AI"}
+						</Button>
+					</div>
+					<p className="text-muted-foreground text-xs">
+						AI fills all five questions from the topic and pack name. Always
+						verify facts before publishing.
+					</p>
 				</FramePanel>
 
 				<FramePanel className="space-y-4">

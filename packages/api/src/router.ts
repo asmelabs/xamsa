@@ -6,6 +6,7 @@ import { packRatingRouter } from "./modules/pack-rating/router";
 import { playerRouter } from "./modules/player/router";
 import { questionRouter } from "./modules/question/router";
 import { topicRouter } from "./modules/topic/router";
+import { tsualRouter } from "./modules/tsual/router";
 import { userRouter } from "./modules/user/router";
 
 export const appRouter = {
@@ -17,6 +18,7 @@ export const appRouter = {
 	question: questionRouter,
 	player: playerRouter,
 	click: clickRouter,
+	tsual: tsualRouter,
 };
 
 export type AppRouter = typeof appRouter;

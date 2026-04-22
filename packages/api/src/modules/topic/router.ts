@@ -1,19 +1,31 @@
 import {
+	BulkCreateTopicsInputSchema,
+	BulkCreateTopicsOutputSchema,
 	CreateTopicInputSchema,
 	CreateTopicOutputSchema,
 	DeleteTopicInputSchema,
 	DeleteTopicOutputSchema,
 	FindOneTopicInputSchema,
 	FindOneTopicOutputSchema,
+	GenerateTopicQuestionsInputSchema,
+	GenerateTopicQuestionsOutputSchema,
+	GetAiTopicQuotaOutputSchema,
+	GetBulkCreateJobInputSchema,
+	GetBulkCreateJobOutputSchema,
 	ListTopicsInputSchema,
 	ListTopicsOutputSchema,
+	StartBulkCreateJobOutputSchema,
 	UpdateTopicInputSchema,
 	UpdateTopicOutputSchema,
 	UpdateTopicsOrderInputSchema,
 	UpdateTopicsOrderOutputSchema,
 } from "@xamsa/schemas/modules/topic";
+import z from "zod";
 import { protectedProcedure, publicProcedure } from "../../procedures";
+import { generateTopicQuestionsWithAI, getAiTopicQuota } from "./ai.service";
+import { getBulkCreateJob, startBulkCreateJob } from "./bulk-job.service";
 import {
+	bulkCreateTopics,
 	createTopic,
 	deleteTopic,
 	findOneTopic,
@@ -30,6 +42,38 @@ export const topicRouter = {
 			async ({ input, context }) =>
 				await createTopic(input, context.session.user.id),
 		),
+	bulkCreate: protectedProcedure
+		.input(BulkCreateTopicsInputSchema)
+		.output(BulkCreateTopicsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await bulkCreateTopics(input, context.session.user.id),
+		),
+	startBulkCreateJob: protectedProcedure
+		.input(BulkCreateTopicsInputSchema)
+		.output(StartBulkCreateJobOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await startBulkCreateJob(input, context.session.user.id),
+		),
+	getBulkCreateJob: protectedProcedure
+		.input(GetBulkCreateJobInputSchema)
+		.output(GetBulkCreateJobOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await getBulkCreateJob(input.jobId, context.session.user.id),
+		),
+	generateQuestions: protectedProcedure
+		.input(GenerateTopicQuestionsInputSchema)
+		.output(GenerateTopicQuestionsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await generateTopicQuestionsWithAI(input, context.session.user.id),
+		),
+	getAiQuota: protectedProcedure
+		.input(z.object({}))
+		.output(GetAiTopicQuotaOutputSchema)
+		.handler(async ({ context }) => getAiTopicQuota(context.session.user.id)),
 	list: publicProcedure
 		.input(ListTopicsInputSchema)
 		.output(ListTopicsOutputSchema)

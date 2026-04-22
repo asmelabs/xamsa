@@ -47,6 +47,8 @@ model Pack {
   topics  Topic[]
   games   Game[]
 
+  tsualPackageImports UserTsualPackageImport[]
+
   @@index([slug])
   @@index([authorId])
   @@index([totalPlays])

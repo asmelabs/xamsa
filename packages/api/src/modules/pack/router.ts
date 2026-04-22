@@ -1,4 +1,6 @@
 import {
+	BulkCreatePacksInputSchema,
+	BulkCreatePacksOutputSchema,
 	CreatePackInputSchema,
 	CreatePackOutputSchema,
 	DeletePackInputSchema,
@@ -14,6 +16,7 @@ import {
 } from "@xamsa/schemas/modules/pack";
 import { protectedProcedure, publicProcedure } from "../../procedures";
 import {
+	bulkCreatePacks,
 	createPack,
 	deletePack,
 	findOnePack,
@@ -29,6 +32,13 @@ export const packRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await createPack(input, context.session.user.id),
+		),
+	bulkCreate: protectedProcedure
+		.input(BulkCreatePacksInputSchema)
+		.output(BulkCreatePacksOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await bulkCreatePacks(input, context.session.user.id),
 		),
 	update: protectedProcedure
 		.input(UpdatePackInputSchema)

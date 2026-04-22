@@ -7,6 +7,8 @@ import {
 	packSort,
 } from "@xamsa/schemas/modules/listings/pack";
 import type {
+	BulkCreatePacksInputType,
+	BulkCreatePacksOutputType,
 	CreatePackInputType,
 	CreatePackOutputType,
 	DeletePackInputType,
@@ -55,6 +57,43 @@ export async function createPack(
 	});
 
 	return pack;
+}
+
+export async function bulkCreatePacks(
+	input: BulkCreatePacksInputType,
+	authorId: string,
+): Promise<BulkCreatePacksOutputType> {
+	return await prisma.$transaction(async (tx) => {
+		const created: { slug: string }[] = [];
+
+		for (const packIn of input.packs) {
+			const slug = await generateUniqueSlug(
+				packIn.name,
+				async (candidate) =>
+					!!(await tx.pack.findUnique({
+						where: { slug: candidate },
+					})),
+			);
+
+			if (COMMON_PACK_SLUGS.includes(slug)) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Name is too common. Please use a different name.",
+				});
+			}
+
+			const p = await tx.pack.create({
+				data: {
+					authorId,
+					slug,
+					...packIn,
+				},
+				select: { slug: true },
+			});
+			created.push(p);
+		}
+
+		return { created };
+	});
 }
 
 export async function updatePack(

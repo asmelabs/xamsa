@@ -54,6 +54,12 @@ model User {
   /// content creation ///
   totalPacksPublished Int @default(0) @map("total_packs_published")
 
+  /// AI topic generation (daily quota, UTC day window) ///
+  lastAiUsedAt     DateTime? @map("last_ai_used_at")
+  aiUseCount       Int       @default(0) @map("ai_use_count")
+  /// Start of the UTC day for which `aiUseCount` applies (midnight UTC)
+  aiUseWindowDate  DateTime? @map("ai_use_window_date")
+
   sessions   Session[]
   accounts   Account[]
   twofactors TwoFactor[]
@@ -61,6 +67,11 @@ model User {
   ratings    PackRating[]
   hosted     Game[]
   players    Player[]
+
+  /// 3sual.az package ids this user has already imported (one row per 3sual package) ///
+  tsualPackageImports UserTsualPackageImport[]
+
+  topicBulkJobs TopicBulkJob[]
 
   @@index([elo])
   @@index([xp])

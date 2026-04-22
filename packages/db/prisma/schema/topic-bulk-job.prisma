@@ -1,0 +1,33 @@
+enum TopicBulkJobStatus {
+  pending
+  running
+  completed
+  failed
+}
+
+/// Async bulk topic creation (3sual / large hand-entered); client polls by id.
+model TopicBulkJob {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  packSlug String @map("pack_slug")
+
+  status TopicBulkJobStatus @default(pending)
+
+  /// { topics: CreateTopicPayload[], importedFromTsualPackageId?: number } — see BulkCreateTopicsInputSchema
+  payload Json @map("payload")
+
+  totalTopics Int @map("total_topics")
+
+  errorMessage String? @map("error_message")
+  /// On success: { "created": [ { "slug": string } ] }
+  result       Json?   @map("result")
+
+  @@index([userId])
+  @@index([status])
+  @@map("topic_bulk_job")
+}

@@ -6,8 +6,11 @@ import {
 	topicSort,
 } from "@xamsa/schemas/modules/listings/topic";
 import type {
+	BulkCreateTopicsInputType,
+	BulkCreateTopicsOutputType,
 	CreateTopicInputType,
 	CreateTopicOutputType,
+	CreateTopicPayloadType,
 	DeleteTopicInputType,
 	DeleteTopicOutputType,
 	FindOneTopicInputType,
@@ -21,6 +24,82 @@ import type {
 } from "@xamsa/schemas/modules/topic";
 import { definePagination } from "@xamsa/utils/pagination";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { assertUserCanCommitTsualImport } from "../tsual/service";
+
+/** Prisma default interactive tx timeout is 5s; large 3sual imports exceed that. */
+function bulkCreateTransactionOptions(topicCount: number) {
+	const timeoutMs = Math.min(600_000, Math.max(30_000, topicCount * 3_000));
+	return {
+		maxWait: 15_000,
+		timeout: timeoutMs,
+	} as const;
+}
+
+async function insertTopicWithQuestionsInTx(
+	tx: Prisma.TransactionClient,
+	packId: string,
+	input: CreateTopicPayloadType,
+	order: number,
+): Promise<{ slug: string }> {
+	if (input.questions.length !== 5) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Each topic must have exactly 5 questions",
+		});
+	}
+
+	const slug = await generateUniqueSlug(
+		input.name,
+		async (candidate) =>
+			!!(await tx.topic.findUnique({
+				where: {
+					packId_slug: {
+						packId,
+						slug: candidate,
+					},
+				},
+			})),
+	);
+
+	const topic = await tx.topic.create({
+		data: {
+			packId,
+			slug,
+			name: input.name,
+			description: input.description,
+			order,
+		},
+		select: {
+			id: true,
+			slug: true,
+		},
+	});
+
+	const questionsData = await Promise.all(
+		input.questions.map(async (q, i) => ({
+			topicId: topic.id,
+			order: i + 1,
+			...q,
+			slug: await generateUniqueSlug(
+				q.text,
+				async (candidate) =>
+					!!(await tx.question.findUnique({
+						where: {
+							topicId_slug: {
+								topicId: topic.id,
+								slug: candidate,
+							},
+						},
+					})),
+			),
+		})),
+	);
+
+	await tx.question.createMany({
+		data: questionsData,
+	});
+
+	return { slug: topic.slug };
+}
 
 export async function createTopic(
 	input: CreateTopicInputType,
@@ -44,19 +123,6 @@ export async function createTopic(
 		});
 	}
 
-	const slug = await generateUniqueSlug(
-		input.name,
-		async (slug) =>
-			!!(await prisma.topic.findUnique({
-				where: {
-					packId_slug: {
-						packId: pack.id,
-						slug,
-					},
-				},
-			})),
-	);
-
 	return await prisma.$transaction(async (tx) => {
 		const { order: lastOrder } = (await tx.topic.findFirst({
 			where: {
@@ -70,51 +136,73 @@ export async function createTopic(
 			},
 		})) ?? { order: 0 };
 
-		const topic = await tx.topic.create({
-			data: {
-				packId: pack.id,
-				slug,
+		return insertTopicWithQuestionsInTx(
+			tx,
+			pack.id,
+			{
 				name: input.name,
-				order: lastOrder + 1,
+				description: input.description,
+				questions: input.questions,
 			},
-			select: {
-				id: true,
-				slug: true,
+			lastOrder + 1,
+		);
+	});
+}
+
+export async function bulkCreateTopics(
+	input: BulkCreateTopicsInputType,
+	authorId: string,
+): Promise<BulkCreateTopicsOutputType> {
+	const { importedFromTsualPackageId, ...bulk } = input;
+
+	if (importedFromTsualPackageId != null) {
+		await assertUserCanCommitTsualImport(authorId, importedFromTsualPackageId);
+	}
+
+	return await prisma.$transaction(async (tx) => {
+		const pack = await tx.pack.findFirst({
+			where: {
+				slug: bulk.pack,
+				authorId,
+				status: "draft",
 			},
+			select: { id: true },
 		});
 
-		if (input.questions.length !== 5) {
-			throw new ORPCError("BAD_REQUEST", {
-				message: "Each topic must have exactly 5 questions",
+		if (!pack) {
+			throw new ORPCError("NOT_FOUND", {
+				message: "Pack not found",
 			});
 		}
 
-		const questionsData = await Promise.all(
-			input.questions.map(async (q, i) => ({
-				topicId: topic.id,
-				order: i + 1,
-				...q,
-				slug: await generateUniqueSlug(
-					q.text,
-					async (slug) =>
-						!!(await tx.question.findUnique({
-							where: {
-								topicId_slug: {
-									topicId: topic.id,
-									slug,
-								},
-							},
-						})),
-				),
-			})),
-		);
+		const { order: lastOrder } = (await tx.topic.findFirst({
+			where: { packId: pack.id },
+			orderBy: { order: "desc" },
+			select: { order: true },
+		})) ?? { order: 0 };
 
-		await tx.question.createMany({
-			data: questionsData,
-		});
+		let nextOrder = lastOrder + 1;
+		const created: { slug: string }[] = [];
 
-		return { slug: topic.slug };
-	});
+		for (const item of bulk.topics) {
+			created.push(
+				await insertTopicWithQuestionsInTx(tx, pack.id, item, nextOrder),
+			);
+			nextOrder += 1;
+		}
+
+		if (importedFromTsualPackageId != null) {
+			await tx.userTsualPackageImport.create({
+				data: {
+					userId: authorId,
+					tsualPackageId: importedFromTsualPackageId,
+					packId: pack.id,
+				},
+			});
+		}
+
+		return { created };
+	}, bulkCreateTransactionOptions(bulk.topics.length));
 }
 
 export async function listTopics(
