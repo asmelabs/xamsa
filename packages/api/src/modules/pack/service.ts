@@ -21,6 +21,7 @@ import type {
 	UpdatePackStatusOutputType,
 } from "@xamsa/schemas/modules/pack";
 import { defineCursorPagination } from "@xamsa/utils/pagination";
+import { computeLevelFromXp } from "@xamsa/utils/progression";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
 import { COMMON_PACK_SLUGS } from "./utils";
 
@@ -152,9 +153,12 @@ export async function updatePackStatus(
 			author: {
 				update: {
 					xp: newXp,
-					totalPacksPublished: isInitialPublish ? {
-						increment: 1
-					} : undefined
+					level: computeLevelFromXp(newXp),
+					totalPacksPublished: isInitialPublish
+						? {
+								increment: 1,
+							}
+						: undefined,
 				},
 			},
 		},

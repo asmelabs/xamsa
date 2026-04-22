@@ -146,6 +146,11 @@ export async function joinPlayer(
 			},
 		});
 
+		await prisma.game.update({
+			where: { id: game.id },
+			data: { totalActivePlayers: { increment: 1 } },
+		});
+
 		await broadcastJoin(reactivated.id);
 		return reactivated;
 	}
@@ -162,6 +167,11 @@ export async function joinPlayer(
 			status: true,
 			joinedAt: true,
 		},
+	});
+
+	await prisma.game.update({
+		where: { id: game.id },
+		data: { totalActivePlayers: { increment: 1 } },
 	});
 
 	await broadcastJoin(player.id);
@@ -316,6 +326,11 @@ export async function leavePlayer(
 				},
 			});
 
+			await tx.game.update({
+				where: { id: game.id },
+				data: { totalActivePlayers: { decrement: 1 } },
+			});
+
 			// If the last active player just left a running game, auto-finalize.
 			let finalizeResult: Awaited<ReturnType<typeof finalizeGame>> | null =
 				null;
@@ -436,6 +451,11 @@ export async function kickPlayer(
 					status: true,
 					leftAt: true,
 				},
+			});
+
+			await tx.game.update({
+				where: { id: game.id },
+				data: { totalActivePlayers: { decrement: 1 } },
 			});
 
 			return { updated: updatedRow, expiredClickId: expiredId };
