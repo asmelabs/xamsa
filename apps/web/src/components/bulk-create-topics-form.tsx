@@ -31,13 +31,14 @@ import {
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
 import { CircleHelp, Download, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
+import { TopicBulkJobDialog } from "./topic-bulk-job-dialog";
 
 const emptyQuestion = {
 	text: "",
@@ -90,6 +91,9 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 		number | null
 	>(null);
 	const [tsualSourceName, setTsualSourceName] = useState<string | null>(null);
+	const [jobDialogOpen, setJobDialogOpen] = useState(false);
+	const [activeJobId, setActiveJobId] = useState<string | null>(null);
+	const lastSubmittedTopicCount = useRef(0);
 
 	const { data: aiQuota } = useQuery({
 		...orpc.topic.getAiQuota.queryOptions({ input: {} }),
@@ -137,35 +141,28 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 		name: "topics",
 	});
 
-	const { mutate: bulkCreate, isPending } = useMutation({
-		...orpc.topic.bulkCreate.mutationOptions(),
-		onSuccess({ created }) {
-			toast.success(
-				created.length === 1
-					? "1 topic created"
-					: `${String(created.length)} topics created`,
-			);
-			navigate({
-				to: "/packs/$packSlug",
-				params: { packSlug },
-				replace: true,
-			});
-		},
-		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
-			);
-		},
+	const { mutateAsync: startBulkJob, isPending: isStartingJob } = useMutation({
+		...orpc.topic.startBulkCreateJob.mutationOptions(),
 	});
 
-	const onSubmit = form.handleSubmit((values) => {
-		bulkCreate({
-			pack: packSlug,
-			topics: values.topics,
-			...(pendingTsualPackageId != null
-				? { importedFromTsualPackageId: pendingTsualPackageId }
-				: {}),
-		});
+	const onSubmit = form.handleSubmit(async (values) => {
+		lastSubmittedTopicCount.current = values.topics.length;
+		try {
+			const { jobId } = await startBulkJob({
+				pack: packSlug,
+				topics: values.topics,
+				...(pendingTsualPackageId != null
+					? { importedFromTsualPackageId: pendingTsualPackageId }
+					: {}),
+			});
+			setActiveJobId(jobId);
+			setJobDialogOpen(true);
+		} catch (e) {
+			const err = e as { message?: string };
+			toast.error(
+				err.message || "Could not start topic import. Please try again.",
+			);
+		}
 	});
 
 	return (
@@ -183,7 +180,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 							type="button"
 							variant="secondary"
 							size="sm"
-							disabled={isPending || isTsualPending}
+							disabled={isStartingJob || isTsualPending}
 							onClick={() => setTsualDialogOpen(true)}
 						>
 							<Download className="mr-1.5 size-4" />
@@ -255,7 +252,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 								size="sm"
 								disabled={
 									!session?.user ||
-									isPending ||
+									isStartingJob ||
 									isAiPending ||
 									!aiQuota ||
 									aiQuota.used >= aiQuota.limit ||
@@ -395,7 +392,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 				</FramePanel>
 
 				<FrameFooter>
-					<form.Submit isLoading={isPending} loadingText="Creating topics...">
+					<form.Submit isLoading={isStartingJob} loadingText="Starting import…">
 						Create {fields.length} topic{fields.length > 1 ? "s" : ""}
 					</form.Submit>
 				</FrameFooter>
@@ -470,6 +467,36 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			<TopicBulkJobDialog
+				jobId={activeJobId}
+				onCompleted={() => {
+					const n = lastSubmittedTopicCount.current;
+					toast.success(
+						n === 1 ? "1 topic created" : `${String(n)} topics created`,
+					);
+					form.reset({ topics: [emptyTopic()] });
+					setPendingTsualPackageId(null);
+					setTsualSourceName(null);
+					setActiveJobId(null);
+					setJobDialogOpen(false);
+					navigate({
+						to: "/packs/$packSlug",
+						params: { packSlug },
+						replace: true,
+					});
+				}}
+				onOpenChange={(o) => {
+					setJobDialogOpen(o);
+					if (!o) {
+						setActiveJobId(null);
+					}
+				}}
+				open={jobDialogOpen}
+				packSlug={packSlug}
+				title="Creating topics"
+				totalTopics={lastSubmittedTopicCount.current}
+			/>
 		</Frame>
 	);
 }

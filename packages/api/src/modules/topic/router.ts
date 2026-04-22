@@ -10,8 +10,11 @@ import {
 	GenerateTopicQuestionsInputSchema,
 	GenerateTopicQuestionsOutputSchema,
 	GetAiTopicQuotaOutputSchema,
+	GetBulkCreateJobInputSchema,
+	GetBulkCreateJobOutputSchema,
 	ListTopicsInputSchema,
 	ListTopicsOutputSchema,
+	StartBulkCreateJobOutputSchema,
 	UpdateTopicInputSchema,
 	UpdateTopicOutputSchema,
 	UpdateTopicsOrderInputSchema,
@@ -20,6 +23,7 @@ import {
 import z from "zod";
 import { protectedProcedure, publicProcedure } from "../../procedures";
 import { generateTopicQuestionsWithAI, getAiTopicQuota } from "./ai.service";
+import { getBulkCreateJob, startBulkCreateJob } from "./bulk-job.service";
 import {
 	bulkCreateTopics,
 	createTopic,
@@ -44,6 +48,20 @@ export const topicRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await bulkCreateTopics(input, context.session.user.id),
+		),
+	startBulkCreateJob: protectedProcedure
+		.input(BulkCreateTopicsInputSchema)
+		.output(StartBulkCreateJobOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await startBulkCreateJob(input, context.session.user.id),
+		),
+	getBulkCreateJob: protectedProcedure
+		.input(GetBulkCreateJobInputSchema)
+		.output(GetBulkCreateJobOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await getBulkCreateJob(input.jobId, context.session.user.id),
 		),
 	generateQuestions: protectedProcedure
 		.input(GenerateTopicQuestionsInputSchema)

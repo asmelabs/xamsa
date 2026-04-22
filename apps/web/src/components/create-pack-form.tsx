@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
+import { TopicBulkJobDialog } from "./topic-bulk-job-dialog";
 
 function isModeratorOrAdmin(
 	user: { role?: string } | undefined,
@@ -59,6 +60,12 @@ export function CreatePackForm() {
 		CreateTopicPayloadType[] | null
 	>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [afterPackJob, setAfterPackJob] = useState<{
+		jobId: string;
+		packSlug: string;
+		topicCount: number;
+	} | null>(null);
+	const [packJobDialogOpen, setPackJobDialogOpen] = useState(false);
 
 	const [defaultName] = useQueryState("name");
 	const [defaultDescription] = useQueryState("description");
@@ -86,9 +93,9 @@ export function CreatePackForm() {
 			...orpc.pack.create.mutationOptions(),
 		});
 
-	const { mutateAsync: bulkCreateAsync, isPending: isBulkPending } =
+	const { mutateAsync: startBulkJob, isPending: isStartingBulkJob } =
 		useMutation({
-			...orpc.topic.bulkCreate.mutationOptions(),
+			...orpc.topic.startBulkCreateJob.mutationOptions(),
 		});
 
 	const { mutate: previewTsualImport, isPending: isTsualPending } = useMutation(
@@ -125,26 +132,27 @@ export function CreatePackForm() {
 		try {
 			const { slug } = await createPackAsync(values);
 			if (withTsual) {
-				await bulkCreateAsync({
+				const { jobId } = await startBulkJob({
 					pack: slug,
 					topics: topicsToImport,
 					importedFromTsualPackageId: tsualId,
 				});
-				toast.success("Pack created with topics from 3sual.");
+				setAfterPackJob({
+					jobId,
+					packSlug: slug,
+					topicCount: topicsToImport.length,
+				});
+				setPackJobDialogOpen(true);
+				form.reset();
+				setPendingTsualTopics(null);
+				setPendingTsualPackageId(null);
+				setTsualSourceName(null);
 			} else {
 				toast.success("Pack created successfully");
-			}
-			form.reset();
-			setPendingTsualTopics(null);
-			setPendingTsualPackageId(null);
-			setTsualSourceName(null);
-			if (withTsual) {
-				navigate({
-					to: "/packs/$packSlug",
-					params: { packSlug: slug },
-					replace: true,
-				});
-			} else {
+				form.reset();
+				setPendingTsualTopics(null);
+				setPendingTsualPackageId(null);
+				setTsualSourceName(null);
 				navigate({ to: `/packs/${slug}/topics/new`, replace: true });
 			}
 		} catch (error) {
@@ -157,7 +165,7 @@ export function CreatePackForm() {
 		}
 	});
 
-	const loading = isCreatePending || isBulkPending || isSubmitting;
+	const loading = isCreatePending || isSubmitting || isStartingBulkJob;
 
 	return (
 		<Frame>
@@ -301,6 +309,30 @@ export function CreatePackForm() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			<TopicBulkJobDialog
+				jobId={afterPackJob?.jobId ?? null}
+				onCompleted={(packSlug) => {
+					toast.success("Pack created with topics from 3sual.");
+					setAfterPackJob(null);
+					setPackJobDialogOpen(false);
+					navigate({
+						to: "/packs/$packSlug",
+						params: { packSlug },
+						replace: true,
+					});
+				}}
+				onOpenChange={(o) => {
+					setPackJobDialogOpen(o);
+					if (!o) {
+						setAfterPackJob(null);
+					}
+				}}
+				open={packJobDialogOpen}
+				packSlug={afterPackJob?.packSlug ?? ""}
+				title="Adding topics from 3sual"
+				totalTopics={afterPackJob?.topicCount ?? 0}
+			/>
 		</Frame>
 	);
 }

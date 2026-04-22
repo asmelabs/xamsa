@@ -88,6 +88,36 @@ export type BulkCreateTopicsOutputType = z.infer<
 	typeof BulkCreateTopicsOutputSchema
 >;
 
+export const StartBulkCreateJobOutputSchema = z.object({
+	jobId: z.string().uuid(),
+});
+
+export const GetBulkCreateJobInputSchema = z.object({
+	jobId: z.string().uuid(),
+});
+
+export const TopicBulkJobStatusSchema = z.enum([
+	"pending",
+	"running",
+	"completed",
+	"failed",
+]);
+
+export const GetBulkCreateJobOutputSchema = z.object({
+	status: TopicBulkJobStatusSchema,
+	totalTopics: z.number().int().min(0),
+	errorMessage: z.string().nullable(),
+	result: BulkCreateTopicsOutputSchema.nullable(),
+	updatedAt: z.coerce.date(),
+});
+
+export type GetBulkCreateJobInputType = z.infer<
+	typeof GetBulkCreateJobInputSchema
+>;
+export type GetBulkCreateJobOutputType = z.infer<
+	typeof GetBulkCreateJobOutputSchema
+>;
+
 /**
  * AI: generate 5 questions for a topic (no DB write; server validates output).
  */

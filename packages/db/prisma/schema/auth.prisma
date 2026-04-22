@@ -71,6 +71,8 @@ model User {
   /// 3sual.az package ids this user has already imported (one row per 3sual package) ///
   tsualPackageImports UserTsualPackageImport[]
 
+  topicBulkJobs TopicBulkJob[]
+
   @@index([elo])
   @@index([xp])
   @@index([totalWins])
