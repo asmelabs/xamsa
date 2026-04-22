@@ -7,6 +7,7 @@ import {
 } from "@xamsa/ui/components/frame";
 import { JoinGameForm } from "@/components/join-game-form";
 import { getUser } from "@/functions/get-user";
+import { pageSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/join/")({
 	component: RouteComponent,
@@ -22,9 +23,15 @@ export const Route = createFileRoute("/join/")({
 		return { session };
 	},
 
-	head: () => ({
-		meta: [{ title: "Join a game — Xamsa" }],
-	}),
+	head: () =>
+		pageSeo({
+			title: "Join a game",
+			description:
+				"Enter the code from your host to join an active Xamsa game. You’ll play in real time with buzz-in answers.",
+			path: "/join/",
+			noIndex: true,
+			keywords: "Xamsa join, game code, enter quiz room, live trivia join",
+		}),
 });
 
 function RouteComponent() {

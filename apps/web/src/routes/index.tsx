@@ -29,12 +29,18 @@ import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { getUser } from "@/functions/get-user";
+import { DEFAULT_DESCRIPTION, DEFAULT_KEYWORDS, pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/")({
-	head: () => ({
-		meta: [{ title: "Xamsa" }],
-	}),
+	head: () =>
+		pageSeo({
+			titleIsFull: true,
+			title: "Xamsa — Live party quiz & buzzer games",
+			description: DEFAULT_DESCRIPTION,
+			path: "/",
+			keywords: DEFAULT_KEYWORDS,
+		}),
 	beforeLoad: async () => {
 		const session = await getUser();
 		return { session };
@@ -162,8 +168,8 @@ function SignedOutHome() {
 					Welcome to Xamsa
 				</h1>
 				<p className="max-w-prose text-muted-foreground">
-					A buzz-to-answer party game inspired by the TV show. Host a pack, rally
-					your friends, race to the buzzer.
+					A buzz-to-answer party game inspired by the TV show. Host a pack,
+					rally your friends, race to the buzzer.
 				</p>
 			</div>
 
@@ -274,11 +280,7 @@ function SignedInHome({ userName, username }: SignedInHomeProps) {
 						label="Played"
 						value={stats.totalGamesPlayed}
 					/>
-					<StatTile
-						icon={TrophyIcon}
-						label="Wins"
-						value={stats.totalWins}
-					/>
+					<StatTile icon={TrophyIcon} label="Wins" value={stats.totalWins} />
 					<StatTile
 						icon={CrownIcon}
 						label="Podiums"
@@ -312,10 +314,7 @@ function SignedInHome({ userName, username }: SignedInHomeProps) {
 				</div>
 				{recentRows.length === 0 ? (
 					<div className="rounded-xl border border-border border-dashed p-6 text-center text-muted-foreground text-sm">
-						<ClockIcon
-							className="mx-auto mb-2 size-5"
-							strokeWidth={1.75}
-						/>
+						<ClockIcon className="mx-auto mb-2 size-5" strokeWidth={1.75} />
 						No games yet. Host or join one to see your history here.
 					</div>
 				) : (

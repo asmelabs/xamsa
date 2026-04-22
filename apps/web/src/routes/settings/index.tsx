@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { getUser } from "@/functions/get-user";
 import { useAppForm } from "@/hooks/use-app-form";
 import { getCurrentProductVersionLabel } from "@/lib/app-release";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/settings/")({
@@ -40,15 +41,15 @@ export const Route = createFileRoute("/settings/")({
 		return { user: context.session!.user };
 	},
 
-	head: () => ({
-		meta: [
-			{ title: "Settings — Xamsa" },
-			{
-				name: "description",
-				content: "Manage your account settings",
-			},
-		],
-	}),
+	head: () =>
+		pageSeo({
+			title: "Settings",
+			description:
+				"Update your Xamsa profile, email, and account details. See the current app version and release notes from here.",
+			path: "/settings/",
+			noIndex: true,
+			keywords: "Xamsa settings, account, profile, app version",
+		}),
 });
 
 function RouteComponent() {

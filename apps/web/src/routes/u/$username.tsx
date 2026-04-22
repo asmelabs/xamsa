@@ -1,14 +1,21 @@
-import { getLevelProgress } from "@xamsa/utils/levels";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
-import { BarChart3Icon, LogOutIcon, SettingsIcon, ShieldCheckIcon, ZapIcon } from "lucide-react";
+import { getLevelProgress } from "@xamsa/utils/levels";
+import {
+	BarChart3Icon,
+	LogOutIcon,
+	SettingsIcon,
+	ShieldCheckIcon,
+	ZapIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { StatTile } from "@/components/home/stat-tile";
 import { LoadingButton } from "@/components/loading-button";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/u/$username")({
@@ -33,25 +40,25 @@ export const Route = createFileRoute("/u/$username")({
 		}
 	},
 
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `${loaderData.profile.name} (@${loaderData.profile.username}) — Xamsa`
-					: "User — Xamsa",
-			},
-			{
-				name: "description",
-				content: loaderData?.profile.name || "User profile",
-			},
-			{
-				name: "og:title",
-				content: loaderData
-					? `${loaderData.profile.name} on Xamsa`
-					: "User — Xamsa",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Profile",
+				description:
+					"View a player’s public profile on Xamsa: display name, level, XP, and Elo rating.",
+			});
+		}
+		const { profile } = loaderData;
+		const desc = `Public profile for ${profile.name} (@${profile.username}) on Xamsa. Level ${profile.level}, ${profile.xp.toLocaleString()} XP, Elo ${profile.elo.toLocaleString()}. See quiz progress and competitive stats.`;
+		return pageSeo({
+			title: `${profile.name} (@${profile.username})`,
+			description: desc,
+			path: `/u/${profile.username}/`,
+			ogTitle: `${profile.name} on Xamsa`,
+			ogDescription: desc,
+			keywords: `Xamsa, quiz profile, ${profile.username}, ${profile.name}, trivia stats, Elo, XP`,
+		});
+	},
 });
 
 const roleConfig = {

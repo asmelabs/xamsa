@@ -18,7 +18,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	notFound,
+	useNavigate,
+} from "@tanstack/react-router";
 import type { ListTopicQuestionsOutputType } from "@xamsa/schemas/modules/question";
 import {
 	Alert,
@@ -44,12 +49,43 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute(
 	"/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/",
 )({
 	component: RouteComponent,
+	loader: async ({ params }) => {
+		try {
+			const topic = await orpc.topic.findOne.call({
+				slug: params.topicSlug,
+				pack: params.packSlug,
+			});
+			return { topic };
+		} catch {
+			throw notFound();
+		}
+	},
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Reorder questions",
+				description:
+					"Drag questions within a topic to set point order and flow before you publish or play.",
+				noIndex: true,
+			});
+		}
+		const { topic } = loaderData;
+		return pageSeo({
+			title: `Reorder questions · ${topic.name}`,
+			description: `Change the order of questions in “${topic.name}” (${topic.pack.name}) on Xamsa. Drag rows to match how you want the round to play, then save.`,
+			path: `/packs/${topic.pack.slug}/topics/${topic.slug}/questions/edit/reorder/`,
+			ogTitle: `Reorder questions: ${topic.name}`,
+			keywords: `Xamsa, edit topic, question order, ${topic.name}, ${topic.pack.name}`,
+			noIndex: true,
+		});
+	},
 });
 
 type QuestionItem = ListTopicQuestionsOutputType[number];
@@ -182,6 +218,8 @@ function RouteComponent() {
 				<ArrowLeftIcon />
 				Back to topic
 			</Button>
+
+			<h1 className="font-bold text-2xl tracking-tight">Reorder questions</h1>
 
 			<Frame>
 				<FrameHeader className="flex items-center justify-between">

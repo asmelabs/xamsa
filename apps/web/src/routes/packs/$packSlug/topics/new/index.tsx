@@ -1,34 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreateTopicForm } from "@/components/create-topic-form";
-
-const title = "Create a new topic";
-const description =
-	"Create a new topic for the pack on Xamsa. Topics have 5 questions and are the fundamental parts of the games.";
+import { pageSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/packs/$packSlug/topics/new/")({
 	component: RouteComponent,
-	head: () => ({
-		meta: [
-			{ title },
-			{
-				name: "description",
-				content: description,
-			},
-			{
-				name: "keywords",
-				content:
-					"xamsa, create topic, create question, pack, topic, question, game, fun, friends",
-			},
-			{
-				name: "og:title",
-				content: title,
-			},
-			{
-				name: "og:description",
-				content: description,
-			},
-		],
-	}),
+	head: ({ params }) =>
+		pageSeo({
+			title: "Create a topic",
+			description:
+				"Add a new topic to your pack on Xamsa. Each topic holds five questions that appear in order during live games.",
+			path: `/packs/${params.packSlug}/topics/new/`,
+			noIndex: true,
+			keywords:
+				"Xamsa, create topic, quiz topic, five questions, pack editor, trivia builder",
+		}),
 });
 
 function RouteComponent() {

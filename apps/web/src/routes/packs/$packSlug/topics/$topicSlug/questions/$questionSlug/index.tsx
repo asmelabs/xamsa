@@ -10,6 +10,7 @@ import {
 import { cn } from "@xamsa/ui/lib/utils";
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, PencilIcon } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute(
@@ -28,19 +29,25 @@ export const Route = createFileRoute(
 			throw notFound();
 		}
 	},
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `Question ${loaderData.order} — ${loaderData.topic.name} — Xamsa`
-					: "Question — Xamsa",
-			},
-			{
-				name: "description",
-				content: loaderData?.text || "A quiz question",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Question",
+				description: "A quiz question on Xamsa.",
+			});
+		}
+		const preview = loaderData.text?.trim() || "Quiz question";
+		const desc = `Question ${loaderData.order} in “${loaderData.topic.name}” (${loaderData.pack.name}) on Xamsa. ${truncateMeta(preview, 120)}`;
+		return pageSeo({
+			title: `Q${loaderData.order} · ${loaderData.topic.name}`,
+			description: desc,
+			path: `/packs/${loaderData.pack.slug}/topics/${loaderData.topic.slug}/questions/${loaderData.slug}/`,
+			ogType: "article",
+			ogTitle: `Question ${loaderData.order} · ${loaderData.topic.name}`,
+			ogDescription: truncateMeta(desc),
+			keywords: `Xamsa, quiz question, ${loaderData.topic.name}, ${loaderData.pack.name}`,
+		});
+	},
 });
 
 function RouteComponent() {

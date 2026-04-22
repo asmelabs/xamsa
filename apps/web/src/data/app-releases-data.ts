@@ -18,6 +18,31 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-04-22",
 			year: 2026,
 			month: 4,
+			patch: 1,
+			title: "SEO and social sharing",
+			highlights: [
+				{
+					kind: "text",
+					text: "Every route now sets clearer titles, descriptions, and keywords for search and previews.",
+				},
+				{
+					kind: "text",
+					text: "Open Graph and Twitter cards use a shared default image; favicon and touch icon use the app logo.",
+				},
+				{
+					kind: "text",
+					text: "Pack, topic, question, profile, play, and game pages include context-specific copy; private flows use noindex where appropriate.",
+				},
+				{
+					kind: "text",
+					text: "Optional VITE_PUBLIC_SITE_URL produces absolute og:image and og:url in production.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-22",
+			year: 2026,
+			month: 4,
 			patch: 0,
 			title: "Initial release",
 			highlights: [

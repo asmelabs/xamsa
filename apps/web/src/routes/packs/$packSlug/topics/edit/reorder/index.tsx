@@ -18,7 +18,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	notFound,
+	useNavigate,
+} from "@tanstack/react-router";
 import type { GetPaginatedItem } from "@xamsa/schemas/common/pagination";
 import type { ListTopicsOutputType } from "@xamsa/schemas/modules/topic";
 import {
@@ -46,10 +51,38 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/$packSlug/topics/edit/reorder/")({
 	component: RouteComponent,
+	loader: async ({ params }) => {
+		try {
+			const pack = await orpc.pack.findOne.call({ slug: params.packSlug });
+			return { pack };
+		} catch {
+			throw notFound();
+		}
+	},
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Reorder topics",
+				description:
+					"Drag and drop topics in your pack to set the order players will see when you host a game.",
+				noIndex: true,
+			});
+		}
+		const { pack } = loaderData;
+		return pageSeo({
+			title: `Reorder topics · ${pack.name}`,
+			description: `Change the order of topics in your pack “${pack.name}” on Xamsa before publishing or hosting. Drag rows, then save.`,
+			path: `/packs/${pack.slug}/topics/edit/reorder/`,
+			ogTitle: `Reorder topics: ${pack.name}`,
+			keywords: `Xamsa, edit pack, topic order, ${pack.name}`,
+			noIndex: true,
+		});
+	},
 });
 
 type TopicItem = GetPaginatedItem<ListTopicsOutputType>;
@@ -170,6 +203,8 @@ function RouteComponent() {
 				<ArrowLeftIcon />
 				Back to pack
 			</Button>
+
+			<h1 className="font-bold text-2xl tracking-tight">Reorder topics</h1>
 
 			<Frame>
 				<FrameHeader className="flex items-center justify-between">
