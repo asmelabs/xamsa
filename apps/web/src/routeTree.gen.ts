@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WhatsNewIndexRouteImport } from './routes/whats-new/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as PlayIndexRouteImport } from './routes/play/index'
 import { Route as PacksIndexRouteImport } from './routes/packs/index'
@@ -47,6 +48,11 @@ const AuthRoute = AuthRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatsNewIndexRoute = WhatsNewIndexRouteImport.update({
+  id: '/whats-new/',
+  path: '/whats-new/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/whats-new/': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/packs': typeof PacksIndexRoute
   '/play': typeof PlayIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/whats-new': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/whats-new/': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
@@ -302,6 +311,7 @@ export interface FileRouteTypes {
     | '/packs/'
     | '/play/'
     | '/settings/'
+    | '/whats-new/'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/packs'
     | '/play'
     | '/settings'
+    | '/whats-new'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/packs/'
     | '/play/'
     | '/settings/'
+    | '/whats-new/'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
@@ -391,6 +403,7 @@ export interface RootRouteChildren {
   PacksIndexRoute: typeof PacksIndexRoute
   PlayIndexRoute: typeof PlayIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  WhatsNewIndexRoute: typeof WhatsNewIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
@@ -422,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whats-new/': {
+      id: '/whats-new/'
+      path: '/whats-new'
+      fullPath: '/whats-new/'
+      preLoaderRoute: typeof WhatsNewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/': {
@@ -644,6 +664,7 @@ const rootRouteChildren: RootRouteChildren = {
   PacksIndexRoute: PacksIndexRoute,
   PlayIndexRoute: PlayIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  WhatsNewIndexRoute: WhatsNewIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   GCodeIndexRoute: GCodeIndexRoute,

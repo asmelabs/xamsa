@@ -1,5 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	redirect,
+	useRouter,
+} from "@tanstack/react-router";
 import { UpdateProfileInputSchema } from "@xamsa/schemas/modules/user";
 import {
 	Frame,
@@ -12,6 +17,7 @@ import { Input } from "@xamsa/ui/components/input";
 import { toast } from "sonner";
 import { getUser } from "@/functions/get-user";
 import { useAppForm } from "@/hooks/use-app-form";
+import { getCurrentProductVersionLabel } from "@/lib/app-release";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/settings/")({
@@ -48,6 +54,7 @@ export const Route = createFileRoute("/settings/")({
 function RouteComponent() {
 	const router = useRouter();
 	const { user } = Route.useLoaderData();
+	const appVersionLabel = getCurrentProductVersionLabel();
 
 	const form = useAppForm({
 		schema: UpdateProfileInputSchema,
@@ -113,7 +120,6 @@ function RouteComponent() {
 				</form>
 			</Frame>
 
-			{/* Placeholder for future settings sections */}
 			<Frame>
 				<FrameHeader>
 					<FrameTitle>Account</FrameTitle>
@@ -128,13 +134,28 @@ function RouteComponent() {
 							<dt className="text-muted-foreground">Email</dt>
 							<dd className="font-medium">{user.email}</dd>
 						</div>
-						<div className="flex items-center justify-between">
-							<dt className="text-muted-foreground">Email verified</dt>
-							<dd className="font-medium">
-								{user.emailVerified ? "Yes" : "No"}
-							</dd>
-						</div>
 					</dl>
+				</FramePanel>
+			</Frame>
+
+			<Frame>
+				<FrameHeader>
+					<FrameTitle>App</FrameTitle>
+				</FrameHeader>
+				<FramePanel className="space-y-3">
+					<div className="flex items-center justify-between gap-3 text-sm">
+						<span className="text-muted-foreground">Version</span>
+						<span className="font-medium">{appVersionLabel}</span>
+					</div>
+					<p className="text-muted-foreground text-xs">
+						<Link
+							to="/whats-new"
+							className="font-medium text-foreground underline decoration-muted-foreground/50 underline-offset-4 hover:decoration-foreground"
+						>
+							See what’s new
+						</Link>{" "}
+						for user-facing updates in each release.
+					</p>
 				</FramePanel>
 			</Frame>
 		</div>

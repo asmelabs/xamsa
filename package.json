@@ -28,6 +28,7 @@
 	},
 	"type": "module",
 	"scripts": {
+		"prepare": "lefthook install",
 		"dev": "turbo dev",
 		"build": "turbo db:deploy && turbo build",
 		"check-types": "turbo check-types",
@@ -37,7 +38,8 @@
 		"db:generate": "turbo -F @xamsa/db db:generate",
 		"db:migrate": "turbo -F @xamsa/db db:migrate",
 		"db:seed": "turbo -F @xamsa/db db:seed",
-		"check": "biome check --write ."
+		"check": "biome check --write .",
+		"changeset": "changeset"
 	},
 	"dependencies": {
 		"@xamsa/env": "workspace:*",
@@ -46,6 +48,9 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.0",
+		"@changesets/cli": "^2.29.8",
+		"@commitlint/cli": "^20.3.1",
+		"@commitlint/config-conventional": "^20.3.1",
 		"@types/node": "catalog:",
 		"@xamsa/config": "workspace:*",
 		"lefthook": "^2.0.13",
