@@ -1,0 +1,84 @@
+# APPS
+app:web:
+  - changed-files:
+    - any-glob-to-any-file: "apps/web/*"
+
+# PACKAGES
+pkg:api:
+  - changed-files:
+    - any-glob-to-any-file: "packages/api/*"
+
+pkg:ably:
+  - changed-files:
+    - any-glob-to-any-file: "packages/ably/*"
+
+pkg:auth:
+  - changed-files:
+    - any-glob-to-any-file: "packages/auth/*"
+
+pkg:config:
+  - changed-files:
+    - any-glob-to-any-file: "packages/config/*"
+
+pkg:db:
+  - changed-files:
+    - any-glob-to-any-file: "packages/db/*"
+
+pkg:env:
+  - changed-files:
+    - any-glob-to-any-file: "packages/env/*"
+
+pkg:mail:
+  - changed-files:
+    - any-glob-to-any-file: "packages/mail/*"
+
+pkg:schemas:
+  - changed-files:
+    - any-glob-to-any-file: "packages/schemas/*"
+
+pkg:ui:
+  - changed-files:
+    - any-glob-to-any-file: "packages/ui/*"
+
+pkg:utils:
+  - changed-files:
+    - any-glob-to-any-file: "packages/utils/*"
+
+# USAGE
+dependencies:
+    - changed-files:
+        - any-glob-to-any-file:
+            - "package.json"
+            - "bun.lock"
+            - "**/package.json"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "**/*.md"
+          - ".github/CONTRIBUTING.md"
+
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.json"
+          - "*.yml"
+          - "*.yaml"
+          - "*.mjs"
+          - ".vscode/**"
+          - ".editorconfig"
+          - "biome.json"
+          - "turbo.json"
+          - "lefthook.yml"
+          - "commitlint.config.mjs"
+          - "packages/config/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/workflows/**"
+
+database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "packages/db/prisma/**"
