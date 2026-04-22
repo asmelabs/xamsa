@@ -24,6 +24,16 @@ import type {
 } from "@xamsa/schemas/modules/topic";
 import { definePagination } from "@xamsa/utils/pagination";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { assertUserCanCommitTsualImport } from "../tsual/service";
+
+/** Prisma default interactive tx timeout is 5s; large 3sual imports exceed that. */
+function bulkCreateTransactionOptions(topicCount: number) {
+	const timeoutMs = Math.min(600_000, Math.max(30_000, topicCount * 3_000));
+	return {
+		maxWait: 15_000,
+		timeout: timeoutMs,
+	} as const;
+}
 
 async function insertTopicWithQuestionsInTx(
 	tx: Prisma.TransactionClient,
@@ -143,10 +153,16 @@ export async function bulkCreateTopics(
 	input: BulkCreateTopicsInputType,
 	authorId: string,
 ): Promise<BulkCreateTopicsOutputType> {
+	const { importedFromTsualPackageId, ...bulk } = input;
+
+	if (importedFromTsualPackageId != null) {
+		await assertUserCanCommitTsualImport(authorId, importedFromTsualPackageId);
+	}
+
 	return await prisma.$transaction(async (tx) => {
 		const pack = await tx.pack.findFirst({
 			where: {
-				slug: input.pack,
+				slug: bulk.pack,
 				authorId,
 				status: "draft",
 			},
@@ -168,15 +184,25 @@ export async function bulkCreateTopics(
 		let nextOrder = lastOrder + 1;
 		const created: { slug: string }[] = [];
 
-		for (const item of input.topics) {
+		for (const item of bulk.topics) {
 			created.push(
 				await insertTopicWithQuestionsInTx(tx, pack.id, item, nextOrder),
 			);
 			nextOrder += 1;
 		}
 
+		if (importedFromTsualPackageId != null) {
+			await tx.userTsualPackageImport.create({
+				data: {
+					userId: authorId,
+					tsualPackageId: importedFromTsualPackageId,
+					packId: pack.id,
+				},
+			});
+		}
+
 		return { created };
-	});
+	}, bulkCreateTransactionOptions(bulk.topics.length));
 }
 
 export async function listTopics(

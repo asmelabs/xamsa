@@ -18,3 +18,4 @@ export { PackSchema } from './Pack.schema';
 export { PackRatingSchema } from './PackRating.schema';
 export { TopicSchema } from './Topic.schema';
 export { QuestionSchema } from './Question.schema';
+export { UserTsualPackageImportSchema } from './UserTsualPackageImport.schema';

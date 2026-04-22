@@ -3,9 +3,10 @@ import {
 	FindOnePackageOutputSchema,
 	ListTsualPackagesInputSchema,
 	ListTsualPackagesResponseSchema,
+	PreviewTsualImportInputSchema,
 	PreviewTsualImportOutputSchema,
 } from "@xamsa/schemas/modules/tsual";
-import { protectedProcedure } from "../../procedures";
+import { moderatorProcedure, protectedProcedure } from "../../procedures";
 import {
 	getTsualForUse,
 	listTsualForHome,
@@ -21,8 +22,11 @@ export const tsualRouter = {
 		.input(FindOnePackageInputSchema)
 		.output(FindOnePackageOutputSchema)
 		.handler(async ({ input }) => getTsualForUse(input)),
-	previewImport: protectedProcedure
-		.input(FindOnePackageInputSchema)
+	previewImport: moderatorProcedure
+		.input(PreviewTsualImportInputSchema)
 		.output(PreviewTsualImportOutputSchema)
-		.handler(async ({ input }) => previewTsualImport(input)),
+		.handler(
+			async ({ input, context }) =>
+				await previewTsualImport(input, context.session.user.id),
+		),
 };

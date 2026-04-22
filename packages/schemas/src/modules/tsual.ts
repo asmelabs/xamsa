@@ -1,4 +1,5 @@
 import z from "zod";
+import { BULK_TOPICS_MAX_TSUAL_IMPORT } from "../common/bulk";
 import { CreateTopicPayloadSchema } from "./topic";
 
 /**
@@ -42,15 +43,55 @@ export type ListTsualPackagesResponse = z.infer<
 >;
 export type TsualForHomePackage = z.infer<typeof TsualForHomePackageSchema>;
 
+/** Oyun tipləri ki, mövzu+5 sual xəmsə modelinə uyğun gəlir (3sual `package.game.name`). */
+export const TSUAL_IMPORT_ALLOWED_GAME_NAMES = [
+	"Fərdi Oyun",
+	"Xəmsə Milli İntellektual Oyunu",
+] as const;
+
 // --- full package (GET /packages/foruse?id=…) ---
 
 export const FindOnePackageInputSchema = z.object({
 	id: z.coerce.number().int().positive(),
 });
 
+/**
+ * `raw` = rəqəm və ya 3sual.az-dan kopyalanmış URL (məs. .../package/3946, ?id=…).
+ * Uğursuzdakı `null` qaytarır.
+ */
+export function parseTsualPackageIdFromRaw(raw: string): number | null {
+	const t = raw.trim();
+	if (t.length === 0) {
+		return null;
+	}
+	if (/^\d+$/.test(t)) {
+		const n = Number.parseInt(t, 10);
+		return n > 0 ? n : null;
+	}
+	const fromPath = t.match(/\/package\/(\d+)/i);
+	if (fromPath?.[1]) {
+		const n = Number.parseInt(fromPath[1], 10);
+		return n > 0 ? n : null;
+	}
+	const idParam = t.match(/[?&]id=(\d+)/i);
+	if (idParam?.[1]) {
+		const n = Number.parseInt(idParam[1], 10);
+		return n > 0 ? n : null;
+	}
+	return null;
+}
+
+export const PreviewTsualImportInputSchema = z.object({
+	/** Paked ID və ya tam URL */
+	raw: z.string().min(1, "ID və ya link daxil edin"),
+});
+export type PreviewTsualImportInput = z.infer<
+	typeof PreviewTsualImportInputSchema
+>;
+
 const TsualGameInfoSchema = z.object({
 	id: z.int().positive(),
-	name: z.string(),
+	name: z.string().nullable(),
 	with_Theme: z.boolean(),
 });
 
@@ -70,7 +111,8 @@ export const TsualQuestionValueSchema = z.object({
 	id: z.int().positive(),
 	text: z.string(),
 	answer: z.string(),
-	comment: z.string(),
+	/** API bəzən `null` göndərir (boş şərh). */
+	comment: z.string().nullable(),
 	rekvizit: z.unknown().nullable(),
 	source_media: z.unknown().nullable(),
 	sources: z.array(z.unknown()),
@@ -81,7 +123,8 @@ export const TsualThemeSchema = z.object({
 	/** API field name (not "round") */
 	raund: z.int(),
 	name: z.string(),
-	information: z.string(),
+	/** API bəzən `null` göndərir. */
+	information: z.string().nullable(),
 	authors: z.array(TsualPersonRefSchema),
 	values: z.array(TsualQuestionValueSchema),
 	sources: z.array(z.unknown()),
@@ -112,7 +155,8 @@ export const TsualPhaseSchema: z.ZodType<TsualPhase> = z.lazy(() =>
 
 export const TsualPackageBodySchema = z.object({
 	id: z.int().positive(),
-	name: z.string(),
+	/** API bəzən `null` göndərir. */
+	name: z.string().nullable(),
 	isReady: z.boolean(),
 	information: z.string().nullable(),
 	added: z.string(),
@@ -166,9 +210,14 @@ export type TsualPackageBody = z.infer<typeof TsualPackageBodySchema>;
  * Used to preview an import from 3sual before `topic.bulkCreate`.
  */
 export const PreviewTsualImportOutputSchema = z.object({
-	topics: z.array(CreateTopicPayloadSchema),
+	topics: z
+		.array(CreateTopicPayloadSchema)
+		.min(1)
+		.max(BULK_TOPICS_MAX_TSUAL_IMPORT),
 	/** 3sual package name for suggested pack title in UI */
 	sourceName: z.string(),
+	/** 3sual `package.id` — bulkCreate-də unikal import üçün göndərin */
+	tsualPackageId: z.int().positive(),
 });
 
 export type PreviewTsualImportOutput = z.infer<

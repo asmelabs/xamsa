@@ -1,5 +1,5 @@
 import z from "zod";
-import { BULK_TOPICS_MAX } from "../common/bulk";
+import { BULK_TOPICS_MAX, BULK_TOPICS_MAX_TSUAL_IMPORT } from "../common/bulk";
 import {
 	PaginationInputSchema,
 	PaginationOutputSchema,
@@ -47,11 +47,35 @@ export type CreateTopicPayloadType = z.infer<typeof CreateTopicPayloadSchema>;
 
 /**
  * BULK CREATE (single pack, many topics)
+ * — Default max: `BULK_TOPICS_MAX` (20).
+ * — With `importedFromTsualPackageId` (3sual import): `BULK_TOPICS_MAX_TSUAL_IMPORT` (200).
  */
-export const BulkCreateTopicsInputSchema = z.object({
-	pack: PackSchema.shape.slug,
-	topics: z.array(CreateTopicPayloadSchema).min(1).max(BULK_TOPICS_MAX),
-});
+export const BulkCreateTopicsInputSchema = z
+	.object({
+		pack: PackSchema.shape.slug,
+		topics: z.array(CreateTopicPayloadSchema).min(1),
+		/** 3sual `package.id` if topics came from a moderator import (records UserTsualPackageImport) */
+		importedFromTsualPackageId: z.number().int().positive().optional(),
+	})
+	.superRefine((data, ctx) => {
+		const cap =
+			data.importedFromTsualPackageId != null
+				? BULK_TOPICS_MAX_TSUAL_IMPORT
+				: BULK_TOPICS_MAX;
+		if (data.topics.length > cap) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.too_big,
+				inclusive: true,
+				maximum: cap,
+				origin: "array",
+				message:
+					data.importedFromTsualPackageId != null
+						? `Ən çoxu ${String(cap)} mövzu (3sual import).`
+						: `Ən çoxu ${String(cap)} mövzu bir dəfəyə (əl ilə).`,
+				path: ["topics"],
+			});
+		}
+	});
 
 export const BulkCreateTopicsOutputSchema = z.object({
 	created: z.array(TopicSchema.pick({ slug: true })),
