@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@xamsa/ui/components/button";
 import { ArrowLeftIcon, ArrowUpDown, PlusIcon } from "lucide-react";
 import { PackTopicsList } from "@/components/pack-topics-list";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/$packSlug/topics/")({
@@ -13,29 +14,26 @@ export const Route = createFileRoute("/packs/$packSlug/topics/")({
 			throw notFound();
 		}
 	},
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `${loaderData.name} topics — Xamsa`
-					: "Pack topics — Xamsa",
-			},
-			{
-				name: "description",
-				content: loaderData?.description || "List of topics in the pack",
-			},
-			{
-				name: "og:title",
-				content: loaderData
-					? `${loaderData.name} topics by ${loaderData.author.name} — Xamsa`
-					: "Pack topics — Xamsa",
-			},
-			{
-				name: "og:description",
-				content: loaderData?.description || "List of topics in the pack",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Pack topics",
+				description: "Topics inside a Xamsa question pack.",
+			});
+		}
+		const desc =
+			loaderData.description?.trim() ||
+			`Topics in “${loaderData.name}” by ${loaderData.author.name}. Each topic holds five questions for live Xamsa games.`;
+		return pageSeo({
+			title: `${loaderData.name} · Topics`,
+			description: desc,
+			path: `/packs/${loaderData.slug}/topics/`,
+			ogType: "article",
+			ogTitle: `Topics · ${loaderData.name}`,
+			ogDescription: truncateMeta(desc),
+			keywords: `${loaderData.name}, topics, Xamsa, quiz pack, ${loaderData.author.username}`,
+		});
+	},
 });
 
 function RouteComponent() {

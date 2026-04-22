@@ -1,10 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { CreatePackForm } from "@/components/create-pack-form";
 import { getUser } from "@/functions/get-user";
-
-const title = "Create a new pack";
-const description =
-	"Create a new pack on Xamsa. With packs you can create topics and questions, then have fun games with your friends.";
+import { pageSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/packs/new/")({
 	component: RouteComponent,
@@ -24,28 +21,16 @@ export const Route = createFileRoute("/packs/new/")({
 
 		return context.session.user;
 	},
-	head: () => ({
-		meta: [
-			{ title },
-			{
-				name: "description",
-				content: description,
-			},
-			{
-				name: "keywords",
-				content:
-					"xamsa, create pack, create topic, create question, pack, topic, question, game, fun, friends",
-			},
-			{
-				name: "og:title",
-				content: title,
-			},
-			{
-				name: "og:description",
-				content: description,
-			},
-		],
-	}),
+	head: () =>
+		pageSeo({
+			title: "Create a pack",
+			description:
+				"Start a new question pack on Xamsa: add topics, write five questions each, publish when ready, and host live buzzer games with friends.",
+			path: "/packs/new/",
+			noIndex: true,
+			keywords:
+				"Xamsa, create pack, quiz builder, trivia deck, host a quiz, question pack",
+		}),
 });
 
 function RouteComponent() {

@@ -27,6 +27,7 @@ import { useEffect, useRef } from "react";
 import { JoinGameForm } from "@/components/join-game-form";
 import type { PackCard } from "@/components/pack-card";
 import { getUser } from "@/functions/get-user";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 type PlayTab = "host" | "join";
@@ -52,15 +53,15 @@ export const Route = createFileRoute("/play/")({
 		return { isAuthenticated: !!session, activeGame };
 	},
 
-	head: () => ({
-		meta: [
-			{ title: "Play — Xamsa" },
-			{
-				name: "description",
-				content: "Host a game from one of your published packs, or join with a code.",
-			},
-		],
-	}),
+	head: () =>
+		pageSeo({
+			title: "Play",
+			description:
+				"Host a live quiz from your published packs or join a friend’s game with a short code. Xamsa runs real-time buzzer rounds for groups.",
+			path: "/play/",
+			keywords:
+				"Xamsa play, host quiz, join game code, live trivia, buzzer game, multiplayer quiz",
+		}),
 });
 
 function RouteComponent() {

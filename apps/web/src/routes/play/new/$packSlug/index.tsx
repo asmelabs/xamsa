@@ -21,6 +21,7 @@ import {
 import { ArrowLeftIcon, LayersIcon, PlayIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/play/new/$packSlug/")({
@@ -44,15 +45,28 @@ export const Route = createFileRoute("/play/new/$packSlug/")({
 		}
 	},
 
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `Start game: ${loaderData.name} — Xamsa`
-					: "Start game — Xamsa",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Host a game",
+				description:
+					"Create a live Xamsa session from one of your published packs, get a room code, and invite players to join.",
+				path: "/play/new/",
+				noIndex: true,
+			});
+		}
+		const packDesc = loaderData.description?.trim();
+		const desc = `Start hosting a live quiz with your pack “${loaderData.name}” on Xamsa. Create a game room, share the code, and play in real time with buzzers.${packDesc ? ` ${truncateMeta(packDesc, 100)}` : ""}`;
+		return pageSeo({
+			title: `Host · ${loaderData.name}`,
+			description: desc,
+			path: `/play/new/${loaderData.slug}/`,
+			ogTitle: `Host: ${loaderData.name}`,
+			ogDescription: truncateMeta(desc),
+			keywords: `Xamsa, host quiz, live game, ${loaderData.name}, multiplayer trivia`,
+			noIndex: true,
+		});
+	},
 });
 
 function RouteComponent() {
@@ -84,6 +98,8 @@ function RouteComponent() {
 				<ArrowLeftIcon />
 				Choose a different pack
 			</Button>
+
+			<h1 className="font-bold text-2xl tracking-tight">Host a new game</h1>
 
 			<Frame>
 				<FrameHeader>

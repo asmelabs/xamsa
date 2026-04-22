@@ -17,9 +17,19 @@ import { SearchBar } from "@/components/search-bar";
 import { getUser } from "@/functions/get-user";
 import { useSearchQuery } from "@/hooks/use-search-query";
 import { useSortQuery } from "@/hooks/use-sort-query";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/")({
+	head: () =>
+		pageSeo({
+			title: "Question packs",
+			description:
+				"Browse community-made question packs on Xamsa. Filter by popularity, ratings, and plays, open a pack to see topics, or create your own for live buzzer games.",
+			path: "/packs/",
+			keywords:
+				"Xamsa packs, quiz packs, trivia decks, browse questions, community quiz",
+		}),
 	component: RouteComponent,
 	beforeLoad: async () => {
 		const session = await getUser();
@@ -99,7 +109,7 @@ function RouteComponent() {
 	return (
 		<div className="container mx-auto max-w-7xl space-y-6 py-10">
 			<div className="flex items-center justify-between">
-				<h1 className="font-bold text-2xl">List of packs</h1>
+				<h1 className="font-bold text-2xl">Question packs</h1>
 				<Button render={<Link to="/packs/new" />}>
 					<PlusIcon />
 					Create pack

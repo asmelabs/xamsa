@@ -12,6 +12,7 @@ import { Toaster } from "@xamsa/ui/components/sonner";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { PostHogProvider } from "posthog-js/react";
 import { BottomTabMenu } from "@/components/bottom-tab-menu";
+import { rootIconLinks } from "@/lib/seo";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
 
@@ -35,7 +36,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 				content: "dark",
 			},
 			{
-				title: "Xamsa",
+				name: "theme-color",
+				content: "#0a0a0a",
 			},
 		],
 		links: [
@@ -43,6 +45,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 				rel: "stylesheet",
 				href: appCss,
 			},
+			...rootIconLinks(),
 		],
 	}),
 

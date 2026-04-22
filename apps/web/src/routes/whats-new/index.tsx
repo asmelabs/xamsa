@@ -14,19 +14,19 @@ import {
 	formatProductVersionLabel,
 	getCurrentProductVersionLabel,
 } from "@/lib/app-release";
+import { pageSeo } from "@/lib/seo";
 import { ReleaseHighlightItem } from "./-release-highlight";
 
 export const Route = createFileRoute("/whats-new/")({
 	component: WhatsNewPage,
-	head: () => ({
-		meta: [
-			{ title: "What’s new — Xamsa" },
-			{
-				name: "description",
-				content: "Recent updates and improvements to Xamsa.",
-			},
-		],
-	}),
+	head: () =>
+		pageSeo({
+			title: "What’s new",
+			description:
+				"Read user-facing release notes for Xamsa: new features, improvements, and fixes in each CalVer update.",
+			path: "/whats-new/",
+			keywords: "Xamsa changelog, updates, release notes, new features",
+		}),
 });
 
 function WhatsNewPage() {

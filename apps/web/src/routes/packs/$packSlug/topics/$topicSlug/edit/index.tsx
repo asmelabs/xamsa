@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { EditTopicForm } from "@/components/edit-topic-form";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute(
@@ -17,19 +18,26 @@ export const Route = createFileRoute(
 			throw notFound();
 		}
 	},
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `${loaderData.name} — ${loaderData.pack.name} — Xamsa`
-					: "Topic — Xamsa",
-			},
-			{
-				name: "description",
-				content: loaderData?.description || "A topic in a quiz pack",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Edit topic",
+				description: "Edit a topic in your Xamsa pack.",
+				noIndex: true,
+			});
+		}
+		const desc =
+			loaderData.description?.trim() ||
+			`Edit topic “${loaderData.name}” in “${loaderData.pack.name}” — name, description, and linked questions on Xamsa.`;
+		return pageSeo({
+			title: `Edit · ${loaderData.name}`,
+			description: desc,
+			path: `/packs/${loaderData.pack.slug}/topics/${loaderData.slug}/edit/`,
+			noIndex: true,
+			ogDescription: truncateMeta(desc),
+			keywords: `Xamsa, edit topic, ${loaderData.pack.name}`,
+		});
+	},
 });
 
 function RouteComponent() {

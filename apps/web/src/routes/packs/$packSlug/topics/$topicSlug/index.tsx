@@ -14,6 +14,7 @@ import {
 	EyeOff,
 	PencilIcon,
 } from "lucide-react";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/$packSlug/topics/$topicSlug/")({
@@ -28,19 +29,26 @@ export const Route = createFileRoute("/packs/$packSlug/topics/$topicSlug/")({
 			throw notFound();
 		}
 	},
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `${loaderData.name} — ${loaderData.pack.name} — Xamsa`
-					: "Topic — Xamsa",
-			},
-			{
-				name: "description",
-				content: loaderData?.description || "A topic in a quiz pack",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Topic",
+				description: "A topic inside a Xamsa question pack.",
+			});
+		}
+		const desc =
+			loaderData.description?.trim() ||
+			`“${loaderData.name}” in pack “${loaderData.pack.name}” on Xamsa — five quiz questions and answers for live games.`;
+		return pageSeo({
+			title: `${loaderData.name} · ${loaderData.pack.name}`,
+			description: desc,
+			path: `/packs/${loaderData.pack.slug}/topics/${loaderData.slug}/`,
+			ogType: "article",
+			ogTitle: `${loaderData.name} · ${loaderData.pack.name}`,
+			ogDescription: truncateMeta(desc),
+			keywords: `${loaderData.name}, ${loaderData.pack.name}, Xamsa topic, quiz questions`,
+		});
+	},
 });
 
 function RouteComponent() {

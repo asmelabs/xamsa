@@ -12,6 +12,7 @@ import { PackNotFound } from "@/components/pack-not-found";
 import { PackTopicsList } from "@/components/pack-topics-list";
 import { RatePackDialog } from "@/components/rate-pack-dialog";
 import { StatCard } from "@/components/stat-card";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/$packSlug/")({
@@ -25,25 +26,27 @@ export const Route = createFileRoute("/packs/$packSlug/")({
 			throw notFound();
 		}
 	},
-	head: ({ loaderData }) => ({
-		meta: [
-			{ title: loaderData ? `${loaderData.name} — Xamsa` : "Pack — Xamsa" },
-			{
-				name: "description",
-				content: loaderData?.description || "A pack of questions and answers",
-			},
-			{
-				name: "og:title",
-				content: loaderData
-					? `${loaderData.name} by ${loaderData.author.name} — Xamsa`
-					: "Pack — Xamsa",
-			},
-			{
-				name: "og:description",
-				content: loaderData?.description || "A pack of questions and answers",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Pack",
+				description:
+					"Question pack on Xamsa — topics, questions, and live play.",
+			});
+		}
+		const desc =
+			loaderData.description?.trim() ||
+			`“${loaderData.name}” by ${loaderData.author.name}: a Xamsa question pack you can browse, rate, and use in live buzzer games.`;
+		return pageSeo({
+			title: loaderData.name,
+			description: desc,
+			path: `/packs/${loaderData.slug}/`,
+			ogType: "article",
+			ogTitle: `${loaderData.name} · ${loaderData.author.name}`,
+			ogDescription: truncateMeta(desc),
+			keywords: `${loaderData.name}, quiz pack, Xamsa, ${loaderData.author.username}, trivia, ${loaderData.language ?? "quiz"}`,
+		});
+	},
 });
 
 function RouteComponent() {

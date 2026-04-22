@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { EditPackForm } from "@/components/edit-pack-form";
+import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/$packSlug/edit/")({
@@ -12,29 +13,27 @@ export const Route = createFileRoute("/packs/$packSlug/edit/")({
 			throw notFound();
 		}
 	},
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData
-					? `Update ${loaderData.name} — Xamsa`
-					: "Update pack — Xamsa",
-			},
-			{
-				name: "description",
-				content: loaderData?.description || "A pack of questions and answers",
-			},
-			{
-				name: "og:title",
-				content: loaderData
-					? `${loaderData.name} by ${loaderData.author.name} — Xamsa`
-					: "Update pack — Xamsa",
-			},
-			{
-				name: "og:description",
-				content: loaderData?.description || "A pack of questions and answers",
-			},
-		],
-	}),
+	head: ({ loaderData }) => {
+		if (!loaderData) {
+			return pageSeo({
+				title: "Edit pack",
+				description: "Edit your Xamsa question pack, topics, and settings.",
+				noIndex: true,
+			});
+		}
+		const desc =
+			loaderData.description?.trim() ||
+			`Edit “${loaderData.name}”: update pack details, topics, and questions before publishing on Xamsa.`;
+		return pageSeo({
+			title: `Edit · ${loaderData.name}`,
+			description: desc,
+			path: `/packs/${loaderData.slug}/edit/`,
+			noIndex: true,
+			ogTitle: `Edit ${loaderData.name}`,
+			ogDescription: truncateMeta(desc),
+			keywords: `Xamsa, edit pack, ${loaderData.name}, quiz builder`,
+		});
+	},
 });
 
 function RouteComponent() {

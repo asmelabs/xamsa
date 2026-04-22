@@ -11,6 +11,7 @@ import { ClockIcon, HistoryIcon, PlayIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { getUser } from "@/functions/get-user";
+import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 const PAGE_SIZE = 20;
@@ -29,9 +30,15 @@ export const Route = createFileRoute("/history/")({
 		return { session };
 	},
 
-	head: () => ({
-		meta: [{ title: "History — Xamsa" }],
-	}),
+	head: () =>
+		pageSeo({
+			title: "Game history",
+			description:
+				"Review your past Xamsa games: hosts, packs, and results from recent live quiz sessions.",
+			path: "/history/",
+			noIndex: true,
+			keywords: "Xamsa history, past games, quiz sessions",
+		}),
 });
 
 function HistoryPage() {
