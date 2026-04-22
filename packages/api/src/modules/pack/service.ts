@@ -93,6 +93,21 @@ export async function updatePackStatus(
 	input: UpdatePackStatusInputType,
 	userId: string,
 ): Promise<UpdatePackStatusOutputType> {
+	const user = await prisma.user.findUnique({
+		where: {
+			id: userId,
+		},
+		select: {
+			xp: true
+		},
+	});
+
+	if (!user) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "User not found",
+		});
+	}
+
 	const pack = await prisma.pack.findUnique({
 		where: {
 			slug: input.slug,
@@ -102,6 +117,11 @@ export async function updatePackStatus(
 			id: true,
 			status: true,
 			publishedAt: true,
+			_count: {
+				select: {
+					topics: true,
+				}
+			}
 		},
 	});
 
@@ -117,8 +137,9 @@ export async function updatePackStatus(
 		});
 	}
 
-	const newPublishedAt =
-		input.status === "published" && !pack.publishedAt ? new Date() : undefined;
+	const isInitialPublish = input.status === "published" && !pack.publishedAt;
+	const newPublishedAt = isInitialPublish ? new Date() : undefined;
+	const newXp = isInitialPublish ? user.xp + pack._count.topics * 100 : user.xp;
 
 	const updatedPack = await prisma.pack.update({
 		where: {
@@ -128,6 +149,14 @@ export async function updatePackStatus(
 		data: {
 			status: input.status,
 			publishedAt: newPublishedAt,
+			author: {
+				update: {
+					xp: newXp,
+					totalPacksPublished: isInitialPublish ? {
+						increment: 1
+					} : undefined
+				},
+			},
 		},
 		select: {
 			slug: true,

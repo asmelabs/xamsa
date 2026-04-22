@@ -982,8 +982,24 @@ export async function completeGame(
 	const now = new Date();
 
 	const finalResult = await prisma.$transaction(async (tx) => {
+
+    await tx.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        xp: {
+          increment: 100,
+        },
+        totalGamesHosted: {
+          increment: 1,
+        },
+      }
+    })
+    
 		return finalizeGame(tx, game.id, { now });
 	});
+
 
 	// broadcast
 	const channel = ablyRest.channels.get(channels.game(input.code));
