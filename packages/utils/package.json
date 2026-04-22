@@ -9,7 +9,9 @@
 			"default": "./src/*.ts"
 		}
 	},
-	"scripts": {},
+	"scripts": {
+		"test": "vitest run"
+	},
 	"dependencies": {
 		"@xamsa/env": "workspace:*",
 		"@xamsa/schemas": "workspace:*",
@@ -20,6 +22,7 @@
 	"devDependencies": {
 		"@types/bcryptjs": "^3.0.0",
 		"@xamsa/config": "workspace:*",
-		"typescript": "^5"
+		"typescript": "^5",
+		"vitest": "^3.2.4"
 	}
 }

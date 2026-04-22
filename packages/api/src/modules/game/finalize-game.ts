@@ -1,8 +1,8 @@
 import type { Prisma } from "@xamsa/db";
+import { calculateEloDeltas } from "@xamsa/utils/elo";
 import {
 	computeGamePlayerXpDelta,
 	computeLevelFromXp,
-	computeMultiplayerEloDeltas,
 	HOST_FULL_GAME_COMPLETION_XP_BONUS,
 } from "@xamsa/utils/progression";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
@@ -296,9 +296,18 @@ export async function finalizeGame(
 			ratingByUserId.set(u.id, u.elo);
 		}
 	}
-	const eloDeltas =
+	const eloRows =
 		!force && rankedUserIds.length >= 2
-			? computeMultiplayerEloDeltas(rankedUserIds, ratingByUserId)
+			? ranked.map((p, i) => ({
+					userId: p.userId,
+					rank: i + 1,
+					score: p.score,
+					ratingBefore: ratingByUserId.get(p.userId) ?? 1000,
+				}))
+			: [];
+	const eloDeltas =
+		eloRows.length >= 2
+			? calculateEloDeltas(eloRows, { forceAborted: false })
 			: new Map<string, number>();
 
 	for (let i = 0; i < ranked.length; i++) {

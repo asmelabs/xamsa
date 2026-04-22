@@ -24,6 +24,11 @@ export async function findOneProfile(
 			name: true,
 			image: true,
 			role: true,
+			xp: true,
+			level: true,
+			elo: true,
+			peakElo: true,
+			lowestElo: true,
 		},
 	});
 
