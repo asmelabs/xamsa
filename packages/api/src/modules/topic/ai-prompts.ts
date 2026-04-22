@@ -1,5 +1,35 @@
 import type { PackLanguage } from "@xamsa/schemas/db/schemas/enums/PackLanguage.schema";
 
+const exampleTopicsAndQuestionsArray = [
+	{
+		topic: "Adı dəyişdirilmiş ölkələr",
+		questions: [
+			{
+				text: "Zəngin təbiəti ilə məşhur olan bu ölkə adını yaxın illərdə dəyişmişdir. Yox, onlar hind toyuğu ilə düşmən deyildilər.",
+				answer: "Türkiyə",
+			},
+			{
+				text: "Rəsmi olaraq 2020-ci ildə adı dəyişdirilmiş bu ölkədə velosipdelərin sayı insanların sayından daha çoxdur. 23 Milyon!",
+				answer: "Hollandiya",
+			},
+			{
+				text: "BU ölkənin bayrağında ön pəncəsi ilə qılınc tutmuş şiri xatırlamaq olar. Seylon Çayı onların ən məşhur bitkisidir.",
+				answer: "Şri-Lanka",
+			},
+			{
+				text: "Swaizerlandın adının İsveçrə ilə oxşarlığı səbəbindən dəyişilməsini təklif edən BU kral, elə də dərindən fikirləşməmişdi.",
+				answer: "Kral Msvat",
+				explanation:
+					"Kral Msvat ölkənin adını Esvatini etmişdi. Esvatini və Msvat adları arasındakı əlaqə olduqca diqqətəlayiqdir.",
+			},
+			{
+				text: 'Keçmiş adı Daqomeya olan BU ölkə "Afrikanın Venesiyası" olaraq tanınan və su üzərində yerləşən Ganvia kəndinə sahiblik edir.',
+				answer: "Benin",
+			},
+		],
+	},
+];
+
 const LANGUAGE_LABEL: Record<PackLanguage, string> = {
 	az: "Azerbaijani (az)",
 	en: "English (en)",
@@ -23,6 +53,8 @@ export function buildTopicGenerationSystemPrompt(
 		"Rules: one clear best answer; avoid trick wording; be factually accurate; no hate, harassment, or NSFW; no real-world instructions for harm;",
 		"vocabulary appropriate to a live TV-style quiz. Questions should be distinct and match the given topic and pack context.",
 		`The "text" should be 2-4 sentences or one paragraph suitable for a reader or host, under 1000 characters each.`,
+		"Example topics and questions that have been taken from real Xamsa show: ",
+		JSON.stringify(exampleTopicsAndQuestionsArray, null, 2),
 	].join(" ");
 }
 
