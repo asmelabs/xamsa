@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { emailPasswordAuthConfig } from "@xamsa/auth/email-password-config";
 import { RegisterInputSchema } from "@xamsa/schemas/modules/auth/register";
 import {
 	Frame,
@@ -13,6 +14,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
+import { assignPostAuthRedirect } from "@/lib/auth-redirect";
 import { LoadingButton } from "./loading-button";
 import { PasswordInput } from "./password-input";
 
@@ -73,6 +75,11 @@ export function RegisterForm() {
 
 			if (result.error) {
 				throw new Error(result.error.message || result.error.statusText);
+			}
+
+			if (!emailPasswordAuthConfig.requireEmailVerification) {
+				assignPostAuthRedirect(callbackURL);
+				return;
 			}
 
 			setShowVerificationEmailSent(true);
@@ -211,11 +218,7 @@ export function RegisterForm() {
 
 					<FrameFooter>
 						<div className="flex justify-end">
-							<form.Submit
-								isLoading={isLoading}
-							>
-								Register
-							</form.Submit>
+							<form.Submit isLoading={isLoading}>Register</form.Submit>
 						</div>
 					</FrameFooter>
 				</form>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { LoginInputSchema } from "@xamsa/schemas/modules/auth/login";
 import {
 	Frame,
@@ -13,10 +13,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
+import { assignPostAuthRedirect } from "@/lib/auth-redirect";
 import { PasswordInput } from "./password-input";
 
 export function LoginForm() {
-	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const [defaultEmail] = useQueryState("email", parseAsString.withDefault(""));
@@ -44,7 +44,7 @@ export function LoginForm() {
 				throw new Error(result.error.message || result.error.statusText);
 			}
 
-			navigate({ to: callbackURL || "/", replace: true });
+			assignPostAuthRedirect(callbackURL);
 		} catch (error) {
 			form.resetField("password");
 			toast.error((error as Error).message || "An unknown error occurred");
