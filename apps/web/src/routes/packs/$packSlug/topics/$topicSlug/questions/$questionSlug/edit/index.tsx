@@ -1,4 +1,9 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import {
+	PacksBreadcrumb,
+	PacksSubpageContainer,
+	PacksSubpageHeader,
+} from "@/components/packs";
 import { UpdateQuestionForm } from "@/components/update-question-form";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -46,7 +51,36 @@ function RouteComponent() {
 	const question = Route.useLoaderData();
 
 	return (
-		<div>
+		<PacksSubpageContainer>
+			<PacksBreadcrumb
+				items={[
+					{ label: "Packs", to: "/packs" },
+					{
+						label: question.pack.name,
+						to: "/packs/$packSlug",
+						params: { packSlug: question.pack.slug },
+					},
+					{
+						label: "Topics",
+						to: "/packs/$packSlug/topics",
+						params: { packSlug: question.pack.slug },
+					},
+					{
+						label: question.topic.name,
+						to: "/packs/$packSlug/topics/$topicSlug",
+						params: {
+							packSlug: question.pack.slug,
+							topicSlug: question.topic.slug,
+						},
+					},
+					{ label: `Question ${String(question.order)}`, current: true },
+				]}
+			/>
+			<PacksSubpageHeader
+				description="Update wording, answers, acceptable alternatives, and host notes. Changes apply after you save."
+				eyebrow="Pack editor"
+				title="Edit question"
+			/>
 			<UpdateQuestionForm
 				questionData={{
 					pack: question.pack.slug,
@@ -58,6 +92,6 @@ function RouteComponent() {
 					description: question.description,
 				}}
 			/>
-		</div>
+		</PacksSubpageContainer>
 	);
 }

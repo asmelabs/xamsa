@@ -198,14 +198,19 @@ export const ListTopicsInputSchema = ListTopicsFiltersSchema.partial()
 	.extend(topicSearch.shape())
 	.extend(topicPeriod.shape());
 
-export const ListTopicsOutputSchema = PaginationOutputSchema(
-	TopicSchema.pick({
-		slug: true,
-		name: true,
-		description: true,
-		order: true,
+export const ListTopicsItemSchema = TopicSchema.pick({
+	slug: true,
+	name: true,
+	description: true,
+	order: true,
+}).extend({
+	_count: z.object({
+		questions: z.int().min(0),
 	}),
-);
+});
+
+export const ListTopicsOutputSchema =
+	PaginationOutputSchema(ListTopicsItemSchema);
 
 export type ListTopicsFiltersType = z.infer<typeof ListTopicsFiltersSchema>;
 export type ListTopicsInputType = z.infer<typeof ListTopicsInputSchema>;

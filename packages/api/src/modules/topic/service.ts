@@ -249,6 +249,9 @@ export async function listTopics(
 				name: true,
 				description: true,
 				order: true,
+				_count: {
+					select: { questions: true },
+				},
 			},
 		}),
 		prisma.topic.count({ where }),

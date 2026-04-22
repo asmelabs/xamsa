@@ -15,17 +15,21 @@ import {
 	EllipsisIcon,
 	ExternalLinkIcon,
 	GlobeIcon,
+	LayoutGridIcon,
 	LinkIcon,
 	ListIcon,
 	LockIcon,
 	PencilIcon,
+	PlayIcon,
 	PlusIcon,
 	RedoIcon,
 	TrashIcon,
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { ChangePackVisibilityDialog } from "./change-pack-visibility-dialog";
 import { DeletePackDialog } from "./delete-pack-dialog";
 
 interface PackActionsMenuProps {
@@ -42,6 +46,9 @@ export function PackActionsMenu({
 	status,
 }: PackActionsMenuProps) {
 	const { copy } = useCopyToClipboard();
+	const [visibilityOpen, setVisibilityOpen] = useState(false);
+	const [targetVisibility, setTargetVisibility] =
+		useState<PackVisibility>("public");
 
 	const [, setDeletePackOpen] = useQueryState(
 		"delete-pack-open",
@@ -54,6 +61,11 @@ export function PackActionsMenu({
 		toast.success("Link copied to clipboard");
 	};
 
+	const openVisibilityChange = (next: PackVisibility) => {
+		setTargetVisibility(next);
+		setVisibilityOpen(true);
+	};
+
 	return (
 		<>
 			<Menu>
@@ -62,14 +74,18 @@ export function PackActionsMenu({
 				</MenuTrigger>
 				<MenuPopup align="end" sideOffset={6}>
 					<MenuGroup>
-						<MenuGroupLabel>Edit</MenuGroupLabel>
+						<MenuGroupLabel>Pack</MenuGroupLabel>
 						<MenuItem
 							render={<Link to="/packs/$packSlug/edit" params={{ packSlug }} />}
 						>
 							<PencilIcon />
 							Edit pack details
 						</MenuItem>
-						<MenuItem>
+						<MenuItem
+							onClick={() =>
+								openVisibilityChange(isPrivate ? "public" : "private")
+							}
+						>
 							{isPrivate ? <GlobeIcon /> : <LockIcon />}
 							{isPrivate ? "Make public" : "Make private"}
 						</MenuItem>
@@ -80,17 +96,30 @@ export function PackActionsMenu({
 					<MenuGroup>
 						<MenuGroupLabel>Topics</MenuGroupLabel>
 						{status === "draft" && (
-							<MenuItem
-								render={
-									<Link
-										to="/packs/$packSlug/topics/new"
-										params={{ packSlug }}
-									/>
-								}
-							>
-								<PlusIcon />
-								Add a new topic
-							</MenuItem>
+							<>
+								<MenuItem
+									render={
+										<Link
+											to="/packs/$packSlug/topics/new"
+											params={{ packSlug }}
+										/>
+									}
+								>
+									<PlusIcon />
+									Add a new topic
+								</MenuItem>
+								<MenuItem
+									render={
+										<Link
+											to="/packs/$packSlug/topics/bulk"
+											params={{ packSlug }}
+										/>
+									}
+								>
+									<LayoutGridIcon />
+									Bulk add topics
+								</MenuItem>
+							</>
 						)}
 						<MenuItem
 							render={
@@ -116,7 +145,15 @@ export function PackActionsMenu({
 					<MenuSeparator />
 
 					<MenuGroup>
-						<MenuGroupLabel>Share</MenuGroupLabel>
+						<MenuGroupLabel>Play and share</MenuGroupLabel>
+						{status === "published" && (
+							<MenuItem
+								render={<Link to="/play" search={{ pack: packSlug }} />}
+							>
+								<PlayIcon />
+								Play this pack
+							</MenuItem>
+						)}
 						<MenuItem onClick={handleCopyLink}>
 							<LinkIcon />
 							Copy link
@@ -152,6 +189,14 @@ export function PackActionsMenu({
 					</MenuGroup>
 				</MenuPopup>
 			</Menu>
+
+			<ChangePackVisibilityDialog
+				onOpenChange={setVisibilityOpen}
+				open={visibilityOpen}
+				packName={packName}
+				packSlug={packSlug}
+				targetVisibility={targetVisibility}
+			/>
 
 			<DeletePackDialog packSlug={packSlug} packName={packName} />
 		</>

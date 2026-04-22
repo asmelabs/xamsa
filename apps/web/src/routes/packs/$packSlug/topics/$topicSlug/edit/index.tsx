@@ -1,5 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { EditTopicForm } from "@/components/edit-topic-form";
+import {
+	PacksBreadcrumb,
+	PacksSubpageContainer,
+	PacksSubpageHeader,
+} from "@/components/packs";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -44,7 +49,36 @@ function RouteComponent() {
 	const topic = Route.useLoaderData();
 
 	return (
-		<div>
+		<PacksSubpageContainer>
+			<PacksBreadcrumb
+				items={[
+					{ label: "Packs", to: "/packs" },
+					{
+						label: topic.pack.name,
+						to: "/packs/$packSlug",
+						params: { packSlug: topic.pack.slug },
+					},
+					{
+						label: "Topics",
+						to: "/packs/$packSlug/topics",
+						params: { packSlug: topic.pack.slug },
+					},
+					{
+						label: topic.name,
+						to: "/packs/$packSlug/topics/$topicSlug",
+						params: {
+							packSlug: topic.pack.slug,
+							topicSlug: topic.slug,
+						},
+					},
+					{ label: "Edit", current: true },
+				]}
+			/>
+			<PacksSubpageHeader
+				description="Change the topic title and description. Question text is edited from each question or the topic page."
+				eyebrow="Pack editor"
+				title="Edit topic"
+			/>
 			<EditTopicForm
 				topicData={{
 					pack: topic.pack.slug,
@@ -53,6 +87,6 @@ function RouteComponent() {
 					description: topic.description,
 				}}
 			/>
-		</div>
+		</PacksSubpageContainer>
 	);
 }

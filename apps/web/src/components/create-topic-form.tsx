@@ -158,7 +158,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Create a new topic</FrameTitle>
+				<FrameTitle>Topic and questions</FrameTitle>
 				<p className="text-muted-foreground text-sm">
 					Need many topics?{" "}
 					<Link

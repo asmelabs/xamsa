@@ -1,5 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { BulkCreateTopicsForm } from "@/components/bulk-create-topics-form";
+import {
+	PacksBreadcrumb,
+	PacksSubpageContainer,
+	PacksSubpageHeader,
+} from "@/components/packs";
 import { getUser } from "@/functions/get-user";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -41,10 +46,31 @@ export const Route = createFileRoute("/packs/$packSlug/topics/bulk/")({
 });
 
 function RouteComponent() {
-	const { packSlug } = Route.useParams();
+	const { pack } = Route.useLoaderData();
 	return (
-		<div className="container mx-auto max-w-5xl py-10">
-			<BulkCreateTopicsForm packSlug={packSlug} />
-		</div>
+		<PacksSubpageContainer>
+			<PacksBreadcrumb
+				items={[
+					{ label: "Packs", to: "/packs" },
+					{
+						label: pack.name,
+						to: "/packs/$packSlug",
+						params: { packSlug: pack.slug },
+					},
+					{
+						label: "Topics",
+						to: "/packs/$packSlug/topics",
+						params: { packSlug: pack.slug },
+					},
+					{ label: "Bulk add topics", current: true },
+				]}
+			/>
+			<PacksSubpageHeader
+				description="Paste or import several topics at once while this pack is still a draft. Large imports may finish in the background — keep the page open."
+				eyebrow="Pack editor"
+				title="Create multiple topics"
+			/>
+			<BulkCreateTopicsForm packSlug={pack.slug} />
+		</PacksSubpageContainer>
 	);
 }

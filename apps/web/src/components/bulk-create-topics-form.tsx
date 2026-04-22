@@ -168,7 +168,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Create multiple topics</FrameTitle>
+				<FrameTitle>Topic rows</FrameTitle>
 				<p className="text-muted-foreground text-sm">
 					Each topic needs {String(QUESTIONS_PER_TOPIC)} questions. Up to{" "}
 					{String(BULK_TOPICS_MAX)} per submission when adding by hand, or up to{" "}

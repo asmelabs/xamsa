@@ -60,7 +60,7 @@ export function EditTopicForm({ topicData }: EditTopicFormProps) {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Update topic</FrameTitle>
+				<FrameTitle>Topic content</FrameTitle>
 			</FrameHeader>
 			<form onSubmit={onSubmit}>
 				<FramePanel className="space-y-4">

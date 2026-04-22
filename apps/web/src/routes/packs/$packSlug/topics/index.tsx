@@ -1,7 +1,17 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@xamsa/ui/components/button";
-import { ArrowLeftIcon, ArrowUpDown, PlusIcon } from "lucide-react";
+import {
+	ArrowLeftIcon,
+	ArrowUpDown,
+	LayoutGridIcon,
+	PlusIcon,
+} from "lucide-react";
 import { PackTopicsList } from "@/components/pack-topics-list";
+import {
+	PacksBreadcrumb,
+	PacksSubpageContainer,
+	PacksSubpageHeader,
+} from "@/components/packs";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -39,32 +49,50 @@ export const Route = createFileRoute("/packs/$packSlug/topics/")({
 function RouteComponent() {
 	const { packSlug } = Route.useParams();
 	const pack = Route.useLoaderData();
+	const topicCount = pack._count.topics;
 
 	return (
-		<div className="container mx-auto max-w-3xl space-y-6 py-10">
-			<div className="space-y-4">
-				<Button
-					variant="ghost"
-					size="sm"
-					render={<Link to="/packs/$packSlug" params={{ packSlug }} />}
-				>
-					<ArrowLeftIcon />
-					{pack.name}
-				</Button>
+		<PacksSubpageContainer variant="narrow">
+			<PacksBreadcrumb
+				items={[
+					{ label: "Packs", to: "/packs" },
+					{ label: pack.name, to: "/packs/$packSlug", params: { packSlug } },
+					{ label: "Topics", current: true },
+				]}
+			/>
 
-				<div className="flex items-center justify-between">
-					<div>
-						<h1 className="font-bold text-2xl tracking-tight">Topics</h1>
-						<p className="mt-1 text-muted-foreground text-sm">
-							Manage the topics and questions in this pack.
-						</p>
-					</div>
+			<Button
+				className="-mt-1 mb-4"
+				size="sm"
+				variant="ghost"
+				render={<Link to="/packs/$packSlug" params={{ packSlug }} />}
+			>
+				<ArrowLeftIcon />
+				<span className="min-w-0 truncate">{pack.name}</span>
+			</Button>
 
-					{pack.isAuthor && pack.status === "draft" && (
-						<div className="flex items-center gap-2">
+			<PacksSubpageHeader
+				actions={
+					pack.isAuthor && pack.status === "draft" ? (
+						<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
 							<Button
 								variant="outline"
 								size="sm"
+								className="justify-center sm:min-w-0"
+								render={
+									<Link
+										to="/packs/$packSlug/topics/bulk"
+										params={{ packSlug }}
+									/>
+								}
+							>
+								<LayoutGridIcon />
+								Bulk add
+							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								className="justify-center"
 								render={
 									<Link
 										to="/packs/$packSlug/topics/edit/reorder"
@@ -77,6 +105,7 @@ function RouteComponent() {
 							</Button>
 							<Button
 								size="sm"
+								className="justify-center"
 								render={
 									<Link
 										to="/packs/$packSlug/topics/new"
@@ -88,11 +117,23 @@ function RouteComponent() {
 								Add topic
 							</Button>
 						</div>
-					)}
-				</div>
-			</div>
+					) : undefined
+				}
+				description={
+					topicCount === 0
+						? "No topics yet. Add a topic to start building your deck."
+						: `${String(topicCount)} topic${topicCount === 1 ? "" : "s"} in this pack. ${pack.isAuthor ? "Each should have five questions before you publish." : "Open a topic to browse questions when the pack is published."}`
+				}
+				eyebrow={pack.isAuthor ? "Your pack" : "Pack contents"}
+				title="Topics"
+			/>
 
-			<PackTopicsList limit={25} packSlug={packSlug} isAuthor={pack.isAuthor} />
-		</div>
+			<PackTopicsList
+				isAuthor={pack.isAuthor}
+				limit={25}
+				listBase="topicsPage"
+				packSlug={packSlug}
+			/>
+		</PacksSubpageContainer>
 	);
 }

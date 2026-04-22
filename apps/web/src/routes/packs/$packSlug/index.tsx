@@ -2,6 +2,11 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Alert, AlertDescription } from "@xamsa/ui/components/alert";
 import { Button } from "@xamsa/ui/components/button";
 import { Rating } from "@xamsa/ui/components/rating";
+import {
+	Tooltip,
+	TooltipPopup,
+	TooltipTrigger,
+} from "@xamsa/ui/components/tooltip";
 import { MIN_TOPICS_PER_PACK_TO_PUBLISH } from "@xamsa/utils/constants";
 import { format } from "date-fns";
 import { ArchiveIcon, GlobeIcon, Play, Star, Trophy } from "lucide-react";
@@ -10,6 +15,7 @@ import { PackActionsMenu } from "@/components/pack-actions-menu";
 import { PackHeaderChips } from "@/components/pack-header-chips";
 import { PackNotFound } from "@/components/pack-not-found";
 import { PackTopicsList } from "@/components/pack-topics-list";
+import { PacksSubpageContainer } from "@/components/packs";
 import { RatePackDialog } from "@/components/rate-pack-dialog";
 import { StatCard } from "@/components/stat-card";
 import { pageSeo, truncateMeta } from "@/lib/seo";
@@ -59,6 +65,35 @@ function RouteComponent() {
 	function StatusChangeButton() {
 		if (!pack.isAuthor) return null;
 
+		if (pack.status === "draft" && !canPublish) {
+			const needed = Math.max(0, MIN_TOPICS_PER_PACK_TO_PUBLISH - topicCount);
+			return (
+				<Tooltip>
+					<TooltipTrigger
+						render={
+							<span className="inline-flex">
+								<Button
+									aria-label={`Cannot publish until you have at least ${String(MIN_TOPICS_PER_PACK_TO_PUBLISH)} topics. You have ${String(topicCount)}.`}
+									disabled
+									size="sm"
+									type="button"
+									variant="outline"
+								>
+									<GlobeIcon />
+									Publish
+								</Button>
+							</span>
+						}
+					/>
+					<TooltipPopup className="max-w-xs" side="bottom">
+						Add {String(needed)} more topic{needed === 1 ? "" : "s"} to publish
+						(minimum {String(MIN_TOPICS_PER_PACK_TO_PUBLISH)}). You have{" "}
+						{String(topicCount)}.
+					</TooltipPopup>
+				</Tooltip>
+			);
+		}
+
 		if (pack.status === "draft" && canPublish) {
 			return (
 				<ChangePackStatusDrawer slug={pack.slug} status="published">
@@ -96,8 +131,14 @@ function RouteComponent() {
 	}
 
 	return (
-		<div className="container mx-auto max-w-3xl space-y-6 py-10">
-			<div className="space-y-3">
+		<PacksSubpageContainer className="space-y-6" variant="narrow">
+			<div
+				className={
+					pack.isAuthor
+						? "space-y-3 rounded-2xl border border-border/80 bg-card/40 p-5 shadow-sm/5"
+						: "space-y-3"
+				}
+			>
 				<PackHeaderChips
 					language={pack.language}
 					status={pack.status}
@@ -105,10 +146,28 @@ function RouteComponent() {
 					totalTopics={pack._count.topics}
 				/>
 
-				<div className="flex items-center justify-between gap-2">
-					<h1 className="font-bold text-3xl tracking-tight">{pack.name}</h1>
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+					<div className="min-w-0 space-y-1.5">
+						<h1 className="font-bold text-3xl tracking-tight">{pack.name}</h1>
+						{pack.isAuthor && (
+							<p className="text-muted-foreground text-sm">
+								Manage topics, questions, and publication from this page.
+							</p>
+						)}
+						{!pack.isAuthor &&
+							pack.rating === undefined &&
+							pack.status === "published" && (
+								<p className="text-muted-foreground text-sm">
+									One quick score helps the author and the community. Use{" "}
+									<span className="font-medium text-foreground">
+										Rate this pack
+									</span>{" "}
+									when you are ready.
+								</p>
+							)}
+					</div>
 					{pack.isAuthor ? (
-						<div className="flex items-center gap-2">
+						<div className="flex shrink-0 items-center gap-2 self-start">
 							<StatusChangeButton />
 							<PackActionsMenu
 								packSlug={pack.slug}
@@ -121,7 +180,7 @@ function RouteComponent() {
 						<RatePackDialog packSlug={pack.slug} />
 					) : pack.rating ? (
 						<div
-							className="flex items-center gap-2"
+							className="flex shrink-0 items-center gap-2"
 							title={`You have rated this pack ${pack.rating.toFixed(1)} out of 5`}
 						>
 							<Rating size={14} value={pack.rating} readOnly />
@@ -188,6 +247,6 @@ function RouteComponent() {
 			)}
 
 			<PackTopicsList packSlug={pack.slug} isAuthor={pack.isAuthor} />
-		</div>
+		</PacksSubpageContainer>
 	);
 }

@@ -91,7 +91,7 @@ export function BulkCreatePacksForm() {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Create multiple packs</FrameTitle>
+				<FrameTitle>Draft rows</FrameTitle>
 				<p className="text-muted-foreground text-sm">
 					All packs are created as drafts. You can add up to{" "}
 					{String(BULK_PACKS_MAX)} in one go.

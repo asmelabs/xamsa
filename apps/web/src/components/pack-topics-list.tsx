@@ -23,6 +23,7 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { Spinner } from "@xamsa/ui/components/spinner";
+import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
 import {
 	ChevronLeftIcon,
 	ChevronRight,
@@ -34,17 +35,24 @@ import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect } from "react";
 import { orpc } from "@/utils/orpc";
 
+type PackTopicsListBase = "pack" | "topicsPage";
+
 interface PackTopicsListProps {
 	packSlug: string;
 	isAuthor: boolean;
 	limit?: number;
+	/** Use `topicsPage` when this list is embedded on `/packs/.../topics` so pagination matches the URL. */
+	listBase?: PackTopicsListBase;
 }
 
 export function PackTopicsList({
 	packSlug,
 	isAuthor,
 	limit = 10,
+	listBase = "pack",
 }: PackTopicsListProps) {
+	const listTo =
+		listBase === "topicsPage" ? "/packs/$packSlug/topics" : "/packs/$packSlug";
 	const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
 	const {
@@ -137,7 +145,7 @@ export function PackTopicsList({
 				) : (
 					<div className="space-y-2">
 						{topics?.items.map((topic) => (
-							<TopicCard key={topic.slug} topic={topic} packSlug={packSlug} />
+							<TopicCard key={topic.slug} packSlug={packSlug} topic={topic} />
 						))}
 					</div>
 				)}
@@ -152,7 +160,7 @@ export function PackTopicsList({
 								size="sm"
 								render={
 									<Link
-										to="/packs/$packSlug"
+										to={listTo}
 										params={{ packSlug }}
 										search={{ page: pagination.prevPage }}
 									/>
@@ -170,7 +178,7 @@ export function PackTopicsList({
 								size="sm"
 								render={
 									<Link
-										to="/packs/$packSlug"
+										to={listTo}
 										params={{ packSlug }}
 										search={{ page: pagination.nextPage }}
 									/>
@@ -196,6 +204,7 @@ function TopicCard({
 	topic: GetPaginatedItem<ListTopicsOutputType>;
 	packSlug: string;
 }) {
+	const q = topic._count.questions;
 	return (
 		<Link
 			to="/packs/$packSlug/topics/$topicSlug"
@@ -206,7 +215,12 @@ function TopicCard({
 				{topic.order}
 			</div>
 			<div className="min-w-0 flex-1">
-				<h3 className="truncate font-medium text-sm">{topic.name}</h3>
+				<div className="flex flex-wrap items-center gap-2">
+					<h3 className="min-w-0 truncate font-medium text-sm">{topic.name}</h3>
+					<span className="shrink-0 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0 text-[11px] text-muted-foreground leading-none">
+						{String(q)}/{String(QUESTIONS_PER_TOPIC)} Q
+					</span>
+				</div>
 				{topic.description && (
 					<p className="mt-0.5 truncate text-muted-foreground text-xs">
 						{topic.description}
