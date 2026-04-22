@@ -18,6 +18,27 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-04-22",
 			year: 2026,
 			month: 4,
+			patch: 2,
+			title: "Auth redirect and session refresh",
+			highlights: [
+				{
+					kind: "text",
+					text: "After sign up with email verification off, you go straight to your redirect URL or home instead of the “check your inbox” screen.",
+				},
+				{
+					kind: "text",
+					text: "After login or register, the app reloads in place so the signed-in home and tabs show your account without a manual refresh.",
+				},
+				{
+					kind: "text",
+					text: "Redirect URLs after auth are limited to same-origin paths for safety.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-22",
+			year: 2026,
+			month: 4,
 			patch: 1,
 			title: "SEO and social sharing",
 			highlights: [

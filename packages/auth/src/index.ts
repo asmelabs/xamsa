@@ -12,14 +12,12 @@ import {
 	twoFactor,
 } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { emailPasswordAuthConfig } from "./email-password-config";
 
-const trustedOrigins = env.NODE_ENV === "production" ? [
-	"https://xamsa.site",
-	"https://www.xamsa.site",
-] : [
-	"http://localhost:3000",
-	"http://localhost:3001",
-];
+const trustedOrigins =
+	env.NODE_ENV === "production"
+		? ["https://xamsa.site", "https://www.xamsa.site"]
+		: ["http://localhost:3000", "http://localhost:3001"];
 
 export function createAuth() {
 	const prisma = createPrismaClient();
@@ -38,7 +36,8 @@ export function createAuth() {
 		trustedOrigins,
 		emailAndPassword: {
 			enabled: true,
-			requireEmailVerification: false,
+			requireEmailVerification:
+				emailPasswordAuthConfig.requireEmailVerification,
 			revokeSessionsOnPasswordReset: true,
 
 			// async sendResetPassword({ url, user }) {
