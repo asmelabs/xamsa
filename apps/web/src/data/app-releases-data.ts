@@ -18,6 +18,59 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-04-22",
 			year: 2026,
 			month: 4,
+			patch: 5,
+			title: "Pack pages, editor layout, and pack actions",
+			highlights: [
+				{
+					kind: "text",
+					text: "Pack builder routes now use a consistent header, breadcrumbs, and page shell on create, edit, bulk, and topic or question screens.",
+				},
+				{
+					kind: "text",
+					text: "The pack overflow menu can switch public/private (with a short confirm), open Play, jump to bulk topic import, and keeps copy link, topics, reorder, and delete working.",
+				},
+				{
+					kind: "text",
+					text: "On your pack, Publish stays visible in draft: it is disabled with a tooltip until you have the minimum number of topics; rating prompts are clearer for visitors.",
+				},
+				{
+					kind: "text",
+					text: "Topics list on the pack’s Topics page shows each row’s question count; question pages can step previous/next in the topic when you are the author.",
+				},
+				{
+					kind: "routerLink",
+					before: "Open ",
+					to: "/packs/",
+					label: "Packs",
+					after: " to browse or start from Create a pack.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-22",
+			year: 2026,
+			month: 4,
+			patch: 4,
+			title: "3sual import and async bulk topic jobs",
+			highlights: [
+				{
+					kind: "text",
+					text: "Where allowed, you can preview and import a 3sual package into a draft pack, with validation and duplicate checks before topics are created.",
+				},
+				{
+					kind: "text",
+					text: "Large topic imports run as a background job: you get a job id, a modal with progress, and the client polls until creation finishes—no long blocking request (uses extended runtime on Vercel where available).",
+				},
+				{
+					kind: "text",
+					text: "Bulk create for packs and topics is integrated with the same import flow when creating a pack with a 3sual source.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-22",
+			year: 2026,
+			month: 4,
 			patch: 3,
 			title: "Global leaderboard and finished-game stats",
 			highlights: [
