@@ -160,6 +160,28 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 				</div>
 			)}
 
+			{/* Rating (non-hosts): prompt before other actions */}
+			{!game.isHost && (
+				<div className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+					<div className="min-w-0 text-center sm:text-left">
+						<p className="font-semibold text-foreground">How was this pack?</p>
+						<p className="mt-0.5 text-muted-foreground text-sm">
+							Rate it in a tap — authors and the community see aggregated
+							scores, not individual picks.
+						</p>
+					</div>
+					<Button
+						className="shrink-0 sm:min-w-44"
+						size="sm"
+						variant="secondary"
+						onClick={() => setRatePackOpened(true)}
+					>
+						<StarIcon />
+						Rate this pack
+					</Button>
+				</div>
+			)}
+
 			{/* CTAs */}
 			<div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
 				<Button variant="outline" size="sm" render={<Link to="/" />}>
@@ -167,16 +189,6 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 					Back home
 				</Button>
 				<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-					{!game.isHost && (
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => setRatePackOpened(true)}
-						>
-							<StarIcon />
-							Rate this pack
-						</Button>
-					)}
 					<Button
 						size="sm"
 						variant="secondary"
@@ -203,7 +215,13 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 			</div>
 
 			{/* Rate-pack dialog (mounted for non-hosts so the CTA above can open it) */}
-			{!game.isHost && <RatePackDialog packSlug={game.pack.slug} hideTrigger />}
+			{!game.isHost && (
+				<RatePackDialog
+					context="afterGame"
+					hideTrigger
+					packSlug={game.pack.slug}
+				/>
+			)}
 
 			{/* Full scoreboard */}
 			{rest.length > 0 && (

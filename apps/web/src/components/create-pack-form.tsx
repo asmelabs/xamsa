@@ -170,7 +170,7 @@ export function CreatePackForm() {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Create a new pack</FrameTitle>
+				<FrameTitle>Pack details</FrameTitle>
 				<p className="text-muted-foreground text-sm">
 					Want several draft packs?{" "}
 					<Link className="text-primary underline" to="/packs/bulk-new">

@@ -75,7 +75,7 @@ export function UpdateQuestionForm({ questionData }: UpdateQuestionFormProps) {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Update question</FrameTitle>
+				<FrameTitle>Question content</FrameTitle>
 			</FrameHeader>
 			<form onSubmit={onSubmit}>
 				<FramePanel className="space-y-4">

@@ -1,5 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { EditPackForm } from "@/components/edit-pack-form";
+import {
+	PacksBreadcrumb,
+	PacksSubpageContainer,
+	PacksSubpageHeader,
+} from "@/components/packs";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -40,7 +45,23 @@ function RouteComponent() {
 	const pack = Route.useLoaderData();
 
 	return (
-		<div>
+		<PacksSubpageContainer>
+			<PacksBreadcrumb
+				items={[
+					{ label: "Packs", to: "/packs" },
+					{
+						label: pack.name,
+						to: "/packs/$packSlug",
+						params: { packSlug: pack.slug },
+					},
+					{ label: "Edit settings", current: true },
+				]}
+			/>
+			<PacksSubpageHeader
+				description="Update how this pack appears to others, who can see it, and the description shown on the pack page."
+				eyebrow="Pack settings"
+				title="Edit pack"
+			/>
 			<EditPackForm
 				packData={{
 					slug: pack.slug,
@@ -49,6 +70,6 @@ function RouteComponent() {
 					visibility: pack.visibility,
 				}}
 			/>
-		</div>
+		</PacksSubpageContainer>
 	);
 }

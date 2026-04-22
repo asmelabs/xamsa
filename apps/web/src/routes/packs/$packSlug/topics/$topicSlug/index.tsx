@@ -2,7 +2,6 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
-	FrameFooter,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
@@ -14,6 +13,7 @@ import {
 	EyeOff,
 	PencilIcon,
 } from "lucide-react";
+import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -55,38 +55,79 @@ function RouteComponent() {
 	const { packSlug } = Route.useParams();
 	const topic = Route.useLoaderData();
 
+	const showAuthorTools = topic.isAuthor && topic.pack.status === "draft";
+
 	return (
-		<div className="container mx-auto max-w-3xl space-y-6 py-10">
+		<PacksSubpageContainer className="space-y-6" variant="narrow">
+			<PacksBreadcrumb
+				items={[
+					{ label: "Packs", to: "/packs" },
+					{
+						label: topic.pack.name,
+						to: "/packs/$packSlug",
+						params: { packSlug },
+					},
+					{
+						label: "Topics",
+						to: "/packs/$packSlug/topics",
+						params: { packSlug },
+					},
+					{ label: topic.name, current: true },
+				]}
+			/>
+
 			<Button
-				variant="ghost"
+				className="-mt-1"
 				size="sm"
+				variant="ghost"
 				render={<Link to="/packs/$packSlug/topics" params={{ packSlug }} />}
 			>
 				<ArrowLeftIcon />
-				{topic.pack.name}
+				{topic.pack.name} · Topics
 			</Button>
 
-			<div className="space-y-3">
-				<div className="flex items-center justify-between gap-3">
-					<h1 className="font-bold text-2xl tracking-tight">
-						#{topic.order}. {topic.name}
-					</h1>
-					{topic.isAuthor && topic.pack.status === "draft" && (
-						<Button
-							variant="outline"
-							size="sm"
-							render={
-								<Link
-									to="/packs/$packSlug/topics/$topicSlug/edit"
-									params={{ packSlug, topicSlug: topic.slug }}
-								/>
-							}
-						>
-							<PencilIcon />
-							Edit
-						</Button>
-					)}
+			{showAuthorTools && (
+				<div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-2 border-border/80 border-b bg-background/95 py-2 backdrop-blur sm:-mx-0 sm:py-2.5">
+					<Button
+						variant="outline"
+						size="sm"
+						render={
+							<Link
+								to="/packs/$packSlug/topics/$topicSlug/edit"
+								params={{ packSlug, topicSlug: topic.slug }}
+							/>
+						}
+					>
+						<PencilIcon />
+						Edit topic
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						render={
+							<Link
+								to="/packs/$packSlug/topics/$topicSlug/questions/edit/reorder"
+								params={{ packSlug, topicSlug: topic.slug }}
+							/>
+						}
+					>
+						<ArrowUpDown />
+						Reorder questions
+					</Button>
 				</div>
+			)}
+
+			<div
+				className={
+					showAuthorTools
+						? "space-y-3 rounded-2xl border border-border/80 bg-card/30 p-5 shadow-sm/5"
+						: "space-y-3"
+				}
+			>
+				<h1 className="font-bold text-2xl tracking-tight sm:text-3xl">
+					<span className="text-muted-foreground">#{String(topic.order)}</span>{" "}
+					{topic.name}
+				</h1>
 
 				{topic.description && (
 					<p className="text-muted-foreground">{topic.description}</p>
@@ -156,23 +197,7 @@ function RouteComponent() {
 						</div>
 					)}
 				</FramePanel>
-				{topic.isAuthor && topic.pack.status === "draft" && (
-					<FrameFooter>
-						<Button
-							variant="outline"
-							render={
-								<Link
-									to="/packs/$packSlug/topics/$topicSlug/questions/edit/reorder"
-									params={{ packSlug, topicSlug: topic.slug }}
-								/>
-							}
-						>
-							<ArrowUpDown />
-							Reorder Questions
-						</Button>
-					</FrameFooter>
-				)}
 			</Frame>
-		</div>
+		</PacksSubpageContainer>
 	);
 }

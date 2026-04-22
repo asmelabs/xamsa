@@ -20,9 +20,15 @@ interface RatePackDialogProps {
 	 * `rate-pack` query param themselves.
 	 */
 	hideTrigger?: boolean;
+	/** Short copy variant for pack page vs. end-game flows. */
+	context?: "default" | "afterGame";
 }
 
-export function RatePackDialog({ packSlug, hideTrigger }: RatePackDialogProps) {
+export function RatePackDialog({
+	packSlug,
+	hideTrigger,
+	context = "default",
+}: RatePackDialogProps) {
 	const { data: session } = authClient.useSession();
 	const user = session?.user;
 	const router = useRouter();
@@ -45,7 +51,7 @@ export function RatePackDialog({ packSlug, hideTrigger }: RatePackDialogProps) {
 			toast.success("Pack rated successfully");
 			setOpened(false);
 			router.invalidate({
-				filter: (r) => r.pathname.startsWith("/packs/$packSlug/"),
+				filter: (r) => r.pathname.startsWith("/packs/"),
 			});
 			form.reset();
 		},
@@ -71,13 +77,18 @@ export function RatePackDialog({ packSlug, hideTrigger }: RatePackDialogProps) {
 			setOpened={(open) => setOpened(open ?? false)}
 			trigger={
 				hideTrigger ? undefined : (
-					<Button size="icon" variant="outline">
+					<Button size="sm" variant="secondary">
 						<StarIcon />
+						{context === "afterGame" ? "Rate experience" : "Rate this pack"}
 					</Button>
 				)
 			}
 			title="Rate this pack"
-			description="How would you rate this pack from 1 to 5?"
+			description={
+				context === "afterGame"
+					? "How was the content and flow? Your rating helps others find great packs."
+					: "Share a quick 1–5 score. You can update it later from this page."
+			}
 			submit={
 				<LoadingButton
 					isLoading={isPending}

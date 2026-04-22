@@ -66,7 +66,7 @@ export function EditPackForm({ packData }: EditPackFormProps) {
 	return (
 		<Frame>
 			<FrameHeader>
-				<FrameTitle>Update pack</FrameTitle>
+				<FrameTitle>Description and visibility</FrameTitle>
 			</FrameHeader>
 			<form onSubmit={onSubmit}>
 				<FramePanel className="space-y-4">
