@@ -18,6 +18,30 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-04-22",
 			year: 2026,
 			month: 4,
+			patch: 3,
+			title: "Global leaderboard and finished-game stats",
+			highlights: [
+				{
+					kind: "text",
+					text: "The Leaderboard page is live: global rankings by Elo (default), XP and level, wins, or career points, with load-more pagination.",
+				},
+				{
+					kind: "text",
+					text: "After a game ends, use Full stats to open a detailed recap: charts, every round and question, all buzzes with timestamps, and a per-player breakdown.",
+				},
+				{
+					kind: "routerLink",
+					before: "Open ",
+					to: "/leaderboard/",
+					label: "Leaderboard",
+					after: " anytime to see how you stack up.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-22",
+			year: 2026,
+			month: 4,
 			patch: 2,
 			title: "Auth redirect and session refresh",
 			highlights: [

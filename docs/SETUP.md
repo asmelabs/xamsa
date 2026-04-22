@@ -95,6 +95,8 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | `EMAIL_FROM` | Sender address (valid email) |
 | `CORS_ORIGIN` | Allowed origins; comma-separated URLs if more than one |
 
+**Transactional email:** `MAILERSEND_API_KEY` and `EMAIL_FROM` power password reset messages from Better Auth. In **production**, users receive the reset link by email. In **development**, the link is printed to the server console instead.
+
 **Optional:**
 
 | Variable | Notes |

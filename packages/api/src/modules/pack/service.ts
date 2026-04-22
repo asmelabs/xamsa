@@ -99,7 +99,7 @@ export async function updatePackStatus(
 			id: userId,
 		},
 		select: {
-			xp: true
+			xp: true,
 		},
 	});
 
@@ -121,8 +121,8 @@ export async function updatePackStatus(
 			_count: {
 				select: {
 					topics: true,
-				}
-			}
+				},
+			},
 		},
 	});
 
@@ -277,12 +277,11 @@ export async function listPacks(
 			searchWhere ?? {},
 			periodWhere ?? {},
 			{
-				authorId:
-					onlyMyPacks === true && userId
-						? { equals: userId }
-						: authors
-							? { in: authors }
-							: undefined,
+				...(onlyMyPacks === true && userId
+					? { authorId: userId }
+					: authors?.length
+						? { author: { username: { in: authors } } }
+						: {}),
 				language: languages ? { in: languages } : undefined,
 				visibility: visibilities ? { in: visibilities } : undefined,
 				status: statuses ? { in: statuses } : undefined,

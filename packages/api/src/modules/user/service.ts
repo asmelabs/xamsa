@@ -5,6 +5,10 @@ import type {
 	FindOneProfileOutputType,
 	GetActiveGameOutputType,
 	GetMyStatsOutputType,
+	GetPublicRecentGamesInputType,
+	GetPublicRecentGamesOutputType,
+	GetPublicStatsInputType,
+	GetPublicStatsOutputType,
 	GetRecentGamesInputType,
 	GetRecentGamesOutputType,
 	RecentGameRow,
@@ -195,9 +199,7 @@ export async function getRecentGames(
 		},
 		orderBy: [{ finishedAt: "desc" }, { id: "desc" }],
 		take: limit + 1,
-		...(input.cursor
-			? { cursor: { id: input.cursor }, skip: 1 }
-			: {}),
+		...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
 		select: {
 			id: true,
 			code: true,
@@ -247,4 +249,32 @@ export async function getRecentGames(
 			: null;
 
 	return { items, nextCursor };
+}
+
+async function requireUserIdByUsername(username: string): Promise<string> {
+	const user = await prisma.user.findUnique({
+		where: { username },
+		select: { id: true },
+	});
+	if (!user) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Profile not found",
+		});
+	}
+	return user.id;
+}
+
+export async function getPublicStats(
+	input: GetPublicStatsInputType,
+): Promise<GetPublicStatsOutputType> {
+	const userId = await requireUserIdByUsername(input.username);
+	return getMyStats(userId);
+}
+
+export async function getPublicRecentGames(
+	input: GetPublicRecentGamesInputType,
+): Promise<GetPublicRecentGamesOutputType> {
+	const { username, ...pagination } = input;
+	const userId = await requireUserIdByUsername(username);
+	return getRecentGames(pagination, userId);
 }

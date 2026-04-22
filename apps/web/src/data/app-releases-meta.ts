@@ -3,4 +3,4 @@
  */
 export const productName = "Xamsa";
 
-export const current = { year: 2026, month: 4, patch: 2 } as const;
+export const current = { year: 2026, month: 4, patch: 3 } as const;

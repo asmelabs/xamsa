@@ -1,22 +1,34 @@
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
+import { Spinner } from "@xamsa/ui/components/spinner";
 import { getLevelProgress } from "@xamsa/utils/levels";
 import {
 	BarChart3Icon,
+	CrownIcon,
+	FlameIcon,
+	GamepadIcon,
 	LogOutIcon,
+	Package,
 	SettingsIcon,
 	ShieldCheckIcon,
+	TargetIcon,
+	TrophyIcon,
 	ZapIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
+import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { LoadingButton } from "@/components/loading-button";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
+
+const HISTORY_PAGE = 15;
 
 export const Route = createFileRoute("/u/$username")({
 	component: RouteComponent,
@@ -68,8 +80,62 @@ const roleConfig = {
 };
 
 function RouteComponent() {
+	const { username } = Route.useParams();
 	const { profile, isOwner } = Route.useLoaderData();
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+	const { data: publicStats } = useQuery(
+		orpc.user.getPublicStats.queryOptions({ input: { username } }),
+	);
+
+	const {
+		data: gamesData,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading: gamesLoading,
+	} = useInfiniteQuery({
+		...orpc.user.getPublicRecentGames.infiniteOptions({
+			input: (pageParam: string | undefined) => ({
+				username,
+				cursor: pageParam,
+				limit: HISTORY_PAGE,
+			}),
+			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+			initialPageParam: undefined as string | undefined,
+		}),
+	});
+
+	const { data: packsData, isLoading: packsLoading } = useQuery({
+		...orpc.pack.list.queryOptions({
+			input: {
+				authors: [username],
+				statuses: ["published"],
+				limit: 24,
+				sort: "newest",
+				dir: "desc",
+			},
+		}),
+	});
+
+	const gameRows = gamesData?.pages.flatMap((p) => p.items) ?? [];
+	const packRows = packsData?.items ?? [];
+	const sentinelRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!sentinelRef.current) return;
+		const el = sentinelRef.current;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+					fetchNextPage();
+				}
+			},
+			{ threshold: 0 },
+		);
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 	const levelProgress = getLevelProgress(profile.xp);
 	const xpToNext =
 		!levelProgress.isMaxLevel && levelProgress.xpForCurrentLevel > 0
@@ -192,11 +258,94 @@ function RouteComponent() {
 				</div>
 			</section>
 
-			<div className="rounded-xl border border-border border-dashed p-10 text-center">
-				<p className="text-muted-foreground text-sm">
-					Packs and game history will appear here soon.
-				</p>
-			</div>
+			{publicStats && (
+				<section className="space-y-4">
+					<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+						Stats
+					</h2>
+					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+						<StatTile
+							icon={GamepadIcon}
+							label="Played"
+							value={publicStats.totalGamesPlayed}
+						/>
+						<StatTile
+							icon={TrophyIcon}
+							label="Wins"
+							value={publicStats.totalWins}
+						/>
+						<StatTile
+							icon={CrownIcon}
+							label="Podiums"
+							value={publicStats.totalPodiums}
+						/>
+						<StatTile
+							icon={FlameIcon}
+							label="Hosted"
+							value={publicStats.totalGamesHosted}
+						/>
+						<StatTile
+							icon={TargetIcon}
+							label="Correct"
+							value={publicStats.totalCorrectAnswers}
+						/>
+						<StatTile
+							icon={ZapIcon}
+							label="Points"
+							value={publicStats.totalPointsEarned.toLocaleString()}
+						/>
+					</div>
+				</section>
+			)}
+
+			<section className="space-y-4">
+				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+					Published packs
+				</h2>
+				{packsLoading ? (
+					<div className="flex justify-center py-8">
+						<Spinner />
+					</div>
+				) : packRows.length === 0 ? (
+					<div className="rounded-xl border border-border border-dashed p-8 text-center text-muted-foreground text-sm">
+						<Package className="mx-auto mb-2 size-6 opacity-50" />
+						No published packs yet.
+					</div>
+				) : (
+					<div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+						{packRows.map((pack) => (
+							<TrendingPackTile key={pack.slug} pack={pack} />
+						))}
+					</div>
+				)}
+			</section>
+
+			<section className="space-y-4">
+				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+					Recent games
+				</h2>
+				{gamesLoading ? (
+					<div className="flex justify-center py-8">
+						<Spinner />
+					</div>
+				) : gameRows.length === 0 ? (
+					<div className="rounded-xl border border-border border-dashed p-8 text-center text-muted-foreground text-sm">
+						No completed games to show yet.
+					</div>
+				) : (
+					<div className="grid gap-2">
+						{gameRows.map((row) => (
+							<RecentGameRowItem key={row.code} row={row} />
+						))}
+						<div ref={sentinelRef} className="h-2" />
+						{isFetchingNextPage ? (
+							<div className="flex justify-center py-2">
+								<Spinner className="size-5" />
+							</div>
+						) : null}
+					</div>
+				)}
+			</section>
 
 			{/* Owner-only logout */}
 			{isOwner && (

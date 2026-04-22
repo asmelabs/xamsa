@@ -11,6 +11,8 @@ import {
 	FindOneGameOutputSchema,
 	GameStartInputSchema,
 	GameStartOutputSchema,
+	GetCompletedGameRecapInputSchema,
+	GetCompletedGameRecapOutputSchema,
 	HandleHostDisconnectInputSchema,
 	HandleHostDisconnectOutputSchema,
 	LeaveAsHostInputSchema,
@@ -21,6 +23,7 @@ import {
 	UpdateGameStatusOutputSchema,
 } from "@xamsa/schemas/modules/game";
 import { protectedProcedure, publicProcedure } from "../../procedures";
+import { getCompletedGameRecap } from "./recap";
 import {
 	advanceQuestion,
 	completeGame,
@@ -56,6 +59,10 @@ export const gameRouter = {
 			async ({ input, context }) =>
 				await findOneGame(input, context.session?.user.id),
 		),
+	getCompletedRecap: publicProcedure
+		.input(GetCompletedGameRecapInputSchema)
+		.output(GetCompletedGameRecapOutputSchema)
+		.handler(async ({ input }) => await getCompletedGameRecap(input)),
 	updateStatus: protectedProcedure
 		.input(UpdateGameStatusInputSchema)
 		.output(UpdateGameStatusOutputSchema)

@@ -177,7 +177,9 @@ export async function updateGameStatus(
 		}
 	}
 
-	// TODO: on ...->completed states, we need to update the game stats
+	// `completed` is only applied through `completeGame` / `leaveAsHost` /
+	// abandonment flows, which call `finalizeGame` and roll up stats. Host UI
+	// uses this procedure only for pause/resume.
 
 	// pausedAt tracking: stamp on active->paused, clear on paused->active.
 	// We only touch pausedAt on these exact transitions; anything else leaves
@@ -359,7 +361,9 @@ export async function findOneGame(
 				points: currentQuestionRecord.order * 100,
 				text: game.isQuestionRevealed ? currentQuestionRecord.text : null,
 				answer: game.isQuestionRevealed ? currentQuestionRecord.answer : null,
-				explanation: null, // TODO: add isExplanationRevealed on Game
+				explanation: game.isQuestionRevealed
+					? currentQuestionRecord.explanation
+					: null,
 			}
 		: null;
 
@@ -594,9 +598,7 @@ async function loadHostGameContext(code: string, userId: string) {
 	if (game.status !== "active") {
 		throw new ORPCError("BAD_REQUEST", {
 			message:
-				game.status === "paused"
-					? "Game is paused"
-					: "Game is not active",
+				game.status === "paused" ? "Game is paused" : "Game is not active",
 		});
 	}
 
@@ -795,8 +797,7 @@ export async function advanceQuestion(
 
 	if (isLastQuestionInTopic && isLastTopicInPack) {
 		throw new ORPCError("BAD_REQUEST", {
-			message:
-				"No more questions. Use 'Finish game' to complete the game.",
+			message: "No more questions. Use 'Finish game' to complete the game.",
 		});
 	}
 
@@ -891,9 +892,7 @@ export async function advanceQuestion(
 				currentQuestionOrder: nextQuestionOrder,
 				isQuestionRevealed: false,
 				totalQuestions: { increment: 1 },
-				totalSkippedQuestions: leavingWasSkipped
-					? { increment: 1 }
-					: undefined,
+				totalSkippedQuestions: leavingWasSkipped ? { increment: 1 } : undefined,
 				totalTopics: crossedTopicBoundary ? { increment: 1 } : undefined,
 			},
 		});
@@ -985,7 +984,6 @@ export async function completeGame(
 		finalizeGame(tx, game.id, { now }),
 	);
 
-
 	// broadcast
 	const channel = ablyRest.channels.get(channels.game(input.code));
 	await channel.publish(GAME_EVENTS.GAME_ENDED, {
@@ -1072,9 +1070,7 @@ export async function handleHostDisconnect(
 		return { status: "active", finalized: false };
 	}
 
-	const hostPresent = presenceMembers.some(
-		(m) => m.clientId === game.hostId,
-	);
+	const hostPresent = presenceMembers.some((m) => m.clientId === game.hostId);
 	if (hostPresent) {
 		return { status: "active", finalized: false };
 	}

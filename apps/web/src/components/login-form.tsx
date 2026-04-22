@@ -69,7 +69,7 @@ export function LoginForm() {
 							label={
 								<div className="flex w-full items-center justify-between">
 									<p>Password</p>
-									{/* <Link
+									<Link
 										to="/auth/forgot-password"
 										search={{
 											email: form.watch("email") || undefined,
@@ -78,7 +78,7 @@ export function LoginForm() {
 										className="text-muted-foreground text-xs underline"
 									>
 										Forgot password?
-									</Link> */}
+									</Link>
 								</div>
 							}
 						>

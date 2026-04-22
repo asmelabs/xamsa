@@ -1,4 +1,6 @@
 import z from "zod";
+import { ClickStatusSchema } from "../db/schemas/enums/ClickStatus.schema";
+import { GameQuestionStatusSchema } from "../db/schemas/enums/GameQuestionStatus.schema";
 import { GameStatusSchema } from "../db/schemas/enums/GameStatus.schema";
 import {
 	ClickSchema,
@@ -322,4 +324,83 @@ export type HandleHostDisconnectInputType = z.infer<
 >;
 export type HandleHostDisconnectOutputType = z.infer<
 	typeof HandleHostDisconnectOutputSchema
+>;
+
+/**
+ * COMPLETED GAME RECAP — full stats for the stats page (topics, questions, clicks).
+ */
+export const GetCompletedGameRecapInputSchema = FindOneGameInputSchema;
+
+const RecapClickSchema = z.object({
+	id: z.string(),
+	position: z.number().int(),
+	status: ClickStatusSchema,
+	clickedAt: z.coerce.date(),
+	answeredAt: z.coerce.date().nullable(),
+	reactionMs: z.number().int().nullable(),
+	pointsAwarded: z.number().int(),
+	playerId: z.string(),
+	playerName: z.string(),
+});
+
+const RecapQuestionSchema = z.object({
+	order: z.number().int(),
+	points: z.number().int(),
+	status: GameQuestionStatusSchema,
+	wasSkipped: z.boolean(),
+	wasRevealed: z.boolean(),
+	text: z.string(),
+	answer: z.string(),
+	winnerPlayerId: z.string().nullable(),
+	winnerName: z.string().nullable(),
+	firstBuzzMs: z.number().int().nullable(),
+	durationSeconds: z.number().int().nullable(),
+	totalClicks: z.number().int(),
+	totalCorrectAnswers: z.number().int(),
+	totalIncorrectAnswers: z.number().int(),
+	totalExpiredClicks: z.number().int(),
+	clicks: z.array(RecapClickSchema),
+});
+
+const RecapTopicSchema = z.object({
+	order: z.number().int(),
+	topicName: z.string(),
+	topicSlug: z.string(),
+	durationSeconds: z.number().int().nullable(),
+	totalClicks: z.number().int(),
+	totalCorrectAnswers: z.number().int(),
+	totalIncorrectAnswers: z.number().int(),
+	totalExpiredClicks: z.number().int(),
+	totalQuestionsAnswered: z.number().int(),
+	totalQuestionsSkipped: z.number().int(),
+	questions: z.array(RecapQuestionSchema),
+});
+
+export const GetCompletedGameRecapOutputSchema = z.object({
+	code: z.string(),
+	startedAt: z.coerce.date().nullable(),
+	finishedAt: z.coerce.date().nullable(),
+	durationSeconds: z.number().int().nullable(),
+	pack: PackSchema.pick({ slug: true, name: true }),
+	winnerId: z.string().nullable(),
+	totals: z.object({
+		totalTopics: z.number().int(),
+		totalQuestions: z.number().int(),
+		totalSkippedQuestions: z.number().int(),
+		totalAnswers: z.number().int(),
+		totalCorrectAnswers: z.number().int(),
+		totalIncorrectAnswers: z.number().int(),
+		totalExpiredAnswers: z.number().int(),
+		totalPointsAwarded: z.number().int(),
+		totalPointsDeducted: z.number().int(),
+	}),
+	players: z.array(GamePlayerSchema),
+	topics: z.array(RecapTopicSchema),
+});
+
+export type GetCompletedGameRecapInputType = z.infer<
+	typeof GetCompletedGameRecapInputSchema
+>;
+export type GetCompletedGameRecapOutputType = z.infer<
+	typeof GetCompletedGameRecapOutputSchema
 >;

@@ -35,7 +35,6 @@ model Game {
 
   /// player counts - useful for lobby listing ///
   totalActivePlayers Int @default(0) @map("total_active_players") // active players
-  totalSpectators    Int @default(0) @map("total_spectators") // spectators
 
   /// content played ///
   totalTopics           Int @default(0) @map("total_topics") // topics actually played through

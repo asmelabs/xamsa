@@ -28,9 +28,8 @@ model User {
   lowestElo Int @default(1000) @map("lowest_elo")
 
   /// game counts ///
-  totalGamesHosted    Int @default(0) @map("total_games_hosted")
-  totalGamesPlayed    Int @default(0) @map("total_games_played")
-  totalGamesSpectated Int @default(0) @map("total_games_spectated") // start to finish spectating
+  totalGamesHosted Int @default(0) @map("total_games_hosted")
+  totalGamesPlayed Int @default(0) @map("total_games_played")
 
   /// performance ///
   totalPointsEarned Int @default(0) @map("total_points_earned")
@@ -49,9 +48,8 @@ model User {
   totalFirstClicks      Int @default(0) @map("total_first_clicks")
 
   /// time spent (seconds) ///
-  totalTimeSpentPlaying    Int @default(0) @map("total_time_spent_playing")
-  totalTimeSpentHosting    Int @default(0) @map("total_time_spent_hosting")
-  totalTimeSpentSpectating Int @default(0) @map("total_time_spent_spectating")
+  totalTimeSpentPlaying Int @default(0) @map("total_time_spent_playing")
+  totalTimeSpentHosting Int @default(0) @map("total_time_spent_hosting")
 
   /// content creation ///
   totalPacksPublished Int @default(0) @map("total_packs_published")
@@ -64,6 +62,10 @@ model User {
   hosted     Game[]
   players    Player[]
 
+  @@index([elo])
+  @@index([xp])
+  @@index([totalWins])
+  @@index([totalPointsEarned])
   @@map("user")
 }
 

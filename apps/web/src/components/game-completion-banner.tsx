@@ -7,6 +7,10 @@ import {
 } from "@xamsa/ui/components/frame";
 import { CrownIcon, TrophyIcon } from "lucide-react";
 import type { GameData } from "@/lib/game-types";
+import {
+	competitionRanksForSortedPlayers,
+	sortGamePlayersForScoreboard,
+} from "@/lib/sort-game-players";
 
 interface GameCompletionBannerProps {
 	game: GameData;
@@ -17,12 +21,11 @@ export function GameCompletionBanner({ game }: GameCompletionBannerProps) {
 		? game.players.find((p) => p.id === game.winnerId)
 		: null;
 
-	const sortedPlayers = [...game.players].sort((a, b) => {
-		if (a.rank !== null && b.rank !== null) return a.rank - b.rank;
-		if (a.rank !== null) return -1;
-		if (b.rank !== null) return 1;
-		return b.score - a.score;
-	});
+	const sortedPlayers = sortGamePlayersForScoreboard(game.players);
+	const computedRanks = competitionRanksForSortedPlayers(sortedPlayers);
+	const rankByPlayerId = new Map(
+		sortedPlayers.map((p, i) => [p.id, computedRanks[i] ?? i + 1]),
+	);
 
 	return (
 		<Frame>
@@ -56,8 +59,8 @@ export function GameCompletionBanner({ game }: GameCompletionBannerProps) {
 				)}
 
 				<div className="space-y-1.5">
-					{sortedPlayers.map((player, index) => {
-						const rank = player.rank ?? index + 1;
+					{sortedPlayers.map((player) => {
+						const rank = player.rank ?? rankByPlayerId.get(player.id) ?? 0;
 						const rankBadge =
 							rank === 1
 								? "bg-amber-500/10 text-amber-600 dark:text-amber-400"

@@ -19,7 +19,6 @@ export const UserSchema = z.object({
   lowestElo: z.number().int().default(1000),
   totalGamesHosted: z.number().int(),
   totalGamesPlayed: z.number().int(),
-  totalGamesSpectated: z.number().int(),
   totalPointsEarned: z.number().int(),
   totalWins: z.number().int(),
   totalPodiums: z.number().int(),
@@ -32,7 +31,6 @@ export const UserSchema = z.object({
   totalFirstClicks: z.number().int(),
   totalTimeSpentPlaying: z.number().int(),
   totalTimeSpentHosting: z.number().int(),
-  totalTimeSpentSpectating: z.number().int(),
   totalPacksPublished: z.number().int(),
 });
 

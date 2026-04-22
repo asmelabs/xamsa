@@ -1,6 +1,10 @@
 import type { Prisma } from "@xamsa/db";
 import { calculateEloDeltas } from "@xamsa/utils/elo";
 import {
+	compareStandingsOrder,
+	competitionRanksFromSorted,
+} from "@xamsa/utils/game-standings";
+import {
 	computeGamePlayerXpDelta,
 	computeLevelFromXp,
 	HOST_FULL_GAME_COMPLETION_XP_BONUS,
@@ -126,11 +130,9 @@ export async function finalizeGame(
 				});
 
 				if (trailingQuestion && !trailingQuestion.finishedAt) {
-					const result = await finalizeGameQuestion(
-						tx,
-						trailingQuestion.id,
-						{ markAsSkip: force && !game.isQuestionRevealed },
-					);
+					const result = await finalizeGameQuestion(tx, trailingQuestion.id, {
+						markAsSkip: force && !game.isQuestionRevealed,
+					});
 					leavingWasSkipped = !result.wasAnswered;
 				}
 			}
@@ -230,33 +232,50 @@ export async function finalizeGame(
 		};
 	});
 
-	// 3. Rank players: score DESC, correct DESC, longestStreak DESC,
-	//    fastestClickMs ASC (nulls last), joinedAt ASC.
-	const ranked = [...aggregates].sort((a, b) => {
-		if (b.score !== a.score) return b.score - a.score;
-		if (b.correctAnswers !== a.correctAnswers) {
-			return b.correctAnswers - a.correctAnswers;
-		}
-		if (b.longestCorrectStreak !== a.longestCorrectStreak) {
-			return b.longestCorrectStreak - a.longestCorrectStreak;
-		}
-		const aFast = a.fastestClickMs ?? Number.POSITIVE_INFINITY;
-		const bFast = b.fastestClickMs ?? Number.POSITIVE_INFINITY;
-		if (aFast !== bFast) return aFast - bFast;
-		return a.joinedAt.getTime() - b.joinedAt.getTime();
-	});
+	// 3. Rank players: score → correctAnswers → fewer incorrectAnswers →
+	//    more totalClicks → joinedAt; competition ranks for ties on the first four.
+	const ranked = [...aggregates].sort((a, b) =>
+		compareStandingsOrder(
+			{
+				score: a.score,
+				correctAnswers: a.correctAnswers,
+				incorrectAnswers: a.incorrectAnswers,
+				totalClicks: a.totalClicks,
+				joinedAt: a.joinedAt,
+			},
+			{
+				score: b.score,
+				correctAnswers: b.correctAnswers,
+				incorrectAnswers: b.incorrectAnswers,
+				totalClicks: b.totalClicks,
+				joinedAt: b.joinedAt,
+			},
+		),
+	);
+
+	const standingsRanks = competitionRanksFromSorted(
+		ranked.map((p) => ({
+			score: p.score,
+			correctAnswers: p.correctAnswers,
+			incorrectAnswers: p.incorrectAnswers,
+			totalClicks: p.totalClicks,
+			joinedAt: p.joinedAt,
+		})),
+	);
 
 	const winnerId = ranked[0]?.id ?? null;
-	const totalRanked = ranked.length;
+	const maxStandingsRank =
+		standingsRanks.length > 0 ? Math.max(...standingsRanks) : 0;
 
 	// 4. Persist per-player rank + click stats.
 	for (let i = 0; i < ranked.length; i++) {
 		const p = ranked[i];
 		if (!p) continue;
+		const rank = standingsRanks[i] ?? i + 1;
 		await tx.player.update({
 			where: { id: p.id },
 			data: {
-				rank: i + 1,
+				rank,
 				fastestClickMs: p.fastestClickMs,
 				averageClickMs: p.averageClickMs,
 				totalClicks: p.totalClicks,
@@ -300,7 +319,7 @@ export async function finalizeGame(
 		!force && rankedUserIds.length >= 2
 			? ranked.map((p, i) => ({
 					userId: p.userId,
-					rank: i + 1,
+					rank: standingsRanks[i] ?? i + 1,
 					score: p.score,
 					ratingBefore: ratingByUserId.get(p.userId) ?? 1000,
 				}))
@@ -313,7 +332,7 @@ export async function finalizeGame(
 	for (let i = 0; i < ranked.length; i++) {
 		const p = ranked[i];
 		if (!p) continue;
-		const rank = i + 1;
+		const rank = standingsRanks[i] ?? i + 1;
 
 		const xpDelta = computeGamePlayerXpDelta(rank, p.score);
 
@@ -346,7 +365,7 @@ export async function finalizeGame(
 				totalWins: { increment: rank === 1 ? 1 : 0 },
 				totalPodiums: { increment: rank <= 3 ? 1 : 0 },
 				totalLastPlaces: {
-					increment: rank === totalRanked && totalRanked > 0 ? 1 : 0,
+					increment: maxStandingsRank > 0 && rank === maxStandingsRank ? 1 : 0,
 				},
 				totalPointsEarned: { increment: Math.max(0, p.score) },
 				totalCorrectAnswers: { increment: p.correctAnswers },
@@ -369,8 +388,7 @@ export async function finalizeGame(
 			where: { id: game.hostId },
 			select: { xp: true },
 		});
-		const newHostXp =
-			(hostUser?.xp ?? 0) + HOST_FULL_GAME_COMPLETION_XP_BONUS;
+		const newHostXp = (hostUser?.xp ?? 0) + HOST_FULL_GAME_COMPLETION_XP_BONUS;
 		await tx.user.update({
 			where: { id: game.hostId },
 			data: {
@@ -402,9 +420,7 @@ export async function finalizeGame(
 				? { increment: 1 }
 				: undefined,
 			totalTopics: topicWasClosed ? { increment: 1 } : undefined,
-			totalSkippedQuestions: leavingWasSkipped
-				? { increment: 1 }
-				: undefined,
+			totalSkippedQuestions: leavingWasSkipped ? { increment: 1 } : undefined,
 		},
 	});
 
@@ -422,7 +438,7 @@ export async function finalizeGame(
 		durationSeconds,
 		playerRanks: ranked.map((p, i) => ({
 			id: p.id,
-			rank: i + 1,
+			rank: standingsRanks[i] ?? i + 1,
 			score: p.score,
 		})),
 	};

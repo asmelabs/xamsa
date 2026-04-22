@@ -17,7 +17,6 @@ export const GameSchema = z.object({
   currentQuestionOrder: z.number().int().nullish(),
   isQuestionRevealed: z.boolean(),
   totalActivePlayers: z.number().int(),
-  totalSpectators: z.number().int(),
   totalTopics: z.number().int(),
   totalQuestions: z.number().int(),
   totalSkippedQuestions: z.number().int(),

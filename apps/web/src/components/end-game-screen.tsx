@@ -8,6 +8,7 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import {
+	BarChart3Icon,
 	CrownIcon,
 	HomeIcon,
 	MedalIcon,
@@ -18,27 +19,11 @@ import {
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import type { GameData, GamePlayer } from "@/lib/game-types";
+import { sortGamePlayersForScoreboard } from "@/lib/sort-game-players";
 import { RatePackDialog } from "./rate-pack-dialog";
 
 interface EndGameScreenProps {
 	game: GameData;
-}
-
-/**
- * Compares players first by authoritative `rank` (when finalizeGame has run),
- * falling back to descending score + earliest joinedAt for pre-finalized
- * snapshots.
- */
-function sortForScoreboard(players: GamePlayer[]): GamePlayer[] {
-	return [...players].sort((a, b) => {
-		if (a.rank !== null && b.rank !== null) return a.rank - b.rank;
-		if (a.rank !== null) return -1;
-		if (b.rank !== null) return 1;
-		if (b.score !== a.score) return b.score - a.score;
-		return (
-			new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
-		);
-	});
 }
 
 function formatDurationFromMs(ms: number): string {
@@ -63,7 +48,7 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 		parseAsBoolean.withDefault(false),
 	);
 
-	const ranked = sortForScoreboard(game.players);
+	const ranked = sortGamePlayersForScoreboard(game.players);
 	const [first, second, third] = ranked;
 	const rest = ranked.slice(3);
 
@@ -73,13 +58,12 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 
 	const myPlayer = game.myPlayer;
 	const myRank = myPlayer
-		? (ranked.findIndex((p) => p.id === myPlayer.id) + 1 || null)
+		? ranked.findIndex((p) => p.id === myPlayer.id) + 1 || null
 		: null;
 
 	const totalDurationMs =
 		game.startedAt && game.finishedAt
-			? new Date(game.finishedAt).getTime() -
-				new Date(game.startedAt).getTime()
+			? new Date(game.finishedAt).getTime() - new Date(game.startedAt).getTime()
 			: null;
 
 	return (
@@ -178,11 +162,7 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 
 			{/* CTAs */}
 			<div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-				<Button
-					variant="outline"
-					size="sm"
-					render={<Link to="/" />}
-				>
+				<Button variant="outline" size="sm" render={<Link to="/" />}>
 					<HomeIcon />
 					Back home
 				</Button>
@@ -197,6 +177,14 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 							Rate this pack
 						</Button>
 					)}
+					<Button
+						size="sm"
+						variant="secondary"
+						render={<Link to="/g/$code/stats" params={{ code: game.code }} />}
+					>
+						<BarChart3Icon />
+						Full stats
+					</Button>
 					{game.isHost && (
 						<Button
 							size="sm"
@@ -215,9 +203,7 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 			</div>
 
 			{/* Rate-pack dialog (mounted for non-hosts so the CTA above can open it) */}
-			{!game.isHost && (
-				<RatePackDialog packSlug={game.pack.slug} hideTrigger />
-			)}
+			{!game.isHost && <RatePackDialog packSlug={game.pack.slug} hideTrigger />}
 
 			{/* Full scoreboard */}
 			{rest.length > 0 && (
@@ -350,9 +336,7 @@ function ScoreboardRow({
 					</p>
 				)}
 			</div>
-			<p className="font-semibold text-sm">
-				{player.score.toLocaleString()}
-			</p>
+			<p className="font-semibold text-sm">{player.score.toLocaleString()}</p>
 		</div>
 	);
 }
@@ -395,9 +379,7 @@ function PlayerStatsCard({
 						@{player.user.username}
 					</p>
 				</div>
-				<p className="font-bold text-lg">
-					{player.score.toLocaleString()}
-				</p>
+				<p className="font-bold text-lg">{player.score.toLocaleString()}</p>
 			</div>
 
 			<div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">

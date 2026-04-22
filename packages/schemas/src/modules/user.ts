@@ -119,3 +119,90 @@ export type GetRecentGamesOutputType = z.infer<
 	typeof GetRecentGamesOutputSchema
 >;
 export type RecentGameRow = z.infer<typeof RecentGameRowSchema>;
+
+/**
+ * PUBLIC PROFILE — STATS
+ *
+ * Same aggregates as `getMyStats`, keyed by public username.
+ */
+export const GetPublicStatsInputSchema = UserSchema.pick({
+	username: true,
+});
+
+export const GetPublicStatsOutputSchema = GetMyStatsOutputSchema;
+
+export type GetPublicStatsInputType = z.infer<typeof GetPublicStatsInputSchema>;
+export type GetPublicStatsOutputType = z.infer<
+	typeof GetPublicStatsOutputSchema
+>;
+
+/**
+ * PUBLIC PROFILE — RECENT GAMES
+ *
+ * Same rows as `getRecentGames`, for the user matching `username`.
+ */
+export const GetPublicRecentGamesInputSchema = GetRecentGamesInputSchema.extend(
+	{
+		username: UserSchema.shape.username,
+	},
+);
+
+export type GetPublicRecentGamesInputType = z.infer<
+	typeof GetPublicRecentGamesInputSchema
+>;
+
+export const GetPublicRecentGamesOutputSchema = GetRecentGamesOutputSchema;
+
+export type GetPublicRecentGamesOutputType = z.infer<
+	typeof GetPublicRecentGamesOutputSchema
+>;
+
+/**
+ * GLOBAL LEADERBOARD
+ *
+ * Public ranking over `User` aggregates (updated on game finalization).
+ * Elo board requires more finished games as a player to reduce default-rating noise.
+ */
+export const GlobalLeaderboardBoardSchema = z.enum([
+	"elo",
+	"xp",
+	"wins",
+	"points",
+]);
+
+export const GetGlobalLeaderboardInputSchema = z.object({
+	board: GlobalLeaderboardBoardSchema.default("elo"),
+	limit: z.number().int().min(1).max(100).default(50),
+	cursor: z.string().optional(),
+});
+
+export const GlobalLeaderboardRowSchema = z.object({
+	rank: z.number().int(),
+	username: z.string(),
+	name: z.string(),
+	image: z.string().nullable(),
+	elo: z.number().int(),
+	level: z.number().int(),
+	xp: z.number().int(),
+	totalWins: z.number().int(),
+	totalGamesPlayed: z.number().int(),
+	totalPointsEarned: z.number().int(),
+});
+
+export const GetGlobalLeaderboardOutputSchema = z.object({
+	items: z.array(GlobalLeaderboardRowSchema),
+	nextCursor: z.string().nullable(),
+});
+
+export type GlobalLeaderboardBoardType = z.infer<
+	typeof GlobalLeaderboardBoardSchema
+>;
+export type GetGlobalLeaderboardInputType = z.infer<
+	typeof GetGlobalLeaderboardInputSchema
+>;
+export type GetGlobalLeaderboardOutputType = z.infer<
+	typeof GetGlobalLeaderboardOutputSchema
+>;
+export type GlobalLeaderboardRowType = z.infer<
+	typeof GlobalLeaderboardRowSchema
+>;

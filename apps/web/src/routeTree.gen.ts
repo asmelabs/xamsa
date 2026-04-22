@@ -32,6 +32,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as PlayNewPackSlugIndexRouteImport } from './routes/play/new/$packSlug/index'
 import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
+import { Route as GCodeStatsIndexRouteImport } from './routes/g/$code/stats/index'
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
 import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
@@ -156,6 +157,11 @@ const PacksPackSlugEditIndexRoute = PacksPackSlugEditIndexRouteImport.update({
   path: '/packs/$packSlug/edit/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GCodeStatsIndexRoute = GCodeStatsIndexRouteImport.update({
+  id: '/g/$code/stats/',
+  path: '/g/$code/stats/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PacksPackSlugTopicsNewIndexRoute =
   PacksPackSlugTopicsNewIndexRouteImport.update({
     id: '/packs/$packSlug/topics/new/',
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
+  '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/g/$code': typeof GCodeIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
+  '/g/$code/stats': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug': typeof PlayNewPackSlugIndexRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
+  '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/g/$code/'
     | '/packs/$packSlug/'
     | '/packs/new/'
+    | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/g/$code'
     | '/packs/$packSlug'
     | '/packs/new'
+    | '/g/$code/stats'
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
     | '/play/new/$packSlug'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/g/$code/'
     | '/packs/$packSlug/'
     | '/packs/new/'
+    | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
@@ -409,6 +421,7 @@ export interface RootRouteChildren {
   GCodeIndexRoute: typeof GCodeIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
+  GCodeStatsIndexRoute: typeof GCodeStatsIndexRoute
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
   PlayNewPackSlugIndexRoute: typeof PlayNewPackSlugIndexRoute
@@ -584,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksPackSlugEditIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$code/stats/': {
+      id: '/g/$code/stats/'
+      path: '/g/$code/stats'
+      fullPath: '/g/$code/stats/'
+      preLoaderRoute: typeof GCodeStatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/topics/new/': {
       id: '/packs/$packSlug/topics/new/'
       path: '/packs/$packSlug/topics/new'
@@ -670,6 +690,7 @@ const rootRouteChildren: RootRouteChildren = {
   GCodeIndexRoute: GCodeIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
+  GCodeStatsIndexRoute: GCodeStatsIndexRoute,
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
   PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
   PlayNewPackSlugIndexRoute: PlayNewPackSlugIndexRoute,
