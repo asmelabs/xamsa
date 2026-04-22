@@ -3,7 +3,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
 	HeadContent,
-	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
@@ -11,6 +10,7 @@ import { env } from "@xamsa/env/web";
 import { Toaster } from "@xamsa/ui/components/sonner";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { PostHogProvider } from "posthog-js/react";
+import { AppContentShell } from "@/components/app-content-shell";
 import { BottomTabMenu } from "@/components/bottom-tab-menu";
 import { rootIconLinks } from "@/lib/seo";
 import type { orpc } from "@/utils/orpc";
@@ -62,10 +62,8 @@ function RootDocument() {
 	const app = (
 		<>
 			<NuqsAdapter>
-				<div className="relative isolate mx-auto min-h-svh max-w-4xl px-4 py-4 pb-16 md:px-0">
-					<Outlet />
-					<BottomTabMenu />
-				</div>
+				<AppContentShell />
+				<BottomTabMenu />
 				<Toaster richColors position="top-center" />
 				<TanStackRouterDevtools position="bottom-left" />
 				<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />

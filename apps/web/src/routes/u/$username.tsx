@@ -9,6 +9,7 @@ import {
 	CrownIcon,
 	FlameIcon,
 	GamepadIcon,
+	LayoutDashboardIcon,
 	LogOutIcon,
 	Package,
 	SettingsIcon,
@@ -26,6 +27,7 @@ import { LoadingButton } from "@/components/loading-button";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import { pageSeo } from "@/lib/seo";
+import { isStaffRole } from "@/lib/staff";
 import { orpc } from "@/utils/orpc";
 
 const HISTORY_PAGE = 15;
@@ -81,7 +83,8 @@ const roleConfig = {
 
 function RouteComponent() {
 	const { username } = Route.useParams();
-	const { profile, isOwner } = Route.useLoaderData();
+	const { profile, user, isOwner } = Route.useLoaderData();
+	const showStaffDashboard = isOwner && isStaffRole(user?.role);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
 	const { data: publicStats } = useQuery(
@@ -197,7 +200,17 @@ function RouteComponent() {
 				</div>
 
 				{isOwner && (
-					<div className="flex items-center gap-2 sm:ml-auto">
+					<div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+						{showStaffDashboard ? (
+							<Button
+								variant="outline"
+								size="sm"
+								render={<Link to="/dashboard" />}
+							>
+								<LayoutDashboardIcon />
+								Staff dashboard
+							</Button>
+						) : null}
 						<Button
 							variant="outline"
 							size="sm"
