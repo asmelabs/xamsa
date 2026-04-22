@@ -59,6 +59,7 @@ Single deployable surface: quiz/game flows, packs, auth UI, and oRPC API routes 
 
 - **Stack:** TanStack Start (TanStack Router), Vite, Nitro
 - **Dev server:** default port `3001` (`apps/web/vite.config.ts`)
+- **Product version:** CalVer in `src/data/app-releases-meta.ts`; release copy in `src/data/app-releases-data.ts` (structured highlights, no JSX); `/whats-new/` lists releases; Settings shows the current label via `src/lib/app-release.ts`.
 
 ---
 

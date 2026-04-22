@@ -10,6 +10,7 @@ For local setup, see the [Setup Guide](/docs/SETUP.md). For the monorepo layout,
 - [Making Changes](#making-changes)
 - [Commit Conventions](#commit-conventions)
 - [Changesets](#changesets)
+- [Product version (web app, CalVer)](#product-version-web-app-calver)
 - [Pull Requests](#pull-requests)
 - [Code Quality](#code-quality)
 - [Dependencies](#dependencies)
@@ -175,6 +176,25 @@ bun run changeset
 ```
 
 Follow the prompts, then commit the new file under `.changeset/`. Release automation (if you add it later) often uses commit subjects like `Version Packages` or `chore(release)`; those are ignored by Commitlint.
+
+---
+
+## Product version (web app, CalVer)
+
+End-user version strings (e.g. **Xamsa v26.04.1**) are **not** driven by Changesets. They use **calendar versioning** maintained in the web app:
+
+- Source of truth: [`apps/web/src/data/app-releases-meta.ts`](/apps/web/src/data/app-releases-meta.ts) (`current` CalVer + product name, safe everywhere), [`apps/web/src/data/app-releases-data.ts`](/apps/web/src/data/app-releases-data.ts) (`releases` with structured `highlights`: `text` lines and/or `routerLink` for inline links — no JSX in data files), and [`apps/web/src/data/app-releases-types.ts`](/apps/web/src/data/app-releases-types.ts) (types; extend `ReleaseHighlight` for richer UI and render it in What’s new).
+- Display format: `v{YY}.{MM}.{patch}` (two-digit year, zero-padded month), e.g. April 2026, first release of the month → `v26.04.1`.
+- Helpers: [`apps/web/src/lib/app-release.ts`](/apps/web/src/lib/app-release.ts).
+- In the UI: **Settings** shows the current label; the **What’s new** page ([`apps/web/src/routes/whats-new/index.tsx`](/apps/web/src/routes/whats-new/index.tsx)) is served at `/whats-new/`.
+
+When you ship a user-visible release:
+
+1. Bump `current` in `app-releases-meta.ts` to the new CalVer (keep it in sync with the new release entry).
+2. Prepend a `releases` entry in `app-releases-data.ts` with `releasedAt`, the same `year` / `month` / `patch`, optional `title`, and user-oriented `highlights` (`{ kind: "text", text: "..." }` and/or `{ kind: "routerLink", to, label, before?, after? }`). For buttons or custom blocks, add a new `ReleaseHighlight` variant in `app-releases-types.ts` and render it in [`apps/web/src/routes/whats-new/-release-highlight.tsx`](/apps/web/src/routes/whats-new/-release-highlight.tsx) (keep helpers in this `-` file so TanStack Router’s lazy route chunk stays valid).
+3. Optionally align [`apps/web/package.json`](/apps/web/package.json) `"version"` with the same numbers (npm-friendly form, e.g. `26.4.1`).
+
+Changesets remain for **shared packages** under `packages/`; CalVer is **product messaging** for the web app.
 
 ---
 
