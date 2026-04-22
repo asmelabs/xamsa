@@ -1,7 +1,11 @@
-import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+/**
+ * Server-side env. Values come from the host `process.env` (injected in production;
+ * in local dev, `apps/web` loads `apps/web/.env` in `load-app-env.ts` before Vite
+ * and API handlers start — see that file, not `createServerFn`, for file-based secrets).
+ */
 export const env = createEnv({
 	server: {
 		DATABASE_URL: z.string().min(1),
@@ -29,6 +33,12 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),
+		/** Optional. Used for server-side “Generate with AI” on topic questions (Groq OpenAI-compatible API). */
+		GROQ_API_KEY: z
+			.string()
+			.min(1)
+			.transform((s) => s.trim())
+			.optional(),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

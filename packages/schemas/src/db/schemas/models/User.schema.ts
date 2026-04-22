@@ -32,6 +32,9 @@ export const UserSchema = z.object({
   totalTimeSpentPlaying: z.number().int(),
   totalTimeSpentHosting: z.number().int(),
   totalPacksPublished: z.number().int(),
+  lastAiUsedAt: z.coerce.date().nullish(),
+  aiUseCount: z.number().int(),
+  aiUseWindowDate: z.coerce.date().nullish(),
 });
 
 export type UserType = z.infer<typeof UserSchema>;

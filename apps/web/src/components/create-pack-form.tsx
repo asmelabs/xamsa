@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { PackLanguageSchema } from "@xamsa/schemas/db/schemas/enums/PackLanguage.schema";
 import { PackVisibilitySchema } from "@xamsa/schemas/db/schemas/enums/PackVisibility.schema";
 import { CreatePackInputSchema } from "@xamsa/schemas/modules/pack";
@@ -63,6 +63,13 @@ export function CreatePackForm() {
 		<Frame>
 			<FrameHeader>
 				<FrameTitle>Create a new pack</FrameTitle>
+				<p className="text-muted-foreground text-sm">
+					Want several draft packs?{" "}
+					<Link className="text-primary underline" to="/packs/bulk-new">
+						Create multiple packs at once
+					</Link>
+					.
+				</p>
 			</FrameHeader>
 			<form onSubmit={onSubmit}>
 				<FramePanel className="space-y-4">

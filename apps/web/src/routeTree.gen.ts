@@ -24,6 +24,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
+import { Route as PacksBulkNewIndexRouteImport } from './routes/packs/bulk-new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
 import { Route as GCodeIndexRouteImport } from './routes/g/$code/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
@@ -34,6 +35,7 @@ import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$pa
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
 import { Route as GCodeStatsIndexRouteImport } from './routes/g/$code/stats/index'
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
+import { Route as PacksPackSlugTopicsBulkIndexRouteImport } from './routes/packs/$packSlug/topics/bulk/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
 import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/edit/index'
@@ -116,6 +118,11 @@ const PacksNewIndexRoute = PacksNewIndexRouteImport.update({
   path: '/packs/new/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PacksBulkNewIndexRoute = PacksBulkNewIndexRouteImport.update({
+  id: '/packs/bulk-new/',
+  path: '/packs/bulk-new/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PacksPackSlugIndexRoute = PacksPackSlugIndexRouteImport.update({
   id: '/packs/$packSlug/',
   path: '/packs/$packSlug/',
@@ -166,6 +173,12 @@ const PacksPackSlugTopicsNewIndexRoute =
   PacksPackSlugTopicsNewIndexRouteImport.update({
     id: '/packs/$packSlug/topics/new/',
     path: '/packs/$packSlug/topics/new/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PacksPackSlugTopicsBulkIndexRoute =
+  PacksPackSlugTopicsBulkIndexRouteImport.update({
+    id: '/packs/$packSlug/topics/bulk/',
+    path: '/packs/$packSlug/topics/bulk/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const PacksPackSlugTopicsTopicSlugIndexRoute =
@@ -225,12 +238,14 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
+  '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/bulk/': typeof PacksPackSlugTopicsBulkIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
@@ -257,12 +272,14 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
   '/g/$code': typeof GCodeIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
+  '/packs/bulk-new': typeof PacksBulkNewIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
   '/g/$code/stats': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug': typeof PlayNewPackSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/bulk': typeof PacksPackSlugTopicsBulkIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewIndexRoute
   '/packs/$packSlug/topics/$topicSlug/edit': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder': typeof PacksPackSlugTopicsEditReorderIndexRoute
@@ -291,12 +308,14 @@ export interface FileRoutesById {
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
+  '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  '/packs/$packSlug/topics/bulk/': typeof PacksPackSlugTopicsBulkIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
@@ -326,12 +345,14 @@ export interface FileRouteTypes {
     | '/auth/reset-password/'
     | '/g/$code/'
     | '/packs/$packSlug/'
+    | '/packs/bulk-new/'
     | '/packs/new/'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
     | '/packs/$packSlug/topics/$topicSlug/'
+    | '/packs/$packSlug/topics/bulk/'
     | '/packs/$packSlug/topics/new/'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
@@ -358,12 +379,14 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/g/$code'
     | '/packs/$packSlug'
+    | '/packs/bulk-new'
     | '/packs/new'
     | '/g/$code/stats'
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
     | '/play/new/$packSlug'
     | '/packs/$packSlug/topics/$topicSlug'
+    | '/packs/$packSlug/topics/bulk'
     | '/packs/$packSlug/topics/new'
     | '/packs/$packSlug/topics/$topicSlug/edit'
     | '/packs/$packSlug/topics/edit/reorder'
@@ -391,12 +414,14 @@ export interface FileRouteTypes {
     | '/auth/reset-password/'
     | '/g/$code/'
     | '/packs/$packSlug/'
+    | '/packs/bulk-new/'
     | '/packs/new/'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
     | '/packs/$packSlug/topics/$topicSlug/'
+    | '/packs/$packSlug/topics/bulk/'
     | '/packs/$packSlug/topics/new/'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
@@ -420,12 +445,14 @@ export interface RootRouteChildren {
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
+  PacksBulkNewIndexRoute: typeof PacksBulkNewIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
   GCodeStatsIndexRoute: typeof GCodeStatsIndexRoute
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
   PlayNewPackSlugIndexRoute: typeof PlayNewPackSlugIndexRoute
   PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
+  PacksPackSlugTopicsBulkIndexRoute: typeof PacksPackSlugTopicsBulkIndexRoute
   PacksPackSlugTopicsNewIndexRoute: typeof PacksPackSlugTopicsNewIndexRoute
   PacksPackSlugTopicsTopicSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   PacksPackSlugTopicsEditReorderIndexRoute: typeof PacksPackSlugTopicsEditReorderIndexRoute
@@ -541,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksNewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/packs/bulk-new/': {
+      id: '/packs/bulk-new/'
+      path: '/packs/bulk-new'
+      fullPath: '/packs/bulk-new/'
+      preLoaderRoute: typeof PacksBulkNewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/': {
       id: '/packs/$packSlug/'
       path: '/packs/$packSlug'
@@ -609,6 +643,13 @@ declare module '@tanstack/react-router' {
       path: '/packs/$packSlug/topics/new'
       fullPath: '/packs/$packSlug/topics/new/'
       preLoaderRoute: typeof PacksPackSlugTopicsNewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs/$packSlug/topics/bulk/': {
+      id: '/packs/$packSlug/topics/bulk/'
+      path: '/packs/$packSlug/topics/bulk'
+      fullPath: '/packs/$packSlug/topics/bulk/'
+      preLoaderRoute: typeof PacksPackSlugTopicsBulkIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packs/$packSlug/topics/$topicSlug/': {
@@ -689,6 +730,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   GCodeIndexRoute: GCodeIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
+  PacksBulkNewIndexRoute: PacksBulkNewIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
   GCodeStatsIndexRoute: GCodeStatsIndexRoute,
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
@@ -696,6 +738,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlayNewPackSlugIndexRoute: PlayNewPackSlugIndexRoute,
   PacksPackSlugTopicsTopicSlugIndexRoute:
     PacksPackSlugTopicsTopicSlugIndexRoute,
+  PacksPackSlugTopicsBulkIndexRoute: PacksPackSlugTopicsBulkIndexRoute,
   PacksPackSlugTopicsNewIndexRoute: PacksPackSlugTopicsNewIndexRoute,
   PacksPackSlugTopicsTopicSlugEditIndexRoute:
     PacksPackSlugTopicsTopicSlugEditIndexRoute,
