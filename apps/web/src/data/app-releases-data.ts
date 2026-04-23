@@ -9,12 +9,29 @@ export type {
 	ReleaseHighlight,
 } from "@/data/app-releases-types";
 
-const current = { year: 2026, month: 4, patch: 8 } as const;
+const current = { year: 2026, month: 4, patch: 9 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-23",
+			year: 2026,
+			month: 4,
+			patch: 9,
+			title: "Host-only game XP, Elo for play, advanced recap",
+			highlights: [
+				{
+					kind: "text",
+					text: "XP and levels from live games are for the host only (hosting a session). Player progression uses Elo and your existing stats, not play XP. Every completed game still awards the host the usual hosting bonus, including when the host ends the game early.",
+				},
+				{
+					kind: "text",
+					text: "The game stats page has a new Flow tab: a score-over-time line chart, a per-round heatmap of how many questions you took in each round, and streaks on the overview plus in Flow. Recent games and public history still exclude lobby-only cancels from earlier releases.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-23",
 			year: 2026,

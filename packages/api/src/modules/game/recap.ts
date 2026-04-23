@@ -166,6 +166,62 @@ export async function getCompletedGameRecap(
 		clicksByQuestionId.set(c.questionId, list);
 	}
 
+	const playerIds = game.players.map((p) => p.id);
+	const emptyScoreMap = (): Record<string, number> => {
+		const o: Record<string, number> = {};
+		for (const id of playerIds) o[id] = 0;
+		return o;
+	};
+
+	const cumulative = emptyScoreMap();
+	const scoreTimeline: {
+		stepIndex: number;
+		label: string;
+		scoresByPlayerId: Record<string, number>;
+	}[] = [{ stepIndex: 0, label: "Start", scoresByPlayerId: { ...cumulative } }];
+	let nextStep = 1;
+
+	for (const gt of gameTopics) {
+		for (const gq of gt.questions) {
+			const rawClicks = clicksByQuestionId.get(gq.question.id) ?? [];
+			for (const c of rawClicks) {
+				cumulative[c.playerId] =
+					(cumulative[c.playerId] ?? 0) + c.pointsAwarded;
+			}
+			scoreTimeline.push({
+				stepIndex: nextStep++,
+				label: `R${gt.order} Q${gq.order}`,
+				scoresByPlayerId: { ...cumulative },
+			});
+		}
+	}
+
+	const roundPerformance: {
+		playerId: string;
+		playerName: string;
+		topicOrder: number;
+		topicName: string;
+		totalQuestions: number;
+		questionsCorrect: number;
+	}[] = [];
+	for (const p of game.players) {
+		const playerName = p.user.name?.trim() || "Player";
+		for (const gt of gameTopics) {
+			const totalQuestions = gt.questions.length;
+			const questionsCorrect = gt.questions.filter(
+				(gq) => gq.winnerId === p.id,
+			).length;
+			roundPerformance.push({
+				playerId: p.id,
+				playerName,
+				topicOrder: gt.order,
+				topicName: gt.topic.name,
+				totalQuestions,
+				questionsCorrect,
+			});
+		}
+	}
+
 	const topics = gameTopics.map((gt) => ({
 		order: gt.order,
 		topicName: gt.topic.name,
@@ -234,5 +290,7 @@ export async function getCompletedGameRecap(
 		},
 		players,
 		topics,
+		scoreTimeline,
+		roundPerformance,
 	};
 }

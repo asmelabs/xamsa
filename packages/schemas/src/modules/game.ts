@@ -376,6 +376,21 @@ const RecapTopicSchema = z.object({
 	questions: z.array(RecapQuestionSchema),
 });
 
+const RecapScoreTimelineStepSchema = z.object({
+	stepIndex: z.number().int(),
+	label: z.string(),
+	scoresByPlayerId: z.record(z.string(), z.number()),
+});
+
+const RecapRoundPerformanceRowSchema = z.object({
+	playerId: z.string(),
+	playerName: z.string(),
+	topicOrder: z.number().int(),
+	topicName: z.string(),
+	totalQuestions: z.number().int(),
+	questionsCorrect: z.number().int(),
+});
+
 export const GetCompletedGameRecapOutputSchema = z.object({
 	code: z.string(),
 	startedAt: z.coerce.date().nullable(),
@@ -396,6 +411,8 @@ export const GetCompletedGameRecapOutputSchema = z.object({
 	}),
 	players: z.array(GamePlayerSchema),
 	topics: z.array(RecapTopicSchema),
+	scoreTimeline: z.array(RecapScoreTimelineStepSchema),
+	roundPerformance: z.array(RecapRoundPerformanceRowSchema),
 });
 
 export type GetCompletedGameRecapInputType = z.infer<

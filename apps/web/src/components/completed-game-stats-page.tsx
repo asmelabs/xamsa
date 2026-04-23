@@ -1,8 +1,3 @@
-/**
- * Richer analytics (per-round score lines, outcome heatmaps, streak views) can
- * build on `getCompletedRecap` without new DB fields — extend the recap shape
- * and chart here incrementally.
- */
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { GetCompletedGameRecapOutputType } from "@xamsa/schemas/modules/game";
@@ -33,6 +28,7 @@ import {
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@xamsa/ui/components/tabs";
 import { format } from "date-fns";
 import {
+	ActivityIcon,
 	ArrowLeftIcon,
 	BarChart3Icon,
 	ClockIcon,
@@ -46,6 +42,8 @@ import {
 	CartesianGrid,
 	Cell,
 	Legend,
+	Line,
+	LineChart,
 	Pie,
 	PieChart,
 	ResponsiveContainer,
@@ -361,6 +359,216 @@ function TopicDurationChart({ recap }: { recap: Recap }) {
 	);
 }
 
+function cellHeatmapClass(ratio: number, hasQuestions: boolean): string {
+	if (!hasQuestions) return "bg-muted/30 text-muted-foreground";
+	if (ratio >= 0.8) return "bg-emerald-500/30 text-foreground";
+	if (ratio >= 0.5) return "bg-amber-500/25 text-foreground";
+	if (ratio > 0) return "bg-orange-500/20 text-foreground";
+	return "bg-rose-500/15 text-muted-foreground";
+}
+
+function ScoreTimelineLineChart({ recap }: { recap: Recap }) {
+	const sorted = sortGamePlayersForScoreboard(recap.players);
+	const data = recap.scoreTimeline.map((step) => {
+		const row: Record<string, string | number> = {
+			label: step.label,
+			step: step.stepIndex,
+		};
+		for (const p of sorted) {
+			row[p.id] = step.scoresByPlayerId[p.id] ?? 0;
+		}
+		return row;
+	});
+
+	if (data.length <= 1) {
+		return null;
+	}
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2 text-base">
+					<ActivityIcon className="size-4" />
+					Score over time
+				</CardTitle>
+				<CardDescription>
+					Running total after each question (points from your buzz resolutions)
+				</CardDescription>
+			</CardHeader>
+			<CardPanel className="pb-4">
+				<div className="h-[300px] w-full min-w-0">
+					<ResponsiveContainer width="100%" height="100%">
+						<LineChart
+							data={data}
+							margin={{ left: 4, right: 8, top: 8, bottom: 48 }}
+						>
+							<CartesianGrid
+								strokeDasharray="3 3"
+								className="stroke-muted/40"
+							/>
+							<XAxis
+								dataKey="label"
+								tick={{ fontSize: 9 }}
+								interval="preserveStartEnd"
+								angle={-28}
+								textAnchor="end"
+								height={48}
+							/>
+							<YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={44} />
+							<Tooltip
+								content={({ active, label, payload }) => {
+									if (!active || !payload?.length) return null;
+									return (
+										<div className="rounded-lg border bg-popover px-3 py-2 text-popover-foreground text-xs shadow-md">
+											<p className="mb-1 font-medium">{String(label)}</p>
+											<ul className="space-y-0.5">
+												{payload.map((it) => (
+													<li
+														key={String(it.dataKey)}
+														className="flex justify-between gap-4 tabular-nums"
+													>
+														<span className="text-muted-foreground">
+															{it.name}
+														</span>
+														<span>{String(it.value)}</span>
+													</li>
+												))}
+											</ul>
+										</div>
+									);
+								}}
+							/>
+							<Legend wrapperStyle={{ fontSize: 12 }} />
+							{sorted.map((p, i) => (
+								<Line
+									key={p.id}
+									type="monotone"
+									dataKey={p.id}
+									name={p.user.name}
+									stroke={
+										CHART_FILLS[i % CHART_FILLS.length] ?? "var(--chart-1)"
+									}
+									dot={false}
+									strokeWidth={2}
+									isAnimationActive={false}
+								/>
+							))}
+						</LineChart>
+					</ResponsiveContainer>
+				</div>
+			</CardPanel>
+		</Card>
+	);
+}
+
+function RoundPerformanceHeatmap({ recap }: { recap: Recap }) {
+	const sorted = sortGamePlayersForScoreboard(recap.players);
+	const roundOrders = [
+		...new Set(recap.roundPerformance.map((r) => r.topicOrder)),
+	].sort((a, b) => a - b);
+
+	if (roundOrders.length === 0) {
+		return null;
+	}
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="text-base">Round results</CardTitle>
+				<CardDescription>
+					Questions you answered first in each round (e.g. 3/5 = three of five
+					in that round)
+				</CardDescription>
+			</CardHeader>
+			<CardPanel className="overflow-x-auto pb-4">
+				<Table variant="card" className="min-w-[480px] text-xs">
+					<TableHeader>
+						<TableRow>
+							<TableHead className="whitespace-nowrap">Player</TableHead>
+							{roundOrders.map((o) => (
+								<TableHead key={o} className="min-w-[4.5rem] text-center">
+									R{o}
+								</TableHead>
+							))}
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{sorted.map((p) => (
+							<TableRow key={p.id}>
+								<TableCell className="max-w-[140px] truncate font-medium">
+									{p.user.name}
+								</TableCell>
+								{roundOrders.map((o) => {
+									const cell = recap.roundPerformance.find(
+										(r) => r.playerId === p.id && r.topicOrder === o,
+									);
+									if (!cell) {
+										return (
+											<TableCell key={o} className="text-center">
+												—
+											</TableCell>
+										);
+									}
+									const r =
+										cell.totalQuestions > 0
+											? cell.questionsCorrect / cell.totalQuestions
+											: 0;
+									return (
+										<TableCell
+											key={o}
+											className={`text-center font-medium tabular-nums ${cellHeatmapClass(r, cell.totalQuestions > 0)}`}
+										>
+											{cell.questionsCorrect}/{cell.totalQuestions}
+										</TableCell>
+									);
+								})}
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</CardPanel>
+		</Card>
+	);
+}
+
+function StreaksSummary({ recap }: { recap: Recap }) {
+	const sorted = sortGamePlayersForScoreboard(recap.players);
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="text-base">Streaks</CardTitle>
+				<CardDescription>
+					Best correct / wrong-answer runs during the game
+				</CardDescription>
+			</CardHeader>
+			<CardPanel>
+				<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					{sorted.map((p) => (
+						<div
+							key={p.id}
+							className="rounded-xl border border-border bg-muted/20 px-3 py-2.5"
+						>
+							<p className="truncate font-medium text-sm">{p.user.name}</p>
+							<div className="mt-1 flex justify-between gap-2 text-xs">
+								<span className="text-muted-foreground">Best correct run</span>
+								<span className="font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
+									{p.longestCorrectStreak}
+								</span>
+							</div>
+							<div className="mt-0.5 flex justify-between gap-2 text-xs">
+								<span className="text-muted-foreground">Long wrong run</span>
+								<span className="font-semibold text-rose-600 tabular-nums dark:text-rose-400">
+									{p.longestWrongStreak}
+								</span>
+							</div>
+						</div>
+					))}
+				</div>
+			</CardPanel>
+		</Card>
+	);
+}
+
 function ClicksTable({
 	clicks,
 }: {
@@ -647,6 +855,10 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 							<UsersIcon className="size-4" />
 							By player
 						</TabsTab>
+						<TabsTab value="flow">
+							<ActivityIcon className="size-4" />
+							Flow
+						</TabsTab>
 					</TabsList>
 
 					<TabsPanel value="overview" className="mt-4 space-y-6">
@@ -655,6 +867,12 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 							<OutcomesPieChart recap={recap} />
 						</div>
 						<TopicDurationChart recap={recap} />
+						<StreaksSummary recap={recap} />
+					</TabsPanel>
+
+					<TabsPanel value="flow" className="mt-4 space-y-6">
+						<ScoreTimelineLineChart recap={recap} />
+						<RoundPerformanceHeatmap recap={recap} />
 					</TabsPanel>
 
 					<TabsPanel value="rounds" className="mt-4 space-y-6">

@@ -5,7 +5,6 @@ import {
 	competitionRanksFromSorted,
 } from "@xamsa/utils/game-standings";
 import {
-	computeGamePlayerXpDelta,
 	computeLevelFromXp,
 	HOST_FULL_GAME_COMPLETION_XP_BONUS,
 } from "@xamsa/utils/progression";
@@ -48,8 +47,8 @@ export type FinalizeGameOptions = {
  *      - If force-finalizing an unrevealed question, mark it as skipped.
  *   3. Compute every player's aggregate stats and final rank.
  *   4. Persist ranks + per-player click stats.
- *   5. Roll up per-player aggregates onto the User row (xp, games, etc.).
- *   6. Roll up host stats onto the host User row.
+ *   5. Roll up per-player aggregates onto the User row (Elo, play stats, etc. — not XP; XP is host-only).
+ *   6. Roll up host stats (including hosting XP) onto the host User row.
  *   7. Update the Game row: status=completed, winner, duration, totals.
  *   8. Bump the Pack's totalPlays counter.
  *
@@ -420,14 +419,11 @@ export async function finalizeGame(
 		if (!p) continue;
 		const rank = standingsRanks[i] ?? i + 1;
 
-		const xpDelta = computeGamePlayerXpDelta(rank, p.score);
-
+		// XP/level is only for the host (hosting + pack work); Elo and aggregates reflect play.
 		const currentUser = await tx.user.findUnique({
 			where: { id: p.userId },
-			select: { xp: true, elo: true, peakElo: true, lowestElo: true },
+			select: { elo: true, peakElo: true, lowestElo: true },
 		});
-		const newXp = (currentUser?.xp ?? 0) + xpDelta;
-		const newLevel = computeLevelFromXp(newXp);
 
 		const eloDelta = eloDeltas.get(p.userId) ?? 0;
 		let eloPatch: {
@@ -461,38 +457,26 @@ export async function finalizeGame(
 				totalTopicsPlayed: { increment: p.topicsPlayed },
 				totalQuestionsPlayed: { increment: totalGameQuestions },
 				totalTimeSpentPlaying: { increment: durationSeconds },
-				xp: newXp,
-				level: newLevel,
 				...(eloPatch ?? {}),
 			},
 		});
 	}
 
-	// 6. Roll up host stats onto the host User row.
-	if (!force) {
-		const hostUser = await tx.user.findUnique({
-			where: { id: game.hostId },
-			select: { xp: true },
-		});
-		const newHostXp = (hostUser?.xp ?? 0) + HOST_FULL_GAME_COMPLETION_XP_BONUS;
-		await tx.user.update({
-			where: { id: game.hostId },
-			data: {
-				totalGamesHosted: { increment: 1 },
-				totalTimeSpentHosting: { increment: durationSeconds },
-				xp: newHostXp,
-				level: computeLevelFromXp(newHostXp),
-			},
-		});
-	} else {
-		await tx.user.update({
-			where: { id: game.hostId },
-			data: {
-				totalGamesHosted: { increment: 1 },
-				totalTimeSpentHosting: { increment: durationSeconds },
-			},
-		});
-	}
+	// 6. Host: XP/level for hosting a completed session (including host-ended games).
+	const hostUser = await tx.user.findUnique({
+		where: { id: game.hostId },
+		select: { xp: true },
+	});
+	const newHostXp = (hostUser?.xp ?? 0) + HOST_FULL_GAME_COMPLETION_XP_BONUS;
+	await tx.user.update({
+		where: { id: game.hostId },
+		data: {
+			totalGamesHosted: { increment: 1 },
+			totalTimeSpentHosting: { increment: durationSeconds },
+			xp: newHostXp,
+			level: computeLevelFromXp(newHostXp),
+		},
+	});
 
 	// 7. Finalize the Game row.
 	await tx.game.update({
