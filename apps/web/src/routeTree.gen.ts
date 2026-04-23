@@ -28,6 +28,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-pas
 import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksBulkNewIndexRouteImport } from './routes/packs/bulk-new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
+import { Route as GamesHistoryIndexRouteImport } from './routes/games/history/index'
 import { Route as GCodeIndexRouteImport } from './routes/g/$code/index'
 import { Route as DashboardUsersIndexRouteImport } from './routes/dashboard/users/index'
 import { Route as DashboardTopicsIndexRouteImport } from './routes/dashboard/topics/index'
@@ -145,6 +146,11 @@ const PacksBulkNewIndexRoute = PacksBulkNewIndexRouteImport.update({
 const PacksPackSlugIndexRoute = PacksPackSlugIndexRouteImport.update({
   id: '/packs/$packSlug/',
   path: '/packs/$packSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesHistoryIndexRoute = GamesHistoryIndexRouteImport.update({
+  id: '/games/history/',
+  path: '/games/history/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GCodeIndexRoute = GCodeIndexRouteImport.update({
@@ -300,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/topics/': typeof DashboardTopicsIndexRoute
   '/dashboard/users/': typeof DashboardUsersIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
+  '/games/history/': typeof GamesHistoryIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
@@ -342,6 +349,7 @@ export interface FileRoutesByTo {
   '/dashboard/topics': typeof DashboardTopicsIndexRoute
   '/dashboard/users': typeof DashboardUsersIndexRoute
   '/g/$code': typeof GCodeIndexRoute
+  '/games/history': typeof GamesHistoryIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new': typeof PacksBulkNewIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
@@ -387,6 +395,7 @@ export interface FileRoutesById {
   '/dashboard/topics/': typeof DashboardTopicsIndexRoute
   '/dashboard/users/': typeof DashboardUsersIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
+  '/games/history/': typeof GamesHistoryIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
@@ -433,6 +442,7 @@ export interface FileRouteTypes {
     | '/dashboard/topics/'
     | '/dashboard/users/'
     | '/g/$code/'
+    | '/games/history/'
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
     | '/packs/new/'
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/dashboard/topics'
     | '/dashboard/users'
     | '/g/$code'
+    | '/games/history'
     | '/packs/$packSlug'
     | '/packs/bulk-new'
     | '/packs/new'
@@ -519,6 +530,7 @@ export interface FileRouteTypes {
     | '/dashboard/topics/'
     | '/dashboard/users/'
     | '/g/$code/'
+    | '/games/history/'
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
     | '/packs/new/'
@@ -551,6 +563,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
+  GamesHistoryIndexRoute: typeof GamesHistoryIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksBulkNewIndexRoute: typeof PacksBulkNewIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
@@ -701,6 +714,13 @@ declare module '@tanstack/react-router' {
       path: '/packs/$packSlug'
       fullPath: '/packs/$packSlug/'
       preLoaderRoute: typeof PacksPackSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/history/': {
+      id: '/games/history/'
+      path: '/games/history'
+      fullPath: '/games/history/'
+      preLoaderRoute: typeof GamesHistoryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/g/$code/': {
@@ -926,6 +946,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   GCodeIndexRoute: GCodeIndexRoute,
+  GamesHistoryIndexRoute: GamesHistoryIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksBulkNewIndexRoute: PacksBulkNewIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,

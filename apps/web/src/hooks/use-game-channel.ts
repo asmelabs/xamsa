@@ -67,6 +67,8 @@ export type QuestionRevealedData = {
 	order: number;
 	text: string | null;
 	answer: string | null;
+	/** When host reveals manually, pending buzzes are expired on the server. */
+	expiredClicks?: { id: string; playerId: string }[];
 	isAuthoritative?: boolean;
 };
 
@@ -119,7 +121,10 @@ export type GameResumedData = {
  * Builds a tentative click entry used for optimistic UI before
  * the server confirms the buzz.
  */
-function buildTentativeClick(data: BuzzIntentData, position: number): GameClick {
+function buildTentativeClick(
+	data: BuzzIntentData,
+	position: number,
+): GameClick {
 	return {
 		id: `tentative_${data.intentId}`,
 		_intentId: data.intentId,
@@ -350,10 +355,31 @@ export function applyQuestionRevealToGame(
 		answer: data.answer ?? old.currentQuestion.answer,
 	};
 
+	const expiredIds = new Set((data.expiredClicks ?? []).map((c) => c.id));
+
+	if (!expiredIds.size) {
+		return {
+			...old,
+			isQuestionRevealed: true,
+			currentQuestion: nextCurrentQuestion,
+		};
+	}
+
 	return {
 		...old,
 		isQuestionRevealed: true,
 		currentQuestion: nextCurrentQuestion,
+		clicks: old.clicks.map((c) =>
+			expiredIds.has(c.id) ? { ...c, status: "expired" as const } : c,
+		),
+		hostData: old.hostData
+			? {
+					...old.hostData,
+					clickDetails: old.hostData.clickDetails.map((c) =>
+						expiredIds.has(c.id) ? { ...c, status: "expired" as const } : c,
+					),
+				}
+			: old.hostData,
 	};
 }
 
@@ -540,9 +566,7 @@ export function applyGameCompletedToGame(
 		data.playerRanks.map((r) => [r.id, r] as const),
 	);
 
-	const applyRank = <P extends { id: string; score: number }>(
-		player: P,
-	): P => {
+	const applyRank = <P extends { id: string; score: number }>(player: P): P => {
 		const update = rankByPlayerId.get(player.id);
 		if (!update) return player;
 		return { ...player, score: update.score, rank: update.rank };
@@ -611,9 +635,7 @@ export function useGameChannel(code: string) {
 			// and only on first confirmation
 			if (!wasAlreadyConfirmed) {
 				const myPlayerId = previous?.myPlayer?.id;
-				const buzzer = previous?.players.find(
-					(p) => p.id === data.playerId,
-				);
+				const buzzer = previous?.players.find((p) => p.id === data.playerId);
 				if (buzzer && data.playerId !== myPlayerId) {
 					toast(`${buzzer.user.name} buzzed`, {
 						description: `#${data.position} in queue`,
@@ -760,12 +782,10 @@ export function useGameChannel(code: string) {
 			if (member.clientId !== cached.hostId) return;
 			if (hostDisconnectFiredRef.current) return;
 			hostDisconnectFiredRef.current = true;
-			void orpc.game.handleHostDisconnect
-				.call({ code })
-				.catch(() => {
-					// resetting lets a subsequent disconnect re-attempt
-					hostDisconnectFiredRef.current = false;
-				});
+			void orpc.game.handleHostDisconnect.call({ code }).catch(() => {
+				// resetting lets a subsequent disconnect re-attempt
+				hostDisconnectFiredRef.current = false;
+			});
 		};
 		channel.presence.subscribe("leave", onPresenceLeave);
 
@@ -789,10 +809,7 @@ export function useGameChannel(code: string) {
 		channel.subscribe(GAME_EVENTS.CLICK_RESOLVED, onClickResolved);
 		channel.subscribe(GAME_EVENTS.QUESTION_REVEAL_INTENT, onQuestionRevealed);
 		channel.subscribe(GAME_EVENTS.QUESTION_REVEALED, onQuestionRevealed);
-		channel.subscribe(
-			GAME_EVENTS.QUESTION_ADVANCE_INTENT,
-			onQuestionAdvanced,
-		);
+		channel.subscribe(GAME_EVENTS.QUESTION_ADVANCE_INTENT, onQuestionAdvanced);
 		channel.subscribe(GAME_EVENTS.QUESTION_ADVANCED, onQuestionAdvanced);
 		channel.subscribe(GAME_EVENTS.GAME_COMPLETE_INTENT, onGameCompleted);
 		channel.subscribe(GAME_EVENTS.GAME_ENDED, onGameCompleted);
@@ -805,10 +822,7 @@ export function useGameChannel(code: string) {
 			channel.unsubscribe(GAME_EVENTS.GAME_STARTED, onGameStarted);
 			channel.unsubscribe(GAME_EVENTS.CLICK_NEW, onClickNew);
 			channel.unsubscribe(GAME_EVENTS.BUZZ_INTENT, onBuzzIntent);
-			channel.unsubscribe(
-				GAME_EVENTS.CLICK_RESOLVE_INTENT,
-				onClickResolved,
-			);
+			channel.unsubscribe(GAME_EVENTS.CLICK_RESOLVE_INTENT, onClickResolved);
 			channel.unsubscribe(GAME_EVENTS.CLICK_RESOLVED, onClickResolved);
 			channel.unsubscribe(
 				GAME_EVENTS.QUESTION_REVEAL_INTENT,
@@ -820,10 +834,7 @@ export function useGameChannel(code: string) {
 				onQuestionAdvanced,
 			);
 			channel.unsubscribe(GAME_EVENTS.QUESTION_ADVANCED, onQuestionAdvanced);
-			channel.unsubscribe(
-				GAME_EVENTS.GAME_COMPLETE_INTENT,
-				onGameCompleted,
-			);
+			channel.unsubscribe(GAME_EVENTS.GAME_COMPLETE_INTENT, onGameCompleted);
 			channel.unsubscribe(GAME_EVENTS.GAME_ENDED, onGameCompleted);
 			channel.unsubscribe(GAME_EVENTS.GAME_PAUSED, onGamePaused);
 			channel.unsubscribe(GAME_EVENTS.GAME_RESUMED, onGameResumed);

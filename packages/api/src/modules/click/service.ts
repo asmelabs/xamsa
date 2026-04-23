@@ -23,6 +23,7 @@ export async function buzzClick(
 			startedAt: true,
 			currentTopicOrder: true,
 			currentQuestionOrder: true,
+			isQuestionRevealed: true,
 		},
 	});
 
@@ -32,12 +33,16 @@ export async function buzzClick(
 		});
 	}
 
+	if (game.isQuestionRevealed) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Question is already revealed; buzzer is closed",
+		});
+	}
+
 	if (game.status !== "active") {
 		throw new ORPCError("BAD_REQUEST", {
 			message:
-				game.status === "paused"
-					? "Game is paused"
-					: "Game is not active",
+				game.status === "paused" ? "Game is paused" : "Game is not active",
 		});
 	}
 
@@ -122,6 +127,8 @@ export async function buzzClick(
 		},
 	});
 
+	const clickedAt = new Date();
+
 	// create the click
 	const click = await prisma.click.create({
 		data: {
@@ -130,7 +137,7 @@ export async function buzzClick(
 			topicId: currentQuestion.topicId,
 			questionId: currentQuestion.id,
 			position: existingClickCount + 1,
-			clickedAt: new Date(input.clickedAt),
+			clickedAt,
 			status: "pending",
 		},
 		select: {
@@ -210,12 +217,16 @@ export async function resolveClick(
 		});
 	}
 
+	if (game.isQuestionRevealed) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Question is already revealed",
+		});
+	}
+
 	if (game.status !== "active") {
 		throw new ORPCError("BAD_REQUEST", {
 			message:
-				game.status === "paused"
-					? "Game is paused"
-					: "Game is not active",
+				game.status === "paused" ? "Game is paused" : "Game is not active",
 		});
 	}
 
@@ -381,8 +392,8 @@ export async function resolveClick(
 		//      and every active player already has a non-pending click)
 		let shouldReveal = isCorrect;
 		if (!isCorrect) {
-			const [activePlayerCount, pendingLeft, resolvedCount] =
-				await Promise.all([
+			const [activePlayerCount, pendingLeft, resolvedCount] = await Promise.all(
+				[
 					tx.player.count({
 						where: { gameId: game.id, status: "playing" },
 					}),
@@ -400,7 +411,8 @@ export async function resolveClick(
 							status: { not: "pending" },
 						},
 					}),
-				]);
+				],
+			);
 			shouldReveal = pendingLeft === 0 && resolvedCount >= activePlayerCount;
 		}
 

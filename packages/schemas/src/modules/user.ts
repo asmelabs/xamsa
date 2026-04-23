@@ -161,7 +161,7 @@ export type GetPublicRecentGamesOutputType = z.infer<
  * GLOBAL LEADERBOARD
  *
  * Public ranking over `User` aggregates (updated on game finalization).
- * Elo board requires more finished games as a player to reduce default-rating noise.
+ * Elo board requires at least one finished game as a player; XP includes hosts.
  */
 export const GlobalLeaderboardBoardSchema = z.enum([
 	"elo",

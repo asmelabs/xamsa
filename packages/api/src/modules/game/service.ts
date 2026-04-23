@@ -26,7 +26,7 @@ import type {
 } from "@xamsa/schemas/modules/game";
 import { MIN_PLAYERS_PER_GAME_TO_START } from "@xamsa/utils/constants";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
-import { finalizeGame } from "./finalize-game";
+import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
 import { generateUniqueGameCode } from "./utils";
 
 export async function createGame(
@@ -723,6 +723,7 @@ export async function revealQuestion(
 			order: question.order,
 			text: question.text,
 			answer: question.answer,
+			expiredClicks: [],
 			isAuthoritative: true,
 		});
 		return {
@@ -732,16 +733,55 @@ export async function revealQuestion(
 		};
 	}
 
-	await prisma.$transaction(async (tx) => {
+	const { expiredClicks } = await prisma.$transaction(async (tx) => {
+		const now = new Date();
+		const pending = await tx.click.findMany({
+			where: {
+				gameId: game.id,
+				questionId: question.id,
+				status: "pending",
+			},
+			select: { id: true, playerId: true },
+		});
+
+		if (pending.length > 0) {
+			await tx.click.updateMany({
+				where: { id: { in: pending.map((c) => c.id) } },
+				data: {
+					status: "expired",
+					answeredAt: now,
+					pointsAwarded: 0,
+				},
+			});
+			for (const row of pending) {
+				await tx.player.update({
+					where: { id: row.playerId },
+					data: { expiredClicks: { increment: 1 } },
+				});
+			}
+		}
+
 		await tx.game.update({
 			where: { id: game.id },
-			data: { isQuestionRevealed: true },
+			data: {
+				isQuestionRevealed: true,
+				...(pending.length > 0
+					? {
+							totalAnswers: { increment: pending.length },
+							totalExpiredAnswers: { increment: pending.length },
+						}
+					: {}),
+			},
 		});
 
 		await tx.gameQuestion.update({
 			where: { id: gameQuestion.id },
 			data: { wasRevealed: true },
 		});
+
+		return {
+			expiredClicks: pending.map((c) => ({ id: c.id, playerId: c.playerId })),
+		};
 	});
 
 	const channel = ablyRest.channels.get(channels.game(input.code));
@@ -749,6 +789,7 @@ export async function revealQuestion(
 		order: question.order,
 		text: question.text,
 		answer: question.answer,
+		expiredClicks,
 		isAuthoritative: true,
 	});
 
@@ -1113,7 +1154,7 @@ export async function leaveAsHost(
 ): Promise<LeaveAsHostOutputType> {
 	const game = await prisma.game.findUnique({
 		where: { code: input.code },
-		select: { id: true, hostId: true, status: true },
+		select: { id: true, hostId: true, status: true, startedAt: true },
 	});
 
 	if (!game) {
@@ -1135,6 +1176,9 @@ export async function leaveAsHost(
 	const now = new Date();
 
 	const finalResult = await prisma.$transaction(async (tx) => {
+		if (!game.startedAt) {
+			return completeLobbyOnlyGame(tx, game.id, now);
+		}
 		return finalizeGame(tx, game.id, { now, force: true });
 	});
 

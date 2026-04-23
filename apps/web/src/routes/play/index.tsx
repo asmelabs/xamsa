@@ -139,6 +139,15 @@ function PlayView() {
 					Host a game from one of your packs, or join a friend's game with a
 					code.
 				</p>
+				<p className="text-muted-foreground text-sm">
+					<Link
+						to="/games/history"
+						className="font-medium text-primary underline-offset-4 hover:underline"
+					>
+						Recent public games
+					</Link>{" "}
+					— finished sessions anyone can browse.
+				</p>
 			</div>
 
 			<Tabs value={tab} onValueChange={(v) => setTab(v as PlayTab)}>

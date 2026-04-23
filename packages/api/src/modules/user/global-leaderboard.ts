@@ -8,13 +8,8 @@ import type {
 	GlobalLeaderboardRowType,
 } from "@xamsa/schemas/modules/user";
 
-/** Minimum completed games as a player to appear on non-Elo boards. */
-const MIN_GAMES_PLAYED = 1;
-/**
- * Elo is only meaningful after several ranked games; keeps default 1000 rows from
- * dominating when users have barely played.
- */
-const MIN_GAMES_PLAYED_ELO = 3;
+/** Minimum completed games as a player for Elo board (competitive play only). */
+const MIN_GAMES_PLAYED_ELO = 1;
 
 const CURSOR_VERSION = 1 as const;
 
@@ -414,6 +409,18 @@ function strictlyAfterWhere(cursor: LeaderboardCursor): Prisma.UserWhereInput {
 	}
 }
 
+function baseWhereForBoard(
+	board: GlobalLeaderboardBoardType,
+): Prisma.UserWhereInput {
+	if (board === "elo") {
+		return { totalGamesPlayed: { gte: MIN_GAMES_PLAYED_ELO } };
+	}
+	// XP / wins / points: include active hosts who may have zero `totalGamesPlayed`
+	return {
+		OR: [{ totalGamesPlayed: { gte: 1 } }, { totalGamesHosted: { gte: 1 } }],
+	};
+}
+
 function orderByForBoard(
 	board: GlobalLeaderboardBoardType,
 ): Prisma.UserOrderByWithRelationInput[] {
@@ -453,11 +460,8 @@ export async function getGlobalLeaderboard(
 ): Promise<GetGlobalLeaderboardOutputType> {
 	const board = input.board;
 	const limit = input.limit;
-	const minGames = board === "elo" ? MIN_GAMES_PLAYED_ELO : MIN_GAMES_PLAYED;
 
-	const baseWhere: Prisma.UserWhereInput = {
-		totalGamesPlayed: { gte: minGames },
-	};
+	const baseWhere = baseWhereForBoard(board);
 
 	let cursorDecoded: LeaderboardCursor | null = null;
 	if (input.cursor) {
