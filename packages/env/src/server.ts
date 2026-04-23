@@ -33,8 +33,8 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),
-		/** Optional. Used for server-side “Generate with AI” on topic questions (Groq OpenAI-compatible API). */
-		GROQ_API_KEY: z
+		/** Optional. Used for server-side “Generate with AI” on topic questions (Google Gemini API / AI Studio). */
+		GEMINI_API_KEY: z
 			.string()
 			.min(1)
 			.transform((s) => s.trim())

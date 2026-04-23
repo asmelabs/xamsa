@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CreateTopicInputSchema } from "@xamsa/schemas/modules/topic";
-import { Button } from "@xamsa/ui/components/button";
+import {
+	CreateTopicInputSchema,
+	type CreateTopicInputType,
+} from "@xamsa/schemas/modules/topic";
+import { Button, buttonVariants } from "@xamsa/ui/components/button";
 import {
 	Carousel,
 	type CarouselApi,
@@ -20,6 +23,12 @@ import {
 	DialogTitle,
 } from "@xamsa/ui/components/dialog";
 import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@xamsa/ui/components/dropdown-menu";
+import {
 	Frame,
 	FrameFooter,
 	FrameHeader,
@@ -29,11 +38,14 @@ import {
 import { Input } from "@xamsa/ui/components/input";
 import { Label } from "@xamsa/ui/components/label";
 import { Textarea } from "@xamsa/ui/components/textarea";
+import { cn } from "@xamsa/ui/lib/utils";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
-import { Check, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Sparkles } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { SubmitErrorHandler } from "react-hook-form";
 import { toast } from "sonner";
+import { LoadingButton } from "@/components/loading-button";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
@@ -50,9 +62,12 @@ interface CreateTopicFormProps {
 	packSlug: string;
 }
 
+type CreateTopicFormFieldValues = Omit<CreateTopicInputType, "pack">;
+
 export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const createNavigationModeRef = useRef<"continue" | "go">("continue");
 	const { data: session } = authClient.useSession();
 	const [api, setApi] = useState<CarouselApi>();
 	const [currentSlide, setCurrentSlide] = useState(0);
@@ -81,9 +96,28 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const { mutate: createTopic, isPending } = useMutation({
 		...orpc.topic.create.mutationOptions(),
 		onSuccess({ slug }) {
-			form.reset();
+			form.reset({
+				name: "",
+				description: "",
+				questions: Array.from({ length: QUESTIONS_PER_TOPIC }, () => ({
+					...emptyQuestion,
+				})),
+			});
 			toast.success("Topic created successfully");
-			navigate({ to: `/packs/${packSlug}/topics/${slug}`, replace: true });
+			const mode = createNavigationModeRef.current;
+			if (mode === "continue") {
+				navigate({
+					to: "/packs/$packSlug/topics/new",
+					params: { packSlug },
+					replace: true,
+				});
+			} else {
+				navigate({
+					to: "/packs/$packSlug/topics/$topicSlug",
+					params: { packSlug, topicSlug: slug },
+					replace: true,
+				});
+			}
 		},
 		onError(error) {
 			toast.error(
@@ -115,27 +149,37 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 		},
 	});
 
-	const onSubmit = form.handleSubmit(
-		async (values) => {
-			createTopic({ ...values, pack: packSlug });
-		},
-		(errors) => {
-			// Navigate to the first question with an error
-			if (errors.questions) {
-				const questions = errors.questions as Record<string, unknown>[];
-				const firstErrorIndex = questions.findIndex((q) => q !== undefined);
-				if (firstErrorIndex !== -1) {
-					api?.scrollTo(firstErrorIndex);
-					toast.error(`Question ${firstErrorIndex + 1} has errors`);
-					return;
-				}
+	const onFormValidationError: SubmitErrorHandler<
+		CreateTopicFormFieldValues
+	> = (errors) => {
+		const questionFieldErrors = errors.questions;
+		if (questionFieldErrors && Array.isArray(questionFieldErrors)) {
+			const firstErrorIndex = questionFieldErrors.findIndex(
+				(q) => q !== undefined,
+			);
+			if (firstErrorIndex !== -1) {
+				api?.scrollTo(firstErrorIndex);
+				toast.error(`Question ${firstErrorIndex + 1} has errors`);
+				return;
 			}
+		}
 
-			if (errors.name) {
-				toast.error("Please fill in the topic name");
-			}
-		},
-	);
+		if (errors.name) {
+			toast.error("Please fill in the topic name");
+		}
+	};
+
+	const onSubmit = form.handleSubmit((values) => {
+		createNavigationModeRef.current = "continue";
+		createTopic({ ...values, pack: packSlug });
+	}, onFormValidationError);
+
+	const submitForCreate = (mode: "continue" | "go") => {
+		createNavigationModeRef.current = mode;
+		void form.handleSubmit((values) => {
+			createTopic({ ...values, pack: packSlug });
+		}, onFormValidationError)();
+	};
 
 	// Track which questions are filled (have both text and answer)
 	const [topicName, topicDescription, questions] = form.watch([
@@ -392,13 +436,43 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 				</FramePanel>
 
 				<FrameFooter>
-					<form.Submit
-						isLoading={isPending}
-						loadingText="Creating topic..."
-						disabled={filledCount < QUESTIONS_PER_TOPIC}
-					>
-						Create Topic
-					</form.Submit>
+					<div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end">
+						<div className="inline-flex w-full min-w-0 sm:w-auto">
+							<LoadingButton
+								type="submit"
+								variant="default"
+								className="min-w-0 flex-1 rounded-r-none sm:min-w-56"
+								disabled={filledCount < QUESTIONS_PER_TOPIC}
+								isLoading={isPending}
+								loadingText="Creating…"
+							>
+								Create and Continue
+							</LoadingButton>
+							<DropdownMenu>
+								<DropdownMenuTrigger
+									className={cn(
+										buttonVariants({ variant: "default", size: "default" }),
+										"shrink-0 rounded-l-none border-primary-foreground/25 border-l px-2.5 disabled:opacity-64",
+									)}
+									disabled={filledCount < QUESTIONS_PER_TOPIC || isPending}
+									type="button"
+								>
+									<ChevronDown className="size-4 opacity-90" aria-hidden />
+									<span className="sr-only">More create options</span>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end" className="min-w-44">
+									<DropdownMenuItem
+										disabled={filledCount < QUESTIONS_PER_TOPIC || isPending}
+										onClick={() => {
+											submitForCreate("go");
+										}}
+									>
+										Create and Go
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					</div>
 				</FrameFooter>
 			</form>
 		</Frame>

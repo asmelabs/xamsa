@@ -12,7 +12,7 @@ import {
 	startOfNextUtcDay,
 	startOfUtcDay,
 } from "@xamsa/utils/ai-limits";
-import { generateTopicQuestionsJson, resolveGroqApiKey } from "./llm-groq";
+import { generateTopicQuestionsJson, resolveGeminiApiKey } from "./llm-gemini";
 
 type QuotaUser = {
 	aiUseCount: number;
@@ -66,10 +66,10 @@ export async function generateTopicQuestionsWithAI(
 	input: GenerateTopicQuestionsInputType,
 	userId: string,
 ): Promise<GenerateTopicQuestionsOutputType> {
-	if (!resolveGroqApiKey()) {
+	if (!resolveGeminiApiKey()) {
 		throw new ORPCError("INTERNAL_SERVER_ERROR", {
 			message:
-				"AI topic generation is not configured. Set GROQ_API_KEY in apps/web/.env (or the process environment) and restart the dev server.",
+				"AI topic generation is not configured. Set GEMINI_API_KEY in apps/web/.env (or the process environment) and restart the dev server.",
 		});
 	}
 
@@ -128,6 +128,13 @@ export async function generateTopicQuestionsWithAI(
 	} catch (e) {
 		const message =
 			e instanceof Error ? e.message : "Failed to call AI provider";
+		if (
+			message ===
+				"AI service is temporarily overloaded. Please try again in a moment." ||
+			message.startsWith("All Gemini models are currently unavailable")
+		) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", { message });
+		}
 		throw new ORPCError("INTERNAL_SERVER_ERROR", {
 			message: `AI request failed: ${message}`,
 		});

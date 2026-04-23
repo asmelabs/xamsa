@@ -456,7 +456,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 										onError: (err) => {
 											toast.error(
 												err.message ||
-													"AI generation failed. Check GROQ_API_KEY on the server.",
+													"AI generation failed. Check GEMINI_API_KEY on the server.",
 											);
 										},
 									},

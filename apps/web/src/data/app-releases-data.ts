@@ -9,12 +9,29 @@ export type {
 	ReleaseHighlight,
 } from "@/data/app-releases-types";
 
-const current = { year: 2026, month: 4, patch: 9 } as const;
+const current = { year: 2026, month: 4, patch: 10 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-23",
+			year: 2026,
+			month: 4,
+			patch: 10,
+			title: "AI topic generation: Google Gemini 2.5",
+			highlights: [
+				{
+					kind: "text",
+					text: "“Generate with AI” for pack topics now uses Google Gemini 2.5 Pro via the Gemini API (Google AI Studio), instead of Groq. Configure the server with GEMINI_API_KEY; Groq is no longer used.",
+				},
+				{
+					kind: "text",
+					text: "The primary model is gemini-2.5-pro for stronger multilingual (including Azerbaijani) phrasing, instruction-following, and general knowledge. If the service returns a rate or quota error (for example 429), the same request is retried once with gemini-2.5-flash.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-23",
 			year: 2026,
