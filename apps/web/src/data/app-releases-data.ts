@@ -15,7 +15,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 	current,
 	releases: [
 		{
-			releasedAt: "2026-04-22",
+			releasedAt: "2026-04-23",
 			year: 2026,
 			month: 4,
 			patch: 6,

@@ -23,10 +23,7 @@ const TIER_NAMES = [
 ] as const;
 
 function nameForLevel(level: number): string {
-	const tierIdx = Math.min(
-		Math.floor((level - 1) / 5),
-		TIER_NAMES.length - 1,
-	);
+	const tierIdx = Math.min(Math.floor((level - 1) / 5), TIER_NAMES.length - 1);
 	const subtier = ((level - 1) % 5) + 1;
 	const tier = TIER_NAMES[tierIdx] ?? "Immortal";
 	return `${tier} ${subtier}`;
@@ -43,7 +40,7 @@ function buildLevelDefinitions(): {
 		defs.push({ level, minXp, name: nameForLevel(level) });
 		if (level < MAX_LEVEL) {
 			// Widening steps: later levels cost more XP per tier.
-			minXp += Math.floor(380 * level ** 1.32);
+			minXp += Math.floor(450 * level ** 1.45);
 		}
 	}
 	return defs;
