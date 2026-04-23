@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect } from "react";
+import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
 import { orpc } from "@/utils/orpc";
 
 type PackTopicsListBase = "pack" | "topicsPage";
@@ -40,6 +41,8 @@ type PackTopicsListBase = "pack" | "topicsPage";
 interface PackTopicsListProps {
 	packSlug: string;
 	isAuthor: boolean;
+	/** When `draft` and `isAuthor`, each topic can be deleted. */
+	packStatus?: "draft" | "published" | "archived";
 	limit?: number;
 	/** Use `topicsPage` when this list is embedded on `/packs/.../topics` so pagination matches the URL. */
 	listBase?: PackTopicsListBase;
@@ -48,9 +51,11 @@ interface PackTopicsListProps {
 export function PackTopicsList({
 	packSlug,
 	isAuthor,
+	packStatus,
 	limit = 10,
 	listBase = "pack",
 }: PackTopicsListProps) {
+	const canDeleteTopic = isAuthor && packStatus === "draft";
 	const listTo =
 		listBase === "topicsPage" ? "/packs/$packSlug/topics" : "/packs/$packSlug";
 	const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -145,7 +150,12 @@ export function PackTopicsList({
 				) : (
 					<div className="space-y-2">
 						{topics?.items.map((topic) => (
-							<TopicCard key={topic.slug} packSlug={packSlug} topic={topic} />
+							<TopicCard
+								key={topic.slug}
+								canDelete={canDeleteTopic}
+								packSlug={packSlug}
+								topic={topic}
+							/>
 						))}
 					</div>
 				)}
@@ -200,34 +210,57 @@ export function PackTopicsList({
 function TopicCard({
 	topic,
 	packSlug,
+	canDelete,
 }: {
 	topic: GetPaginatedItem<ListTopicsOutputType>;
 	packSlug: string;
+	canDelete: boolean;
 }) {
 	const q = topic._count.questions;
 	return (
-		<Link
-			to="/packs/$packSlug/topics/$topicSlug"
-			params={{ packSlug, topicSlug: topic.slug }}
-			className="group flex items-center gap-4 rounded-xl border border-border p-4 transition-colors hover:border-primary/30 hover:bg-primary/3"
-		>
-			<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted font-semibold text-muted-foreground text-sm transition-colors group-hover:bg-primary/10 group-hover:text-primary">
-				{topic.order}
-			</div>
-			<div className="min-w-0 flex-1">
-				<div className="flex flex-wrap items-center gap-2">
-					<h3 className="min-w-0 truncate font-medium text-sm">{topic.name}</h3>
-					<span className="shrink-0 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0 text-[11px] text-muted-foreground leading-none">
-						{String(q)}/{String(QUESTIONS_PER_TOPIC)} Q
-					</span>
+		<div className="group flex items-center gap-2 rounded-xl border border-border p-3 transition-colors hover:border-primary/30 hover:bg-primary/3 sm:gap-4 sm:p-4">
+			<Link
+				to="/packs/$packSlug/topics/$topicSlug"
+				params={{ packSlug, topicSlug: topic.slug }}
+				className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4"
+			>
+				<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted font-semibold text-muted-foreground text-sm transition-colors group-hover:bg-primary/10 group-hover:text-primary sm:size-10">
+					{topic.order}
 				</div>
-				{topic.description && (
-					<p className="mt-0.5 truncate text-muted-foreground text-xs">
-						{topic.description}
-					</p>
-				)}
-			</div>
-			<ChevronRight className="size-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
-		</Link>
+				<div className="min-w-0 flex-1">
+					<div className="flex flex-wrap items-center gap-2">
+						<h3 className="min-w-0 truncate font-medium text-sm">
+							{topic.name}
+						</h3>
+						<span className="shrink-0 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0 text-[11px] text-muted-foreground leading-none">
+							{String(q)}/{String(QUESTIONS_PER_TOPIC)} Q
+						</span>
+					</div>
+					{topic.description && (
+						<p className="mt-0.5 truncate text-muted-foreground text-xs">
+							{topic.description}
+						</p>
+					)}
+				</div>
+				<ChevronRight className="size-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
+			</Link>
+			{canDelete ? (
+				<div
+					className="shrink-0"
+					onClick={(e) => e.stopPropagation()}
+					onKeyDown={(e) => e.stopPropagation()}
+				>
+					<DeleteTopicDialog
+						packSlug={packSlug}
+						topicName={topic.name}
+						topicSlug={topic.slug}
+						showLabel={false}
+						triggerSize="icon"
+						triggerVariant="ghost"
+						className="text-muted-foreground hover:text-destructive"
+					/>
+				</div>
+			) : null}
+		</div>
 	);
 }

@@ -466,6 +466,8 @@ export async function deleteTopic(
 		select: {
 			id: true,
 			slug: true,
+			order: true,
+			packId: true,
 		},
 		where: {
 			slug: input.slug,
@@ -484,10 +486,26 @@ export async function deleteTopic(
 		});
 	}
 
-	await prisma.topic.delete({
-		where: {
-			id: topic.id,
-		},
+	const removedOrder = topic.order;
+	const { packId } = topic;
+
+	await prisma.$transaction(async (tx) => {
+		await tx.topic.delete({
+			where: { id: topic.id },
+		});
+
+		const later = await tx.topic.findMany({
+			where: { packId, order: { gt: removedOrder } },
+			select: { id: true, order: true },
+			orderBy: { order: "asc" },
+		});
+
+		for (const row of later) {
+			await tx.topic.update({
+				where: { id: row.id },
+				data: { order: row.order - 1 },
+			});
+		}
 	});
 
 	return {

@@ -246,7 +246,11 @@ function RouteComponent() {
 				</Alert>
 			)}
 
-			<PackTopicsList packSlug={pack.slug} isAuthor={pack.isAuthor} />
+			<PackTopicsList
+				isAuthor={pack.isAuthor}
+				packSlug={pack.slug}
+				packStatus={pack.status}
+			/>
 		</PacksSubpageContainer>
 	);
 }

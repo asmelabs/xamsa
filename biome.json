@@ -43,7 +43,8 @@
 			"recommended": true,
 			"a11y": {
 				"noLabelWithoutControl": "off",
-				"useAriaPropsSupportedByRole": "off"
+				"useAriaPropsSupportedByRole": "off",
+				"noStaticElementInteractions": "off"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "info"

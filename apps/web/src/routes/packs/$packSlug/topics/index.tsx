@@ -133,6 +133,7 @@ function RouteComponent() {
 				limit={25}
 				listBase="topicsPage"
 				packSlug={packSlug}
+				packStatus={pack.status}
 			/>
 		</PacksSubpageContainer>
 	);
