@@ -1,3 +1,8 @@
+/**
+ * Richer analytics (per-round score lines, outcome heatmaps, streak views) can
+ * build on `getCompletedRecap` without new DB fields — extend the recap shape
+ * and chart here incrementally.
+ */
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { GetCompletedGameRecapOutputType } from "@xamsa/schemas/modules/game";

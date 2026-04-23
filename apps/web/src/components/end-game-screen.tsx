@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
@@ -7,6 +8,7 @@ import {
 	FramePanel,
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
+import { Rating } from "@xamsa/ui/components/rating";
 import {
 	BarChart3Icon,
 	CrownIcon,
@@ -20,6 +22,7 @@ import {
 import { parseAsBoolean, useQueryState } from "nuqs";
 import type { GameData, GamePlayer } from "@/lib/game-types";
 import { sortGamePlayersForScoreboard } from "@/lib/sort-game-players";
+import { orpc } from "@/utils/orpc";
 import { RatePackDialog } from "./rate-pack-dialog";
 
 interface EndGameScreenProps {
@@ -47,6 +50,13 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 		"rate-pack",
 		parseAsBoolean.withDefault(false),
 	);
+
+	const { data: packForRate, isLoading: packRateLoading } = useQuery({
+		...orpc.pack.findOne.queryOptions({ input: { slug: game.pack.slug } }),
+		enabled: !game.isHost,
+	});
+	const hasMyRating =
+		typeof packForRate?.rating === "number" && packForRate.rating > 0;
 
 	const ranked = sortGamePlayersForScoreboard(game.players);
 	const [first, second, third] = ranked;
@@ -160,27 +170,48 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 				</div>
 			)}
 
-			{/* Rating (non-hosts): prompt before other actions */}
-			{!game.isHost && (
-				<div className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-					<div className="min-w-0 text-center sm:text-left">
-						<p className="font-semibold text-foreground">How was this pack?</p>
-						<p className="mt-0.5 text-muted-foreground text-sm">
-							Rate it in a tap — authors and the community see aggregated
-							scores, not individual picks.
-						</p>
+			{/* Rating (non-hosts): prompt, or show existing one-time rating */}
+			{!game.isHost &&
+				(packRateLoading ? (
+					<div
+						aria-hidden
+						className="h-24 animate-pulse rounded-2xl bg-muted/50"
+					/>
+				) : hasMyRating && packForRate && packForRate.rating != null ? (
+					<div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-muted/20 p-4 text-center sm:flex-row sm:justify-center sm:gap-3">
+						<p className="text-muted-foreground text-sm">Your rating</p>
+						<div
+							className="flex items-center gap-2"
+							title={`You rated this pack ${packForRate.rating.toFixed(1)} out of 5`}
+						>
+							<Rating readOnly size={16} value={packForRate.rating} />
+							<span className="text-muted-foreground text-sm">
+								{packForRate.rating.toFixed(1)}/5
+							</span>
+						</div>
 					</div>
-					<Button
-						className="shrink-0 sm:min-w-44"
-						size="sm"
-						variant="secondary"
-						onClick={() => setRatePackOpened(true)}
-					>
-						<StarIcon />
-						Rate this pack
-					</Button>
-				</div>
-			)}
+				) : (
+					<div className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+						<div className="min-w-0 text-center sm:text-left">
+							<p className="font-semibold text-foreground">
+								How was this pack?
+							</p>
+							<p className="mt-0.5 text-muted-foreground text-sm">
+								Rate it in a tap — authors and the community see aggregated
+								scores, not individual picks.
+							</p>
+						</div>
+						<Button
+							className="shrink-0 sm:min-w-44"
+							size="sm"
+							variant="secondary"
+							onClick={() => setRatePackOpened(true)}
+						>
+							<StarIcon />
+							Rate this pack
+						</Button>
+					</div>
+				))}
 
 			{/* CTAs */}
 			<div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -214,8 +245,8 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 				</div>
 			</div>
 
-			{/* Rate-pack dialog (mounted for non-hosts so the CTA above can open it) */}
-			{!game.isHost && (
+			{/* Rate-pack dialog (only if they have not rated yet) */}
+			{!game.isHost && !hasMyRating && !packRateLoading && (
 				<RatePackDialog
 					context="afterGame"
 					hideTrigger

@@ -80,6 +80,12 @@ export async function getCompletedGameRecap(
 		});
 	}
 
+	if (game.startedAt == null) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "This session was closed before the game started",
+		});
+	}
+
 	const [gameTopics, allClicks] = await Promise.all([
 		prisma.gameTopic.findMany({
 			where: { gameId: game.id },

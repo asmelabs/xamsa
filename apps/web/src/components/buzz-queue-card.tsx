@@ -23,6 +23,59 @@ interface BuzzQueueCardProps {
 	isHostView: boolean;
 }
 
+/**
+ * Compact buzz list for the host on smaller viewports — same order as the
+ * full card but easy to see without scrolling past the question.
+ */
+export function BuzzQueueHostStrip({ game }: { game: GameData }) {
+	const clicks = game.hostData?.clickDetails ?? game.clicks;
+	const sortedClicks = useMemo(
+		() => [...clicks].sort((a, b) => a.position - b.position),
+		[clicks],
+	);
+
+	if (sortedClicks.length === 0) {
+		return null;
+	}
+
+	const maxChips = 8;
+	const visible = sortedClicks.slice(0, maxChips);
+	const extra = sortedClicks.length - visible.length;
+
+	return (
+		<div className="rounded-xl border border-primary/25 bg-primary/5 p-3 xl:hidden">
+			<p className="mb-2 font-semibold text-foreground text-xs">Buzz queue</p>
+			<div className="flex flex-wrap items-center gap-1.5">
+				{visible.map((click) => {
+					const player = game.players.find((p) => p.id === click.playerId);
+					if (!player) return null;
+					const short = player.user.name.split(/\s+/)[0] ?? player.user.name;
+					const wrong = click.status === "wrong";
+					const done = click.status === "correct" || wrong;
+					return (
+						<div
+							key={click.id}
+							className={`inline-flex max-w-[10rem] items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
+								wrong
+									? "border-red-500/30 bg-red-500/5 text-muted-foreground line-through"
+									: done
+										? "border-green-500/30 bg-green-500/5"
+										: "border-border bg-background"
+							}`}
+						>
+							<span className="shrink-0 font-bold">{click.position}</span>
+							<span className="truncate">{short}</span>
+						</div>
+					);
+				})}
+				{extra > 0 && (
+					<span className="text-muted-foreground text-xs">+{extra} more</span>
+				)}
+			</div>
+		</div>
+	);
+}
+
 export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 	const queryClient = useQueryClient();
 

@@ -1,8 +1,10 @@
 // src/routes/g/$code/index.tsx
 
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Spinner } from "@xamsa/ui/components/spinner";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { EndGameScreen } from "@/components/end-game-screen";
 import { HostView } from "@/components/host-view";
 import { PlayerView } from "@/components/player-view";
@@ -59,15 +61,36 @@ export const Route = createFileRoute("/g/$code/")({
 
 function RouteComponent() {
 	const { code } = Route.useLoaderData();
+	const navigate = useNavigate();
 	useGameChannel(code);
 
 	const { data: game } = useQuery(
 		orpc.game.findOne.queryOptions({ input: { code } }),
 	);
 
+	const isLobbyOnlyFinished =
+		game?.status === "completed" && game.startedAt == null;
+	const didLobbyRedirectRef = useRef(false);
+
+	useEffect(() => {
+		if (!isLobbyOnlyFinished || didLobbyRedirectRef.current) return;
+		didLobbyRedirectRef.current = true;
+		toast.info("The lobby was closed before the game started.");
+		void navigate({ to: "/play" });
+	}, [isLobbyOnlyFinished, navigate]);
+
 	if (!game) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
+				<Spinner />
+			</div>
+		);
+	}
+
+	// Host ended from the lobby: no scoreboard, no history — back to play.
+	if (isLobbyOnlyFinished) {
+		return (
+			<div className="flex min-h-screen items-center justify-center bg-muted/30">
 				<Spinner />
 			</div>
 		);

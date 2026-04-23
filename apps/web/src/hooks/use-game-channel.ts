@@ -588,6 +588,9 @@ export function useGameChannel(code: string) {
 	// Track already-toasted click resolutions so intent + authoritative
 	// events for the same click id don't fire two toasts.
 	const toastedClickIdsRef = useRef<Set<string>>(new Set());
+	// Buzz toasts (who buzzed) fire on BUZZ_INTENT so they align with the
+	// queue; we dedupe by intent and clear on each new question.
+	const buzzIntentToastIdsRef = useRef<Set<string>>(new Set());
 	// Dedupe host-disconnect reports so a single client doesn't spam the
 	// server endpoint while the grace period is still running.
 	const hostDisconnectFiredRef = useRef(false);
@@ -631,9 +634,14 @@ export function useGameChannel(code: string) {
 				applyClickNewToGame(old, data),
 			);
 
-			// surface a small notification — but not to the buzzer themselves,
-			// and only on first confirmation
-			if (!wasAlreadyConfirmed) {
+			// Primary "who buzzed" toast is in onBuzzIntent (aligned with the
+			// queue). Skip here if that already ran; otherwise fall back (e.g.
+			// subscribed after intent).
+			if (
+				!wasAlreadyConfirmed &&
+				!buzzIntentToastIdsRef.current.has(data.intentId)
+			) {
+				buzzIntentToastIdsRef.current.add(data.intentId);
 				const myPlayerId = previous?.myPlayer?.id;
 				const buzzer = previous?.players.find((p) => p.id === data.playerId);
 				if (buzzer && data.playerId !== myPlayerId) {
@@ -679,6 +687,24 @@ export function useGameChannel(code: string) {
 
 		const onBuzzIntent = (msg: { data?: unknown }) => {
 			const data = msg.data as BuzzIntentData;
+			const previous = queryClient.getQueryData<GameData>(queryKey);
+
+			if (
+				previous &&
+				!buzzIntentToastIdsRef.current.has(data.intentId) &&
+				data.playerId !== previous.myPlayer?.id
+			) {
+				const buzzer = previous.players.find((p) => p.id === data.playerId);
+				if (buzzer) {
+					buzzIntentToastIdsRef.current.add(data.intentId);
+					const position = previous.clicks.length + 1;
+					toast(`${buzzer.user.name} buzzed`, {
+						description: `#${position} in queue`,
+						duration: 1500,
+					});
+				}
+			}
+
 			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
 				applyBuzzIntentToGame(old, data),
 			);
@@ -732,6 +758,7 @@ export function useGameChannel(code: string) {
 
 		const onQuestionAdvanced = (msg: { data?: unknown }) => {
 			const data = msg.data as QuestionAdvancedData;
+			buzzIntentToastIdsRef.current.clear();
 			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
 				applyQuestionAdvancedToGame(old, data),
 			);

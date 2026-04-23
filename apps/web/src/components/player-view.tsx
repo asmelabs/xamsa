@@ -14,12 +14,7 @@ import {
 	MenuPopup,
 	MenuTrigger,
 } from "@xamsa/ui/components/menu";
-import {
-	EllipsisIcon,
-	EyeOffIcon,
-	LogOutIcon,
-	ZapIcon,
-} from "lucide-react";
+import { EllipsisIcon, EyeOffIcon, LogOutIcon, ZapIcon } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { toast } from "sonner";
 import type { GameData } from "@/lib/game-types";
@@ -66,9 +61,7 @@ export function PlayerView({ game }: PlayerViewProps) {
 
 	return (
 		<div
-			className={`mx-auto max-w-md space-y-4 p-4 ${
-				isCompleted ? "" : "pb-32"
-			}`}
+			className={`mx-auto max-w-md space-y-4 p-4 ${isCompleted ? "" : "pb-32"}`}
 		>
 			{/* Top bar */}
 			<div className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
@@ -92,17 +85,13 @@ export function PlayerView({ game }: PlayerViewProps) {
 							Live
 						</Badge>
 					)}
-					{game.status === "paused" && (
-						<Badge variant="warning">Paused</Badge>
-					)}
+					{game.status === "paused" && <Badge variant="warning">Paused</Badge>}
 					{game.status === "waiting" && (
 						<Badge variant="outline">Waiting</Badge>
 					)}
 					{canLeave && (
 						<Menu>
-							<MenuTrigger
-								render={<Button variant="ghost" size="icon-xs" />}
-							>
+							<MenuTrigger render={<Button variant="ghost" size="icon-xs" />}>
 								<EllipsisIcon className="size-3.5" />
 							</MenuTrigger>
 							<MenuPopup align="end">
@@ -219,16 +208,16 @@ export function PlayerView({ game }: PlayerViewProps) {
 							const player = game.players.find((p) => p.id === click.playerId);
 							if (!player) return null;
 							const isMe = click.playerId === game.myPlayer?.id;
+							const isWrong = click.status === "wrong";
+							const chipClass = isWrong
+								? "border-red-500/30 bg-red-500/5 text-muted-foreground line-through"
+								: isMe
+									? "border-primary bg-primary/10 font-medium"
+									: "border-border";
 							return (
 								<div
 									key={click.id}
-									className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
-										isMe
-											? "border-primary bg-primary/10 font-medium"
-											: click.status === "wrong"
-												? "border-red-500/30 bg-red-500/5 text-muted-foreground line-through"
-												: "border-border"
-									}`}
+									className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${chipClass}`}
 								>
 									<span className="font-semibold">{click.position}.</span>
 									<span>{isMe ? "You" : player.user.name.split(" ")[0]}</span>
@@ -272,9 +261,7 @@ export function PlayerView({ game }: PlayerViewProps) {
 									<div
 										key={player.id}
 										className={`flex items-center gap-3 rounded-xl border p-2.5 ${
-											isMe
-												? "border-primary/30 bg-primary/3"
-												: "border-border"
+											isMe ? "border-primary/30 bg-primary/3" : "border-border"
 										}`}
 									>
 										<div

@@ -182,8 +182,10 @@ export async function getMyStats(
  * the last row from the previous page; we fetch `limit + 1` and use the
  * extra row to compute `nextCursor`.
  *
- * Only `status: "completed"` games with a non-null `finishedAt` surface —
- * games that were deleted, are still active, or never finalized are skipped.
+ * Only `status: "completed"` games with a non-null `finishedAt` and a
+ * non-null `startedAt` surface — i.e. sessions that actually started. Lobby
+ * cancels (completed without `startedAt`) are excluded, along with anything
+ * still active, deleted, or never finalized.
  */
 export async function getRecentGames(
 	input: GetRecentGamesInputType,
@@ -195,6 +197,7 @@ export async function getRecentGames(
 		where: {
 			status: "completed",
 			finishedAt: { not: null },
+			startedAt: { not: null },
 			OR: [{ hostId: userId }, { players: { some: { userId } } }],
 		},
 		orderBy: [{ finishedAt: "desc" }, { id: "desc" }],
