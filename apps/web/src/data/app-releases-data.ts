@@ -1,4 +1,3 @@
-import { current, productName } from "@/data/app-releases-meta";
 import type {
 	AppRelease,
 	AppReleasesManifest,
@@ -10,10 +9,25 @@ export type {
 	ReleaseHighlight,
 } from "@/data/app-releases-types";
 
+const current = { year: 2026, month: 4, patch: 7 } as const;
+
 export const appReleasesManifest: AppReleasesManifest = {
-	productName,
+	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-23",
+			year: 2026,
+			month: 4,
+			patch: 7,
+			title: "Topic deletion",
+			highlights: [
+				{
+					kind: "text",
+					text: "You can now delete topics from your packs. This is useful if you want to remove a topic from your pack.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-23",
 			year: 2026,

@@ -1,4 +1,9 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	notFound,
+	useNavigate,
+} from "@tanstack/react-router";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
@@ -13,6 +18,7 @@ import {
 	EyeOff,
 	PencilIcon,
 } from "lucide-react";
+import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -54,6 +60,7 @@ export const Route = createFileRoute("/packs/$packSlug/topics/$topicSlug/")({
 function RouteComponent() {
 	const { packSlug } = Route.useParams();
 	const topic = Route.useLoaderData();
+	const navigate = useNavigate();
 
 	const showAuthorTools = topic.isAuthor && topic.pack.status === "draft";
 
@@ -114,6 +121,19 @@ function RouteComponent() {
 						<ArrowUpDown />
 						Reorder questions
 					</Button>
+					<DeleteTopicDialog
+						className="shrink-0"
+						onDeleted={() => {
+							void navigate({
+								to: "/packs/$packSlug/topics",
+								params: { packSlug },
+							});
+						}}
+						packSlug={packSlug}
+						topicName={topic.name}
+						topicSlug={topic.slug}
+						triggerVariant="outline"
+					/>
 				</div>
 			)}
 
