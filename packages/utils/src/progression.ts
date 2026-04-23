@@ -6,8 +6,8 @@
 import { getLevelFromXp as getLevelFromXpTable } from "./levels";
 
 export {
-	calculateEloDeltas,
 	type CalculateEloDeltasOptions,
+	calculateEloDeltas,
 	type EloPlayerRow,
 } from "./elo";
 export {
@@ -15,8 +15,8 @@ export {
 	getLevelProgress,
 	getXpThreshold,
 	LEVEL_DEFINITIONS,
-	MAX_LEVEL,
 	type LevelProgress,
+	MAX_LEVEL,
 } from "./levels";
 
 /** @deprecated Use `getLevelFromXp` from `@xamsa/utils/levels` */
@@ -24,11 +24,12 @@ export function computeLevelFromXp(xp: number): number {
 	return getLevelFromXpTable(xp);
 }
 
-/** XP granted to the host when a game is completed normally (not force-abandoned). */
+/** XP for hosting any completed game session (including host-ended games). */
 export const HOST_FULL_GAME_COMPLETION_XP_BONUS = 100;
 
 /**
- * Per-player XP from a finished game: score-based with podium bonuses.
+ * @deprecated Games no longer grant XP to players — only the host gets hosting
+ * XP. Kept in case of legacy call sites or migrations.
  */
 export function computeGamePlayerXpDelta(rank: number, score: number): number {
 	const clamped = Math.max(0, score);

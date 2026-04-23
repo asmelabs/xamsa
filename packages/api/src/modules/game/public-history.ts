@@ -37,7 +37,8 @@ function decodeCursor(raw: string): HistoryCursor {
 
 /**
  * Public list of recently completed games (no auth). Cursor pages by
- * `finishedAt` desc, `id` desc.
+ * `finishedAt` desc, `id` desc. Excludes lobby-only cancels
+ * (`startedAt` is null).
  */
 export async function listPublicGameHistory(
 	input: ListPublicGameHistoryInputType,
@@ -51,6 +52,7 @@ export async function listPublicGameHistory(
 	const baseWhere: Prisma.GameWhereInput = {
 		status: "completed",
 		finishedAt: { not: null },
+		startedAt: { not: null },
 	};
 
 	const where: Prisma.GameWhereInput = cursor

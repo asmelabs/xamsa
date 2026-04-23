@@ -1,10 +1,10 @@
+import { PausedBanner } from "@/components/paused-banner";
 import type { GameData } from "@/lib/game-types";
-import { BuzzQueueCard } from "./buzz-queue-card";
+import { BuzzQueueCard, BuzzQueueHostStrip } from "./buzz-queue-card";
 import { CurrentQuestionCard } from "./current-question-card";
 import { GameCompletionBanner } from "./game-completion-banner";
 import { GameHeader } from "./game-header";
 import { HostControls } from "./host-controls";
-import { PausedBanner } from "@/components/paused-banner";
 import { PlayersPanel } from "./players-panel";
 import { StartGameCard } from "./start-game-card";
 
@@ -30,6 +30,7 @@ export function HostView({ game }: HostViewProps) {
 					) : (
 						<>
 							<HostControls game={game} />
+							{game.status === "active" && <BuzzQueueHostStrip game={game} />}
 							<CurrentQuestionCard game={game} isHostView />
 							<BuzzQueueCard game={game} isHostView />
 						</>

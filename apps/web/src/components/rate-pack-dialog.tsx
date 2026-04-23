@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { CreatePackRatingInputSchema } from "@xamsa/schemas/modules/pack-rating";
 import { Button } from "@xamsa/ui/components/button";
@@ -29,6 +29,7 @@ export function RatePackDialog({
 	hideTrigger,
 	context = "default",
 }: RatePackDialogProps) {
+	const queryClient = useQueryClient();
 	const { data: session } = authClient.useSession();
 	const user = session?.user;
 	const router = useRouter();
@@ -50,6 +51,9 @@ export function RatePackDialog({
 		onSuccess() {
 			toast.success("Pack rated successfully");
 			setOpened(false);
+			void queryClient.invalidateQueries({
+				queryKey: orpc.pack.findOne.queryKey({ input: { slug: packSlug } }),
+			});
 			router.invalidate({
 				filter: (r) => r.pathname.startsWith("/packs/"),
 			});

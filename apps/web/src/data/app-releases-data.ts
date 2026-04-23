@@ -9,12 +9,50 @@ export type {
 	ReleaseHighlight,
 } from "@/data/app-releases-types";
 
-const current = { year: 2026, month: 4, patch: 7 } as const;
+const current = { year: 2026, month: 4, patch: 9 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-23",
+			year: 2026,
+			month: 4,
+			patch: 9,
+			title: "Host-only game XP, Elo for play, advanced recap",
+			highlights: [
+				{
+					kind: "text",
+					text: "XP and levels from live games are for the host only (hosting a session). Player progression uses Elo and your existing stats, not play XP. Every completed game still awards the host the usual hosting bonus, including when the host ends the game early.",
+				},
+				{
+					kind: "text",
+					text: "The game stats page has a new Flow tab: a score-over-time line chart, a per-round heatmap of how many questions you took in each round, and streaks on the overview plus in Flow. Recent games and public history still exclude lobby-only cancels from earlier releases.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-23",
+			year: 2026,
+			month: 4,
+			patch: 8,
+			title: "Lobby cancel, buzz UX, and end-game polish",
+			highlights: [
+				{
+					kind: "text",
+					text: "If the host ends the game from the lobby before it starts, everyone returns to Play and that session no longer appears in recent games or the public history feed; detailed stats for that code are unavailable.",
+				},
+				{
+					kind: "text",
+					text: "The host sees a compact buzz queue under the controls on smaller screens, and “who buzzed” notifications line up with the real-time queue. Your own wrong buzz in the player queue now uses the same struck-through style as other players.",
+				},
+				{
+					kind: "text",
+					text: "After a real game, if you have already rated the pack, the end screen shows your score instead of asking you to rate again. Broader per-round charts and heatmaps can build on the existing recap over time.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-23",
 			year: 2026,
