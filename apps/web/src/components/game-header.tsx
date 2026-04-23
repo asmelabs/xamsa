@@ -15,7 +15,6 @@ import {
 	DoorOpenIcon,
 	EllipsisIcon,
 	FlagIcon,
-	LinkIcon,
 	LogOutIcon,
 	ZapIcon,
 } from "lucide-react";
@@ -55,11 +54,6 @@ export function GameHeader({ game }: GameHeaderProps) {
 	const handleCopyCode = () => {
 		copy(game.code);
 		toast.success("Code copied");
-	};
-
-	const handleCopyLink = () => {
-		copy(`${window.location.origin}/g/${game.code}`);
-		toast.success("Invite link copied");
 	};
 
 	const queryKey = orpc.game.findOne.queryKey({ input: { code: game.code } });
@@ -130,10 +124,6 @@ export function GameHeader({ game }: GameHeaderProps) {
 					{game.code}
 					<CopyIcon className="size-3.5 text-muted-foreground" />
 				</button>
-				<Button variant="outline" size="sm" onClick={handleCopyLink}>
-					<LinkIcon />
-					Copy invite
-				</Button>
 
 				{(canShowHostEnd || canShowPlayerLeave) && (
 					<Menu>

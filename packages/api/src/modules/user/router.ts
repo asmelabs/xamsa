@@ -5,6 +5,8 @@ import {
 	GetGlobalLeaderboardInputSchema,
 	GetGlobalLeaderboardOutputSchema,
 	GetMyStatsOutputSchema,
+	GetPublicGameActivityInputSchema,
+	GetPublicGameActivityOutputSchema,
 	GetPublicRecentGamesInputSchema,
 	GetPublicRecentGamesOutputSchema,
 	GetPublicStatsInputSchema,
@@ -20,6 +22,7 @@ import {
 	findOneProfile,
 	getActiveGame,
 	getMyStats,
+	getPublicGameActivity,
 	getPublicRecentGames,
 	getPublicStats,
 	getRecentGames,
@@ -35,6 +38,10 @@ export const userRouter = {
 		.input(GetPublicStatsInputSchema)
 		.output(GetPublicStatsOutputSchema)
 		.handler(async ({ input }) => await getPublicStats(input)),
+	getPublicGameActivity: publicProcedure
+		.input(GetPublicGameActivityInputSchema)
+		.output(GetPublicGameActivityOutputSchema)
+		.handler(async ({ input }) => await getPublicGameActivity(input)),
 	getPublicRecentGames: publicProcedure
 		.input(GetPublicRecentGamesInputSchema)
 		.output(GetPublicRecentGamesOutputSchema)

@@ -9,12 +9,29 @@ export type {
 	ReleaseHighlight,
 } from "@/data/app-releases-types";
 
-const current = { year: 2026, month: 4, patch: 9 } as const;
+const current = { year: 2026, month: 4, patch: 10 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-23",
+			year: 2026,
+			month: 4,
+			patch: 10,
+			title: "AI topic generation: Google Gemini 2.5",
+			highlights: [
+				{
+					kind: "text",
+					text: "“Generate with AI” for pack topics now uses Google Gemini 2.5 Pro via the Gemini API (Google AI Studio), instead of Groq. Configure the server with GEMINI_API_KEY; Groq is no longer used.",
+				},
+				{
+					kind: "text",
+					text: "The primary model is gemini-2.5-pro for stronger multilingual (including Azerbaijani) phrasing, instruction-following, and general knowledge. If the service returns a rate or quota error (for example 429), the same request is retried once with gemini-2.5-flash.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-23",
 			year: 2026,
@@ -28,7 +45,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "The game stats page has a new Flow tab: a score-over-time line chart, a per-round heatmap of how many questions you took in each round, and streaks on the overview plus in Flow. Recent games and public history still exclude lobby-only cancels from earlier releases.",
+					text: "The game stats Flow tab has a player multiselect (default all) that filters the score-over-time chart, plus a Q1–Q5 × rounds score matrix with row and column totals. Streaks stay on Overview; recent games and public history still exclude lobby-only cancels.",
+				},
+				{
+					kind: "text",
+					text: "When a game finishes, the end screen can show hosting XP and your ranked Elo change (when two or more players played). Host header and current-question reveal UI are tightened for small screens.",
+				},
+				{
+					kind: "text",
+					text: "On game stats Flow, the Q1–Q5 matrix has a “Show” menu: pick points, total clicks, correct / wrong / expired counts, or first-buzz counts. Cells show one value at a time and row, column, and grand totals follow the same metric.",
+				},
+				{
+					kind: "text",
+					text: "Public profiles list more lifetime numbers (wrong and expired buzzes, first buzzes, topics and questions played, time playing and hosting, published packs). There is a buzz-outcome pie chart and a last-12-months bar of completed games you played or hosted.",
 				},
 			],
 		},

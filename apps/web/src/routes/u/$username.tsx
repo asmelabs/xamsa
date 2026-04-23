@@ -2,10 +2,21 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
+import {
+	Card,
+	CardDescription,
+	CardHeader,
+	CardPanel,
+	CardTitle,
+} from "@xamsa/ui/components/card";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import { getLevelProgress } from "@xamsa/utils/levels";
+import { format, parse } from "date-fns";
 import {
 	BarChart3Icon,
+	BookOpenIcon,
+	ChartNoAxesColumnIcon,
+	ClockIcon,
 	CrownIcon,
 	FlameIcon,
 	GamepadIcon,
@@ -15,10 +26,24 @@ import {
 	SettingsIcon,
 	ShieldCheckIcon,
 	TargetIcon,
+	TimerOffIcon,
 	TrophyIcon,
+	XCircleIcon,
 	ZapIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+	Bar,
+	BarChart,
+	Cell,
+	Legend,
+	Pie,
+	PieChart,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+	YAxis,
+} from "recharts";
 import { toast } from "sonner";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
@@ -81,6 +106,24 @@ const roleConfig = {
 	admin: { label: "Admin", variant: "success" as const },
 };
 
+const OUTCOME_PIE_COLORS = {
+	correct: "var(--chart-2)",
+	wrong: "var(--chart-4)",
+	expired: "var(--chart-3)",
+} as const;
+
+function formatPlayTimeSeconds(totalSeconds: number): string {
+	if (totalSeconds < 60) return `${totalSeconds}s`;
+	const h = Math.floor(totalSeconds / 3600);
+	const m = Math.floor((totalSeconds % 3600) / 60);
+	if (h >= 48) {
+		const d = Math.floor(h / 24);
+		return `${d}d ${h % 24}h`;
+	}
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
+}
+
 function RouteComponent() {
 	const { username } = Route.useParams();
 	const { profile, user, isOwner } = Route.useLoaderData();
@@ -89,6 +132,9 @@ function RouteComponent() {
 
 	const { data: publicStats } = useQuery(
 		orpc.user.getPublicStats.queryOptions({ input: { username } }),
+	);
+	const { data: gameActivity } = useQuery(
+		orpc.user.getPublicGameActivity.queryOptions({ input: { username } }),
 	);
 
 	const {
@@ -308,6 +354,180 @@ function RouteComponent() {
 							value={publicStats.totalPointsEarned.toLocaleString()}
 						/>
 					</div>
+					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+						<StatTile
+							icon={XCircleIcon}
+							label="Wrong"
+							value={publicStats.totalIncorrectAnswers}
+						/>
+						<StatTile
+							icon={TimerOffIcon}
+							label="Expired"
+							value={publicStats.totalExpiredAnswers}
+						/>
+						<StatTile
+							icon={ZapIcon}
+							label="1st buzz"
+							value={publicStats.totalFirstClicks}
+						/>
+						<StatTile
+							icon={ChartNoAxesColumnIcon}
+							label="Last place"
+							value={publicStats.totalLastPlaces}
+						/>
+						<StatTile
+							icon={BookOpenIcon}
+							label="Topics seen"
+							value={publicStats.totalTopicsPlayed}
+						/>
+					</div>
+					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+						<StatTile
+							icon={TargetIcon}
+							label="Questions"
+							value={publicStats.totalQuestionsPlayed}
+						/>
+						<StatTile
+							icon={ClockIcon}
+							label="Time playing"
+							value={formatPlayTimeSeconds(publicStats.totalTimeSpentPlaying)}
+						/>
+						<StatTile
+							icon={ClockIcon}
+							label="Time hosting"
+							value={formatPlayTimeSeconds(publicStats.totalTimeSpentHosting)}
+						/>
+					</div>
+					{publicStats.totalPacksPublished > 0 ? (
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+							<StatTile
+								icon={Package}
+								label="Packs published"
+								value={publicStats.totalPacksPublished}
+							/>
+						</div>
+					) : null}
+
+					{(() => {
+						const c = publicStats.totalCorrectAnswers;
+						const w = publicStats.totalIncorrectAnswers;
+						const e = publicStats.totalExpiredAnswers;
+						const totalBuzz = c + w + e;
+						const pieData = [
+							{
+								name: "Correct",
+								value: c,
+								fill: OUTCOME_PIE_COLORS.correct,
+							},
+							{ name: "Wrong", value: w, fill: OUTCOME_PIE_COLORS.wrong },
+							{
+								name: "Expired",
+								value: e,
+								fill: OUTCOME_PIE_COLORS.expired,
+							},
+						].filter((d) => d.value > 0);
+						return (
+							<div className="grid gap-4 min-[900px]:grid-cols-2">
+								<Card>
+									<CardHeader>
+										<CardTitle className="text-base">Buzz outcomes</CardTitle>
+										<CardDescription>
+											Share of resolved buzzes (career)
+										</CardDescription>
+									</CardHeader>
+									<CardPanel>
+										{totalBuzz === 0 ? (
+											<p className="text-muted-foreground text-sm">
+												No buzz outcomes recorded yet.
+											</p>
+										) : (
+											<div className="mx-auto h-[220px] w-full min-w-0 max-w-[280px]">
+												<ResponsiveContainer width="100%" height="100%">
+													<PieChart>
+														<Pie
+															data={pieData}
+															dataKey="value"
+															nameKey="name"
+															innerRadius={50}
+															outerRadius={80}
+															paddingAngle={2}
+														>
+															{pieData.map((d) => (
+																<Cell key={d.name} fill={d.fill} />
+															))}
+														</Pie>
+														<Tooltip
+															formatter={(value) => {
+																const v = Number(value);
+																const safe = Number.isFinite(v) ? v : 0;
+																return [
+																	`${safe.toLocaleString()} (${totalBuzz > 0 ? Math.round((safe / totalBuzz) * 100) : 0}%)`,
+																	"Count",
+																];
+															}}
+														/>
+														<Legend />
+													</PieChart>
+												</ResponsiveContainer>
+											</div>
+										)}
+									</CardPanel>
+								</Card>
+								<Card>
+									<CardHeader>
+										<CardTitle className="text-base">Games by month</CardTitle>
+										<CardDescription>
+											Completed games you played or hosted (last 12 months)
+										</CardDescription>
+									</CardHeader>
+									<CardPanel>
+										{!gameActivity ? (
+											<div className="flex justify-center py-8">
+												<Spinner className="size-6" />
+											</div>
+										) : (
+											<div className="h-[220px] w-full min-w-0">
+												<ResponsiveContainer width="100%" height="100%">
+													<BarChart
+														data={gameActivity.months.map((m) => ({
+															...m,
+															label: format(
+																parse(m.month, "yyyy-MM", new Date()),
+																"MMM ''yy",
+															),
+														}))}
+														margin={{ left: 0, right: 4, top: 8, bottom: 4 }}
+													>
+														<XAxis
+															dataKey="label"
+															tick={{ fontSize: 10 }}
+															interval="preserveStartEnd"
+														/>
+														<YAxis
+															allowDecimals={false}
+															width={28}
+															tick={{ fontSize: 10 }}
+														/>
+														<Tooltip
+															formatter={(value) => {
+																const v = Number(value);
+																return [Number.isFinite(v) ? v : 0, "Games"];
+															}}
+														/>
+														<Bar
+															dataKey="games"
+															fill="var(--chart-1)"
+															radius={[3, 3, 0, 0]}
+														/>
+													</BarChart>
+												</ResponsiveContainer>
+											</div>
+										)}
+									</CardPanel>
+								</Card>
+							</div>
+						);
+					})()}
 				</section>
 			)}
 

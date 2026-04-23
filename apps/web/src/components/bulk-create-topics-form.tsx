@@ -23,6 +23,7 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
+import { Label } from "@xamsa/ui/components/label";
 import {
 	Popover,
 	PopoverPopup,
@@ -93,6 +94,10 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 	const [tsualSourceName, setTsualSourceName] = useState<string | null>(null);
 	const [jobDialogOpen, setJobDialogOpen] = useState(false);
 	const [activeJobId, setActiveJobId] = useState<string | null>(null);
+	const [aiAuthorDialog, setAiAuthorDialog] = useState<{
+		topicIndex: number;
+		authorPrompt: string;
+	} | null>(null);
 	const lastSubmittedTopicCount = useRef(0);
 
 	const { data: aiQuota } = useQuery({
@@ -265,57 +270,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 										toast.error("Enter a name for this topic first.");
 										return;
 									}
-									const topicDescription =
-										form
-											.getValues(`topics.${topicIndex}.description`)
-											?.trim() || undefined;
-									generateWithAi(
-										{
-											pack: packSlug,
-											topicName,
-											topicDescription,
-										},
-										{
-											onSuccess: (data) => {
-												data.questions.forEach((q, i) => {
-													form.setValue(
-														`topics.${topicIndex}.questions.${i}.text`,
-														q.text,
-													);
-													form.setValue(
-														`topics.${topicIndex}.questions.${i}.answer`,
-														q.answer,
-													);
-													form.setValue(
-														`topics.${topicIndex}.questions.${i}.acceptableAnswers`,
-														q.acceptableAnswers ?? [],
-													);
-													form.setValue(
-														`topics.${topicIndex}.questions.${i}.description`,
-														q.description ?? "",
-													);
-													form.setValue(
-														`topics.${topicIndex}.questions.${i}.explanation`,
-														q.explanation ?? "",
-													);
-												});
-												void queryClient.invalidateQueries({
-													queryKey: orpc.topic.getAiQuota.queryKey({
-														input: {},
-													}),
-												});
-												toast.success(
-													`Topic ${String(topicIndex + 1)}: AI draft added — review before saving.`,
-												);
-											},
-											onError: (err) => {
-												toast.error(
-													err.message ||
-														"AI generation failed. Check GROQ_API_KEY on the server.",
-												);
-											},
-										},
-									);
+									setAiAuthorDialog({ topicIndex, authorPrompt: "" });
 								}}
 							>
 								<Sparkles className="mr-1.5 size-4" />
@@ -397,6 +352,123 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 					</form.Submit>
 				</FrameFooter>
 			</form>
+
+			<Dialog
+				onOpenChange={(open) => {
+					if (!open) setAiAuthorDialog(null);
+				}}
+				open={aiAuthorDialog !== null}
+			>
+				<DialogContent className="sm:max-w-lg" showCloseButton>
+					<DialogHeader>
+						<DialogTitle>Generate with AI</DialogTitle>
+						<DialogDescription>
+							Optional: add instructions (difficulty, tone, themes to include or
+							avoid). Leave empty for the default prompt.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogPanel>
+						<div className="space-y-2">
+							<Label htmlFor="bulk-ai-author-prompt">
+								Additional instructions
+							</Label>
+							<Textarea
+								id="bulk-ai-author-prompt"
+								maxLength={2000}
+								onChange={(e) => {
+									const v = e.target.value;
+									setAiAuthorDialog((d) => (d ? { ...d, authorPrompt: v } : d));
+								}}
+								placeholder="e.g. harder clues, no sports, keep answers to one word…"
+								rows={5}
+								value={aiAuthorDialog?.authorPrompt ?? ""}
+							/>
+							<p className="text-muted-foreground text-xs">
+								{aiAuthorDialog?.authorPrompt.length ?? 0}/2000 characters
+							</p>
+						</div>
+					</DialogPanel>
+					<DialogFooter>
+						<Button
+							onClick={() => setAiAuthorDialog(null)}
+							type="button"
+							variant="outline"
+						>
+							Cancel
+						</Button>
+						<Button
+							disabled={isAiPending || aiAuthorDialog == null}
+							onClick={() => {
+								if (aiAuthorDialog == null) return;
+								const topicIndex = aiAuthorDialog.topicIndex;
+								const authorPrompt =
+									aiAuthorDialog.authorPrompt.trim() || undefined;
+								setAiAuthorDialog(null);
+								const topicName =
+									form.getValues(`topics.${topicIndex}.name`)?.trim() ?? "";
+								if (!topicName) {
+									toast.error("Enter a name for this topic first.");
+									return;
+								}
+								const topicDescription =
+									form.getValues(`topics.${topicIndex}.description`)?.trim() ||
+									undefined;
+								generateWithAi(
+									{
+										pack: packSlug,
+										topicName,
+										topicDescription,
+										authorPrompt,
+									},
+									{
+										onSuccess: (data) => {
+											data.questions.forEach((q, i) => {
+												form.setValue(
+													`topics.${topicIndex}.questions.${i}.text`,
+													q.text,
+												);
+												form.setValue(
+													`topics.${topicIndex}.questions.${i}.answer`,
+													q.answer,
+												);
+												form.setValue(
+													`topics.${topicIndex}.questions.${i}.acceptableAnswers`,
+													q.acceptableAnswers ?? [],
+												);
+												form.setValue(
+													`topics.${topicIndex}.questions.${i}.description`,
+													q.description ?? "",
+												);
+												form.setValue(
+													`topics.${topicIndex}.questions.${i}.explanation`,
+													q.explanation ?? "",
+												);
+											});
+											void queryClient.invalidateQueries({
+												queryKey: orpc.topic.getAiQuota.queryKey({
+													input: {},
+												}),
+											});
+											toast.success(
+												`Topic ${String(topicIndex + 1)}: AI draft added — review before saving.`,
+											);
+										},
+										onError: (err) => {
+											toast.error(
+												err.message ||
+													"AI generation failed. Check GEMINI_API_KEY on the server.",
+											);
+										},
+									},
+								);
+							}}
+							type="button"
+						>
+							{isAiPending ? "Generating…" : "Generate"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Dialog onOpenChange={setTsualDialogOpen} open={tsualDialogOpen}>
 				<DialogContent className="sm:max-w-md" showCloseButton>

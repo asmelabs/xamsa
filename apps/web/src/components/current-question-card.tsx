@@ -105,34 +105,30 @@ export function CurrentQuestionCard({
 			</FrameHeader>
 
 			<FramePanel className="space-y-4">
-				<div>
-					<div className="flex items-center justify-between">
-						<p className="text-muted-foreground text-xs uppercase tracking-wide">
-							Question
-						</p>
-						<Button
-							variant={game.isQuestionRevealed ? "outline" : "ghost"}
-							size="sm"
-							className="h-7 text-xs"
-							disabled={game.isQuestionRevealed || isRevealing}
-							onClick={handleReveal}
-						>
-							{game.isQuestionRevealed ? (
-								<>
-									<EyeIcon className="size-3" />
-									Revealed
-								</>
-							) : (
-								<>
-									<EyeOffIcon className="size-3" />
-									Reveal to players
-								</>
-							)}
-						</Button>
-					</div>
-					<p className="mt-1 font-medium text-lg leading-snug">
-						{question.text}
+				<div className="space-y-3">
+					<p className="text-muted-foreground text-xs uppercase tracking-wide">
+						Question
 					</p>
+					<p className="font-medium text-lg leading-snug">{question.text}</p>
+					<Button
+						variant={game.isQuestionRevealed ? "outline" : "secondary"}
+						size="default"
+						className="w-full gap-2 border border-primary/20 shadow-sm sm:w-auto sm:min-w-[12rem]"
+						disabled={game.isQuestionRevealed || isRevealing}
+						onClick={handleReveal}
+					>
+						{game.isQuestionRevealed ? (
+							<>
+								<EyeIcon className="size-4" />
+								Revealed to players
+							</>
+						) : (
+							<>
+								<EyeOffIcon className="size-4" />
+								Reveal to players
+							</>
+						)}
+					</Button>
 				</div>
 
 				<div className="rounded-lg border border-green-500/20 bg-green-500/5 p-3">
@@ -154,17 +150,13 @@ export function CurrentQuestionCard({
 				</div>
 
 				{question.explanation && (
-					<div className="rounded-lg bg-muted/50 p-3">
-						<div className="flex items-center justify-between">
-							<p className="text-muted-foreground text-xs uppercase tracking-wide">
-								Explanation
-							</p>
-							<Button variant="ghost" size="sm" className="h-7 text-xs">
-								<EyeOffIcon className="size-3" />
-								Reveal to players
-							</Button>
-						</div>
-						<p className="mt-1 text-sm">{question.explanation}</p>
+					<div className="rounded-lg border border-border/60 bg-muted/30 p-3">
+						<p className="text-muted-foreground text-xs uppercase tracking-wide">
+							Explanation
+						</p>
+						<p className="mt-1.5 text-sm leading-relaxed">
+							{question.explanation}
+						</p>
 					</div>
 				)}
 			</FramePanel>
