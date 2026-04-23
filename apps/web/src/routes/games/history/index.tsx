@@ -29,9 +29,9 @@ export const Route = createFileRoute("/games/history/")({
 		pageSeo({
 			title: "Recent games",
 			description:
-				"Public list of recently finished live quiz games on Xamsa: packs, player counts, and duration.",
+				"Public list of recently finished Xamsa games. Open any code for the full buzzer recap: scores, topics, and questions.",
 			path: "/games/history/",
-			keywords: "Xamsa games, recent games, live quiz history",
+			keywords: "Xamsa games, recent games, game stats, buzzer recap",
 		}),
 });
 
@@ -72,7 +72,7 @@ function PublicGamesHistoryPage() {
 	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	return (
-		<div className="container mx-auto max-w-4xl space-y-6 px-4 py-8">
+		<div className="container mx-auto max-w-5xl space-y-6 px-4 py-8">
 			<div className="space-y-2">
 				<div className="flex items-center gap-2 text-primary">
 					<HistoryIcon className="size-7" />
@@ -81,8 +81,10 @@ function PublicGamesHistoryPage() {
 					</h1>
 				</div>
 				<p className="text-muted-foreground text-sm sm:text-base">
-					Recently finished public games. No sign-in required—stats stay on
-					profiles; this is only a live feed of completed sessions.
+					Recently finished games. Tap a game code (or{" "}
+					<span className="text-foreground">Full recap</span>) to open the same
+					detailed stats page as after a match—scores, rounds, questions, and
+					every buzz.
 				</p>
 				<p className="text-muted-foreground text-sm">
 					<Button
@@ -113,14 +115,16 @@ function PublicGamesHistoryPage() {
 			) : null}
 
 			{!isLoading && !isError && rows.length > 0 ? (
-				<div className="rounded-xl border">
+				<div className="overflow-x-auto rounded-xl border">
 					<Table>
 						<TableHeader>
 							<TableRow>
 								<TableHead>Finished</TableHead>
+								<TableHead>Code</TableHead>
 								<TableHead>Pack</TableHead>
 								<TableHead className="text-right">Players</TableHead>
 								<TableHead className="text-right">Duration</TableHead>
+								<TableHead className="text-right">Recap</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -131,9 +135,18 @@ function PublicGamesHistoryPage() {
 									</TableCell>
 									<TableCell>
 										<Link
+											to="/g/$code/stats"
+											params={{ code: g.code }}
+											className="font-medium font-mono text-primary text-sm tabular-nums tracking-wide hover:underline"
+										>
+											{g.code}
+										</Link>
+									</TableCell>
+									<TableCell>
+										<Link
 											to="/packs/$packSlug"
 											params={{ packSlug: g.pack.slug }}
-											className="font-medium text-primary hover:underline"
+											className="font-medium text-foreground hover:text-primary hover:underline"
 										>
 											{g.pack.name}
 										</Link>
@@ -147,6 +160,15 @@ function PublicGamesHistoryPage() {
 													g.durationSeconds % 60
 												}s`
 											: "—"}
+									</TableCell>
+									<TableCell className="text-right">
+										<Link
+											to="/g/$code/stats"
+											params={{ code: g.code }}
+											className="text-primary text-sm hover:underline"
+										>
+											Full stats
+										</Link>
 									</TableCell>
 								</TableRow>
 							))}
