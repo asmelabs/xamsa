@@ -30,6 +30,7 @@ export async function generateTopicQuestionsJson(params: {
 	topicDescription?: string;
 	packName: string;
 	packDescription: string | null;
+	authorPrompt?: string;
 }): Promise<unknown> {
 	const apiKey = resolveGroqApiKey();
 	if (!apiKey) {
@@ -42,6 +43,7 @@ export async function generateTopicQuestionsJson(params: {
 		topicDescription: params.topicDescription,
 		packName: params.packName,
 		packDescription: params.packDescription,
+		authorPrompt: params.authorPrompt,
 	});
 
 	const messages: GroqMessage[] = [
@@ -58,7 +60,7 @@ export async function generateTopicQuestionsJson(params: {
 		body: JSON.stringify({
 			model: MODEL,
 			messages,
-			temperature: 0.35,
+			temperature: 0.28,
 			response_format: { type: "json_object" },
 		}),
 	});

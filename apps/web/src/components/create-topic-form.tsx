@@ -11,6 +11,15 @@ import {
 	CarouselPrevious,
 } from "@xamsa/ui/components/carousel";
 import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogPanel,
+	DialogTitle,
+} from "@xamsa/ui/components/dialog";
+import {
 	Frame,
 	FrameFooter,
 	FrameHeader,
@@ -18,6 +27,7 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
+import { Label } from "@xamsa/ui/components/label";
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
 import { Check, Sparkles } from "lucide-react";
@@ -46,6 +56,8 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const { data: session } = authClient.useSession();
 	const [api, setApi] = useState<CarouselApi>();
 	const [currentSlide, setCurrentSlide] = useState(0);
+	const [aiAuthorDialogOpen, setAiAuthorDialogOpen] = useState(false);
+	const [aiAuthorPromptDraft, setAiAuthorPromptDraft] = useState("");
 
 	const [defaultName] = useQueryState("name");
 	const [defaultDescription] = useQueryState("description");
@@ -205,11 +217,8 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 							variant="secondary"
 							disabled={aiDisabled}
 							onClick={() => {
-								generateWithAi({
-									pack: packSlug,
-									topicName: topicName.trim(),
-									topicDescription: topicDescription?.trim() || undefined,
-								});
+								setAiAuthorPromptDraft("");
+								setAiAuthorDialogOpen(true);
 							}}
 						>
 							<Sparkles className="mr-1.5 size-4" />
@@ -220,6 +229,67 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 						AI fills all five questions from the topic and pack name. Always
 						verify facts before publishing.
 					</p>
+					<Dialog
+						onOpenChange={(o) => {
+							setAiAuthorDialogOpen(o);
+							if (!o) setAiAuthorPromptDraft("");
+						}}
+						open={aiAuthorDialogOpen}
+					>
+						<DialogContent className="sm:max-w-lg" showCloseButton>
+							<DialogHeader>
+								<DialogTitle>Generate with AI</DialogTitle>
+								<DialogDescription>
+									Optional: add instructions (difficulty, tone, things to
+									include or avoid). Leave empty for the default prompt.
+								</DialogDescription>
+							</DialogHeader>
+							<DialogPanel>
+								<div className="space-y-2">
+									<Label htmlFor="create-ai-author-prompt">
+										Additional instructions
+									</Label>
+									<Textarea
+										id="create-ai-author-prompt"
+										maxLength={2000}
+										onChange={(e) => setAiAuthorPromptDraft(e.target.value)}
+										placeholder="e.g. harder clues, 1990s only, no politics…"
+										rows={5}
+										value={aiAuthorPromptDraft}
+									/>
+									<p className="text-muted-foreground text-xs">
+										{aiAuthorPromptDraft.length}/2000 characters
+									</p>
+								</div>
+							</DialogPanel>
+							<DialogFooter>
+								<Button
+									onClick={() => setAiAuthorDialogOpen(false)}
+									type="button"
+									variant="outline"
+								>
+									Cancel
+								</Button>
+								<Button
+									disabled={isAiPending}
+									onClick={() => {
+										const ap = aiAuthorPromptDraft.trim() || undefined;
+										setAiAuthorDialogOpen(false);
+										setAiAuthorPromptDraft("");
+										generateWithAi({
+											pack: packSlug,
+											topicName: topicName.trim(),
+											topicDescription: topicDescription?.trim() || undefined,
+											authorPrompt: ap,
+										});
+									}}
+									type="button"
+								>
+									{isAiPending ? "Generating…" : "Generate"}
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
 				</FramePanel>
 
 				<FramePanel className="space-y-4">

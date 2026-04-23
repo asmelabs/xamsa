@@ -34,6 +34,14 @@ export const appReleasesManifest: AppReleasesManifest = {
 					kind: "text",
 					text: "When a game finishes, the end screen can show hosting XP and your ranked Elo change (when two or more players played). Host header and current-question reveal UI are tightened for small screens.",
 				},
+				{
+					kind: "text",
+					text: "On game stats Flow, the Q1–Q5 matrix has a “Show” menu: pick points, total clicks, correct / wrong / expired counts, or first-buzz counts. Cells show one value at a time and row, column, and grand totals follow the same metric.",
+				},
+				{
+					kind: "text",
+					text: "Public profiles list more lifetime numbers (wrong and expired buzzes, first buzzes, topics and questions played, time playing and hosting, published packs). There is a buzz-outcome pie chart and a last-12-months bar of completed games you played or hosted.",
+				},
 			],
 		},
 		{

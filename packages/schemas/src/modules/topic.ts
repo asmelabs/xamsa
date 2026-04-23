@@ -125,6 +125,8 @@ export const GenerateTopicQuestionsInputSchema = z.object({
 	pack: PackSchema.shape.slug,
 	topicName: z.string().min(1, "Topic name is required").max(100),
 	topicDescription: z.string().max(1000).optional(),
+	/** Optional; merged into the user prompt for this request only. */
+	authorPrompt: z.string().max(2000).optional(),
 	/** If omitted, the pack’s language is used. */
 	language: PackLanguageSchema.optional(),
 });

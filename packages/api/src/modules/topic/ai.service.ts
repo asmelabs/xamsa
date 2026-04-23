@@ -116,12 +116,14 @@ export async function generateTopicQuestionsWithAI(
 
 	let raw: unknown;
 	try {
+		const authorTrimmed = input.authorPrompt?.trim();
 		raw = await generateTopicQuestionsJson({
 			language,
 			topicName: input.topicName,
 			topicDescription: input.topicDescription,
 			packName: pack.name,
 			packDescription: pack.description,
+			...(authorTrimmed ? { authorPrompt: authorTrimmed } : {}),
 		});
 	} catch (e) {
 		const message =
