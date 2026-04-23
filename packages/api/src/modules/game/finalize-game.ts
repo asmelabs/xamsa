@@ -479,6 +479,16 @@ export async function finalizeGame(
 	});
 
 	// 7. Finalize the Game row.
+	const eloDeltaByUserId: Record<string, number> = {};
+	for (const p of ranked) {
+		const d = eloDeltas.get(p.userId) ?? 0;
+		if (d !== 0) eloDeltaByUserId[p.userId] = d;
+	}
+	const completionDeltas: Prisma.InputJsonValue = {
+		v: 1,
+		hostXpGained: HOST_FULL_GAME_COMPLETION_XP_BONUS,
+		eloDeltaByUserId,
+	};
 	await tx.game.update({
 		where: { id: gameId },
 		data: {
@@ -491,6 +501,7 @@ export async function finalizeGame(
 				: undefined,
 			totalTopics: topicWasClosed ? { increment: 1 } : undefined,
 			totalSkippedQuestions: leavingWasSkipped ? { increment: 1 } : undefined,
+			completionDeltas,
 		},
 	});
 

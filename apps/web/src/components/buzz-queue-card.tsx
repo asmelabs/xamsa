@@ -43,34 +43,38 @@ export function BuzzQueueHostStrip({ game }: { game: GameData }) {
 	const extra = sortedClicks.length - visible.length;
 
 	return (
-		<div className="rounded-xl border border-primary/25 bg-primary/5 p-3 xl:hidden">
+		<div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-primary/25 bg-primary/5 p-3 xl:hidden">
 			<p className="mb-2 font-semibold text-foreground text-xs">Buzz queue</p>
-			<div className="flex flex-wrap items-center gap-1.5">
-				{visible.map((click) => {
-					const player = game.players.find((p) => p.id === click.playerId);
-					if (!player) return null;
-					const short = player.user.name.split(/\s+/)[0] ?? player.user.name;
-					const wrong = click.status === "wrong";
-					const done = click.status === "correct" || wrong;
-					return (
-						<div
-							key={click.id}
-							className={`inline-flex max-w-[10rem] items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
-								wrong
-									? "border-red-500/30 bg-red-500/5 text-muted-foreground line-through"
-									: done
-										? "border-green-500/30 bg-green-500/5"
-										: "border-border bg-background"
-							}`}
-						>
-							<span className="shrink-0 font-bold">{click.position}</span>
-							<span className="truncate">{short}</span>
-						</div>
-					);
-				})}
-				{extra > 0 && (
-					<span className="text-muted-foreground text-xs">+{extra} more</span>
-				)}
+			<div className="-mx-0.5 max-w-full overflow-x-auto px-0.5 pb-0.5">
+				<div className="inline-flex w-max min-w-0 flex-nowrap items-center gap-1.5">
+					{visible.map((click) => {
+						const player = game.players.find((p) => p.id === click.playerId);
+						if (!player) return null;
+						const short = player.user.name.split(/\s+/)[0] ?? player.user.name;
+						const wrong = click.status === "wrong";
+						const done = click.status === "correct" || wrong;
+						return (
+							<div
+								key={click.id}
+								className={`inline-flex max-w-[10rem] items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
+									wrong
+										? "border-red-500/30 bg-red-500/5 text-muted-foreground line-through"
+										: done
+											? "border-green-500/30 bg-green-500/5"
+											: "border-border bg-background"
+								}`}
+							>
+								<span className="shrink-0 font-bold">{click.position}</span>
+								<span className="truncate">{short}</span>
+							</div>
+						);
+					})}
+					{extra > 0 && (
+						<span className="shrink-0 text-muted-foreground text-xs">
+							+{extra} more
+						</span>
+					)}
+				</div>
 			</div>
 		</div>
 	);

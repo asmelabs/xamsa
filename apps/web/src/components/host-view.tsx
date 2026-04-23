@@ -22,7 +22,7 @@ export function HostView({ game }: HostViewProps) {
 			{game.status === "paused" && <PausedBanner pausedAt={game.pausedAt} />}
 
 			<div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-				<div className="space-y-4">
+				<div className="min-w-0 max-w-full space-y-4">
 					{game.status === "waiting" ? (
 						<StartGameCard game={game} activePlayers={activePlayers} />
 					) : game.status === "completed" ? (

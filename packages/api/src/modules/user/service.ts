@@ -5,6 +5,8 @@ import type {
 	FindOneProfileOutputType,
 	GetActiveGameOutputType,
 	GetMyStatsOutputType,
+	GetPublicGameActivityInputType,
+	GetPublicGameActivityOutputType,
 	GetPublicRecentGamesInputType,
 	GetPublicRecentGamesOutputType,
 	GetPublicStatsInputType,
@@ -164,6 +166,15 @@ export async function getMyStats(
 			totalPodiums: true,
 			totalPointsEarned: true,
 			totalCorrectAnswers: true,
+			totalIncorrectAnswers: true,
+			totalExpiredAnswers: true,
+			totalFirstClicks: true,
+			totalLastPlaces: true,
+			totalTopicsPlayed: true,
+			totalQuestionsPlayed: true,
+			totalTimeSpentPlaying: true,
+			totalTimeSpentHosting: true,
+			totalPacksPublished: true,
 		},
 	});
 
@@ -272,6 +283,44 @@ export async function getPublicStats(
 ): Promise<GetPublicStatsOutputType> {
 	const userId = await requireUserIdByUsername(input.username);
 	return getMyStats(userId);
+}
+
+/** Max rows scanned to bucket finished games by month (profile activity chart). */
+const PUBLIC_GAME_ACTIVITY_GAME_CAP = 2000;
+
+export async function getPublicGameActivity(
+	input: GetPublicGameActivityInputType,
+): Promise<GetPublicGameActivityOutputType> {
+	const userId = await requireUserIdByUsername(input.username);
+	const rows = await prisma.game.findMany({
+		where: {
+			status: "completed",
+			finishedAt: { not: null },
+			startedAt: { not: null },
+			OR: [{ hostId: userId }, { players: { some: { userId } } }],
+		},
+		select: { finishedAt: true },
+		orderBy: { finishedAt: "desc" },
+		take: PUBLIC_GAME_ACTIVITY_GAME_CAP,
+	});
+
+	const countsByMonth = new Map<string, number>();
+	for (const r of rows) {
+		const d = r.finishedAt;
+		if (!d) continue;
+		const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+		countsByMonth.set(key, (countsByMonth.get(key) ?? 0) + 1);
+	}
+
+	const months: GetPublicGameActivityOutputType["months"] = [];
+	const now = new Date();
+	for (let i = 11; i >= 0; i--) {
+		const dt = new Date(now.getFullYear(), now.getMonth() - i, 1);
+		const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+		months.push({ month: key, games: countsByMonth.get(key) ?? 0 });
+	}
+
+	return { months };
 }
 
 export async function getPublicRecentGames(

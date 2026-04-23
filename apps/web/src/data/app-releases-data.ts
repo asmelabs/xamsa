@@ -28,7 +28,11 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "The game stats page has a new Flow tab: a score-over-time line chart, a per-round heatmap of how many questions you took in each round, and streaks on the overview plus in Flow. Recent games and public history still exclude lobby-only cancels from earlier releases.",
+					text: "The game stats Flow tab has a player multiselect (default all) that filters the score-over-time chart, plus a Q1–Q5 × rounds score matrix with row and column totals. Streaks stay on Overview; recent games and public history still exclude lobby-only cancels.",
+				},
+				{
+					kind: "text",
+					text: "When a game finishes, the end screen can show hosting XP and your ranked Elo change (when two or more players played). Host header and current-question reveal UI are tightened for small screens.",
 				},
 			],
 		},

@@ -15,6 +15,15 @@ import {
 	CardPanel,
 	CardTitle,
 } from "@xamsa/ui/components/card";
+import { Checkbox } from "@xamsa/ui/components/checkbox";
+import { Label } from "@xamsa/ui/components/label";
+import {
+	Select,
+	SelectItem,
+	SelectPopup,
+	SelectTrigger,
+	SelectValue,
+} from "@xamsa/ui/components/select";
 import { Separator } from "@xamsa/ui/components/separator";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import {
@@ -36,6 +45,7 @@ import {
 	TrophyIcon,
 	UsersIcon,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
 	Bar,
 	BarChart,
@@ -359,16 +369,115 @@ function TopicDurationChart({ recap }: { recap: Recap }) {
 	);
 }
 
-function cellHeatmapClass(ratio: number, hasQuestions: boolean): string {
-	if (!hasQuestions) return "bg-muted/30 text-muted-foreground";
-	if (ratio >= 0.8) return "bg-emerald-500/30 text-foreground";
-	if (ratio >= 0.5) return "bg-amber-500/25 text-foreground";
-	if (ratio > 0) return "bg-orange-500/20 text-foreground";
-	return "bg-rose-500/15 text-muted-foreground";
+function formatSignedPoints(n: number): string {
+	if (n === 0) return "0";
+	if (n > 0) return `+${n}`;
+	return String(n);
 }
 
-function ScoreTimelineLineChart({ recap }: { recap: Recap }) {
-	const sorted = sortGamePlayersForScoreboard(recap.players);
+type MatrixMetric =
+	| "points"
+	| "clicks"
+	| "correct"
+	| "wrong"
+	| "expired"
+	| "firstBuzz";
+
+const MATRIX_METRIC_OPTIONS: { value: MatrixMetric; label: string }[] = [
+	{ value: "points", label: "Points" },
+	{ value: "clicks", label: "Clicks" },
+	{ value: "correct", label: "Correct" },
+	{ value: "wrong", label: "Wrong" },
+	{ value: "expired", label: "Expired" },
+	{ value: "firstBuzz", label: "First buzz" },
+];
+
+function metricValueForClicks(
+	clicks: Recap["topics"][number]["questions"][number]["clicks"],
+	selectedPlayerIds: Set<string>,
+	metric: MatrixMetric,
+): number {
+	const filtered = clicks.filter((c) => selectedPlayerIds.has(c.playerId));
+	if (filtered.length === 0) return 0;
+	switch (metric) {
+		case "points":
+			return filtered.reduce((s, c) => s + c.pointsAwarded, 0);
+		case "clicks":
+			return filtered.length;
+		case "correct":
+			return filtered.filter((c) => c.status === "correct").length;
+		case "wrong":
+			return filtered.filter((c) => c.status === "wrong").length;
+		case "expired":
+			return filtered.filter((c) => c.status === "expired").length;
+		case "firstBuzz":
+			return filtered.filter((c) => c.position === 1).length;
+		default:
+			return 0;
+	}
+}
+
+function cellHasSelectedClicks(
+	clicks: Recap["topics"][number]["questions"][number]["clicks"],
+	selectedPlayerIds: Set<string>,
+): boolean {
+	return clicks.some((c) => selectedPlayerIds.has(c.playerId));
+}
+
+function formatMatrixCell(
+	value: number,
+	metric: MatrixMetric,
+	hasClicks: boolean,
+): string {
+	if (!hasClicks) return "—";
+	if (metric === "points") return formatSignedPoints(value);
+	return String(value);
+}
+
+function columnMetricTotal(
+	recap: Recap,
+	questionOrder: number,
+	selectedPlayerIds: Set<string>,
+	metric: MatrixMetric,
+): number {
+	let sum = 0;
+	for (const t of recap.topics) {
+		const q = t.questions.find((qq) => qq.order === questionOrder);
+		if (!q) continue;
+		sum += metricValueForClicks(q.clicks, selectedPlayerIds, metric);
+	}
+	return sum;
+}
+
+function matrixMetricDescription(metric: MatrixMetric): string {
+	switch (metric) {
+		case "points":
+			return "Net buzz points (sum of points awarded) for selected players in each slot.";
+		case "clicks":
+			return "Total buzzes (answer attempts) from selected players in each slot.";
+		case "correct":
+			return "Count of correct buzzes from selected players in each slot.";
+		case "wrong":
+			return "Count of wrong buzzes from selected players in each slot.";
+		case "expired":
+			return "Count of expired buzzes from selected players in each slot.";
+		case "firstBuzz":
+			return "Count of first-position buzzes from selected players in each slot.";
+		default:
+			return "";
+	}
+}
+
+function ScoreTimelineLineChart({
+	recap,
+	selectedPlayerIds,
+}: {
+	recap: Recap;
+	selectedPlayerIds: Set<string>;
+}) {
+	const allSorted = sortGamePlayersForScoreboard(recap.players);
+	const sorted = allSorted.filter((p) => selectedPlayerIds.has(p.id));
+	const nSelected = selectedPlayerIds.size;
 	const data = recap.scoreTimeline.map((step) => {
 		const row: Record<string, string | number> = {
 			label: step.label,
@@ -379,6 +488,26 @@ function ScoreTimelineLineChart({ recap }: { recap: Recap }) {
 		}
 		return row;
 	});
+
+	const empty = (
+		<Card>
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2 text-base">
+					<ActivityIcon className="size-4" />
+					Score over time
+				</CardTitle>
+			</CardHeader>
+			<CardPanel>
+				<p className="text-muted-foreground text-sm">
+					Select at least one player to see the chart.
+				</p>
+			</CardPanel>
+		</Card>
+	);
+
+	if (nSelected === 0) {
+		return empty;
+	}
 
 	if (data.length <= 1) {
 		return null;
@@ -392,7 +521,9 @@ function ScoreTimelineLineChart({ recap }: { recap: Recap }) {
 					Score over time
 				</CardTitle>
 				<CardDescription>
-					Running total after each question (points from your buzz resolutions)
+					{nSelected === 1
+						? "This player’s running total after each question."
+						: "Running total after each question (points from buzz resolutions)."}
 				</CardDescription>
 			</CardHeader>
 			<CardPanel className="pb-4">
@@ -461,73 +592,247 @@ function ScoreTimelineLineChart({ recap }: { recap: Recap }) {
 	);
 }
 
-function RoundPerformanceHeatmap({ recap }: { recap: Recap }) {
-	const sorted = sortGamePlayersForScoreboard(recap.players);
-	const roundOrders = [
-		...new Set(recap.roundPerformance.map((r) => r.topicOrder)),
-	].sort((a, b) => a - b);
+function QuestionOrderScoreMatrix({
+	recap,
+	selectedPlayerIds,
+}: {
+	recap: Recap;
+	selectedPlayerIds: Set<string>;
+}) {
+	const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>("points");
 
-	if (roundOrders.length === 0) {
-		return null;
+	const topics = useMemo(() => {
+		const t = [...recap.topics];
+		t.sort((a, b) => a.order - b.order);
+		return t;
+	}, [recap.topics]);
+
+	if (selectedPlayerIds.size === 0) {
+		return (
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-base">Score by question slot</CardTitle>
+				</CardHeader>
+				<CardPanel>
+					<p className="text-muted-foreground text-sm">
+						Select at least one player to see the matrix.
+					</p>
+				</CardPanel>
+			</Card>
+		);
 	}
+
+	const colTotals = [1, 2, 3, 4, 5].map((k) =>
+		columnMetricTotal(recap, k, selectedPlayerIds, matrixMetric),
+	);
+	const grand = colTotals.reduce((s, n) => s + n, 0);
 
 	return (
 		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">Round results</CardTitle>
-				<CardDescription>
-					Questions you answered first in each round (e.g. 3/5 = three of five
-					in that round)
-				</CardDescription>
+			<CardHeader className="space-y-3 sm:flex sm:flex-row sm:items-end sm:justify-between sm:space-y-0">
+				<div className="min-w-0 space-y-1">
+					<CardTitle className="text-base">Score by question slot</CardTitle>
+					<CardDescription>
+						{matrixMetricDescription(matrixMetric)}
+					</CardDescription>
+				</div>
+				<div className="flex flex-wrap items-center gap-2">
+					<Label
+						htmlFor="matrix-metric"
+						className="whitespace-nowrap text-muted-foreground text-xs"
+					>
+						Show
+					</Label>
+					<Select
+						value={matrixMetric}
+						onValueChange={(v) => {
+							if (v) setMatrixMetric(v as MatrixMetric);
+						}}
+					>
+						<SelectTrigger
+							id="matrix-metric"
+							size="sm"
+							className="w-42 min-w-0"
+						>
+							<SelectValue placeholder="Metric">
+								{MATRIX_METRIC_OPTIONS.find((o) => o.value === matrixMetric)
+									?.label ?? matrixMetric}
+							</SelectValue>
+						</SelectTrigger>
+						<SelectPopup>
+							{MATRIX_METRIC_OPTIONS.map((opt) => (
+								<SelectItem key={opt.value} value={opt.value}>
+									{opt.label}
+								</SelectItem>
+							))}
+						</SelectPopup>
+					</Select>
+				</div>
 			</CardHeader>
-			<CardPanel className="overflow-x-auto pb-4">
-				<Table variant="card" className="min-w-[480px] text-xs">
+			<CardPanel className="min-w-0 overflow-x-auto pb-4">
+				<Table variant="card" className="min-w-[520px] text-xs">
 					<TableHeader>
 						<TableRow>
-							<TableHead className="whitespace-nowrap">Player</TableHead>
-							{roundOrders.map((o) => (
-								<TableHead key={o} className="min-w-[4.5rem] text-center">
-									R{o}
+							<TableHead className="w-18 whitespace-nowrap">Round</TableHead>
+							{[1, 2, 3, 4, 5].map((k) => (
+								<TableHead
+									key={k}
+									className="min-w-18 text-center"
+									title={
+										topics.find((t) => t.questions.some((q) => q.order === k))
+											?.topicName
+									}
+								>
+									Q{k}
 								</TableHead>
 							))}
+							<TableHead className="min-w-18 text-center">Total</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{sorted.map((p) => (
-							<TableRow key={p.id}>
-								<TableCell className="max-w-[140px] truncate font-medium">
-									{p.user.name}
-								</TableCell>
-								{roundOrders.map((o) => {
-									const cell = recap.roundPerformance.find(
-										(r) => r.playerId === p.id && r.topicOrder === o,
-									);
-									if (!cell) {
+						{topics.map((t) => {
+							let rowSum = 0;
+							return (
+								<TableRow key={t.order}>
+									<TableCell className="whitespace-nowrap font-medium">
+										<span title={t.topicName}>R{t.order}</span>
+									</TableCell>
+									{[1, 2, 3, 4, 5].map((k) => {
+										const q = t.questions.find((qq) => qq.order === k);
+										if (!q) {
+											return (
+												<TableCell key={k} className="text-center">
+													—
+												</TableCell>
+											);
+										}
+										const has = cellHasSelectedClicks(
+											q.clicks,
+											selectedPlayerIds,
+										);
+										const value = metricValueForClicks(
+											q.clicks,
+											selectedPlayerIds,
+											matrixMetric,
+										);
+										rowSum += value;
 										return (
-											<TableCell key={o} className="text-center">
-												—
+											<TableCell key={k} className="text-center">
+												<div className="font-medium tabular-nums">
+													{formatMatrixCell(value, matrixMetric, has)}
+												</div>
 											</TableCell>
 										);
-									}
-									const r =
-										cell.totalQuestions > 0
-											? cell.questionsCorrect / cell.totalQuestions
-											: 0;
-									return (
-										<TableCell
-											key={o}
-											className={`text-center font-medium tabular-nums ${cellHeatmapClass(r, cell.totalQuestions > 0)}`}
-										>
-											{cell.questionsCorrect}/{cell.totalQuestions}
-										</TableCell>
-									);
-								})}
-							</TableRow>
-						))}
+									})}
+									<TableCell className="text-center font-semibold tabular-nums">
+										{matrixMetric === "points"
+											? formatSignedPoints(rowSum)
+											: String(rowSum)}
+									</TableCell>
+								</TableRow>
+							);
+						})}
+						<TableRow>
+							<TableCell className="font-medium">Total</TableCell>
+							{colTotals.map((ct, i) => (
+								<TableCell key={i} className="text-center">
+									<div className="font-medium tabular-nums">
+										{matrixMetric === "points"
+											? formatSignedPoints(ct)
+											: String(ct)}
+									</div>
+								</TableCell>
+							))}
+							<TableCell className="text-center font-semibold tabular-nums">
+								{matrixMetric === "points"
+									? formatSignedPoints(grand)
+									: String(grand)}
+							</TableCell>
+						</TableRow>
 					</TableBody>
 				</Table>
 			</CardPanel>
 		</Card>
+	);
+}
+
+function GameFlowSection({ recap }: { recap: Recap }) {
+	const sorted = sortGamePlayersForScoreboard(recap.players);
+	const [selectedPlayerIds, setSelectedPlayerIds] = useState(
+		() => new Set(sorted.map((p) => p.id)),
+	);
+
+	const allIds = sorted.map((p) => p.id);
+	const isAll =
+		allIds.length > 0 && allIds.every((id) => selectedPlayerIds.has(id));
+
+	return (
+		<div className="min-w-0 space-y-6">
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-base">Players in this view</CardTitle>
+					<CardDescription>
+						Include players in the line chart and score matrix (default: all)
+					</CardDescription>
+				</CardHeader>
+				<CardPanel className="space-y-3">
+					<div className="flex flex-wrap gap-2">
+						<Button
+							size="sm"
+							variant="outline"
+							type="button"
+							onClick={() => setSelectedPlayerIds(new Set(allIds))}
+							disabled={isAll}
+						>
+							Select all
+						</Button>
+						<Button
+							size="sm"
+							variant="outline"
+							type="button"
+							onClick={() => setSelectedPlayerIds(new Set())}
+							disabled={selectedPlayerIds.size === 0}
+						>
+							Clear
+						</Button>
+					</div>
+					<div className="grid gap-2 sm:grid-cols-2">
+						{sorted.map((p) => {
+							const id = `flow-player-${p.id}`;
+							const checked = selectedPlayerIds.has(p.id);
+							return (
+								<div key={p.id} className="flex items-center gap-2">
+									<Checkbox
+										id={id}
+										checked={checked}
+										onCheckedChange={(next) => {
+											const on = next === true;
+											setSelectedPlayerIds((prev) => {
+												const n = new Set(prev);
+												if (on) n.add(p.id);
+												else n.delete(p.id);
+												return n;
+											});
+										}}
+									/>
+									<Label htmlFor={id} className="truncate font-medium text-sm">
+										{p.user.name}
+									</Label>
+								</div>
+							);
+						})}
+					</div>
+				</CardPanel>
+			</Card>
+			<ScoreTimelineLineChart
+				recap={recap}
+				selectedPlayerIds={selectedPlayerIds}
+			/>
+			<QuestionOrderScoreMatrix
+				recap={recap}
+				selectedPlayerIds={selectedPlayerIds}
+			/>
+		</div>
 	);
 }
 
@@ -870,9 +1175,8 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 						<StreaksSummary recap={recap} />
 					</TabsPanel>
 
-					<TabsPanel value="flow" className="mt-4 space-y-6">
-						<ScoreTimelineLineChart recap={recap} />
-						<RoundPerformanceHeatmap recap={recap} />
+					<TabsPanel value="flow" className="mt-4 min-w-0 space-y-6">
+						<GameFlowSection key={recap.code} recap={recap} />
 					</TabsPanel>
 
 					<TabsPanel value="rounds" className="mt-4 space-y-6">

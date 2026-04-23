@@ -98,6 +98,47 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 				</p>
 			</div>
 
+			{game.rewardsRecorded &&
+			((game.isHost && game.hostXpGained != null) ||
+				(myPlayer && game.myEloDelta != null)) ? (
+				<div className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-8">
+					{game.isHost && game.hostXpGained != null ? (
+						<div className="text-center sm:text-left">
+							<p className="text-muted-foreground text-xs uppercase tracking-wide">
+								Hosting reward
+							</p>
+							<p className="mt-0.5 flex items-center justify-center gap-1.5 font-semibold text-amber-600 text-lg tabular-nums sm:justify-start dark:text-amber-400">
+								<ZapIcon className="size-5" />+{game.hostXpGained} XP
+							</p>
+						</div>
+					) : null}
+					{myPlayer && game.myEloDelta != null ? (
+						<div className="text-center sm:text-left">
+							<p className="text-muted-foreground text-xs uppercase tracking-wide">
+								Ranked Elo
+							</p>
+							<p className="mt-0.5 font-semibold text-lg tabular-nums">
+								{game.players.length < 2 ? (
+									<span className="text-muted-foreground">
+										— (2+ players needed)
+									</span>
+								) : game.myEloDelta > 0 ? (
+									<span className="text-emerald-600 dark:text-emerald-400">
+										+{game.myEloDelta}
+									</span>
+								) : game.myEloDelta < 0 ? (
+									<span className="text-rose-600 dark:text-rose-400">
+										{game.myEloDelta}
+									</span>
+								) : (
+									<span>0</span>
+								)}
+							</p>
+						</div>
+					) : null}
+				</div>
+			) : null}
+
 			{/* Winner hero */}
 			{winner ? (
 				<div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-linear-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5 sm:p-6">

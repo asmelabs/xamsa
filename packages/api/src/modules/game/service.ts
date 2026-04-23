@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { channels, GAME_EVENTS } from "@xamsa/ably/channels";
 import { ablyRest } from "@xamsa/ably/server";
+import type { Prisma } from "@xamsa/db";
 import prisma from "@xamsa/db";
 import type {
 	AdvanceQuestionInputType,
@@ -28,6 +29,30 @@ import { MIN_PLAYERS_PER_GAME_TO_START } from "@xamsa/utils/constants";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
 import { generateUniqueGameCode } from "./utils";
+
+function mapGameCompletionDeltas(raw: Prisma.JsonValue | null): {
+	hostXpGained: number | null;
+	eloDeltaByUserId: Record<string, number>;
+} {
+	if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
+		return { hostXpGained: null, eloDeltaByUserId: {} };
+	}
+	const o = raw as Record<string, unknown>;
+	const hostXpGained =
+		typeof o.hostXpGained === "number" && Number.isFinite(o.hostXpGained)
+			? Math.trunc(o.hostXpGained)
+			: null;
+	const eloDeltaByUserId: Record<string, number> = {};
+	const m = o.eloDeltaByUserId;
+	if (m && typeof m === "object" && !Array.isArray(m)) {
+		for (const [k, v] of Object.entries(m)) {
+			if (typeof v === "number" && Number.isFinite(v)) {
+				eloDeltaByUserId[k] = Math.trunc(v);
+			}
+		}
+	}
+	return { hostXpGained, eloDeltaByUserId };
+}
 
 export async function createGame(
 	input: CreateGameInputType,
@@ -245,6 +270,7 @@ export async function findOneGame(
 			winnerId: true,
 			hostId: true,
 			packId: true,
+			completionDeltas: true,
 			pack: {
 				select: {
 					id: true,
@@ -417,6 +443,11 @@ export async function findOneGame(
 		where: { packId: game.packId },
 	});
 
+	const { hostXpGained, eloDeltaByUserId } = mapGameCompletionDeltas(
+		game.completionDeltas,
+	);
+	const rewardsRecorded = game.completionDeltas != null;
+
 	return {
 		code: game.code,
 		status: game.status,
@@ -443,6 +474,13 @@ export async function findOneGame(
 		isHost,
 		myPlayer,
 		hostData,
+		rewardsRecorded,
+		hostXpGained,
+		eloDeltaByUserId,
+		myEloDelta:
+			rewardsRecorded && userId && myPlayerRaw
+				? (eloDeltaByUserId[userId] ?? 0)
+				: null,
 	};
 }
 

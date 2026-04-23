@@ -78,6 +78,15 @@ export const GetMyStatsOutputSchema = UserSchema.pick({
 	totalPodiums: true,
 	totalPointsEarned: true,
 	totalCorrectAnswers: true,
+	totalIncorrectAnswers: true,
+	totalExpiredAnswers: true,
+	totalFirstClicks: true,
+	totalLastPlaces: true,
+	totalTopicsPlayed: true,
+	totalQuestionsPlayed: true,
+	totalTimeSpentPlaying: true,
+	totalTimeSpentHosting: true,
+	totalPacksPublished: true,
 });
 
 export type GetMyStatsOutputType = z.infer<typeof GetMyStatsOutputSchema>;
@@ -155,6 +164,32 @@ export const GetPublicRecentGamesOutputSchema = GetRecentGamesOutputSchema;
 
 export type GetPublicRecentGamesOutputType = z.infer<
 	typeof GetPublicRecentGamesOutputSchema
+>;
+
+/**
+ * PUBLIC PROFILE — GAME ACTIVITY BY MONTH
+ *
+ * Completed games the user hosted or played in, bucketed as YYYY-MM (last 12 months).
+ * Capped server-side for query cost.
+ */
+export const GetPublicGameActivityInputSchema = UserSchema.pick({
+	username: true,
+});
+
+export const GameActivityMonthSchema = z.object({
+	month: z.string(),
+	games: z.number().int(),
+});
+
+export const GetPublicGameActivityOutputSchema = z.object({
+	months: z.array(GameActivityMonthSchema),
+});
+
+export type GetPublicGameActivityInputType = z.infer<
+	typeof GetPublicGameActivityInputSchema
+>;
+export type GetPublicGameActivityOutputType = z.infer<
+	typeof GetPublicGameActivityOutputSchema
 >;
 
 /**

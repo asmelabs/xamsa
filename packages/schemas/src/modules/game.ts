@@ -180,6 +180,14 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 	packTotalTopics: z.number().int(),
 
 	winnerId: z.string().nullable(),
+
+	/** True when completion rewards were persisted (games finalized after this shipped). */
+	rewardsRecorded: z.boolean(),
+
+	/** Set when a full play session is finalized; used on end-game and stats. */
+	hostXpGained: z.number().int().nullable(),
+	eloDeltaByUserId: z.record(z.string(), z.number().int()).default({}),
+	myEloDelta: z.number().int().nullable(),
 });
 
 export type FindOneGameInputType = z.infer<typeof FindOneGameInputSchema>;

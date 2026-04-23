@@ -58,6 +58,9 @@ model Game {
   winnerId String? @unique @map("winner_id")
   winner   Player? @relation("GameWinner", fields: [winnerId], references: [id], onDelete: SetNull)
 
+  /// snapshot at finalize: hosting XP and per-user Elo deltas (JSON) for end-game screen ///
+  completionDeltas Json? @map("completion_deltas")
+
   settings GameSettings?
   players  Player[]
   clicks   Click[]
