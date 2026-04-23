@@ -404,3 +404,32 @@ export type GetCompletedGameRecapInputType = z.infer<
 export type GetCompletedGameRecapOutputType = z.infer<
 	typeof GetCompletedGameRecapOutputSchema
 >;
+
+/** Public feed of completed games (no auth). */
+export const ListPublicGameHistoryInputSchema = z.object({
+	limit: z.number().int().min(1).max(100).default(30),
+	cursor: z.string().optional(),
+});
+
+export const PublicGameHistoryItemSchema = z.object({
+	code: z.string(),
+	finishedAt: z.coerce.date(),
+	durationSeconds: z.number().int().nullable(),
+	totalActivePlayers: z.number().int(),
+	pack: z.object({
+		slug: z.string(),
+		name: z.string(),
+	}),
+});
+
+export const ListPublicGameHistoryOutputSchema = z.object({
+	items: z.array(PublicGameHistoryItemSchema),
+	nextCursor: z.string().nullable(),
+});
+
+export type ListPublicGameHistoryInputType = z.infer<
+	typeof ListPublicGameHistoryInputSchema
+>;
+export type ListPublicGameHistoryOutputType = z.infer<
+	typeof ListPublicGameHistoryOutputSchema
+>;

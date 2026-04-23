@@ -35,9 +35,13 @@ const BOARDS: {
 	{
 		id: "elo",
 		label: "Elo",
-		hint: "Competitive rating (3+ games as player)",
+		hint: "Competitive rating (after at least one game as a player)",
 	},
-	{ id: "xp", label: "XP / Level", hint: "Progression across all games" },
+	{
+		id: "xp",
+		label: "XP / Level",
+		hint: "Progression from playing and hosting",
+	},
 	{ id: "wins", label: "Wins", hint: "First-place finishes" },
 	{ id: "points", label: "Points", hint: "Total score earned" },
 ];

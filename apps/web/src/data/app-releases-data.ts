@@ -18,6 +18,35 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-04-22",
 			year: 2026,
 			month: 4,
+			patch: 6,
+			title: "Fair play, Elo, leaderboard, and public game history",
+			highlights: [
+				{
+					kind: "text",
+					text: "Ending a game from the lobby (before it starts) no longer awards XP, stats, or pack plays; only completed sessions after go-live count.",
+				},
+				{
+					kind: "text",
+					text: "Buzzers close after the question is revealed; manual reveal expires pending buzzes. Server records buzz time for a fair queue; host resolves in true position order with a clearer next-player row.",
+				},
+				{
+					kind: "text",
+					text: "Elo updates when a ranked game finishes even if the host uses End game; leaderboard shows Elo after one game as a player and includes hosts on XP (and related boards) when they have hosted but not yet played.",
+				},
+				{
+					kind: "routerLink",
+					before: "Open ",
+					to: "/games/history",
+					label: "Recent games",
+					after:
+						" for a public feed of finished sessions; the Play page links here too.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-22",
+			year: 2026,
+			month: 4,
 			patch: 5,
 			title: "Pack pages, editor layout, and pack actions",
 			highlights: [

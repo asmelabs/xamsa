@@ -52,7 +52,86 @@ export type FinalizeGameOptions = {
  *   6. Roll up host stats onto the host User row.
  *   7. Update the Game row: status=completed, winner, duration, totals.
  *   8. Bump the Pack's totalPlays counter.
+ *
+ * If the game never left the lobby (`startedAt` is null), do not call this —
+ * use `completeLobbyOnlyGame` instead. That path avoids all stat rollups.
  */
+export async function completeLobbyOnlyGame(
+	tx: Prisma.TransactionClient,
+	gameId: string,
+	now: Date = new Date(),
+): Promise<FinalizeGameResult> {
+	const game = await tx.game.findUnique({
+		where: { id: gameId },
+		select: {
+			id: true,
+			status: true,
+			startedAt: true,
+			finishedAt: true,
+			winnerId: true,
+		},
+	});
+
+	if (!game) {
+		throw new Error(`Game ${gameId} not found`);
+	}
+
+	if (game.status === "completed") {
+		const existingPlayers = await tx.player.findMany({
+			where: { gameId },
+			select: { id: true, rank: true, score: true },
+			orderBy: [{ rank: "asc" }, { score: "desc" }],
+		});
+		return {
+			gameId,
+			wasAlreadyCompleted: true,
+			winnerId: game.winnerId,
+			finishedAt: game.finishedAt ?? now,
+			durationSeconds: 0,
+			playerRanks: existingPlayers.map((p) => ({
+				id: p.id,
+				rank: p.rank ?? 0,
+				score: p.score,
+			})),
+		};
+	}
+
+	if (game.startedAt != null) {
+		throw new Error(
+			"completeLobbyOnlyGame: game already started; use finalizeGame",
+		);
+	}
+
+	const players = await tx.player.findMany({
+		where: { gameId, status: { not: "left" } },
+		select: { id: true, score: true },
+		orderBy: { joinedAt: "asc" },
+	});
+
+	await tx.game.update({
+		where: { id: gameId },
+		data: {
+			status: "completed",
+			finishedAt: now,
+			durationSeconds: 0,
+			winnerId: null,
+		},
+	});
+
+	return {
+		gameId,
+		wasAlreadyCompleted: false,
+		winnerId: null,
+		finishedAt: now,
+		durationSeconds: 0,
+		playerRanks: players.map((p, i) => ({
+			id: p.id,
+			rank: i + 1,
+			score: p.score,
+		})),
+	};
+}
+
 export async function finalizeGame(
 	tx: Prisma.TransactionClient,
 	gameId: string,
@@ -100,6 +179,12 @@ export async function finalizeGame(
 				score: p.score,
 			})),
 		};
+	}
+
+	if (!game.startedAt) {
+		throw new Error(
+			"finalizeGame: game never started; use completeLobbyOnlyGame for lobby-only cancels",
+		);
 	}
 
 	// 1. Finalize trailing GameQuestion + GameTopic (if the game has started).
@@ -303,10 +388,11 @@ export async function finalizeGame(
 		where: { gameTopic: { gameId } },
 	});
 
-	// Elo: snapshot ratings before any user row changes; skip for abandoned games.
+	// Elo: snapshot ratings; apply for any finished session that had started
+	// (including host-ended games with force) when 2+ players, not only completeGame.
 	const rankedUserIds = ranked.map((p) => p.userId);
 	const ratingByUserId = new Map<string, number>();
-	if (!force && rankedUserIds.length >= 2) {
+	if (rankedUserIds.length >= 2) {
 		const usersForElo = await tx.user.findMany({
 			where: { id: { in: rankedUserIds } },
 			select: { id: true, elo: true },
@@ -316,7 +402,7 @@ export async function finalizeGame(
 		}
 	}
 	const eloRows =
-		!force && rankedUserIds.length >= 2
+		rankedUserIds.length >= 2
 			? ranked.map((p, i) => ({
 					userId: p.userId,
 					rank: standingsRanks[i] ?? i + 1,
@@ -349,7 +435,7 @@ export async function finalizeGame(
 			peakElo: number;
 			lowestElo: number;
 		} | null = null;
-		if (!force && rankedUserIds.length >= 2 && currentUser) {
+		if (rankedUserIds.length >= 2 && currentUser) {
 			const nextElo = currentUser.elo + eloDelta;
 			eloPatch = {
 				elo: nextElo,

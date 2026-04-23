@@ -23,6 +23,7 @@ export function BuzzButton({ game }: BuzzButtonProps) {
 
 	const canBuzz =
 		game.status === "active" &&
+		!game.isQuestionRevealed &&
 		!!game.myPlayer &&
 		game.myPlayer.status === "playing" &&
 		!hasBuzzed &&

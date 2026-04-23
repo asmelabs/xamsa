@@ -8,6 +8,7 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { CheckIcon, CircleIcon, XIcon } from "lucide-react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import {
 	applyClickResolvedToGame,
@@ -28,6 +29,11 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 	// Use host click details if available, fall back to public clicks
 	const clicks =
 		isHostView && game.hostData ? game.hostData.clickDetails : game.clicks;
+
+	const sortedClicks = useMemo(
+		() => [...clicks].sort((a, b) => a.position - b.position),
+		[clicks],
+	);
 
 	const { mutate: resolve, isPending: isResolving } = useMutation({
 		...orpc.click.resolve.mutationOptions(),
@@ -162,7 +168,7 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 		resolve({ code: game.code, clickId, resolution });
 	};
 
-	if (clicks.length === 0) {
+	if (sortedClicks.length === 0) {
 		return (
 			<Frame>
 				<FrameHeader>
@@ -178,9 +184,11 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 		);
 	}
 
-	const firstPendingPosition = clicks.find(
-		(c) => c.status === "pending",
-	)?.position;
+	const pendingForQuestion = sortedClicks.filter((c) => c.status === "pending");
+	const firstPendingPosition =
+		pendingForQuestion.length > 0
+			? Math.min(...pendingForQuestion.map((c) => c.position))
+			: undefined;
 
 	return (
 		<Frame>
@@ -188,18 +196,19 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 				<FrameTitle>
 					Buzz queue
 					<span className="ml-1.5 font-normal text-muted-foreground text-sm">
-						({clicks.length})
+						({sortedClicks.length})
 					</span>
 				</FrameTitle>
 			</FrameHeader>
 			<FramePanel>
-				<div className="space-y-1.5">
-					{clicks.map((click) => {
+				<div className="space-y-2">
+					{sortedClicks.map((click) => {
 						const player = game.players.find((p) => p.id === click.playerId);
 						if (!player) return null;
 
 						const isCurrentlyActive =
 							click.status === "pending" &&
+							firstPendingPosition !== undefined &&
 							click.position === firstPendingPosition;
 
 						// reactionMs only available in host view
@@ -219,7 +228,7 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 									: click.status === "expired"
 										? "border-border bg-muted/40 opacity-60"
 										: isCurrentlyActive
-											? "border-primary/50 bg-primary/5"
+											? "border-primary border-2 bg-primary/10 shadow-sm ring-1 ring-primary/20"
 											: "border-border";
 
 						const badgeClass =
@@ -245,18 +254,24 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 						return (
 							<div
 								key={click.id}
-								className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${rowClass} ${
-									isTentative ? "animate-pulse" : ""
-								}`}
+								className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+									isHostView && isCurrentlyActive ? "min-h-14" : "min-h-12"
+								} ${rowClass} ${isTentative ? "animate-pulse" : ""}`}
 							>
 								<div
-									className={`flex size-8 shrink-0 items-center justify-center rounded-lg font-semibold text-xs ${badgeClass}`}
+									className={`flex size-9 shrink-0 items-center justify-center rounded-lg font-bold text-sm ${badgeClass}`}
 								>
 									{click.position}
 								</div>
 
 								<div className="min-w-0 flex-1">
-									<p className="truncate font-medium text-sm">
+									<p
+										className={`truncate text-sm ${
+											isCurrentlyActive && isHostView
+												? "font-semibold text-base"
+												: "font-medium"
+										}`}
+									>
 										{player.user.name}
 									</p>
 									<p className="text-muted-foreground text-xs">

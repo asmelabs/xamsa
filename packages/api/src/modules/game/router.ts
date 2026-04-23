@@ -17,12 +17,15 @@ import {
 	HandleHostDisconnectOutputSchema,
 	LeaveAsHostInputSchema,
 	LeaveAsHostOutputSchema,
+	ListPublicGameHistoryInputSchema,
+	ListPublicGameHistoryOutputSchema,
 	RevealQuestionInputSchema,
 	RevealQuestionOutputSchema,
 	UpdateGameStatusInputSchema,
 	UpdateGameStatusOutputSchema,
 } from "@xamsa/schemas/modules/game";
 import { protectedProcedure, publicProcedure } from "../../procedures";
+import { listPublicGameHistory } from "./public-history";
 import { getCompletedGameRecap } from "./recap";
 import {
 	advanceQuestion,
@@ -63,6 +66,10 @@ export const gameRouter = {
 		.input(GetCompletedGameRecapInputSchema)
 		.output(GetCompletedGameRecapOutputSchema)
 		.handler(async ({ input }) => await getCompletedGameRecap(input)),
+	listPublicHistory: publicProcedure
+		.input(ListPublicGameHistoryInputSchema)
+		.output(ListPublicGameHistoryOutputSchema)
+		.handler(async ({ input }) => await listPublicGameHistory(input)),
 	updateStatus: protectedProcedure
 		.input(UpdateGameStatusInputSchema)
 		.output(UpdateGameStatusOutputSchema)
