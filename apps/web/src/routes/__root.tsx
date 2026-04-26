@@ -1,3 +1,4 @@
+import geistMonoLatin from "@fontsource/geist-mono/files/geist-mono-latin-400-normal.woff2?url";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
@@ -9,19 +10,32 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { env } from "@xamsa/env/web";
 import { Toaster } from "@xamsa/ui/components/sonner";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
-import { PostHogProvider } from "posthog-js/react";
 import { AppContentShell } from "@/components/app-content-shell";
 import { BottomTabMenu } from "@/components/bottom-tab-menu";
+import { DeferredPostHogProvider } from "@/components/deferred-posthog-provider";
+import { getUser } from "@/functions/get-user";
 import { rootIconLinks } from "@/lib/seo";
-import type { orpc } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
+
+export type RouterSession = Awaited<ReturnType<typeof getUser>>;
 
 export interface RouterAppContext {
 	orpc: typeof orpc;
 	queryClient: QueryClient;
+	session: RouterSession | null;
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
+	beforeLoad: async ({ context }) => {
+		const session = await getUser();
+		if (session?.user) {
+			await context.queryClient
+				.ensureQueryData(orpc.user.getActiveGame.queryOptions({ input: {} }))
+				.catch(() => null);
+		}
+		return { session };
+	},
 	head: () => ({
 		meta: [
 			{
@@ -33,7 +47,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 			},
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1; user-scalable=no",
+				content:
+					"width=device-width, initial-scale=1, maximum-scale=5, interactive-widget=resizes-content",
 			},
 			{
 				name: "color-scheme",
@@ -45,6 +60,18 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 			},
 		],
 		links: [
+			{
+				rel: "preload",
+				href: geistMonoLatin,
+				as: "font",
+				type: "font/woff2",
+				crossOrigin: "anonymous",
+			},
+			{
+				rel: "preload",
+				href: appCss,
+				as: "style",
+			},
 			{
 				rel: "stylesheet",
 				href: appCss,
@@ -80,11 +107,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 	component: RootDocument,
 });
 
-const postHogOptions = {
-	api_host: env.VITE_PUBLIC_POSTHOG_HOST,
-	defaults: "2026-01-30",
-} as const;
-
 function RootDocument() {
 	const isProd = import.meta.env.PROD;
 	const app = (
@@ -115,12 +137,7 @@ html.dark *{border-color:var(--border)}`,
 			</head>
 			<body className="relative">
 				{isProd && env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ? (
-					<PostHogProvider
-						apiKey={env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN}
-						options={postHogOptions}
-					>
-						{app}
-					</PostHogProvider>
+					<DeferredPostHogProvider>{app}</DeferredPostHogProvider>
 				) : (
 					app
 				)}

@@ -51,6 +51,7 @@ import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { LoadingButton } from "@/components/loading-button";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
+import { profilePageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { isStaffRole } from "@/lib/staff";
 import { orpc } from "@/utils/orpc";
@@ -96,6 +97,7 @@ export const Route = createFileRoute("/u/$username")({
 			ogTitle: `${profile.name} on Xamsa`,
 			ogDescription: desc,
 			keywords: `Xamsa, quiz profile, ${profile.username}, ${profile.name}, trivia stats, Elo, XP`,
+			jsonLd: profilePageJsonLd(profile),
 		});
 	},
 });

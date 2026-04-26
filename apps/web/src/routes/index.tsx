@@ -7,6 +7,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@xamsa/ui/components/card";
+import { Skeleton } from "@xamsa/ui/components/skeleton";
 import {
 	ArrowRightIcon,
 	ClockIcon,
@@ -29,6 +30,7 @@ import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { getUser } from "@/functions/get-user";
+import { siteJsonLd } from "@/lib/json-ld";
 import { DEFAULT_DESCRIPTION, DEFAULT_KEYWORDS, pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -40,6 +42,7 @@ export const Route = createFileRoute("/")({
 			description: DEFAULT_DESCRIPTION,
 			path: "/",
 			keywords: DEFAULT_KEYWORDS,
+			jsonLd: siteJsonLd(),
 		}),
 	beforeLoad: async () => {
 		const session = await getUser();
@@ -119,7 +122,7 @@ function NavTiles({ username }: { username?: string }) {
 			<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
 				Explore
 			</h2>
-			<div className="grid gap-3">
+			<div className="grid min-h-50 gap-3">
 				<NavCard
 					to="/packs"
 					icon={<Package className="size-5" strokeWidth={1.75} />}
@@ -132,7 +135,7 @@ function NavTiles({ username }: { username?: string }) {
 					title="Leaderboard"
 					description="See who's on top and compete for the best scores."
 				/>
-				{username && (
+				{username ? (
 					<NavCard
 						to="/u/$username"
 						params={{ username }}
@@ -140,7 +143,7 @@ function NavTiles({ username }: { username?: string }) {
 						title="Your Profile"
 						description="View your stats, packs, and account settings."
 					/>
-				)}
+				) : null}
 			</div>
 		</div>
 	);
@@ -203,17 +206,27 @@ interface SignedInHomeProps {
 	username: string;
 }
 
+function StatsGridSkeleton() {
+	return (
+		<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+			{Array.from({ length: 6 }, (_, i) => (
+				<Skeleton key={i} className="h-19 rounded-xl" />
+			))}
+		</div>
+	);
+}
+
 function SignedInHome({ userName, username }: SignedInHomeProps) {
 	const { data: activeGame } = useQuery(
 		orpc.user.getActiveGame.queryOptions({ input: {} }),
 	);
-	const { data: stats } = useQuery(
+	const { data: stats, isPending: statsPending } = useQuery(
 		orpc.user.getMyStats.queryOptions({ input: {} }),
 	);
 	const { data: recentGames } = useQuery(
 		orpc.user.getRecentGames.queryOptions({ input: { limit: 5 } }),
 	);
-	const { data: trendingPacks } = useQuery(
+	const { data: trendingPacks, isPending: trendingPending } = useQuery(
 		orpc.pack.list.queryOptions({
 			input: {
 				limit: 6,
@@ -267,37 +280,41 @@ function SignedInHome({ userName, username }: SignedInHomeProps) {
 				Start Playing
 			</Button>
 
-			{stats && (
-				<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-					<StatTile
-						icon={ZapIcon}
-						label="Level"
-						value={stats.level}
-						hint={`${stats.xp} XP`}
-					/>
-					<StatTile
-						icon={GamepadIcon}
-						label="Played"
-						value={stats.totalGamesPlayed}
-					/>
-					<StatTile icon={TrophyIcon} label="Wins" value={stats.totalWins} />
-					<StatTile
-						icon={CrownIcon}
-						label="Podiums"
-						value={stats.totalPodiums}
-					/>
-					<StatTile
-						icon={FlameIcon}
-						label="Hosted"
-						value={stats.totalGamesHosted}
-					/>
-					<StatTile
-						icon={TargetIcon}
-						label="Correct"
-						value={stats.totalCorrectAnswers}
-					/>
-				</div>
-			)}
+			<div className="min-h-19">
+				{stats ? (
+					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+						<StatTile
+							icon={ZapIcon}
+							label="Level"
+							value={stats.level}
+							hint={`${stats.xp} XP`}
+						/>
+						<StatTile
+							icon={GamepadIcon}
+							label="Played"
+							value={stats.totalGamesPlayed}
+						/>
+						<StatTile icon={TrophyIcon} label="Wins" value={stats.totalWins} />
+						<StatTile
+							icon={CrownIcon}
+							label="Podiums"
+							value={stats.totalPodiums}
+						/>
+						<StatTile
+							icon={FlameIcon}
+							label="Hosted"
+							value={stats.totalGamesHosted}
+						/>
+						<StatTile
+							icon={TargetIcon}
+							label="Correct"
+							value={stats.totalCorrectAnswers}
+						/>
+					</div>
+				) : statsPending ? (
+					<StatsGridSkeleton />
+				) : null}
+			</div>
 
 			<section className="space-y-3">
 				<div className="flex items-center justify-between">
@@ -326,27 +343,37 @@ function SignedInHome({ userName, username }: SignedInHomeProps) {
 				)}
 			</section>
 
-			{trendingRows.length > 0 && (
-				<section className="space-y-3">
-					<div className="flex items-center justify-between">
-						<h2 className="inline-flex items-center gap-2 font-semibold text-muted-foreground text-sm uppercase tracking-wider">
-							<TrendingUpIcon className="size-4" strokeWidth={1.75} />
-							Trending packs
-						</h2>
-						<Link
-							to="/packs"
-							className="text-muted-foreground text-xs hover:text-foreground hover:underline"
-						>
-							Browse all →
-						</Link>
+			<section className="min-h-44 space-y-3">
+				<div className="flex items-center justify-between">
+					<h2 className="inline-flex items-center gap-2 font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+						<TrendingUpIcon className="size-4" strokeWidth={1.75} />
+						Trending packs
+					</h2>
+					<Link
+						to="/packs"
+						className="text-muted-foreground text-xs hover:text-foreground hover:underline"
+					>
+						Browse all →
+					</Link>
+				</div>
+				{trendingPending && !trendingPacks ? (
+					<div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+						{Array.from({ length: 4 }, (_, i) => (
+							<Skeleton key={i} className="h-30 w-52 shrink-0 rounded-xl" />
+						))}
 					</div>
+				) : trendingRows.length > 0 ? (
 					<div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
 						{trendingRows.map((pack) => (
 							<TrendingPackTile key={pack.slug} pack={pack} />
 						))}
 					</div>
-				</section>
-			)}
+				) : (
+					<p className="text-muted-foreground text-sm">
+						No trending packs yet.
+					</p>
+				)}
+			</section>
 
 			<NavTiles username={username} />
 		</div>

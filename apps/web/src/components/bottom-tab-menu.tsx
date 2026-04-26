@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { LinkProps } from "@tanstack/react-router";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useRouterState } from "@tanstack/react-router";
 import { Home, Package, Play, Trophy, User, Zap } from "lucide-react";
 import type { ReactNode } from "react";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 interface TabLinkProps extends LinkProps {
@@ -15,6 +14,7 @@ function TabLink({ to, label, children, ...props }: TabLinkProps) {
 	return (
 		<Link
 			to={to}
+			aria-label={label}
 			className="group relative flex flex-col items-center justify-center gap-1 px-3 py-1.5 transition-all duration-200"
 			activeProps={{
 				className:
@@ -22,7 +22,7 @@ function TabLink({ to, label, children, ...props }: TabLinkProps) {
 			}}
 			inactiveProps={{
 				className:
-					"[&>span]:text-muted-foreground/70 [&>div]:text-muted-foreground/70",
+					"[&>span]:text-muted-foreground [&>div]:text-muted-foreground",
 			}}
 			{...props}
 		>
@@ -36,7 +36,12 @@ function TabLink({ to, label, children, ...props }: TabLinkProps) {
 }
 
 export function BottomTabMenu() {
-	const { data: session } = authClient.useSession();
+	const session = useRouterState({
+		select: (s) => {
+			const root = s.matches[0];
+			return root?.context.session ?? null;
+		},
+	});
 	const location = useLocation();
 
 	const { data: activeGame } = useQuery({
@@ -58,6 +63,7 @@ export function BottomTabMenu() {
 	}
 
 	const hasActiveGame = !!activeGame;
+	const playLinkLabel = hasActiveGame ? "Resume active game" : "Play";
 
 	return (
 		<nav className="fixed right-0 bottom-0 left-0 z-50 flex justify-center pb-[env(safe-area-inset-bottom)]">
@@ -74,6 +80,7 @@ export function BottomTabMenu() {
 				<Link
 					to={hasActiveGame ? "/g/$code" : "/play"}
 					params={hasActiveGame ? { code: activeGame.code } : undefined}
+					aria-label={playLinkLabel}
 					className="group relative -mt-4 flex flex-col items-center"
 				>
 					<div

@@ -9,6 +9,7 @@ import { EndGameScreen } from "@/components/end-game-screen";
 import { HostView } from "@/components/host-view";
 import { PlayerView } from "@/components/player-view";
 import { useGameChannel } from "@/hooks/use-game-channel";
+import { gameRoomPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/g/$code/")({
 			ogDescription: desc,
 			keywords: `Xamsa, live quiz, game room, ${game.pack.name}, buzzer`,
 			noIndex: true,
+			jsonLd: gameRoomPageJsonLd(game),
 		});
 	},
 });

@@ -11,7 +11,7 @@ export const getRouter = () => {
 		routeTree,
 		scrollRestoration: true,
 		defaultPreloadStaleTime: 0,
-		context: { orpc, queryClient },
+		context: { orpc, queryClient, session: null },
 		defaultPendingComponent: () => (
 			<div className="flex h-screen items-center justify-center">
 				<Spinner />

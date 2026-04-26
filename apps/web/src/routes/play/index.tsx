@@ -27,6 +27,7 @@ import { useEffect, useRef } from "react";
 import { JoinGameForm } from "@/components/join-game-form";
 import type { PackCard } from "@/components/pack-card";
 import { getUser } from "@/functions/get-user";
+import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -53,15 +54,22 @@ export const Route = createFileRoute("/play/")({
 		return { isAuthenticated: !!session, activeGame };
 	},
 
-	head: () =>
-		pageSeo({
+	head: () => {
+		const description =
+			"Host a live quiz from your published packs or join a friend’s game with a short code. Xamsa runs real-time buzzer rounds for groups.";
+		return pageSeo({
 			title: "Play",
-			description:
-				"Host a live quiz from your published packs or join a friend’s game with a short code. Xamsa runs real-time buzzer rounds for groups.",
+			description,
 			path: "/play/",
 			keywords:
 				"Xamsa play, host quiz, join game code, live trivia, buzzer game, multiplayer quiz",
-		}),
+			jsonLd: collectionPageJsonLd({
+				path: "/play/",
+				title: "Play",
+				description,
+			}),
+		});
+	},
 });
 
 function RouteComponent() {

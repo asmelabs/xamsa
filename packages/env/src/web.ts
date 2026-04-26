@@ -6,7 +6,11 @@ export const env = createEnv({
 	client: {
 		VITE_PUBLIC_POSTHOG_PROJECT_TOKEN: z.string().optional(),
 		VITE_PUBLIC_POSTHOG_HOST: z.string().optional(),
-		/** Canonical site origin for absolute OG/Twitter image URLs (no trailing slash), e.g. https://xamsa.site */
+		/**
+		 * Canonical site origin (no trailing slash), e.g. https://www.xamsa.site.
+		 * Used for OG/Twitter absolute URLs, sitemap.xml and robots.txt Sitemap: line,
+		 * and should match the property URL in Google Search Console.
+		 */
 		VITE_PUBLIC_SITE_URL: z.url().optional(),
 	},
 	// biome-ignore lint/suspicious/noExplicitAny: we need to use any for the runtime environment

@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@xamsa/ui/components/tabs";
 import { CrownIcon, MedalIcon, TrendingUpIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -47,15 +48,22 @@ const BOARDS: {
 ];
 
 export const Route = createFileRoute("/leaderboard/")({
-	head: () =>
-		pageSeo({
+	head: () => {
+		const description =
+			"Global Xamsa rankings: Elo, XP and level, wins, and career points. Compare players who host and play live buzzer quizzes.";
+		return pageSeo({
 			title: "Leaderboard",
-			description:
-				"Global Xamsa rankings: Elo, XP and level, wins, and career points. Compare players who host and play live buzzer quizzes.",
+			description,
 			path: "/leaderboard/",
 			keywords:
 				"Xamsa leaderboard, Elo, quiz rankings, trivia, global rankings, XP",
-		}),
+			jsonLd: collectionPageJsonLd({
+				path: "/leaderboard/",
+				title: "Leaderboard",
+				description,
+			}),
+		});
+	},
 	component: RouteComponent,
 });
 

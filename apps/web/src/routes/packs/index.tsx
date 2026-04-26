@@ -17,19 +17,27 @@ import { SearchBar } from "@/components/search-bar";
 import { getUser } from "@/functions/get-user";
 import { useSearchQuery } from "@/hooks/use-search-query";
 import { useSortQuery } from "@/hooks/use-sort-query";
+import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/packs/")({
-	head: () =>
-		pageSeo({
+	head: () => {
+		const description =
+			"Browse community-made question packs on Xamsa. Filter by popularity, ratings, and plays, open a pack to see topics, or create your own for live buzzer games.";
+		return pageSeo({
 			title: "Question packs",
-			description:
-				"Browse community-made question packs on Xamsa. Filter by popularity, ratings, and plays, open a pack to see topics, or create your own for live buzzer games.",
+			description,
 			path: "/packs/",
 			keywords:
 				"Xamsa packs, quiz packs, trivia decks, browse questions, community quiz",
-		}),
+			jsonLd: collectionPageJsonLd({
+				path: "/packs/",
+				title: "Question packs",
+				description,
+			}),
+		});
+	},
 	component: RouteComponent,
 	beforeLoad: async () => {
 		const session = await getUser();

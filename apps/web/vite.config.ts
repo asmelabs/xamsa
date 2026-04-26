@@ -18,6 +18,7 @@ export default defineConfig({
 		port: 3001,
 	},
 	build: {
+		sourcemap: true,
 		commonjsOptions: {
 			requireReturnsDefault: "auto",
 		},

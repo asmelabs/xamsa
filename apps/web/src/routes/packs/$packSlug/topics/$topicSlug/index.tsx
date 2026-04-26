@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
+import { topicPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -53,6 +54,7 @@ export const Route = createFileRoute("/packs/$packSlug/topics/$topicSlug/")({
 			ogTitle: `${loaderData.name} · ${loaderData.pack.name}`,
 			ogDescription: truncateMeta(desc),
 			keywords: `${loaderData.name}, ${loaderData.pack.name}, Xamsa topic, quiz questions`,
+			jsonLd: topicPageJsonLd(loaderData),
 		});
 	},
 });
