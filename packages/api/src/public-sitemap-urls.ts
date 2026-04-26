@@ -114,10 +114,14 @@ async function collectTopicEntries(): Promise<PublicSitemapEntry[]> {
 
 async function collectUserEntries(): Promise<PublicSitemapEntry[]> {
 	const out: PublicSitemapEntry[] = [];
+	let cursor: { id: string } | undefined;
 
 	for (;;) {
 		const rows = await prisma.user.findMany({
 			select: { id: true, username: true, updatedAt: true },
+			orderBy: { id: "asc" },
+			take: BATCH,
+			...(cursor ? { skip: 1, cursor: { id: cursor.id } } : {}),
 		});
 
 		if (rows.length === 0) {
@@ -127,6 +131,15 @@ async function collectUserEntries(): Promise<PublicSitemapEntry[]> {
 		for (const row of rows) {
 			out.push({ path: `/u/${row.username}/`, lastmod: row.updatedAt });
 		}
+
+		const last = rows[rows.length - 1];
+		if (!last) {
+			break;
+		}
+		cursor = { id: last.id };
+		if (rows.length < BATCH) {
+			break;
+		}
 	}
 
 	return out;
@@ -134,7 +147,7 @@ async function collectUserEntries(): Promise<PublicSitemapEntry[]> {
 
 /**
  * All indexable paths for the public sitemap: static marketing URLs plus
- * published public packs and their topic and question pages.
+ * published public packs, their topics, and public user profile URLs.
  */
 export async function getPublicSitemapEntries(): Promise<PublicSitemapEntry[]> {
 	const now = new Date();
