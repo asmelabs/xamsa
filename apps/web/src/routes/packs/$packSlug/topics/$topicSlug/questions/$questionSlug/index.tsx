@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
+import { questionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -85,6 +86,7 @@ export const Route = createFileRoute(
 			ogTitle: `Question ${q.order} · ${q.topic.name}`,
 			ogDescription: truncateMeta(desc),
 			keywords: `Xamsa, quiz question, ${q.topic.name}, ${q.pack.name}`,
+			jsonLd: questionPageJsonLd(q),
 		});
 	},
 });

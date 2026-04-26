@@ -45,6 +45,8 @@ export type PageSeoInput = {
 	noIndex?: boolean;
 	/** When true, `title` is used as the full document title (no “— Xamsa” suffix). */
 	titleIsFull?: boolean;
+	/** Schema.org graph rendered as `<script type="application/ld+json">` (TanStack `script:ld+json` meta). */
+	jsonLd?: Record<string, unknown>;
 };
 
 /**
@@ -62,6 +64,7 @@ export function pageSeo(input: PageSeoInput) {
 		ogType = "website",
 		noIndex = false,
 		titleIsFull = false,
+		jsonLd,
 	} = input;
 
 	const desc = truncateMeta(description);
@@ -75,6 +78,7 @@ export function pageSeo(input: PageSeoInput) {
 		| { title: string }
 		| { name: string; content: string }
 		| { property: string; content: string }
+		| { "script:ld+json": Record<string, unknown> }
 	> = [
 		{ title: documentTitle },
 		{ name: "description", content: desc },
@@ -92,9 +96,12 @@ export function pageSeo(input: PageSeoInput) {
 		{ name: "twitter:title", content: ogT },
 		{ name: "twitter:description", content: ogD },
 		{ name: "twitter:image", content: ogImageAbs },
+		...(jsonLd ? [{ "script:ld+json": jsonLd }] : []),
 	];
 
-	return { meta };
+	// TanStack Router supports `script:ld+json` in meta (see headContentUtils), but
+	// the generated head types only list standard meta/link props.
+	return { meta: meta as never };
 }
 
 /** Root-only: favicon + touch icon (no duplicate OG; each route uses `pageSeo`). */

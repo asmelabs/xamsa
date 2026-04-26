@@ -17,7 +17,9 @@ export function AppContentShell() {
 				isDashboard ? "max-w-7xl" : "max-w-4xl md:px-0",
 			)}
 		>
-			<Outlet />
+			<main>
+				<Outlet />
+			</main>
 		</div>
 	);
 }

@@ -18,6 +18,7 @@ import { PackTopicsList } from "@/components/pack-topics-list";
 import { PacksSubpageContainer } from "@/components/packs";
 import { RatePackDialog } from "@/components/rate-pack-dialog";
 import { StatCard } from "@/components/stat-card";
+import { packPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -51,6 +52,7 @@ export const Route = createFileRoute("/packs/$packSlug/")({
 			ogTitle: `${loaderData.name} · ${loaderData.author.name}`,
 			ogDescription: truncateMeta(desc),
 			keywords: `${loaderData.name}, quiz pack, Xamsa, ${loaderData.author.username}, trivia, ${loaderData.language ?? "quiz"}`,
+			jsonLd: packPageJsonLd(loaderData),
 		});
 	},
 });

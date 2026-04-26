@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { HistoryIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -25,14 +26,21 @@ const PAGE_SIZE = 30;
 
 export const Route = createFileRoute("/games/history/")({
 	component: PublicGamesHistoryPage,
-	head: () =>
-		pageSeo({
+	head: () => {
+		const description =
+			"Public list of recently finished Xamsa games. Open any code for the full buzzer recap: scores, topics, and questions.";
+		return pageSeo({
 			title: "Recent games",
-			description:
-				"Public list of recently finished Xamsa games. Open any code for the full buzzer recap: scores, topics, and questions.",
+			description,
 			path: "/games/history/",
 			keywords: "Xamsa games, recent games, game stats, buzzer recap",
-		}),
+			jsonLd: collectionPageJsonLd({
+				path: "/games/history/",
+				title: "Recent games",
+				description,
+			}),
+		});
+	},
 });
 
 function PublicGamesHistoryPage() {

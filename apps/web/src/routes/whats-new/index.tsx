@@ -14,19 +14,27 @@ import {
 	formatProductVersionLabel,
 	getCurrentProductVersionLabel,
 } from "@/lib/app-release";
+import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { ReleaseHighlightItem } from "./-release-highlight";
 
 export const Route = createFileRoute("/whats-new/")({
 	component: WhatsNewPage,
-	head: () =>
-		pageSeo({
+	head: () => {
+		const description =
+			"Read user-facing release notes for Xamsa: new features, improvements, and fixes in each CalVer update.";
+		return pageSeo({
 			title: "What’s new",
-			description:
-				"Read user-facing release notes for Xamsa: new features, improvements, and fixes in each CalVer update.",
+			description,
 			path: "/whats-new/",
 			keywords: "Xamsa changelog, updates, release notes, new features",
-		}),
+			jsonLd: collectionPageJsonLd({
+				path: "/whats-new/",
+				title: "What’s new",
+				description,
+			}),
+		});
+	},
 });
 
 function WhatsNewPage() {
