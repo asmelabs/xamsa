@@ -96,7 +96,7 @@ function RouteComponent() {
 			</Button>
 
 			{showAuthorTools && (
-				<div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-2 border-border/80 border-b bg-background/95 py-2 backdrop-blur sm:-mx-0 sm:py-2.5">
+				<div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-2 border-border/80 border-b bg-background/95 py-2 backdrop-blur sm:mx-0 sm:py-2.5">
 					<Button
 						variant="outline"
 						size="sm"
