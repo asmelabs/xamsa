@@ -49,6 +49,7 @@ import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { LoadingButton } from "@/components/loading-button";
+import { ProfileBadgesSection } from "@/components/profile-badges-section";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import { profilePageJsonLd } from "@/lib/json-ld";
@@ -270,6 +271,8 @@ function RouteComponent() {
 					</div>
 				)}
 			</div>
+
+			<ProfileBadgesSection username={username} />
 
 			<section className="space-y-4">
 				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">

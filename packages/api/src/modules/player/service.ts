@@ -11,6 +11,7 @@ import type {
 	PlayerLeaveOutputType,
 } from "@xamsa/schemas/modules/player";
 import { MAX_PLAYERS_PER_GAME } from "@xamsa/utils/constants";
+import { publishBadgeEarnedMany } from "../badge/publish";
 import { finalizeGame } from "../game/finalize-game";
 
 export async function joinPlayer(
@@ -306,11 +307,7 @@ export async function leavePlayer(
 
 	const { updated, expiredClickId, triggeredFinalize } =
 		await prisma.$transaction(async (tx) => {
-			const expiredId = await expireLeaverPendingClick(
-				tx,
-				game.id,
-				player.id,
-			);
+			const expiredId = await expireLeaverPendingClick(tx, game.id, player.id);
 
 			const updatedRow = await tx.player.update({
 				where: { id: player.id },
@@ -363,6 +360,9 @@ export async function leavePlayer(
 	});
 
 	if (triggeredFinalize && !triggeredFinalize.wasAlreadyCompleted) {
+		if (triggeredFinalize.badgeEvents.length > 0) {
+			await publishBadgeEarnedMany(input.code, triggeredFinalize.badgeEvents);
+		}
 		await channel.publish(GAME_EVENTS.GAME_ENDED, {
 			finishedAt: triggeredFinalize.finishedAt,
 			winnerId: triggeredFinalize.winnerId,
@@ -431,36 +431,30 @@ export async function kickPlayer(
 		});
 	}
 
-	const { updated, expiredClickId } = await prisma.$transaction(
-		async (tx) => {
-			const expiredId = await expireLeaverPendingClick(
-				tx,
-				game.id,
-				player.id,
-			);
+	const { updated, expiredClickId } = await prisma.$transaction(async (tx) => {
+		const expiredId = await expireLeaverPendingClick(tx, game.id, player.id);
 
-			const updatedRow = await tx.player.update({
-				where: { id: player.id },
-				data: {
-					status: "left",
-					leftAt: new Date(),
-					leaveReason: "kicked",
-				},
-				select: {
-					id: true,
-					status: true,
-					leftAt: true,
-				},
-			});
+		const updatedRow = await tx.player.update({
+			where: { id: player.id },
+			data: {
+				status: "left",
+				leftAt: new Date(),
+				leaveReason: "kicked",
+			},
+			select: {
+				id: true,
+				status: true,
+				leftAt: true,
+			},
+		});
 
-			await tx.game.update({
-				where: { id: game.id },
-				data: { totalActivePlayers: { decrement: 1 } },
-			});
+		await tx.game.update({
+			where: { id: game.id },
+			data: { totalActivePlayers: { decrement: 1 } },
+		});
 
-			return { updated: updatedRow, expiredClickId: expiredId };
-		},
-	);
+		return { updated: updatedRow, expiredClickId: expiredId };
+	});
 
 	const channel = ablyRest.channels.get(channels.game(input.code));
 	await channel.publish(GAME_EVENTS.PLAYER_LEFT, {

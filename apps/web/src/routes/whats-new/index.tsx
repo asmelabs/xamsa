@@ -1,22 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-	Frame,
-	FrameHeader,
-	FramePanel,
-	FrameTitle,
-} from "@xamsa/ui/components/frame";
-import { SparklesIcon } from "lucide-react";
-import {
-	getReleasesNewestFirst,
-	releaseMatchesCurrent,
-} from "@/data/app-releases-data";
-import {
-	formatProductVersionLabel,
-	getCurrentProductVersionLabel,
-} from "@/lib/app-release";
+import { getReleasesNewestFirst } from "@/data/app-releases-data";
+import { getCurrentProductVersionLabel } from "@/lib/app-release";
 import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
-import { ReleaseHighlightItem } from "./-release-highlight";
+import { ReleaseFrame } from "./-release-frame";
 
 export const Route = createFileRoute("/whats-new/")({
 	component: WhatsNewPage,
@@ -52,50 +39,12 @@ function WhatsNewPage() {
 			</div>
 
 			<div className="space-y-4">
-				{releases.map((release) => {
-					const label = formatProductVersionLabel(release);
-					const isCurrent = releaseMatchesCurrent(release);
-
-					return (
-						<Frame key={`${release.year}-${release.month}-${release.patch}`}>
-							<FrameHeader className="flex flex-row items-start justify-between gap-3">
-								<div className="space-y-1">
-									<FrameTitle className="flex flex-wrap items-center gap-2">
-										{label}
-										{isCurrent ? (
-											<span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 font-normal text-primary text-xs">
-												<SparklesIcon className="size-3" />
-												Current
-											</span>
-										) : null}
-									</FrameTitle>
-									<div className="flex flex-row items-baseline gap-2">
-										<p className="text-muted-foreground text-xs">
-											{release.releasedAt}
-										</p>
-										{release.title ? (
-											<p className="text-foreground text-sm">
-												• {release.title}
-											</p>
-										) : null}
-									</div>
-								</div>
-							</FrameHeader>
-							<FramePanel>
-								<ul className="list-inside list-disc space-y-2 text-muted-foreground text-sm">
-									{release.highlights.map((item, index) => (
-										<li
-											key={`${release.year}-${release.month}-${release.patch}-${index}`}
-											className="text-pretty [&_a]:text-foreground"
-										>
-											<ReleaseHighlightItem highlight={item} />
-										</li>
-									))}
-								</ul>
-							</FramePanel>
-						</Frame>
-					);
-				})}
+				{releases.map((release) => (
+					<ReleaseFrame
+						key={`${release.year}-${release.month}-${release.patch}`}
+						release={release}
+					/>
+				))}
 			</div>
 
 			<p className="text-center text-muted-foreground text-xs">

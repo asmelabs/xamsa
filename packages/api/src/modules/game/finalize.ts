@@ -1,4 +1,7 @@
+import type { BadgeEarnedMessage } from "@xamsa/ably/channels";
 import type { Prisma } from "@xamsa/db";
+
+import { awardTopicBadges } from "../badge/topic-badges";
 
 export type FinalizeGameQuestionResult = {
 	gameQuestionId: string;
@@ -156,9 +159,7 @@ export async function finalizeGameQuestion(
 		},
 	});
 
-	const distinctPlayerIds = Array.from(
-		new Set(clicks.map((c) => c.playerId)),
-	);
+	const distinctPlayerIds = Array.from(new Set(clicks.map((c) => c.playerId)));
 
 	return {
 		gameQuestionId,
@@ -182,7 +183,7 @@ export async function finalizeGameQuestion(
 export async function finalizeGameTopic(
 	tx: Prisma.TransactionClient,
 	gameTopicId: string,
-): Promise<void> {
+): Promise<BadgeEarnedMessage[]> {
 	const now = new Date();
 
 	const gameTopic = await tx.gameTopic.findUnique({
@@ -291,4 +292,6 @@ export async function finalizeGameTopic(
 			data: { topicsPlayed: { increment: 1 } },
 		});
 	}
+
+	return awardTopicBadges(tx, gameTopicId);
 }

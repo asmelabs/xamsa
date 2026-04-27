@@ -1,3 +1,4 @@
+import type { BadgeEarnedMessage } from "@xamsa/ably/channels";
 import type { Prisma } from "@xamsa/db";
 import { calculateEloDeltas } from "@xamsa/utils/elo";
 import {
@@ -17,6 +18,8 @@ export type FinalizeGameResult = {
 	finishedAt: Date;
 	durationSeconds: number;
 	playerRanks: { id: string; rank: number; score: number }[];
+	/** Topic / question badges issued while finalizing the last open topic (for Ably after commit). */
+	badgeEvents: BadgeEarnedMessage[];
 };
 
 export type FinalizeGameOptions = {
@@ -92,6 +95,7 @@ export async function completeLobbyOnlyGame(
 				rank: p.rank ?? 0,
 				score: p.score,
 			})),
+			badgeEvents: [],
 		};
 	}
 
@@ -128,6 +132,7 @@ export async function completeLobbyOnlyGame(
 			rank: i + 1,
 			score: p.score,
 		})),
+		badgeEvents: [],
 	};
 }
 
@@ -177,6 +182,7 @@ export async function finalizeGame(
 				rank: p.rank ?? 0,
 				score: p.score,
 			})),
+			badgeEvents: [],
 		};
 	}
 
@@ -189,6 +195,7 @@ export async function finalizeGame(
 	// 1. Finalize trailing GameQuestion + GameTopic (if the game has started).
 	let leavingWasSkipped = false;
 	let topicWasClosed = false;
+	let badgeEvents: BadgeEarnedMessage[] = [];
 
 	if (game.currentTopicOrder !== null) {
 		const trailingTopic = await tx.gameTopic.findUnique({
@@ -222,7 +229,7 @@ export async function finalizeGame(
 			}
 
 			if (!trailingTopic.finishedAt) {
-				await finalizeGameTopic(tx, trailingTopic.id);
+				badgeEvents = await finalizeGameTopic(tx, trailingTopic.id);
 				topicWasClosed = true;
 			}
 		}
@@ -522,5 +529,6 @@ export async function finalizeGame(
 			rank: standingsRanks[i] ?? i + 1,
 			score: p.score,
 		})),
+		badgeEvents,
 	};
 }

@@ -60,6 +60,8 @@ export type Badge = {
 	rarity: BadgeRarity;
 };
 
+import z from "zod";
+
 export const badges = {
 	ace: {
 		id: "ace",
@@ -164,6 +166,29 @@ export const badges = {
 } as const satisfies Record<string, Badge>;
 
 export type BadgeId = keyof typeof badges;
+
+/** Every catalog id; derived from `badges` keys. */
+export const ALL_BADGE_IDS: readonly BadgeId[] = Object.keys(
+	badges,
+) as BadgeId[];
+
+/**
+ * `z.enum` tuple for the current catalog. Keep in sync with `badges` keys
+ * (TypeScript will not infer a tuple from `Object.keys` alone).
+ */
+const BADGE_ID_ZOD_TUPLE = [
+	"ace",
+	"scavenger",
+	"ghost",
+	"jackpot",
+	"bankrupt",
+] as const;
+
+export const BadgeIdSchema = z.enum(BADGE_ID_ZOD_TUPLE);
+
+export function isBadgeId(id: string): id is BadgeId {
+	return id in badges;
+}
 
 /**
  * Get badge metadata by id with full type safety.

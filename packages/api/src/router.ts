@@ -1,5 +1,6 @@
 import type { RouterClient } from "@orpc/server";
 import { adminRouter } from "./modules/admin/router";
+import { badgeRouter } from "./modules/badge/router";
 import { clickRouter } from "./modules/click/router";
 import { gameRouter } from "./modules/game/router";
 import { packRouter } from "./modules/pack/router";
@@ -12,6 +13,7 @@ import { userRouter } from "./modules/user/router";
 
 export const appRouter = {
 	admin: adminRouter,
+	badge: badgeRouter,
 	user: userRouter,
 	pack: packRouter,
 	packRating: packRatingRouter,

@@ -1,6 +1,9 @@
 /**
  * CalVer + product name only — safe to import from any route without pulling release JSX / router.
+ * Values mirror `appReleasesManifest` in `@xamsa/utils/app-releases`.
  */
-export const productName = "Xamsa";
+import { appReleasesManifest } from "@xamsa/utils/app-releases";
 
-export const current = { year: 2026, month: 4, patch: 10 } as const;
+export const productName = appReleasesManifest.productName;
+
+export const current = appReleasesManifest.current;

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Badge } from "@xamsa/ui/components/badge";
+import { Badge as UiBadge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
@@ -20,9 +20,15 @@ import {
 	ZapIcon,
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { useMemo } from "react";
 import type { GameData, GamePlayer } from "@/lib/game-types";
 import { sortGamePlayersForScoreboard } from "@/lib/sort-game-players";
 import { orpc } from "@/utils/orpc";
+import {
+	buildBadgesByPlayerId,
+	PlayerRecapBadges,
+	type RecapBadgeRow,
+} from "./player-recap-badges";
 import { RatePackDialog } from "./rate-pack-dialog";
 
 interface EndGameScreenProps {
@@ -55,6 +61,12 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 		...orpc.pack.findOne.queryOptions({ input: { slug: game.pack.slug } }),
 		enabled: !game.isHost,
 	});
+
+	const { data: recap } = useQuery({
+		...orpc.game.getCompletedRecap.queryOptions({
+			input: { code: game.code },
+		}),
+	});
 	const hasMyRating =
 		typeof packForRate?.rating === "number" && packForRate.rating > 0;
 
@@ -76,14 +88,19 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 			? new Date(game.finishedAt).getTime() - new Date(game.startedAt).getTime()
 			: null;
 
+	const badgesByPlayerId = useMemo(
+		() => buildBadgesByPlayerId(recap?.badgeAwards ?? []),
+		[recap?.badgeAwards],
+	);
+
 	return (
 		<div className="mx-auto max-w-3xl space-y-5 p-4 pb-12">
 			{/* Header */}
 			<div className="flex flex-col items-center gap-2 pt-4 text-center">
-				<Badge variant="success">
+				<UiBadge variant="success">
 					<TrophyIcon className="size-3" />
 					Game complete
-				</Badge>
+				</UiBadge>
 				<h1 className="font-bold text-2xl tracking-tight sm:text-3xl">
 					{game.pack.name}
 				</h1>
@@ -303,7 +320,7 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 							<ZapIcon className="mr-1.5 inline size-4 text-primary" />
 							Scoreboard
 						</FrameTitle>
-						<Badge variant="outline">{ranked.length} players</Badge>
+						<UiBadge variant="outline">{ranked.length} players</UiBadge>
 					</FrameHeader>
 					<FramePanel className="space-y-1.5">
 						{rest.map((player, index) => (
@@ -333,6 +350,7 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 							player={player}
 							rank={player.rank ?? index + 1}
 							isMe={player.id === myPlayer?.id}
+							badgeRows={badgesByPlayerId.get(player.id)}
 						/>
 					))}
 				</FramePanel>
@@ -435,10 +453,12 @@ function PlayerStatsCard({
 	player,
 	rank,
 	isMe,
+	badgeRows,
 }: {
 	player: GamePlayer;
 	rank: number;
 	isMe: boolean;
+	badgeRows?: RecapBadgeRow[] | null;
 }) {
 	const rankAccent =
 		rank === 1
@@ -480,6 +500,7 @@ function PlayerStatsCard({
 				<Stat label="Streak" value={player.longestCorrectStreak} />
 				<Stat label="Fastest" value={formatClickMs(player.fastestClickMs)} />
 			</div>
+			<PlayerRecapBadges rows={badgeRows} />
 		</div>
 	);
 }

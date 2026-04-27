@@ -37,6 +37,14 @@ export const GAME_EVENTS = {
 
 	PLAYER_JOINED: "player:joined",
 	PLAYER_LEFT: "player:left",
+
+	/** Server-only: a player earned a catalog badge (topic / question / game). */
+	BADGE_EARNED: "badge:earned",
+	/**
+	 * Server-only: one or more badges earned in the same action (e.g. Ace + Jackpot).
+	 * Clients should enqueue all `events` for the celebration overlay.
+	 */
+	BADGE_EARNED_BATCH: "badges:earned",
 };
 
 export const ClickMessageSchema = z.object({
@@ -85,3 +93,22 @@ export type TopicStartMessage = z.infer<typeof TopicStartMessageSchema>;
 export type AnswerResultMessage = z.infer<typeof AnswerResultMessageSchema>;
 export type ScoreUpdateMessage = z.infer<typeof ScoreUpdateMessageSchema>;
 export type PlayerKickedMessage = z.infer<typeof PlayerKickedMessageSchema>;
+
+/** Emitted after `PlayerBadgeAward` is persisted; drives client celebration overlay. */
+export const BadgeEarnedMessageSchema = z.object({
+	badgeId: z.string(),
+	playerId: z.string(),
+	playerName: z.string().nullable(),
+	username: z.string(),
+	gameTopicId: z.string().nullable(),
+	gameQuestionId: z.string().nullable(),
+});
+
+export const BadgeEarnedBatchMessageSchema = z.object({
+	events: z.array(BadgeEarnedMessageSchema),
+});
+
+export type BadgeEarnedMessage = z.infer<typeof BadgeEarnedMessageSchema>;
+export type BadgeEarnedBatchMessage = z.infer<
+	typeof BadgeEarnedBatchMessageSchema
+>;

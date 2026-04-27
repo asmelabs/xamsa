@@ -14,6 +14,7 @@ export { PlayerSchema } from './Player.schema';
 export { ClickSchema } from './Click.schema';
 export { GameTopicSchema } from './GameTopic.schema';
 export { GameQuestionSchema } from './GameQuestion.schema';
+export { PlayerBadgeAwardSchema } from './PlayerBadgeAward.schema';
 export { PackSchema } from './Pack.schema';
 export { PackRatingSchema } from './PackRating.schema';
 export { TopicSchema } from './Topic.schema';

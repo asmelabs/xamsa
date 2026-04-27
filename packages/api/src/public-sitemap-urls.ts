@@ -1,4 +1,7 @@
 import prisma from "@xamsa/db";
+import { formatCalver } from "@xamsa/utils/app-release-calver";
+import { appReleasesManifest } from "@xamsa/utils/app-releases";
+import { ALL_BADGE_IDS } from "@xamsa/utils/badges";
 
 const BATCH = 3000;
 
@@ -9,6 +12,7 @@ export const PUBLIC_SITEMAP_STATIC_PATHS = [
 	"/whats-new/",
 	"/games/history/",
 	"/play/",
+	"/badges/",
 ] as const;
 
 export type PublicSitemapEntry = {
@@ -147,13 +151,22 @@ async function collectUserEntries(): Promise<PublicSitemapEntry[]> {
 
 /**
  * All indexable paths for the public sitemap: static marketing URLs plus
- * published public packs, their topics, and public user profile URLs.
+ * published public packs, their topics, public user profile URLs, badges, and
+ * per-version what’s new pages.
  */
 export async function getPublicSitemapEntries(): Promise<PublicSitemapEntry[]> {
 	const now = new Date();
-	const staticEntries: PublicSitemapEntry[] = PUBLIC_SITEMAP_STATIC_PATHS.map(
-		(path) => ({ path, lastmod: now }),
-	);
+	const staticEntries: PublicSitemapEntry[] = [
+		...PUBLIC_SITEMAP_STATIC_PATHS.map((path) => ({ path, lastmod: now })),
+		...appReleasesManifest.releases.map((r) => ({
+			path: `/whats-new/${formatCalver(r)}/`,
+			lastmod: new Date(r.releasedAt),
+		})),
+		...ALL_BADGE_IDS.map((id) => ({
+			path: `/badges/${id}/`,
+			lastmod: now,
+		})),
+	];
 
 	const [packs, topics, users] = await Promise.all([
 		collectPackEntries(),
