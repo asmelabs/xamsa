@@ -12,8 +12,12 @@ export default defineConfig({
 		tailwindcss(),
 		tanstackStart(),
 		nitro({
-			traceDeps: ["@resvg/resvg-js", /^@resvg\/resvg-js-/, "satori"],
-			// also tell Nitro/Rollup these are external at bundle time
+			traceDeps: [
+				"@resvg/resvg-js",
+				"@resvg/resvg-js-linux-x64-gnu",
+				"@resvg/resvg-js-linux-x64-musl",
+				"satori",
+			],
 			rollupConfig: {
 				external: [/^@resvg\/resvg-js/, /\.node$/, "satori"],
 			},
@@ -33,25 +37,14 @@ export default defineConfig({
 		},
 	},
 	optimizeDeps: {
-		exclude: [
-			"@resvg/resvg-js",
-			"@resvg/resvg-js-linux-x64-gnu",
-			"@resvg/resvg-js-linux-x64-musl",
-			"@resvg/resvg-js-darwin-x64",
-			"@resvg/resvg-js-darwin-arm64",
-			"satori",
-		],
+		exclude: ["@resvg/resvg-js", "satori"],
 	},
 	ssr: {
 		external: [
 			"@resvg/resvg-js",
 			"@resvg/resvg-js-linux-x64-gnu",
 			"@resvg/resvg-js-linux-x64-musl",
-			"@resvg/resvg-js-darwin-x64",
-			"@resvg/resvg-js-darwin-arm64",
-			"@resvg/resvg-js-win32-x64-msvc",
 			"satori",
 		],
-		noExternal: [],
 	},
 });
