@@ -28,6 +28,7 @@ import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as WhatsNewVersionIndexRouteImport } from './routes/whats-new/$version/index'
 import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksBulkNewIndexRouteImport } from './routes/packs/bulk-new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
@@ -151,6 +152,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
+} as any)
+const WhatsNewVersionIndexRoute = WhatsNewVersionIndexRouteImport.update({
+  id: '/whats-new/$version/',
+  path: '/whats-new/$version/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PacksNewIndexRoute = PacksNewIndexRouteImport.update({
   id: '/packs/new/',
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
+  '/whats-new/$version/': typeof WhatsNewVersionIndexRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByTo {
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new': typeof PacksBulkNewIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
+  '/whats-new/$version': typeof WhatsNewVersionIndexRoute
   '/g/$code/stats': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
@@ -435,6 +443,7 @@ export interface FileRoutesById {
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
+  '/whats-new/$version/': typeof WhatsNewVersionIndexRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
     | '/packs/new/'
+    | '/whats-new/$version/'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
@@ -533,6 +543,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug'
     | '/packs/bulk-new'
     | '/packs/new'
+    | '/whats-new/$version'
     | '/g/$code/stats'
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
     | '/packs/new/'
+    | '/whats-new/$version/'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksBulkNewIndexRoute: typeof PacksBulkNewIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
+  WhatsNewVersionIndexRoute: typeof WhatsNewVersionIndexRoute
   GCodeStatsIndexRoute: typeof GCodeStatsIndexRoute
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
@@ -767,6 +780,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/whats-new/$version/': {
+      id: '/whats-new/$version/'
+      path: '/whats-new/$version'
+      fullPath: '/whats-new/$version/'
+      preLoaderRoute: typeof WhatsNewVersionIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/packs/new/': {
       id: '/packs/new/'
@@ -1034,6 +1054,7 @@ const rootRouteChildren: RootRouteChildren = {
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksBulkNewIndexRoute: PacksBulkNewIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
+  WhatsNewVersionIndexRoute: WhatsNewVersionIndexRoute,
   GCodeStatsIndexRoute: GCodeStatsIndexRoute,
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
   PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,

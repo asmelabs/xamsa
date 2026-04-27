@@ -1,15 +1,10 @@
+import { formatCalver } from "@xamsa/utils/app-release-calver";
 import { current, productName } from "@/data/app-releases-meta";
 
-/** Format YY.MM.patch with zero-padded month (e.g. 26.04.1) */
-export function formatCalver(parts: {
-	year: number;
-	month: number;
-	patch: number;
-}): string {
-	const yy = parts.year % 100;
-	const mm = String(parts.month).padStart(2, "0");
-	return `${yy}.${mm}.${parts.patch}`;
-}
+export {
+	formatCalver,
+	parseCalverParam,
+} from "@xamsa/utils/app-release-calver";
 
 export function formatProductVersionLabel(parts: {
 	year: number;
