@@ -9,12 +9,45 @@ export type {
 	ReleaseHighlight,
 } from "@/data/app-releases-types";
 
-const current = { year: 2026, month: 4, patch: 10 } as const;
+const current = { year: 2026, month: 4, patch: 11 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-27",
+			year: 2026,
+			month: 4,
+			patch: 11,
+			title: "Badges: live room toasts, catalog, profile, and recap",
+			highlights: [
+				{
+					kind: "text",
+					text: "Earning a badge in a live game (topic awards like Ace or Jackpot, question awards like Scavenger, and more) is written to the database and broadcast to everyone in the room, so the celebration appears at the right time for host and players—not only after a refresh.",
+				},
+				{
+					kind: "text",
+					text: "When several badges are earned together, the room shows a single bottom strip: each winner and their badge names, with a close control and a few seconds to read, without blocking play.",
+				},
+				{
+					kind: "text",
+					text: "The completed game screen and “Full stats” (By player) list each person’s badges inside their own player card, grouped by pack topic, with links to the badge catalog. The old standalone block of every badge in one list is removed.",
+				},
+				{
+					kind: "text",
+					text: "New public pages browse all badges and who earned a badge; your profile has a Badges section with counts and a detail view per achievement. Sitemap and SEO cover the new routes.",
+				},
+				{
+					kind: "routerLink",
+					before: "Open ",
+					to: "/badges/",
+					label: "Badges",
+					after:
+						" to explore the full catalog, or check your profile to see your history.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-23",
 			year: 2026,
