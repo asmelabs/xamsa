@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getOgBaseImageDataUrl, OG_HEIGHT, OG_WIDTH } from "./base-image";
+import { OG_FONT_FAMILY } from "./fonts";
 
 const COLORS = {
 	bg: "#ffffff",
@@ -13,6 +14,8 @@ const COLORS = {
 } as const;
 
 export const OG_COLORS = COLORS;
+
+export { OG_FONT_FAMILY } from "./fonts";
 
 /**
  * Standard OG canvas: 1200×630 with the brand template baked in (orange bars
@@ -36,14 +39,25 @@ export function OgShell({ children }: { children: ReactNode }) {
 				backgroundSize: `${OG_WIDTH}px ${OG_HEIGHT}px`,
 				backgroundRepeat: "no-repeat",
 				color: COLORS.fg,
-				fontFamily: "Geist",
+				fontFamily: OG_FONT_FAMILY,
 				// Base template reserves ~150px on the left (bars) and ~150px on the
 				// top-right corner (logo). Use 180/110 padding so content sits in the
 				// safe area.
 				padding: "84px 110px 80px 180px",
 			}}
 		>
-			{children}
+			{/* Inner flex + explicit font: Satori sometimes skips inherited fontFamily on nested flex rows. */}
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					flex: 1,
+					width: "100%",
+					fontFamily: OG_FONT_FAMILY,
+				}}
+			>
+				{children}
+			</div>
 		</div>
 	);
 }
@@ -54,6 +68,7 @@ export function OgEyebrow({ children }: { children: ReactNode }) {
 		<div
 			style={{
 				display: "flex",
+				fontFamily: OG_FONT_FAMILY,
 				color: COLORS.primary,
 				fontSize: 26,
 				fontWeight: 700,
@@ -78,6 +93,7 @@ export function OgTitle({
 		<div
 			style={{
 				display: "flex",
+				fontFamily: OG_FONT_FAMILY,
 				fontSize: size,
 				fontWeight: 700,
 				lineHeight: 1.05,
@@ -104,6 +120,7 @@ export function OgSubtitle({
 		<div
 			style={{
 				display: "flex",
+				fontFamily: OG_FONT_FAMILY,
 				fontSize: 30,
 				color,
 				lineHeight: 1.3,
@@ -120,6 +137,7 @@ export function OgChip({ label, value }: { label: string; value: string }) {
 		<div
 			style={{
 				display: "flex",
+				fontFamily: OG_FONT_FAMILY,
 				alignItems: "baseline",
 				gap: 8,
 				padding: "10px 18px",
@@ -130,8 +148,12 @@ export function OgChip({ label, value }: { label: string; value: string }) {
 				fontSize: 26,
 			}}
 		>
-			<span style={{ fontWeight: 700 }}>{value}</span>
-			<span style={{ color: COLORS.muted }}>{label}</span>
+			<span style={{ fontFamily: OG_FONT_FAMILY, fontWeight: 700 }}>
+				{value}
+			</span>
+			<span style={{ fontFamily: OG_FONT_FAMILY, color: COLORS.muted }}>
+				{label}
+			</span>
 		</div>
 	);
 }
@@ -148,6 +170,7 @@ export function OgFooter({
 		<div
 			style={{
 				display: "flex",
+				fontFamily: OG_FONT_FAMILY,
 				marginTop: "auto",
 				justifyContent: "space-between",
 				alignItems: "flex-end",
@@ -156,8 +179,12 @@ export function OgFooter({
 				fontSize: 24,
 			}}
 		>
-			<div style={{ display: "flex" }}>{left ?? ""}</div>
-			<div style={{ display: "flex" }}>{right ?? ""}</div>
+			<div style={{ display: "flex", fontFamily: OG_FONT_FAMILY }}>
+				{left ?? ""}
+			</div>
+			<div style={{ display: "flex", fontFamily: OG_FONT_FAMILY }}>
+				{right ?? ""}
+			</div>
 		</div>
 	);
 }
@@ -204,6 +231,7 @@ export function OgAvatar({
 				backgroundColor: COLORS.primary,
 				color: COLORS.primaryFg,
 				display: "flex",
+				fontFamily: OG_FONT_FAMILY,
 				alignItems: "center",
 				justifyContent: "center",
 				fontSize: Math.round(size * 0.4),

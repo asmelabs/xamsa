@@ -9,9 +9,21 @@ export type OgFont = {
 	style?: "normal" | "italic";
 };
 
+/** Must match `fontFamily` on OG JSX (same name as on the marketing site). */
+export const OG_FONT_FAMILY = "Geist Mono" as const;
+
 let cachedFonts: OgFont[] | null = null;
 
 async function loadTtf(filename: string): Promise<ArrayBuffer> {
+	// In dev, always read from `public/` so `VITE_PUBLIC_SITE_URL` (often pointing at
+	// prod) never pulls stale or missing `/og-fonts/*` over the network.
+	if (import.meta.env.DEV) {
+		const buf = readPublicBinary("og-fonts", filename);
+		return buf.buffer.slice(
+			buf.byteOffset,
+			buf.byteOffset + buf.byteLength,
+		) as ArrayBuffer;
+	}
 	const origin = getSiteOrigin();
 	if (origin) {
 		const res = await fetch(`${origin}/og-fonts/${filename}`);
@@ -29,16 +41,18 @@ async function loadTtf(filename: string): Promise<ArrayBuffer> {
 	) as ArrayBuffer;
 }
 
-/** Geist Sans Regular + Bold TTFs, loaded once and reused across renders. */
+/** Geist Mono Regular + Bold TTFs (Vercel geist-font), reused across renders. */
 export async function getOgFonts(): Promise<OgFont[]> {
-	if (cachedFonts) return cachedFonts;
+	// In dev, skip the module cache so font file / loader changes apply without restart.
+	if (cachedFonts && !import.meta.env.DEV) return cachedFonts;
 	const [regular, bold] = await Promise.all([
-		loadTtf("Geist-Regular.ttf"),
-		loadTtf("Geist-Bold.ttf"),
+		loadTtf("GeistMono-Regular.ttf"),
+		loadTtf("GeistMono-Bold.ttf"),
 	]);
-	cachedFonts = [
-		{ name: "Geist", data: regular, weight: 400, style: "normal" },
-		{ name: "Geist", data: bold, weight: 700, style: "normal" },
+	const fonts: OgFont[] = [
+		{ name: OG_FONT_FAMILY, data: regular, weight: 400, style: "normal" },
+		{ name: OG_FONT_FAMILY, data: bold, weight: 700, style: "normal" },
 	];
-	return cachedFonts;
+	if (!import.meta.env.DEV) cachedFonts = fonts;
+	return fonts;
 }

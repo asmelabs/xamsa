@@ -8,12 +8,21 @@ const ONE_WEEK_SECONDS = ONE_DAY_SECONDS * 7;
 /** `Cache-Control` header used for every dynamic OG image response. */
 export const OG_CACHE_CONTROL = `public, max-age=${ONE_DAY_SECONDS}, s-maxage=${ONE_DAY_SECONDS}, stale-while-revalidate=${ONE_WEEK_SECONDS}`;
 
+/** Dev-only preview grid: avoid caching PNGs in the browser (templates/fonts change often). */
+export const OG_DEV_PREVIEW_CACHE_CONTROL =
+	"private, no-cache, no-store, must-revalidate";
+
+export type OgImageResponseOptions = {
+	cacheControl?: string;
+};
+
 /**
  * Render a React element to a PNG `Response` via `@vercel/og` (Satori + WASM resvg).
  * Avoids native `@resvg/resvg-js` bindings so Vercel serverless can resolve the bundle.
  */
 export async function ogImageResponse(
 	node: React.ReactElement,
+	options?: OgImageResponseOptions,
 ): Promise<Response> {
 	await preloadOgBaseImage();
 	const fonts = await getOgFonts();
@@ -23,6 +32,6 @@ export async function ogImageResponse(
 		fonts,
 	});
 	const headers = new Headers(img.headers);
-	headers.set("Cache-Control", OG_CACHE_CONTROL);
+	headers.set("Cache-Control", options?.cacheControl ?? OG_CACHE_CONTROL);
 	return new Response(img.body, { status: img.status, headers });
 }

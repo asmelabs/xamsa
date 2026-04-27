@@ -1,5 +1,6 @@
 import {
 	OG_COLORS,
+	OG_FONT_FAMILY,
 	OgEyebrow,
 	OgFooter,
 	OgShell,
@@ -21,6 +22,7 @@ export function JoinOg() {
 			<div
 				style={{
 					display: "flex",
+					fontFamily: OG_FONT_FAMILY,
 					marginTop: 28,
 					padding: "20px 32px",
 					borderRadius: 20,
