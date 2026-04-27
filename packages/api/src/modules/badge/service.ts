@@ -5,11 +5,98 @@ import type {
 	GetPublicBadgeSummaryByUsernameOutputType,
 	ListBadgeEarnersInputType,
 	ListBadgeEarnersOutputType,
+	ListPublicAwardsByUsernameInputType,
+	ListPublicAwardsByUsernameOutputType,
 } from "@xamsa/schemas/modules/badge";
 import { type BadgeId, isBadgeId } from "@xamsa/utils/badges";
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 
 import { requireUserIdByUsername } from "../user/service";
+
+const BADGE_EARNER_SELECT = {
+	id: true,
+	earnedAt: true,
+	badgeId: true,
+	gameTopic: {
+		select: {
+			order: true,
+			topic: { select: { slug: true, name: true } },
+		},
+	},
+	gameQuestion: {
+		select: {
+			order: true,
+			gameTopic: {
+				select: {
+					order: true,
+					topic: { select: { slug: true, name: true } },
+				},
+			},
+		},
+	},
+	player: {
+		select: {
+			user: {
+				select: { username: true, name: true, image: true },
+			},
+			game: {
+				select: {
+					code: true,
+					pack: { select: { slug: true, name: true } },
+				},
+			},
+		},
+	},
+} as const;
+
+function mapBadgeSelectRow(row: {
+	id: string;
+	earnedAt: Date;
+	gameTopic: {
+		order: number;
+		topic: { slug: string; name: string };
+	} | null;
+	gameQuestion: {
+		order: number;
+		gameTopic: {
+			order: number;
+			topic: { slug: string; name: string };
+		};
+	} | null;
+	player: {
+		user: { username: string; name: string | null; image: string | null };
+		game: { code: string; pack: { slug: string; name: string } };
+	};
+}): ListBadgeEarnersOutputType["items"][number] {
+	const topicFromGt = row.gameTopic;
+	const gq = row.gameQuestion;
+	const topicFromGq = gq?.gameTopic;
+	const topic = topicFromGt
+		? {
+				order: topicFromGt.order,
+				slug: topicFromGt.topic.slug,
+				name: topicFromGt.topic.name,
+			}
+		: topicFromGq
+			? {
+					order: topicFromGq.order,
+					slug: topicFromGq.topic.slug,
+					name: topicFromGq.topic.name,
+				}
+			: null;
+
+	return {
+		id: row.id,
+		earnedAt: row.earnedAt,
+		user: {
+			...row.player.user,
+			name: row.player.user.name ?? "",
+		},
+		game: row.player.game,
+		topic,
+		questionOrder: gq?.order ?? null,
+	};
+}
 
 export async function listBadgeEarners(
 	input: ListBadgeEarnersInputType,
@@ -21,70 +108,32 @@ export async function listBadgeEarners(
 		where: { badgeId: input.badgeId },
 		...cursorArgs,
 		orderBy: [{ earnedAt: "desc" }, { id: "desc" }],
-		select: {
-			id: true,
-			earnedAt: true,
-			badgeId: true,
-			gameTopic: {
-				select: {
-					order: true,
-					topic: { select: { slug: true, name: true } },
-				},
-			},
-			gameQuestion: {
-				select: {
-					order: true,
-					gameTopic: {
-						select: {
-							order: true,
-							topic: { select: { slug: true, name: true } },
-						},
-					},
-				},
-			},
-			player: {
-				select: {
-					user: {
-						select: { username: true, name: true, image: true },
-					},
-					game: {
-						select: {
-							code: true,
-							pack: { select: { slug: true, name: true } },
-						},
-					},
-				},
-			},
+		select: BADGE_EARNER_SELECT,
+	});
+
+	const items = raw.map((row) => mapBadgeSelectRow(row));
+
+	return pag.output(items, (r) => r.id);
+}
+
+export async function listPublicAwardsByUsername(
+	input: ListPublicAwardsByUsernameInputType,
+): Promise<ListPublicAwardsByUsernameOutputType> {
+	const userId = await requireUserIdByUsername(input.username);
+	const pag = defineCursorPagination(input, input.limit);
+	const cursorArgs = pag.use("id");
+
+	const raw = await prisma.playerBadgeAward.findMany({
+		where: {
+			player: { userId },
+			...(input.badgeId != null ? { badgeId: input.badgeId } : {}),
 		},
+		...cursorArgs,
+		orderBy: [{ earnedAt: "desc" }, { id: "desc" }],
+		select: BADGE_EARNER_SELECT,
 	});
 
-	const items = raw.map((row) => {
-		const topicFromGt = row.gameTopic;
-		const gq = row.gameQuestion;
-		const topicFromGq = gq?.gameTopic;
-		const topic = topicFromGt
-			? {
-					order: topicFromGt.order,
-					slug: topicFromGt.topic.slug,
-					name: topicFromGt.topic.name,
-				}
-			: topicFromGq
-				? {
-						order: topicFromGq.order,
-						slug: topicFromGq.topic.slug,
-						name: topicFromGq.topic.name,
-					}
-				: null;
-
-		return {
-			id: row.id,
-			earnedAt: row.earnedAt,
-			user: row.player.user,
-			game: row.player.game,
-			topic,
-			questionOrder: gq?.order ?? null,
-		};
-	});
+	const items = raw.map((row) => mapBadgeSelectRow(row));
 
 	return pag.output(items, (r) => r.id);
 }

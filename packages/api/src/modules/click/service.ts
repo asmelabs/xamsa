@@ -9,6 +9,8 @@ import type {
 	ClickResolveInputType,
 	ClickResolveOutputType,
 } from "@xamsa/schemas/modules/click";
+import { maybeAwardScavenger } from "../badge/scavenger";
+import { tryPublishTopicBadgesForCompletedCurrentTopic } from "../badge/topic-badges";
 
 export async function buzzClick(
 	input: ClickBuzzInputType,
@@ -444,14 +446,15 @@ export async function resolveClick(
 		};
 	});
 
-	// broadcast after commit
+	// Broadcast + badge work in parallel after commit so the room sees click
+	// state and celebration without waiting for each serial await.
 	const affectedPlayers: PlayerStats[] = [
 		result.resolver,
 		...result.expiredPlayerUpdates,
 	];
 
 	const channel = ablyRest.channels.get(channels.game(input.code));
-	await channel.publish(GAME_EVENTS.CLICK_RESOLVED, {
+	const clickResolvedPublish = channel.publish(GAME_EVENTS.CLICK_RESOLVED, {
 		resolution: input.resolution,
 		click: {
 			id: click.id,
@@ -483,6 +486,36 @@ export async function resolveClick(
 			: null,
 		isAuthoritative: true,
 	});
+
+	const scavengerPublish =
+		input.resolution === "correct" && game.currentTopicOrder != null
+			? maybeAwardScavenger({
+					code: input.code,
+					gameId: game.id,
+					currentTopicOrder: game.currentTopicOrder,
+					questionId: currentQuestion.id,
+					resolvingPlayerId: click.playerId,
+				})
+			: Promise.resolve();
+
+	// Topic badges (ace, ghost, jackpot, …) when the last question in the topic
+	// is revealed; batch publish + parallel with click keeps latency low.
+	const topicBadgesPublish =
+		result.shouldReveal &&
+		game.currentTopicOrder != null &&
+		game.currentQuestionOrder != null
+			? tryPublishTopicBadgesForCompletedCurrentTopic(input.code, {
+					gameId: game.id,
+					currentTopicOrder: game.currentTopicOrder,
+					currentQuestionOrder: game.currentQuestionOrder,
+				})
+			: Promise.resolve();
+
+	await Promise.all([
+		clickResolvedPublish,
+		scavengerPublish,
+		topicBadgesPublish,
+	]);
 
 	return {
 		id: click.id,

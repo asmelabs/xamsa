@@ -22,6 +22,7 @@ import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index
 import { Route as JoinIndexRouteImport } from './routes/join/index'
 import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as BadgesIndexRouteImport } from './routes/badges/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -39,6 +40,7 @@ import { Route as DashboardPacksIndexRouteImport } from './routes/dashboard/pack
 import { Route as DashboardJobsIndexRouteImport } from './routes/dashboard/jobs/index'
 import { Route as DashboardGamesIndexRouteImport } from './routes/dashboard/games/index'
 import { Route as DashboardClicksIndexRouteImport } from './routes/dashboard/clicks/index'
+import { Route as BadgesBadgeIdIndexRouteImport } from './routes/badges/$badgeId/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -119,6 +121,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const BadgesIndexRoute = BadgesIndexRouteImport.update({
+  id: '/badges/',
+  path: '/badges/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
@@ -204,6 +211,11 @@ const DashboardClicksIndexRoute = DashboardClicksIndexRouteImport.update({
   id: '/clicks/',
   path: '/clicks/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const BadgesBadgeIdIndexRoute = BadgesBadgeIdIndexRouteImport.update({
+  id: '/badges/$badgeId/',
+  path: '/badges/$badgeId/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordIndexRoute = AuthResetPasswordIndexRouteImport.update({
   id: '/reset-password/',
@@ -301,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/badges/': typeof BadgesIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/join/': typeof JoinIndexRoute
@@ -312,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
   '/dashboard/clicks/': typeof DashboardClicksIndexRoute
   '/dashboard/games/': typeof DashboardGamesIndexRoute
   '/dashboard/jobs/': typeof DashboardJobsIndexRoute
@@ -346,6 +360,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth': typeof AuthIndexRoute
+  '/badges': typeof BadgesIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/history': typeof HistoryIndexRoute
   '/join': typeof JoinIndexRoute
@@ -357,6 +372,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
+  '/badges/$badgeId': typeof BadgesBadgeIdIndexRoute
   '/dashboard/clicks': typeof DashboardClicksIndexRoute
   '/dashboard/games': typeof DashboardGamesIndexRoute
   '/dashboard/jobs': typeof DashboardJobsIndexRoute
@@ -394,6 +410,7 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
+  '/badges/': typeof BadgesIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/join/': typeof JoinIndexRoute
@@ -405,6 +422,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
+  '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
   '/dashboard/clicks/': typeof DashboardClicksIndexRoute
   '/dashboard/games/': typeof DashboardGamesIndexRoute
   '/dashboard/jobs/': typeof DashboardJobsIndexRoute
@@ -443,6 +461,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/u/$username'
     | '/auth/'
+    | '/badges/'
     | '/dashboard/'
     | '/history/'
     | '/join/'
@@ -454,6 +473,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
+    | '/badges/$badgeId/'
     | '/dashboard/clicks/'
     | '/dashboard/games/'
     | '/dashboard/jobs/'
@@ -488,6 +508,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/u/$username'
     | '/auth'
+    | '/badges'
     | '/dashboard'
     | '/history'
     | '/join'
@@ -499,6 +520,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password'
+    | '/badges/$badgeId'
     | '/dashboard/clicks'
     | '/dashboard/games'
     | '/dashboard/jobs'
@@ -535,6 +557,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/u/$username'
     | '/auth/'
+    | '/badges/'
     | '/dashboard/'
     | '/history/'
     | '/join/'
@@ -546,6 +569,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/auth/reset-password/'
+    | '/badges/$badgeId/'
     | '/dashboard/clicks/'
     | '/dashboard/games/'
     | '/dashboard/jobs/'
@@ -579,6 +603,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UUsernameRoute: typeof UUsernameRoute
+  BadgesIndexRoute: typeof BadgesIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   JoinIndexRoute: typeof JoinIndexRoute
   LeaderboardIndexRoute: typeof LeaderboardIndexRoute
@@ -588,6 +613,7 @@ export interface RootRouteChildren {
   WhatsNewIndexRoute: typeof WhatsNewIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
+  BadgesBadgeIdIndexRoute: typeof BadgesBadgeIdIndexRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
   GamesHistoryIndexRoute: typeof GamesHistoryIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
@@ -699,6 +725,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/badges/': {
+      id: '/badges/'
+      path: '/badges'
+      fullPath: '/badges/'
+      preLoaderRoute: typeof BadgesIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/': {
       id: '/auth/'
@@ -818,6 +851,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/clicks/'
       preLoaderRoute: typeof DashboardClicksIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/badges/$badgeId/': {
+      id: '/badges/$badgeId/'
+      path: '/badges/$badgeId'
+      fullPath: '/badges/$badgeId/'
+      preLoaderRoute: typeof BadgesBadgeIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password/': {
       id: '/auth/reset-password/'
@@ -978,6 +1018,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UUsernameRoute: UUsernameRoute,
+  BadgesIndexRoute: BadgesIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   JoinIndexRoute: JoinIndexRoute,
   LeaderboardIndexRoute: LeaderboardIndexRoute,
@@ -987,6 +1028,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhatsNewIndexRoute: WhatsNewIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
+  BadgesBadgeIdIndexRoute: BadgesBadgeIdIndexRoute,
   GCodeIndexRoute: GCodeIndexRoute,
   GamesHistoryIndexRoute: GamesHistoryIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,

@@ -1,0 +1,4 @@
+1. Implement streaming to AI topic generation
+2. Implement topic name/description generation with AI as well (currently it only generates questions with given Pack, and Topic)
+3. For scavenger badge to be worked, there must be at least 3 players (so on 1v1 - 2 players game no scavenger badge is awarded)
+4. 

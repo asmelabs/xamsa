@@ -78,3 +78,21 @@ export type GetPublicBadgeSummaryByUsernameInputType = z.infer<
 export type GetPublicBadgeSummaryByUsernameOutputType = z.infer<
 	typeof GetPublicBadgeSummaryByUsernameOutputSchema
 >;
+
+// --- listPublicAwardsByUsername ---
+
+export const ListPublicAwardsByUsernameInputSchema =
+	CursorPaginationInputSchema.extend({
+		username: UserSchema.shape.username,
+		badgeId: BadgeIdSchema.optional(),
+	});
+
+export const ListPublicAwardsByUsernameOutputSchema =
+	CursorPaginationOutputSchema(BadgeEarnerRowSchema);
+
+export type ListPublicAwardsByUsernameInputType = z.infer<
+	typeof ListPublicAwardsByUsernameInputSchema
+>;
+export type ListPublicAwardsByUsernameOutputType = z.infer<
+	typeof ListPublicAwardsByUsernameOutputSchema
+>;

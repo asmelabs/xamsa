@@ -63,6 +63,10 @@ import {
 } from "recharts";
 import { sortGamePlayersForScoreboard } from "@/lib/sort-game-players";
 import { orpc } from "@/utils/orpc";
+import {
+	buildBadgesByPlayerId,
+	PlayerRecapBadges,
+} from "./player-recap-badges";
 
 const CHART_FILLS = [
 	"var(--chart-1)",
@@ -1065,6 +1069,10 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 
 	const recap = data;
 	const sortedPlayers = sortGamePlayersForScoreboard(recap.players);
+	const badgesByPlayerId = useMemo(
+		() => buildBadgesByPlayerId(recap.badgeAwards),
+		[recap.badgeAwards],
+	);
 	const winner = recap.winnerId
 		? recap.players.find((p) => p.id === recap.winnerId)
 		: sortedPlayers[0];
@@ -1265,6 +1273,10 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 												value={formatReactionMs(player.averageClickMs)}
 											/>
 										</div>
+										<PlayerRecapBadges
+											rows={badgesByPlayerId.get(player.id)}
+											variant="compact"
+										/>
 										<div>
 											<p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
 												Every buzz ({clicks.length})

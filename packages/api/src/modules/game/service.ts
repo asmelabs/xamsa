@@ -26,6 +26,7 @@ import type {
 	UpdateGameStatusOutputType,
 } from "@xamsa/schemas/modules/game";
 import { MIN_PLAYERS_PER_GAME_TO_START } from "@xamsa/utils/constants";
+import { publishBadgeEarnedMany } from "../badge/publish";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
 import { generateUniqueGameCode } from "./utils";
@@ -929,6 +930,8 @@ export async function advanceQuestion(
 
 	const crossedTopicBoundary = isLastQuestionInTopic;
 
+	let topicBadgeEvents: Awaited<ReturnType<typeof finalizeGameTopic>> = [];
+
 	const result = await prisma.$transaction(async (tx) => {
 		// 1. finalize leaving GameQuestion
 		const leavingResult = await finalizeGameQuestion(tx, gameQuestion.id);
@@ -937,7 +940,7 @@ export async function advanceQuestion(
 		// 2. topic boundary: finalize + create new GameTopic
 		let nextGameTopicId = gameTopic.id;
 		if (crossedTopicBoundary) {
-			await finalizeGameTopic(tx, gameTopic.id);
+			topicBadgeEvents = await finalizeGameTopic(tx, gameTopic.id);
 
 			const nextGameTopic = await tx.gameTopic.create({
 				data: {
@@ -980,6 +983,10 @@ export async function advanceQuestion(
 	});
 
 	void result;
+
+	if (topicBadgeEvents.length > 0) {
+		await publishBadgeEarnedMany(input.code, topicBadgeEvents);
+	}
 
 	// Load next topic info for the public payload
 	const nextTopicInfo = await prisma.topic.findUnique({
@@ -1062,6 +1069,10 @@ export async function completeGame(
 	const finalResult = await prisma.$transaction(async (tx) =>
 		finalizeGame(tx, game.id, { now }),
 	);
+
+	if (finalResult.badgeEvents.length > 0) {
+		await publishBadgeEarnedMany(input.code, finalResult.badgeEvents);
+	}
 
 	// broadcast
 	const channel = ablyRest.channels.get(channels.game(input.code));
@@ -1170,6 +1181,9 @@ export async function handleHostDisconnect(
 	});
 
 	if (!finalResult.wasAlreadyCompleted) {
+		if (finalResult.badgeEvents.length > 0) {
+			await publishBadgeEarnedMany(input.code, finalResult.badgeEvents);
+		}
 		await channel.publish(GAME_EVENTS.GAME_ENDED, {
 			finishedAt: finalResult.finishedAt,
 			winnerId: finalResult.winnerId,
@@ -1219,6 +1233,10 @@ export async function leaveAsHost(
 		}
 		return finalizeGame(tx, game.id, { now, force: true });
 	});
+
+	if (finalResult.badgeEvents.length > 0) {
+		await publishBadgeEarnedMany(input.code, finalResult.badgeEvents);
+	}
 
 	const channel = ablyRest.channels.get(channels.game(input.code));
 	await channel.publish(GAME_EVENTS.GAME_ENDED, {

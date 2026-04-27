@@ -2,9 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { BadgeEarnedMessage } from "@xamsa/ably/channels";
 import { Spinner } from "@xamsa/ui/components/spinner";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { BadgeCelebrationOverlay } from "@/components/badge-celebration-overlay";
 import { EndGameScreen } from "@/components/end-game-screen";
 import { HostView } from "@/components/host-view";
 import { PlayerView } from "@/components/player-view";
@@ -64,7 +66,17 @@ export const Route = createFileRoute("/g/$code/")({
 function RouteComponent() {
 	const { code } = Route.useLoaderData();
 	const navigate = useNavigate();
-	useGameChannel(code);
+	const [badgeBatches, setBadgeBatches] = useState<BadgeEarnedMessage[][]>([]);
+	const onBadgesEarned = useCallback((m: BadgeEarnedMessage[]) => {
+		if (m.length === 0) {
+			return;
+		}
+		setBadgeBatches((q) => [...q, m]);
+	}, []);
+	const consumeBadgeBatch = useCallback(() => {
+		setBadgeBatches((q) => q.slice(1));
+	}, []);
+	useGameChannel(code, { onBadgesEarned });
 
 	const { data: game } = useQuery(
 		orpc.game.findOne.queryOptions({ input: { code } }),
@@ -110,6 +122,10 @@ function RouteComponent() {
 
 	return (
 		<div className="min-h-screen bg-muted/30">
+			<BadgeCelebrationOverlay
+				batchQueue={badgeBatches}
+				onConsume={consumeBadgeBatch}
+			/>
 			{game.isHost ? <HostView game={game} /> : <PlayerView game={game} />}
 		</div>
 	);

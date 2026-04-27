@@ -1,6 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { channels, GAME_EVENTS } from "@xamsa/ably/channels";
+import type { BadgeEarnedMessage } from "@xamsa/ably/channels";
+import {
+	BadgeEarnedBatchMessageSchema,
+	BadgeEarnedMessageSchema,
+	channels,
+	GAME_EVENTS,
+} from "@xamsa/ably/channels";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { getAblyClient } from "@/lib/ably";
@@ -116,6 +122,8 @@ export type GameResumedData = {
 	pausedAt: string | Date | null;
 	isAuthoritative?: boolean;
 };
+
+export type { BadgeEarnedMessage };
 
 /**
  * Builds a tentative click entry used for optimistic UI before
@@ -582,7 +590,22 @@ export function applyGameCompletedToGame(
 	};
 }
 
-export function useGameChannel(code: string) {
+type UseGameChannelOptions = {
+	/**
+	 * Preferred: one or more badges in a single action (topic batch) or
+	 * single-award paths coalesce to a one-item array.
+	 */
+	onBadgesEarned?: (data: BadgeEarnedMessage[]) => void;
+	/** Fired for single-badge publishes (e.g. scavenger) when onBadgesEarned is omitted. */
+	onBadgeEarned?: (data: BadgeEarnedMessage) => void;
+};
+
+export function useGameChannel(
+	code: string,
+	options: UseGameChannelOptions = {},
+) {
+	const onBadgesEarned = options.onBadgesEarned;
+	const onBadgeEarnedCb = options.onBadgeEarned;
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	// Track already-toasted click resolutions so intent + authoritative
@@ -796,6 +819,39 @@ export function useGameChannel(code: string) {
 			);
 		};
 
+		const fireBadges = (list: BadgeEarnedMessage[]) => {
+			if (list.length === 0) {
+				return;
+			}
+			if (onBadgesEarned) {
+				onBadgesEarned(list);
+			} else {
+				for (const e of list) {
+					onBadgeEarnedCb?.(e);
+				}
+			}
+		};
+
+		const onBadgeEarnedEvent = (msg: { data?: unknown }) => {
+			if (!onBadgesEarned && !onBadgeEarnedCb) {
+				return;
+			}
+			const parsed = BadgeEarnedMessageSchema.safeParse(msg.data);
+			if (parsed.success) {
+				fireBadges([parsed.data]);
+			}
+		};
+
+		const onBadgeEarnedBatchEvent = (msg: { data?: unknown }) => {
+			if (!onBadgesEarned && !onBadgeEarnedCb) {
+				return;
+			}
+			const parsed = BadgeEarnedBatchMessageSchema.safeParse(msg.data);
+			if (parsed.success) {
+				fireBadges(parsed.data.events);
+			}
+		};
+
 		// Presence-based host disconnect detection: non-host clients watch for
 		// the host's clientId leaving presence; when observed they call the
 		// server endpoint which runs a grace period + re-check before
@@ -842,6 +898,8 @@ export function useGameChannel(code: string) {
 		channel.subscribe(GAME_EVENTS.GAME_ENDED, onGameCompleted);
 		channel.subscribe(GAME_EVENTS.GAME_PAUSED, onGamePaused);
 		channel.subscribe(GAME_EVENTS.GAME_RESUMED, onGameResumed);
+		channel.subscribe(GAME_EVENTS.BADGE_EARNED, onBadgeEarnedEvent);
+		channel.subscribe(GAME_EVENTS.BADGE_EARNED_BATCH, onBadgeEarnedBatchEvent);
 
 		return () => {
 			channel.unsubscribe(GAME_EVENTS.PLAYER_JOINED, onPlayerJoined);
@@ -865,6 +923,11 @@ export function useGameChannel(code: string) {
 			channel.unsubscribe(GAME_EVENTS.GAME_ENDED, onGameCompleted);
 			channel.unsubscribe(GAME_EVENTS.GAME_PAUSED, onGamePaused);
 			channel.unsubscribe(GAME_EVENTS.GAME_RESUMED, onGameResumed);
+			channel.unsubscribe(GAME_EVENTS.BADGE_EARNED, onBadgeEarnedEvent);
+			channel.unsubscribe(
+				GAME_EVENTS.BADGE_EARNED_BATCH,
+				onBadgeEarnedBatchEvent,
+			);
 
 			channel.presence.unsubscribe("leave", onPresenceLeave);
 			channel.presence.unsubscribe("enter", onPresenceEnter);
@@ -875,5 +938,5 @@ export function useGameChannel(code: string) {
 				// leaving is best-effort
 			});
 		};
-	}, [code, queryClient, navigate]);
+	}, [code, queryClient, navigate, onBadgeEarnedCb, onBadgesEarned]);
 }

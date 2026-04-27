@@ -1,4 +1,5 @@
 import prisma from "@xamsa/db";
+import { ALL_BADGE_IDS } from "@xamsa/utils/badges";
 
 const BATCH = 3000;
 
@@ -151,9 +152,14 @@ async function collectUserEntries(): Promise<PublicSitemapEntry[]> {
  */
 export async function getPublicSitemapEntries(): Promise<PublicSitemapEntry[]> {
 	const now = new Date();
-	const staticEntries: PublicSitemapEntry[] = PUBLIC_SITEMAP_STATIC_PATHS.map(
-		(path) => ({ path, lastmod: now }),
-	);
+	const staticEntries: PublicSitemapEntry[] = [
+		...PUBLIC_SITEMAP_STATIC_PATHS.map((path) => ({ path, lastmod: now })),
+		{ path: "/badges/", lastmod: now },
+		...ALL_BADGE_IDS.map((id) => ({
+			path: `/badges/${id}/`,
+			lastmod: now,
+		})),
+	];
 
 	const [packs, topics, users] = await Promise.all([
 		collectPackEntries(),
