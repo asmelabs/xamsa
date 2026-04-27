@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getReleaseByCalverParam } from "@xamsa/utils/app-releases";
 import { format } from "date-fns";
 import { formatProductVersionLabel } from "@/lib/app-release";
-import { ogPngResponse, renderOgPng } from "@/lib/og/render";
+import { ogImageResponse } from "@/lib/og/render";
 import { ReleaseOg } from "@/lib/og/templates/release";
 
 export const Route = createFileRoute("/api/og/whats-new/$version/og.png")({
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/og/whats-new/$version/og.png")({
 				if (!release) {
 					return new Response("Not found", { status: 404 });
 				}
-				const png = await renderOgPng(
+				return ogImageResponse(
 					<ReleaseOg
 						data={{
 							versionLabel: formatProductVersionLabel(release),
@@ -22,7 +22,6 @@ export const Route = createFileRoute("/api/og/whats-new/$version/og.png")({
 						}}
 					/>,
 				);
-				return ogPngResponse(png);
 			},
 		},
 	},

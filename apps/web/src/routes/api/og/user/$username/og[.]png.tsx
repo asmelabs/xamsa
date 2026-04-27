@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getUserOgData } from "@xamsa/api/og-data";
-import { ogPngResponse, renderOgPng } from "@/lib/og/render";
+import { ogImageResponse } from "@/lib/og/render";
 import { UserOg } from "@/lib/og/templates/user";
 
 export const Route = createFileRoute("/api/og/user/$username/og.png")({
@@ -11,8 +11,7 @@ export const Route = createFileRoute("/api/og/user/$username/og.png")({
 				if (!user) {
 					return new Response("Not found", { status: 404 });
 				}
-				const png = await renderOgPng(<UserOg data={user} />);
-				return ogPngResponse(png);
+				return ogImageResponse(<UserOg data={user} />);
 			},
 		},
 	},
