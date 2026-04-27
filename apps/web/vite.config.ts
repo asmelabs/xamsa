@@ -11,11 +11,12 @@ export default defineConfig({
 		tsconfigPaths(),
 		tailwindcss(),
 		tanstackStart(),
-		// `@resvg/resvg-js` ships native `.node` bindings; tell Nitro to trace
-		// (copy) it into the server output rather than bundling so the loader
-		// can `require` the platform-specific binary at runtime.
 		nitro({
-			traceDeps: ["@resvg/resvg-js", /^@resvg\/resvg-js-/],
+			traceDeps: ["@resvg/resvg-js", /^@resvg\/resvg-js-/, "satori"],
+			// also tell Nitro/Rollup these are external at bundle time
+			rollupConfig: {
+				external: [/^@resvg\/resvg-js/, /\.node$/, "satori"],
+			},
 		}),
 		viteReact(),
 	] as PluginOption[],
@@ -27,13 +28,30 @@ export default defineConfig({
 		commonjsOptions: {
 			requireReturnsDefault: "auto",
 		},
+		rollupOptions: {
+			external: [/^@resvg\/resvg-js/, /\.node$/],
+		},
 	},
-	// Keep the resvg native binding out of the Vite dep-optimizer and SSR bundle
-	// so Vite/esbuild never tries to parse the `.node` file.
 	optimizeDeps: {
-		exclude: ["@resvg/resvg-js"],
+		exclude: [
+			"@resvg/resvg-js",
+			"@resvg/resvg-js-linux-x64-gnu",
+			"@resvg/resvg-js-linux-x64-musl",
+			"@resvg/resvg-js-darwin-x64",
+			"@resvg/resvg-js-darwin-arm64",
+			"satori",
+		],
 	},
 	ssr: {
-		external: ["@resvg/resvg-js"],
+		external: [
+			"@resvg/resvg-js",
+			"@resvg/resvg-js-linux-x64-gnu",
+			"@resvg/resvg-js-linux-x64-musl",
+			"@resvg/resvg-js-darwin-x64",
+			"@resvg/resvg-js-darwin-arm64",
+			"@resvg/resvg-js-win32-x64-msvc",
+			"satori",
+		],
+		noExternal: [],
 	},
 });
