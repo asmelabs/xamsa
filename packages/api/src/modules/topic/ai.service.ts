@@ -2,17 +2,26 @@ import { ORPCError } from "@orpc/server";
 import prisma from "@xamsa/db";
 import { RoleSchema } from "@xamsa/schemas/db/schemas/enums/Role.schema";
 import type {
+	GenerateTopicInputType,
+	GenerateTopicOutputType,
 	GenerateTopicQuestionsInputType,
 	GenerateTopicQuestionsOutputType,
 	GetAiTopicQuotaOutputType,
 } from "@xamsa/schemas/modules/topic";
-import { GenerateTopicQuestionsOutputSchema } from "@xamsa/schemas/modules/topic";
+import {
+	GenerateTopicOutputSchema,
+	GenerateTopicQuestionsOutputSchema,
+} from "@xamsa/schemas/modules/topic";
 import {
 	getDailyAiGenerationLimit,
 	startOfNextUtcDay,
 	startOfUtcDay,
 } from "@xamsa/utils/ai-limits";
-import { generateTopicQuestionsJson, resolveGeminiApiKey } from "./llm-gemini";
+import {
+	generateTopicJson,
+	generateTopicQuestionsJson,
+	resolveGeminiApiKey,
+} from "./llm-gemini";
 
 type QuotaUser = {
 	aiUseCount: number;
@@ -148,11 +157,23 @@ export async function generateTopicQuestionsWithAI(
 		});
 	}
 
-	const now2 = new Date();
-	const today = startOfUtcDay(now2);
+	await incrementDailyAiUseCount(userId);
+
+	return parsed.data;
+}
+
+/**
+ * Atomically charge one unit of the user's daily AI quota. Re-checks the
+ * window so we never over-grant when the call straddles a UTC midnight, and
+ * re-validates the cap so users can't slip over the line via concurrent
+ * requests.
+ */
+async function incrementDailyAiUseCount(userId: string): Promise<void> {
+	const now = new Date();
+	const today = startOfUtcDay(now);
 
 	await prisma.$transaction(async (tx) => {
-		const u2 = await tx.user.findUnique({
+		const u = await tx.user.findUnique({
 			where: { id: userId },
 			select: {
 				aiUseCount: true,
@@ -160,30 +181,144 @@ export async function generateTopicQuestionsWithAI(
 				role: true,
 			},
 		});
-		if (!u2) {
+		if (!u) {
 			throw new ORPCError("NOT_FOUND", { message: "User not found" });
 		}
-		const used2 = effectiveUsedThisUtcDay(u2, now2);
-		const limit2 = getDailyAiGenerationLimit(RoleSchema.parse(u2.role));
-		if (used2 >= limit2) {
+		const used = effectiveUsedThisUtcDay(u, now);
+		const limit = getDailyAiGenerationLimit(RoleSchema.parse(u.role));
+		if (used >= limit) {
 			throw new ORPCError("BAD_REQUEST", {
 				message:
 					"Daily AI generation limit was reached. Please try again tomorrow.",
 			});
 		}
 
-		const isNewWindow = !u2.aiUseWindowDate || u2.aiUseWindowDate < today;
-		const nextCount = isNewWindow ? 1 : u2.aiUseCount + 1;
+		const isNewWindow = !u.aiUseWindowDate || u.aiUseWindowDate < today;
+		const nextCount = isNewWindow ? 1 : u.aiUseCount + 1;
 
 		await tx.user.update({
 			where: { id: userId },
 			data: {
-				lastAiUsedAt: now2,
+				lastAiUsedAt: now,
 				aiUseWindowDate: today,
 				aiUseCount: nextCount,
 			},
 		});
 	});
+}
+
+/**
+ * Generate ONE topic seed (name + 1-sentence description) for a draft pack
+ * the caller authored. Pulls existing topic names so the model never
+ * duplicates, validates with Zod, and charges one unit from the same daily
+ * quota used by the question generator.
+ */
+export async function generateTopicWithAI(
+	input: GenerateTopicInputType,
+	userId: string,
+): Promise<GenerateTopicOutputType> {
+	if (!resolveGeminiApiKey()) {
+		throw new ORPCError("INTERNAL_SERVER_ERROR", {
+			message:
+				"AI topic generation is not configured. Set GEMINI_API_KEY in apps/web/.env (or the process environment) and restart the dev server.",
+		});
+	}
+
+	const u1 = await prisma.user.findUnique({
+		where: { id: userId },
+		select: {
+			aiUseCount: true,
+			aiUseWindowDate: true,
+			role: true,
+		},
+	});
+	if (!u1) {
+		throw new ORPCError("NOT_FOUND", { message: "User not found" });
+	}
+
+	const now1 = new Date();
+	const used1 = effectiveUsedThisUtcDay(u1, now1);
+	const limit1 = getDailyAiGenerationLimit(RoleSchema.parse(u1.role));
+	if (used1 >= limit1) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: `Daily AI generation limit reached (${String(limit1)} per UTC day). Resets at midnight UTC.`,
+		});
+	}
+
+	const pack = await prisma.pack.findFirst({
+		where: {
+			slug: input.pack,
+			authorId: userId,
+			status: "draft",
+		},
+		select: {
+			name: true,
+			description: true,
+			language: true,
+			topics: {
+				select: { name: true },
+				orderBy: { order: "asc" },
+			},
+		},
+	});
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Pack not found or not editable",
+		});
+	}
+
+	const language = input.language ?? pack.language;
+
+	let raw: unknown;
+	try {
+		const authorTrimmed = input.authorPrompt?.trim();
+		const seedTrimmed = input.seed?.trim();
+		raw = await generateTopicJson({
+			language,
+			packName: pack.name,
+			packDescription: pack.description,
+			existingTopicNames: pack.topics.map((t) => t.name),
+			...(seedTrimmed ? { seed: seedTrimmed } : {}),
+			...(authorTrimmed ? { authorPrompt: authorTrimmed } : {}),
+		});
+	} catch (e) {
+		const message =
+			e instanceof Error ? e.message : "Failed to call AI provider";
+		if (
+			message ===
+				"AI service is temporarily overloaded. Please try again in a moment." ||
+			message.startsWith("All Gemini models are currently unavailable")
+		) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", { message });
+		}
+		throw new ORPCError("INTERNAL_SERVER_ERROR", {
+			message: `AI request failed: ${message}`,
+		});
+	}
+
+	const parsed = GenerateTopicOutputSchema.safeParse(raw);
+	if (!parsed.success) {
+		throw new ORPCError("INTERNAL_SERVER_ERROR", {
+			message:
+				"The AI response could not be validated. Please try again or refine your seed.",
+		});
+	}
+
+	// Defensive: catch a duplicate before charging quota. If the model still
+	// returned a name that matches an existing topic in the pack, fail the call
+	// without consuming quota so the user can simply retry.
+	const proposed = parsed.data.name.trim().toLowerCase();
+	const collides = pack.topics.some(
+		(t) => t.name.trim().toLowerCase() === proposed,
+	);
+	if (collides) {
+		throw new ORPCError("INTERNAL_SERVER_ERROR", {
+			message:
+				"AI returned a topic name that already exists in this pack. Please try again with a different seed.",
+		});
+	}
+
+	await incrementDailyAiUseCount(userId);
 
 	return parsed.data;
 }

@@ -97,6 +97,7 @@ export const Route = createFileRoute("/u/$username")({
 			path: `/u/${profile.username}/`,
 			ogTitle: `${profile.name} on Xamsa`,
 			ogDescription: desc,
+			ogImagePath: `/api/og/user/${profile.username}/og.png`,
 			keywords: `Xamsa, quiz profile, ${profile.username}, ${profile.name}, trivia stats, Elo, XP`,
 			jsonLd: profilePageJsonLd(profile),
 		});

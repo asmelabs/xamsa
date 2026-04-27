@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { calculateEloDeltas, type EloPlayerRow } from "./elo";
 
-function deltasObject(rows: EloPlayerRow[], opts?: Parameters<typeof calculateEloDeltas>[1]) {
+function deltasObject(
+	rows: EloPlayerRow[],
+	opts?: Parameters<typeof calculateEloDeltas>[1],
+) {
 	const m = calculateEloDeltas(rows, opts);
 	return Object.fromEntries(m);
 }

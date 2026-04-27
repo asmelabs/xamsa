@@ -73,6 +73,9 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const [currentSlide, setCurrentSlide] = useState(0);
 	const [aiAuthorDialogOpen, setAiAuthorDialogOpen] = useState(false);
 	const [aiAuthorPromptDraft, setAiAuthorPromptDraft] = useState("");
+	const [aiTopicDialogOpen, setAiTopicDialogOpen] = useState(false);
+	const [aiTopicSeedDraft, setAiTopicSeedDraft] = useState("");
+	const [aiTopicAuthorPromptDraft, setAiTopicAuthorPromptDraft] = useState("");
 
 	const [defaultName] = useQueryState("name");
 	const [defaultDescription] = useQueryState("description");
@@ -149,6 +152,23 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 		},
 	});
 
+	const { mutate: generateTopicAi, isPending: isAiTopicPending } = useMutation({
+		...orpc.topic.generateTopic.mutationOptions(),
+		onSuccess(data) {
+			form.setValue("name", data.name);
+			form.setValue("description", data.description ?? "");
+			void queryClient.invalidateQueries({
+				queryKey: orpc.topic.getAiQuota.queryKey({ input: {} }),
+			});
+			toast.success("AI topic added — review before saving.");
+		},
+		onError(error) {
+			toast.error(
+				error.message || "AI topic generation failed. Please try again.",
+			);
+		},
+	});
+
 	const onFormValidationError: SubmitErrorHandler<
 		CreateTopicFormFieldValues
 	> = (errors) => {
@@ -195,12 +215,10 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	const aiRemaining = aiQuota
 		? Math.max(0, aiQuota.limit - aiQuota.used)
 		: null;
-	const aiDisabled =
-		!session?.user ||
-		!topicName?.trim() ||
-		aiRemaining === 0 ||
-		isAiPending ||
-		isPending;
+	const aiBusy = isAiPending || isAiTopicPending || isPending;
+	const aiQuestionsDisabled =
+		!session?.user || !topicName?.trim() || aiRemaining === 0 || aiBusy;
+	const aiTopicDisabled = !session?.user || aiRemaining === 0 || aiBusy;
 
 	useEffect(() => {
 		if (!api) return;
@@ -229,6 +247,23 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 			</FrameHeader>
 			<form onSubmit={onSubmit} className="space-y-4">
 				<FramePanel className="space-y-4">
+					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+						<p className="font-semibold text-sm">Topic</p>
+						<Button
+							type="button"
+							variant="secondary"
+							size="sm"
+							disabled={aiTopicDisabled}
+							onClick={() => {
+								setAiTopicSeedDraft("");
+								setAiTopicAuthorPromptDraft("");
+								setAiTopicDialogOpen(true);
+							}}
+						>
+							<Sparkles className="mr-1.5 size-4" />
+							{isAiTopicPending ? "Generating…" : "Generate topic with AI"}
+						</Button>
+					</div>
 					<form.Input name="name" label="Name">
 						{(field) => (
 							<Input
@@ -259,19 +294,20 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 						<Button
 							type="button"
 							variant="secondary"
-							disabled={aiDisabled}
+							disabled={aiQuestionsDisabled}
 							onClick={() => {
 								setAiAuthorPromptDraft("");
 								setAiAuthorDialogOpen(true);
 							}}
 						>
 							<Sparkles className="mr-1.5 size-4" />
-							{isAiPending ? "Generating…" : "Generate with AI"}
+							{isAiPending ? "Generating…" : "Generate questions with AI"}
 						</Button>
 					</div>
 					<p className="text-muted-foreground text-xs">
-						AI fills all five questions from the topic and pack name. Always
-						verify facts before publishing.
+						AI can seed a fresh topic name + description, or fill all five
+						questions from your topic and pack. Always verify facts before
+						publishing. Each AI run costs one daily generation.
 					</p>
 					<Dialog
 						onOpenChange={(o) => {
@@ -282,7 +318,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 					>
 						<DialogContent className="sm:max-w-lg" showCloseButton>
 							<DialogHeader>
-								<DialogTitle>Generate with AI</DialogTitle>
+								<DialogTitle>Generate questions with AI</DialogTitle>
 								<DialogDescription>
 									Optional: add instructions (difficulty, tone, things to
 									include or avoid). Leave empty for the default prompt.
@@ -330,6 +366,91 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 									type="button"
 								>
 									{isAiPending ? "Generating…" : "Generate"}
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+					<Dialog
+						onOpenChange={(o) => {
+							setAiTopicDialogOpen(o);
+							if (!o) {
+								setAiTopicSeedDraft("");
+								setAiTopicAuthorPromptDraft("");
+							}
+						}}
+						open={aiTopicDialogOpen}
+					>
+						<DialogContent className="sm:max-w-lg" showCloseButton>
+							<DialogHeader>
+								<DialogTitle>Generate topic with AI</DialogTitle>
+								<DialogDescription>
+									AI proposes a topic name and a one-sentence description that
+									fits the pack and avoids duplicating its existing topics. Both
+									fields are optional.
+								</DialogDescription>
+							</DialogHeader>
+							<DialogPanel>
+								<div className="space-y-4">
+									<div className="space-y-2">
+										<Label htmlFor="create-ai-topic-seed">
+											Seed / hint (optional)
+										</Label>
+										<Input
+											id="create-ai-topic-seed"
+											maxLength={200}
+											onChange={(e) => setAiTopicSeedDraft(e.target.value)}
+											placeholder="e.g. phonetic constraint, Cuban history…"
+											value={aiTopicSeedDraft}
+										/>
+										<p className="text-muted-foreground text-xs">
+											{aiTopicSeedDraft.length}/200 characters
+										</p>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="create-ai-topic-author-prompt">
+											Additional instructions (optional)
+										</Label>
+										<Textarea
+											id="create-ai-topic-author-prompt"
+											maxLength={2000}
+											onChange={(e) =>
+												setAiTopicAuthorPromptDraft(e.target.value)
+											}
+											placeholder="e.g. avoid sports topics, lean toward literature…"
+											rows={4}
+											value={aiTopicAuthorPromptDraft}
+										/>
+										<p className="text-muted-foreground text-xs">
+											{aiTopicAuthorPromptDraft.length}/2000 characters
+										</p>
+									</div>
+								</div>
+							</DialogPanel>
+							<DialogFooter>
+								<Button
+									onClick={() => setAiTopicDialogOpen(false)}
+									type="button"
+									variant="outline"
+								>
+									Cancel
+								</Button>
+								<Button
+									disabled={isAiTopicPending}
+									onClick={() => {
+										const seed = aiTopicSeedDraft.trim() || undefined;
+										const ap = aiTopicAuthorPromptDraft.trim() || undefined;
+										setAiTopicDialogOpen(false);
+										setAiTopicSeedDraft("");
+										setAiTopicAuthorPromptDraft("");
+										generateTopicAi({
+											pack: packSlug,
+											seed,
+											authorPrompt: ap,
+										});
+									}}
+									type="button"
+								>
+									{isAiTopicPending ? "Generating…" : "Generate"}
 								</Button>
 							</DialogFooter>
 						</DialogContent>

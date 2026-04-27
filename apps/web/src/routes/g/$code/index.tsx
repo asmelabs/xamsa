@@ -56,6 +56,7 @@ export const Route = createFileRoute("/g/$code/")({
 			path: `/g/${game.code}/`,
 			ogTitle: `Game · ${game.pack.name}`,
 			ogDescription: desc,
+			ogImagePath: `/api/og/game/${game.code}/og.png`,
 			keywords: `Xamsa, live quiz, game room, ${game.pack.name}, buzzer`,
 			noIndex: true,
 			jsonLd: gameRoomPageJsonLd(game),

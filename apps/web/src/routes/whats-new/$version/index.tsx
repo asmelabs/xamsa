@@ -37,6 +37,7 @@ export const Route = createFileRoute("/whats-new/$version/")({
 			description,
 			path,
 			ogType: "article",
+			ogImagePath: `/api/og/whats-new/${calver}/og.png`,
 			keywords: `Xamsa, changelog, ${calver}, release notes`,
 			jsonLd: collectionPageJsonLd({
 				path,

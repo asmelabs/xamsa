@@ -55,6 +55,7 @@ export const Route = createFileRoute("/leaderboard/")({
 			title: "Leaderboard",
 			description,
 			path: "/leaderboard/",
+			ogImagePath: "/api/og/leaderboard.png",
 			keywords:
 				"Xamsa leaderboard, Elo, quiz rankings, trivia, global rankings, XP",
 			jsonLd: collectionPageJsonLd({

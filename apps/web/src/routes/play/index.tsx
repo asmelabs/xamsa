@@ -61,6 +61,7 @@ export const Route = createFileRoute("/play/")({
 			title: "Play",
 			description,
 			path: "/play/",
+			ogImagePath: "/api/og/play.png",
 			keywords:
 				"Xamsa play, host quiz, join game code, live trivia, buzzer game, multiplayer quiz",
 			jsonLd: collectionPageJsonLd({

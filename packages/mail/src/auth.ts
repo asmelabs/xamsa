@@ -18,8 +18,8 @@ export async function sendEmailVerificationEmail(
 		<p>If you did not request this verification, please ignore this email.</p>
 		<p>Thank you,</p>
 		<p>The Xamsa team</p>
-		`
-	})
+		`,
+	});
 }
 
 export async function sendPasswordResetEmail(
@@ -40,6 +40,6 @@ export async function sendPasswordResetEmail(
 		<p>If you did not request this password reset, please ignore this email.</p>
 		<p>Thank you,</p>
 		<p>The Xamsa team</p>
-		`
-	})
+		`,
+	});
 }

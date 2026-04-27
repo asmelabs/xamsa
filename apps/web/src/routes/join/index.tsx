@@ -30,6 +30,7 @@ export const Route = createFileRoute("/join/")({
 				"Enter the code from your host to join an active Xamsa game. You’ll play in real time with buzz-in answers.",
 			path: "/join/",
 			noIndex: true,
+			ogImagePath: "/api/og/join.png",
 			keywords: "Xamsa join, game code, enter quiz room, live trivia join",
 		}),
 });

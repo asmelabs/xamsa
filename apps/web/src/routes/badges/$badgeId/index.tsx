@@ -38,6 +38,7 @@ export const Route = createFileRoute("/badges/$badgeId/")({
 			path,
 			ogTitle: meta.name,
 			ogDescription: meta.description,
+			ogImagePath: `/api/og/badges/${badgeId}/og.png`,
 			keywords: `Xamsa, badge, ${meta.name}, ${badgeId}, trivia, quiz`,
 		});
 	},

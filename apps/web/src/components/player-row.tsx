@@ -105,9 +105,7 @@ export function PlayerRow({
 								variant="destructive"
 								isLoading={isKicking}
 								loadingText="Kicking..."
-								onClick={() =>
-									kick({ code: gameCode, playerId: player.id })
-								}
+								onClick={() => kick({ code: gameCode, playerId: player.id })}
 							>
 								Kick
 							</LoadingButton>

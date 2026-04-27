@@ -44,6 +44,9 @@ import { Route as DashboardClicksIndexRouteImport } from './routes/dashboard/cli
 import { Route as BadgesBadgeIdIndexRouteImport } from './routes/badges/$badgeId/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
+import { Route as ApiOgPlayDotpngRouteImport } from './routes/api/og/play[.]png'
+import { Route as ApiOgLeaderboardDotpngRouteImport } from './routes/api/og/leaderboard[.]png'
+import { Route as ApiOgJoinDotpngRouteImport } from './routes/api/og/join[.]png'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as PlayNewPackSlugIndexRouteImport } from './routes/play/new/$packSlug/index'
 import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
@@ -52,8 +55,14 @@ import { Route as GCodeStatsIndexRouteImport } from './routes/g/$code/stats/inde
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
 import { Route as PacksPackSlugTopicsBulkIndexRouteImport } from './routes/packs/$packSlug/topics/bulk/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
+import { Route as ApiOgWhatsNewVersionOgDotpngRouteImport } from './routes/api/og/whats-new/$version/og[.]png'
+import { Route as ApiOgUserUsernameOgDotpngRouteImport } from './routes/api/og/user/$username/og[.]png'
+import { Route as ApiOgPackSlugOgDotpngRouteImport } from './routes/api/og/pack/$slug/og[.]png'
+import { Route as ApiOgGameCodeOgDotpngRouteImport } from './routes/api/og/game/$code/og[.]png'
+import { Route as ApiOgBadgesBadgeIdOgDotpngRouteImport } from './routes/api/og/badges/$badgeId/og[.]png'
 import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/edit/index'
+import { Route as ApiOgTopicPackSlugTopicSlugOgDotpngRouteImport } from './routes/api/og/topic/$packSlug/$topicSlug/og[.]png'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/index'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/index'
@@ -233,6 +242,21 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   path: '/api/rpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOgPlayDotpngRoute = ApiOgPlayDotpngRouteImport.update({
+  id: '/api/og/play.png',
+  path: '/api/og/play.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgLeaderboardDotpngRoute = ApiOgLeaderboardDotpngRouteImport.update({
+  id: '/api/og/leaderboard.png',
+  path: '/api/og/leaderboard.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgJoinDotpngRoute = ApiOgJoinDotpngRouteImport.update({
+  id: '/api/og/join.png',
+  path: '/api/og/join.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -277,6 +301,34 @@ const PacksPackSlugTopicsTopicSlugIndexRoute =
     path: '/packs/$packSlug/topics/$topicSlug/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiOgWhatsNewVersionOgDotpngRoute =
+  ApiOgWhatsNewVersionOgDotpngRouteImport.update({
+    id: '/api/og/whats-new/$version/og.png',
+    path: '/api/og/whats-new/$version/og.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiOgUserUsernameOgDotpngRoute =
+  ApiOgUserUsernameOgDotpngRouteImport.update({
+    id: '/api/og/user/$username/og.png',
+    path: '/api/og/user/$username/og.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiOgPackSlugOgDotpngRoute = ApiOgPackSlugOgDotpngRouteImport.update({
+  id: '/api/og/pack/$slug/og.png',
+  path: '/api/og/pack/$slug/og.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgGameCodeOgDotpngRoute = ApiOgGameCodeOgDotpngRouteImport.update({
+  id: '/api/og/game/$code/og.png',
+  path: '/api/og/game/$code/og.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgBadgesBadgeIdOgDotpngRoute =
+  ApiOgBadgesBadgeIdOgDotpngRouteImport.update({
+    id: '/api/og/badges/$badgeId/og.png',
+    path: '/api/og/badges/$badgeId/og.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PacksPackSlugTopicsEditReorderIndexRoute =
   PacksPackSlugTopicsEditReorderIndexRouteImport.update({
     id: '/packs/$packSlug/topics/edit/reorder/',
@@ -287,6 +339,12 @@ const PacksPackSlugTopicsTopicSlugEditIndexRoute =
   PacksPackSlugTopicsTopicSlugEditIndexRouteImport.update({
     id: '/packs/$packSlug/topics/$topicSlug/edit/',
     path: '/packs/$packSlug/topics/$topicSlug/edit/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiOgTopicPackSlugTopicSlugOgDotpngRoute =
+  ApiOgTopicPackSlugTopicSlugOgDotpngRouteImport.update({
+    id: '/api/og/topic/$packSlug/$topicSlug/og.png',
+    path: '/api/og/topic/$packSlug/$topicSlug/og.png',
     getParentRoute: () => rootRouteImport,
   } as any)
 const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute =
@@ -329,6 +387,9 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof SettingsIndexRoute
   '/whats-new/': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/og/join.png': typeof ApiOgJoinDotpngRoute
+  '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
+  '/api/og/play.png': typeof ApiOgPlayDotpngRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
@@ -349,9 +410,15 @@ export interface FileRoutesByFullPath {
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
+  '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
+  '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
+  '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
+  '/api/og/user/$username/og.png': typeof ApiOgUserUsernameOgDotpngRoute
+  '/api/og/whats-new/$version/og.png': typeof ApiOgWhatsNewVersionOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/bulk/': typeof PacksPackSlugTopicsBulkIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/api/og/topic/$packSlug/$topicSlug/og.png': typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
@@ -377,6 +444,9 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute
   '/whats-new': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/og/join.png': typeof ApiOgJoinDotpngRoute
+  '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
+  '/api/og/play.png': typeof ApiOgPlayDotpngRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId': typeof BadgesBadgeIdIndexRoute
@@ -397,9 +467,15 @@ export interface FileRoutesByTo {
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug': typeof PlayNewPackSlugIndexRoute
+  '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
+  '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
+  '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
+  '/api/og/user/$username/og.png': typeof ApiOgUserUsernameOgDotpngRoute
+  '/api/og/whats-new/$version/og.png': typeof ApiOgWhatsNewVersionOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/bulk': typeof PacksPackSlugTopicsBulkIndexRoute
   '/packs/$packSlug/topics/new': typeof PacksPackSlugTopicsNewIndexRoute
+  '/api/og/topic/$packSlug/$topicSlug/og.png': typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/edit': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder': typeof PacksPackSlugTopicsEditReorderIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
@@ -428,6 +504,9 @@ export interface FileRoutesById {
   '/settings/': typeof SettingsIndexRoute
   '/whats-new/': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/og/join.png': typeof ApiOgJoinDotpngRoute
+  '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
+  '/api/og/play.png': typeof ApiOgPlayDotpngRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
@@ -448,9 +527,15 @@ export interface FileRoutesById {
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
+  '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
+  '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
+  '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
+  '/api/og/user/$username/og.png': typeof ApiOgUserUsernameOgDotpngRoute
+  '/api/og/whats-new/$version/og.png': typeof ApiOgWhatsNewVersionOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
   '/packs/$packSlug/topics/bulk/': typeof PacksPackSlugTopicsBulkIndexRoute
   '/packs/$packSlug/topics/new/': typeof PacksPackSlugTopicsNewIndexRoute
+  '/api/og/topic/$packSlug/$topicSlug/og.png': typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
@@ -480,6 +565,9 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/whats-new/'
     | '/api/auth/$'
+    | '/api/og/join.png'
+    | '/api/og/leaderboard.png'
+    | '/api/og/play.png'
     | '/api/rpc/$'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
@@ -500,9 +588,15 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
+    | '/api/og/badges/$badgeId/og.png'
+    | '/api/og/game/$code/og.png'
+    | '/api/og/pack/$slug/og.png'
+    | '/api/og/user/$username/og.png'
+    | '/api/og/whats-new/$version/og.png'
     | '/packs/$packSlug/topics/$topicSlug/'
     | '/packs/$packSlug/topics/bulk/'
     | '/packs/$packSlug/topics/new/'
+    | '/api/og/topic/$packSlug/$topicSlug/og.png'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
@@ -528,6 +622,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/whats-new'
     | '/api/auth/$'
+    | '/api/og/join.png'
+    | '/api/og/leaderboard.png'
+    | '/api/og/play.png'
     | '/api/rpc/$'
     | '/auth/reset-password'
     | '/badges/$badgeId'
@@ -548,9 +645,15 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
     | '/play/new/$packSlug'
+    | '/api/og/badges/$badgeId/og.png'
+    | '/api/og/game/$code/og.png'
+    | '/api/og/pack/$slug/og.png'
+    | '/api/og/user/$username/og.png'
+    | '/api/og/whats-new/$version/og.png'
     | '/packs/$packSlug/topics/$topicSlug'
     | '/packs/$packSlug/topics/bulk'
     | '/packs/$packSlug/topics/new'
+    | '/api/og/topic/$packSlug/$topicSlug/og.png'
     | '/packs/$packSlug/topics/$topicSlug/edit'
     | '/packs/$packSlug/topics/edit/reorder'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
@@ -578,6 +681,9 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/whats-new/'
     | '/api/auth/$'
+    | '/api/og/join.png'
+    | '/api/og/leaderboard.png'
+    | '/api/og/play.png'
     | '/api/rpc/$'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
@@ -598,9 +704,15 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
+    | '/api/og/badges/$badgeId/og.png'
+    | '/api/og/game/$code/og.png'
+    | '/api/og/pack/$slug/og.png'
+    | '/api/og/user/$username/og.png'
+    | '/api/og/whats-new/$version/og.png'
     | '/packs/$packSlug/topics/$topicSlug/'
     | '/packs/$packSlug/topics/bulk/'
     | '/packs/$packSlug/topics/new/'
+    | '/api/og/topic/$packSlug/$topicSlug/og.png'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
@@ -624,6 +736,9 @@ export interface RootRouteChildren {
   SettingsIndexRoute: typeof SettingsIndexRoute
   WhatsNewIndexRoute: typeof WhatsNewIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiOgJoinDotpngRoute: typeof ApiOgJoinDotpngRoute
+  ApiOgLeaderboardDotpngRoute: typeof ApiOgLeaderboardDotpngRoute
+  ApiOgPlayDotpngRoute: typeof ApiOgPlayDotpngRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   BadgesBadgeIdIndexRoute: typeof BadgesBadgeIdIndexRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
@@ -636,9 +751,15 @@ export interface RootRouteChildren {
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
   PlayNewPackSlugIndexRoute: typeof PlayNewPackSlugIndexRoute
+  ApiOgBadgesBadgeIdOgDotpngRoute: typeof ApiOgBadgesBadgeIdOgDotpngRoute
+  ApiOgGameCodeOgDotpngRoute: typeof ApiOgGameCodeOgDotpngRoute
+  ApiOgPackSlugOgDotpngRoute: typeof ApiOgPackSlugOgDotpngRoute
+  ApiOgUserUsernameOgDotpngRoute: typeof ApiOgUserUsernameOgDotpngRoute
+  ApiOgWhatsNewVersionOgDotpngRoute: typeof ApiOgWhatsNewVersionOgDotpngRoute
   PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
   PacksPackSlugTopicsBulkIndexRoute: typeof PacksPackSlugTopicsBulkIndexRoute
   PacksPackSlugTopicsNewIndexRoute: typeof PacksPackSlugTopicsNewIndexRoute
+  ApiOgTopicPackSlugTopicSlugOgDotpngRoute: typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   PacksPackSlugTopicsTopicSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   PacksPackSlugTopicsEditReorderIndexRoute: typeof PacksPackSlugTopicsEditReorderIndexRoute
   PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
@@ -893,6 +1014,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/og/play.png': {
+      id: '/api/og/play.png'
+      path: '/api/og/play.png'
+      fullPath: '/api/og/play.png'
+      preLoaderRoute: typeof ApiOgPlayDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/leaderboard.png': {
+      id: '/api/og/leaderboard.png'
+      path: '/api/og/leaderboard.png'
+      fullPath: '/api/og/leaderboard.png'
+      preLoaderRoute: typeof ApiOgLeaderboardDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/join.png': {
+      id: '/api/og/join.png'
+      path: '/api/og/join.png'
+      fullPath: '/api/og/join.png'
+      preLoaderRoute: typeof ApiOgJoinDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -949,6 +1091,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/og/whats-new/$version/og.png': {
+      id: '/api/og/whats-new/$version/og.png'
+      path: '/api/og/whats-new/$version/og.png'
+      fullPath: '/api/og/whats-new/$version/og.png'
+      preLoaderRoute: typeof ApiOgWhatsNewVersionOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/user/$username/og.png': {
+      id: '/api/og/user/$username/og.png'
+      path: '/api/og/user/$username/og.png'
+      fullPath: '/api/og/user/$username/og.png'
+      preLoaderRoute: typeof ApiOgUserUsernameOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/pack/$slug/og.png': {
+      id: '/api/og/pack/$slug/og.png'
+      path: '/api/og/pack/$slug/og.png'
+      fullPath: '/api/og/pack/$slug/og.png'
+      preLoaderRoute: typeof ApiOgPackSlugOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/game/$code/og.png': {
+      id: '/api/og/game/$code/og.png'
+      path: '/api/og/game/$code/og.png'
+      fullPath: '/api/og/game/$code/og.png'
+      preLoaderRoute: typeof ApiOgGameCodeOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/badges/$badgeId/og.png': {
+      id: '/api/og/badges/$badgeId/og.png'
+      path: '/api/og/badges/$badgeId/og.png'
+      fullPath: '/api/og/badges/$badgeId/og.png'
+      preLoaderRoute: typeof ApiOgBadgesBadgeIdOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/topics/edit/reorder/': {
       id: '/packs/$packSlug/topics/edit/reorder/'
       path: '/packs/$packSlug/topics/edit/reorder'
@@ -961,6 +1138,13 @@ declare module '@tanstack/react-router' {
       path: '/packs/$packSlug/topics/$topicSlug/edit'
       fullPath: '/packs/$packSlug/topics/$topicSlug/edit/'
       preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/topic/$packSlug/$topicSlug/og.png': {
+      id: '/api/og/topic/$packSlug/$topicSlug/og.png'
+      path: '/api/og/topic/$packSlug/$topicSlug/og.png'
+      fullPath: '/api/og/topic/$packSlug/$topicSlug/og.png'
+      preLoaderRoute: typeof ApiOgTopicPackSlugTopicSlugOgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': {
@@ -1047,6 +1231,9 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsIndexRoute: SettingsIndexRoute,
   WhatsNewIndexRoute: WhatsNewIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiOgJoinDotpngRoute: ApiOgJoinDotpngRoute,
+  ApiOgLeaderboardDotpngRoute: ApiOgLeaderboardDotpngRoute,
+  ApiOgPlayDotpngRoute: ApiOgPlayDotpngRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   BadgesBadgeIdIndexRoute: BadgesBadgeIdIndexRoute,
   GCodeIndexRoute: GCodeIndexRoute,
@@ -1059,10 +1246,17 @@ const rootRouteChildren: RootRouteChildren = {
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
   PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
   PlayNewPackSlugIndexRoute: PlayNewPackSlugIndexRoute,
+  ApiOgBadgesBadgeIdOgDotpngRoute: ApiOgBadgesBadgeIdOgDotpngRoute,
+  ApiOgGameCodeOgDotpngRoute: ApiOgGameCodeOgDotpngRoute,
+  ApiOgPackSlugOgDotpngRoute: ApiOgPackSlugOgDotpngRoute,
+  ApiOgUserUsernameOgDotpngRoute: ApiOgUserUsernameOgDotpngRoute,
+  ApiOgWhatsNewVersionOgDotpngRoute: ApiOgWhatsNewVersionOgDotpngRoute,
   PacksPackSlugTopicsTopicSlugIndexRoute:
     PacksPackSlugTopicsTopicSlugIndexRoute,
   PacksPackSlugTopicsBulkIndexRoute: PacksPackSlugTopicsBulkIndexRoute,
   PacksPackSlugTopicsNewIndexRoute: PacksPackSlugTopicsNewIndexRoute,
+  ApiOgTopicPackSlugTopicSlugOgDotpngRoute:
+    ApiOgTopicPackSlugTopicSlugOgDotpngRoute,
   PacksPackSlugTopicsTopicSlugEditIndexRoute:
     PacksPackSlugTopicsTopicSlugEditIndexRoute,
   PacksPackSlugTopicsEditReorderIndexRoute:
