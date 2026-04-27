@@ -1,4 +1,5 @@
 import { getSiteOrigin } from "../site-origin";
+import { readPublicBinary } from "./read-public-asset";
 
 /** Font entry shape expected by `@vercel/og` / Satori. */
 export type OgFont = {
@@ -21,12 +22,11 @@ async function loadTtf(filename: string): Promise<ArrayBuffer> {
 		}
 		return res.arrayBuffer();
 	}
-	const url = new URL(`./fonts/${filename}`, import.meta.url);
-	const res = await fetch(url);
-	if (!res.ok) {
-		throw new Error(`Failed to load OG font ${filename}: ${res.status}`);
-	}
-	return res.arrayBuffer();
+	const buf = readPublicBinary("og-fonts", filename);
+	return buf.buffer.slice(
+		buf.byteOffset,
+		buf.byteOffset + buf.byteLength,
+	) as ArrayBuffer;
 }
 
 /** Geist Sans Regular + Bold TTFs, loaded once and reused across renders. */

@@ -1,15 +1,12 @@
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { getSiteOrigin } from "../site-origin";
-
-const here = dirname(fileURLToPath(import.meta.url));
+import { readPublicBinary } from "./read-public-asset";
 
 let cachedDataUrl: string | null = null;
 
 /**
  * Load `og-template.png` into a data URL for Satori `backgroundImage`.
- * On Vercel, the source tree is not on disk — fetch from the deployed public URL.
+ * On Vercel, fetch from the deployed public URL; locally, read from `public/` on disk
+ * (avoids broken paths when this module runs from a Vite SSR bundle).
  */
 export async function preloadOgBaseImage(): Promise<void> {
 	if (cachedDataUrl) return;
@@ -25,8 +22,7 @@ export async function preloadOgBaseImage(): Promise<void> {
 		cachedDataUrl = `data:image/png;base64,${buf.toString("base64")}`;
 		return;
 	}
-	const publicPath = resolve(here, "../../../public/og-template.png");
-	const buf = readFileSync(publicPath);
+	const buf = readPublicBinary("og-template.png");
 	cachedDataUrl = `data:image/png;base64,${buf.toString("base64")}`;
 }
 

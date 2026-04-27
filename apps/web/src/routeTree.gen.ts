@@ -34,6 +34,7 @@ import { Route as PacksBulkNewIndexRouteImport } from './routes/packs/bulk-new/i
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
 import { Route as GamesHistoryIndexRouteImport } from './routes/games/history/index'
 import { Route as GCodeIndexRouteImport } from './routes/g/$code/index'
+import { Route as DevOgPreviewIndexRouteImport } from './routes/dev/og-preview/index'
 import { Route as DashboardUsersIndexRouteImport } from './routes/dashboard/users/index'
 import { Route as DashboardTopicsIndexRouteImport } from './routes/dashboard/topics/index'
 import { Route as DashboardQuestionsIndexRouteImport } from './routes/dashboard/questions/index'
@@ -60,6 +61,7 @@ import { Route as ApiOgUserUsernameOgDotpngRouteImport } from './routes/api/og/u
 import { Route as ApiOgPackSlugOgDotpngRouteImport } from './routes/api/og/pack/$slug/og[.]png'
 import { Route as ApiOgGameCodeOgDotpngRouteImport } from './routes/api/og/game/$code/og[.]png'
 import { Route as ApiOgBadgesBadgeIdOgDotpngRouteImport } from './routes/api/og/badges/$badgeId/og[.]png'
+import { Route as ApiDevOgPreviewKindOgDotpngRouteImport } from './routes/api/dev/og-preview/$kind/og[.]png'
 import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/edit/index'
 import { Route as ApiOgTopicPackSlugTopicSlugOgDotpngRouteImport } from './routes/api/og/topic/$packSlug/$topicSlug/og[.]png'
@@ -190,6 +192,11 @@ const GamesHistoryIndexRoute = GamesHistoryIndexRouteImport.update({
 const GCodeIndexRoute = GCodeIndexRouteImport.update({
   id: '/g/$code/',
   path: '/g/$code/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevOgPreviewIndexRoute = DevOgPreviewIndexRouteImport.update({
+  id: '/dev/og-preview/',
+  path: '/dev/og-preview/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardUsersIndexRoute = DashboardUsersIndexRouteImport.update({
@@ -329,6 +336,12 @@ const ApiOgBadgesBadgeIdOgDotpngRoute =
     path: '/api/og/badges/$badgeId/og.png',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiDevOgPreviewKindOgDotpngRoute =
+  ApiDevOgPreviewKindOgDotpngRouteImport.update({
+    id: '/api/dev/og-preview/$kind/og.png',
+    path: '/api/dev/og-preview/$kind/og.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PacksPackSlugTopicsEditReorderIndexRoute =
   PacksPackSlugTopicsEditReorderIndexRouteImport.update({
     id: '/packs/$packSlug/topics/edit/reorder/',
@@ -400,6 +413,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/questions/': typeof DashboardQuestionsIndexRoute
   '/dashboard/topics/': typeof DashboardTopicsIndexRoute
   '/dashboard/users/': typeof DashboardUsersIndexRoute
+  '/dev/og-preview/': typeof DevOgPreviewIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/games/history/': typeof GamesHistoryIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
@@ -410,6 +424,7 @@ export interface FileRoutesByFullPath {
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
+  '/api/dev/og-preview/$kind/og.png': typeof ApiDevOgPreviewKindOgDotpngRoute
   '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
   '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
   '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
@@ -457,6 +472,7 @@ export interface FileRoutesByTo {
   '/dashboard/questions': typeof DashboardQuestionsIndexRoute
   '/dashboard/topics': typeof DashboardTopicsIndexRoute
   '/dashboard/users': typeof DashboardUsersIndexRoute
+  '/dev/og-preview': typeof DevOgPreviewIndexRoute
   '/g/$code': typeof GCodeIndexRoute
   '/games/history': typeof GamesHistoryIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
@@ -467,6 +483,7 @@ export interface FileRoutesByTo {
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug': typeof PlayNewPackSlugIndexRoute
+  '/api/dev/og-preview/$kind/og.png': typeof ApiDevOgPreviewKindOgDotpngRoute
   '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
   '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
   '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
@@ -517,6 +534,7 @@ export interface FileRoutesById {
   '/dashboard/questions/': typeof DashboardQuestionsIndexRoute
   '/dashboard/topics/': typeof DashboardTopicsIndexRoute
   '/dashboard/users/': typeof DashboardUsersIndexRoute
+  '/dev/og-preview/': typeof DevOgPreviewIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/games/history/': typeof GamesHistoryIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
@@ -527,6 +545,7 @@ export interface FileRoutesById {
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
   '/play/new/$packSlug/': typeof PlayNewPackSlugIndexRoute
+  '/api/dev/og-preview/$kind/og.png': typeof ApiDevOgPreviewKindOgDotpngRoute
   '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
   '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
   '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
@@ -578,6 +597,7 @@ export interface FileRouteTypes {
     | '/dashboard/questions/'
     | '/dashboard/topics/'
     | '/dashboard/users/'
+    | '/dev/og-preview/'
     | '/g/$code/'
     | '/games/history/'
     | '/packs/$packSlug/'
@@ -588,6 +608,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
+    | '/api/dev/og-preview/$kind/og.png'
     | '/api/og/badges/$badgeId/og.png'
     | '/api/og/game/$code/og.png'
     | '/api/og/pack/$slug/og.png'
@@ -635,6 +656,7 @@ export interface FileRouteTypes {
     | '/dashboard/questions'
     | '/dashboard/topics'
     | '/dashboard/users'
+    | '/dev/og-preview'
     | '/g/$code'
     | '/games/history'
     | '/packs/$packSlug'
@@ -645,6 +667,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
     | '/play/new/$packSlug'
+    | '/api/dev/og-preview/$kind/og.png'
     | '/api/og/badges/$badgeId/og.png'
     | '/api/og/game/$code/og.png'
     | '/api/og/pack/$slug/og.png'
@@ -694,6 +717,7 @@ export interface FileRouteTypes {
     | '/dashboard/questions/'
     | '/dashboard/topics/'
     | '/dashboard/users/'
+    | '/dev/og-preview/'
     | '/g/$code/'
     | '/games/history/'
     | '/packs/$packSlug/'
@@ -704,6 +728,7 @@ export interface FileRouteTypes {
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
     | '/play/new/$packSlug/'
+    | '/api/dev/og-preview/$kind/og.png'
     | '/api/og/badges/$badgeId/og.png'
     | '/api/og/game/$code/og.png'
     | '/api/og/pack/$slug/og.png'
@@ -741,6 +766,7 @@ export interface RootRouteChildren {
   ApiOgPlayDotpngRoute: typeof ApiOgPlayDotpngRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   BadgesBadgeIdIndexRoute: typeof BadgesBadgeIdIndexRoute
+  DevOgPreviewIndexRoute: typeof DevOgPreviewIndexRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
   GamesHistoryIndexRoute: typeof GamesHistoryIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
@@ -751,6 +777,7 @@ export interface RootRouteChildren {
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
   PlayNewPackSlugIndexRoute: typeof PlayNewPackSlugIndexRoute
+  ApiDevOgPreviewKindOgDotpngRoute: typeof ApiDevOgPreviewKindOgDotpngRoute
   ApiOgBadgesBadgeIdOgDotpngRoute: typeof ApiOgBadgesBadgeIdOgDotpngRoute
   ApiOgGameCodeOgDotpngRoute: typeof ApiOgGameCodeOgDotpngRoute
   ApiOgPackSlugOgDotpngRoute: typeof ApiOgPackSlugOgDotpngRoute
@@ -944,6 +971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GCodeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/og-preview/': {
+      id: '/dev/og-preview/'
+      path: '/dev/og-preview'
+      fullPath: '/dev/og-preview/'
+      preLoaderRoute: typeof DevOgPreviewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/users/': {
       id: '/dashboard/users/'
       path: '/users'
@@ -1126,6 +1160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOgBadgesBadgeIdOgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/dev/og-preview/$kind/og.png': {
+      id: '/api/dev/og-preview/$kind/og.png'
+      path: '/api/dev/og-preview/$kind/og.png'
+      fullPath: '/api/dev/og-preview/$kind/og.png'
+      preLoaderRoute: typeof ApiDevOgPreviewKindOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/topics/edit/reorder/': {
       id: '/packs/$packSlug/topics/edit/reorder/'
       path: '/packs/$packSlug/topics/edit/reorder'
@@ -1236,6 +1277,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOgPlayDotpngRoute: ApiOgPlayDotpngRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
   BadgesBadgeIdIndexRoute: BadgesBadgeIdIndexRoute,
+  DevOgPreviewIndexRoute: DevOgPreviewIndexRoute,
   GCodeIndexRoute: GCodeIndexRoute,
   GamesHistoryIndexRoute: GamesHistoryIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
@@ -1246,6 +1288,7 @@ const rootRouteChildren: RootRouteChildren = {
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
   PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
   PlayNewPackSlugIndexRoute: PlayNewPackSlugIndexRoute,
+  ApiDevOgPreviewKindOgDotpngRoute: ApiDevOgPreviewKindOgDotpngRoute,
   ApiOgBadgesBadgeIdOgDotpngRoute: ApiOgBadgesBadgeIdOgDotpngRoute,
   ApiOgGameCodeOgDotpngRoute: ApiOgGameCodeOgDotpngRoute,
   ApiOgPackSlugOgDotpngRoute: ApiOgPackSlugOgDotpngRoute,
