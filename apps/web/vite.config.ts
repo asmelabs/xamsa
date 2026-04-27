@@ -12,10 +12,11 @@ export default defineConfig({
 		tailwindcss(),
 		tanstackStart(),
 		nitro({
-			traceDeps: ["@resvg/resvg-js", /^@resvg\/resvg-js-/, "satori"],
-			// also tell Nitro/Rollup these are external at bundle time
+			// Nitro re-bundles pre-split SSR chunks; a second Rollup pass can mis-resolve
+			// `clsx` named exports. Leave `clsx` external so Node loads the real package.
+			traceDeps: ["clsx"],
 			rollupConfig: {
-				external: [/^@resvg\/resvg-js/, /\.node$/, "satori"],
+				external: ["clsx"],
 			},
 		}),
 		viteReact(),
@@ -28,30 +29,5 @@ export default defineConfig({
 		commonjsOptions: {
 			requireReturnsDefault: "auto",
 		},
-		rollupOptions: {
-			external: [/^@resvg\/resvg-js/, /\.node$/],
-		},
-	},
-	optimizeDeps: {
-		exclude: [
-			"@resvg/resvg-js",
-			"@resvg/resvg-js-linux-x64-gnu",
-			"@resvg/resvg-js-linux-x64-musl",
-			"@resvg/resvg-js-darwin-x64",
-			"@resvg/resvg-js-darwin-arm64",
-			"satori",
-		],
-	},
-	ssr: {
-		external: [
-			"@resvg/resvg-js",
-			"@resvg/resvg-js-linux-x64-gnu",
-			"@resvg/resvg-js-linux-x64-musl",
-			"@resvg/resvg-js-darwin-x64",
-			"@resvg/resvg-js-darwin-arm64",
-			"@resvg/resvg-js-win32-x64-msvc",
-			"satori",
-		],
-		noExternal: [],
 	},
 });

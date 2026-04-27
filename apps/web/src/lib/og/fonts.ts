@@ -1,27 +1,32 @@
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+/** Font entry shape expected by `@vercel/og` / Satori. */
+export type OgFont = {
+	name: string;
+	data: ArrayBuffer;
+	weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+	style?: "normal" | "italic";
+};
 
-const here = dirname(fileURLToPath(import.meta.url));
+let cachedFonts: OgFont[] | null = null;
 
-let cachedFonts:
-	| { name: string; data: ArrayBuffer; weight: 400 | 700 }[]
-	| null = null;
-
-function readTtf(filename: string): ArrayBuffer {
-	const buf = readFileSync(resolve(here, "fonts", filename));
-	return buf.buffer.slice(
-		buf.byteOffset,
-		buf.byteOffset + buf.byteLength,
-	) as ArrayBuffer;
+async function loadTtf(filename: string): Promise<ArrayBuffer> {
+	const url = new URL(`./fonts/${filename}`, import.meta.url);
+	const res = await fetch(url);
+	if (!res.ok) {
+		throw new Error(`Failed to load OG font ${filename}: ${res.status}`);
+	}
+	return res.arrayBuffer();
 }
 
 /** Geist Sans Regular + Bold TTFs, loaded once and reused across renders. */
-export function getOgFonts() {
+export async function getOgFonts(): Promise<OgFont[]> {
 	if (cachedFonts) return cachedFonts;
+	const [regular, bold] = await Promise.all([
+		loadTtf("Geist-Regular.ttf"),
+		loadTtf("Geist-Bold.ttf"),
+	]);
 	cachedFonts = [
-		{ name: "Geist", data: readTtf("Geist-Regular.ttf"), weight: 400 },
-		{ name: "Geist", data: readTtf("Geist-Bold.ttf"), weight: 700 },
+		{ name: "Geist", data: regular, weight: 400, style: "normal" },
+		{ name: "Geist", data: bold, weight: 700, style: "normal" },
 	];
 	return cachedFonts;
 }

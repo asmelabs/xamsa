@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getGameOgData } from "@xamsa/api/og-data";
-import { ogPngResponse, renderOgPng } from "@/lib/og/render";
+import { ogImageResponse } from "@/lib/og/render";
 import { GameOg } from "@/lib/og/templates/game";
 
 function statusLabel(status: string): string {
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/og/game/$code/og.png")({
 				if (!game) {
 					return new Response("Not found", { status: 404 });
 				}
-				const png = await renderOgPng(
+				return ogImageResponse(
 					<GameOg
 						data={{
 							code: game.code,
@@ -36,7 +36,6 @@ export const Route = createFileRoute("/api/og/game/$code/og.png")({
 						}}
 					/>,
 				);
-				return ogPngResponse(png);
 			},
 		},
 	},
