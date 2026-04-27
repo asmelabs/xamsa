@@ -1,25 +1,40 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getSiteOrigin } from "../site-origin";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
 let cachedDataUrl: string | null = null;
 
 /**
- * Load `apps/web/public/og-template.png` once and expose it as a data URL so
- * Satori can use it as a CSS background image without making a network round
- * trip during render.
+ * Load `og-template.png` into a data URL for Satori `backgroundImage`.
+ * On Vercel, the source tree is not on disk — fetch from the deployed public URL.
  */
-export function getOgBaseImageDataUrl(): string {
-	if (cachedDataUrl) return cachedDataUrl;
-	// `here` is .../apps/web/src/lib/og — public is two levels up from src.
+export async function preloadOgBaseImage(): Promise<void> {
+	if (cachedDataUrl) return;
+	const origin = getSiteOrigin();
+	if (origin) {
+		const res = await fetch(`${origin}/og-template.png`);
+		if (!res.ok) {
+			throw new Error(
+				`preloadOgBaseImage: fetch og-template.png failed ${res.status}`,
+			);
+		}
+		const buf = Buffer.from(await res.arrayBuffer());
+		cachedDataUrl = `data:image/png;base64,${buf.toString("base64")}`;
+		return;
+	}
 	const publicPath = resolve(here, "../../../public/og-template.png");
 	const buf = readFileSync(publicPath);
 	cachedDataUrl = `data:image/png;base64,${buf.toString("base64")}`;
+}
+
+export function getOgBaseImageDataUrl(): string {
+	if (!cachedDataUrl) {
+		throw new Error("getOgBaseImageDataUrl: call preloadOgBaseImage() first");
+	}
 	return cachedDataUrl;
 }
 
-/** OG canvas dimensions (Twitter / OpenGraph standard). */
-export const OG_WIDTH = 1200;
-export const OG_HEIGHT = 630;
+export { OG_HEIGHT, OG_WIDTH } from "./dimensions";

@@ -1,5 +1,5 @@
 import { ImageResponse } from "@vercel/og";
-import { OG_HEIGHT, OG_WIDTH } from "./base-image";
+import { OG_HEIGHT, OG_WIDTH, preloadOgBaseImage } from "./base-image";
 import { getOgFonts } from "./fonts";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
@@ -15,6 +15,7 @@ export const OG_CACHE_CONTROL = `public, max-age=${ONE_DAY_SECONDS}, s-maxage=${
 export async function ogImageResponse(
 	node: React.ReactElement,
 ): Promise<Response> {
+	await preloadOgBaseImage();
 	const fonts = await getOgFonts();
 	const img = new ImageResponse(node, {
 		width: OG_WIDTH,

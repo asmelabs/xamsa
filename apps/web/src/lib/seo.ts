@@ -1,4 +1,5 @@
-import { env } from "@xamsa/env/web";
+import { OG_HEIGHT, OG_WIDTH } from "./og/dimensions";
+import { getSiteOrigin } from "./site-origin";
 
 export const SITE_NAME = "Xamsa";
 
@@ -14,9 +15,9 @@ export const DEFAULT_KEYWORDS =
 	"Xamsa, quiz game, live trivia, multiplayer quiz, question packs, buzzer game, real-time quiz, social trivia, host a quiz";
 
 export function absoluteUrl(path: string): string {
-	const base = env.VITE_PUBLIC_SITE_URL?.replace(/\/$/, "");
+	const base = getSiteOrigin();
 	if (!base) {
-		return path;
+		return path.startsWith("/") ? path : `/${path}`;
 	}
 	return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
@@ -91,6 +92,8 @@ export function pageSeo(input: PageSeoInput) {
 		{ property: "og:title", content: ogT },
 		{ property: "og:description", content: ogD },
 		{ property: "og:image", content: ogImageAbs },
+		{ property: "og:image:width", content: String(OG_WIDTH) },
+		{ property: "og:image:height", content: String(OG_HEIGHT) },
 		...(urlAbs ? [{ property: "og:url", content: urlAbs }] : []),
 		{ name: "twitter:card", content: "summary_large_image" },
 		{ name: "twitter:title", content: ogT },
