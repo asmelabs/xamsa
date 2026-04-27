@@ -31,7 +31,6 @@ export const PlayerSchema = z.object({
   currentWrongStreak: z.number().int(),
   longestWrongStreak: z.number().int(),
   topicsPlayed: z.number().int(),
-  achievements: z.array(z.string()),
 });
 
 export type PlayerType = z.infer<typeof PlayerSchema>;

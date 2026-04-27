@@ -138,12 +138,10 @@ model Player {
   /// topic participation ///
   topicsPlayed Int @default(0) @map("topics_played") // how many topics they participated in
 
-  /// achievements earned this game — JSON array of achievement codes ///
-  achievements String[] @default([]) // e.g. ["ace", "lightning", "sniper"]
-
-  winningGame  Game?          @relation("GameWinner")
+  winningGame  Game?             @relation("GameWinner")
   clicks       Click[]
-  questionWins GameQuestion[] @relation("QuestionWinner")
+  questionWins GameQuestion[]    @relation("QuestionWinner")
+  badgeAwards  PlayerBadgeAward[]
 
   @@unique([userId, gameId])
   @@index([gameId])
@@ -231,7 +229,8 @@ model GameTopic {
   /// duration (seconds) ///
   durationSeconds Int? @map("duration_seconds")
 
-  questions GameQuestion[]
+  questions    GameQuestion[]
+  badgeAwards  PlayerBadgeAward[]
 
   @@unique([gameId, topicId])
   @@unique([gameId, order])
@@ -276,12 +275,37 @@ model GameQuestion {
   firstBuzzMs     Int? @map("first_buzz_ms") // fastest reaction time on this question
   durationSeconds Int? @map("duration_seconds") // how long the question took
 
+  badgeAwards PlayerBadgeAward[]
+
   @@unique([gameTopicId, questionId])
   @@unique([gameTopicId, order])
   @@index([gameTopicId])
   @@index([questionId])
   @@index([winnerId])
   @@map("game_question")
+}
+
+/// One row per earn; metadata (name, description) lives in @xamsa/utils/badges ///
+model PlayerBadgeAward {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  earnedAt  DateTime @default(now()) @map("earned_at")
+
+  playerId String @map("player_id")
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  badgeId String @map("badge_id")
+
+  gameTopicId String?   @map("game_topic_id")
+  gameTopic   GameTopic? @relation(fields: [gameTopicId], references: [id], onDelete: Cascade)
+
+  gameQuestionId String?      @map("game_question_id")
+  gameQuestion   GameQuestion? @relation(fields: [gameQuestionId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([badgeId, earnedAt])
+  @@index([playerId, badgeId])
+  @@map("player_badge_award")
 }
 
 enum GameQuestionStatus {

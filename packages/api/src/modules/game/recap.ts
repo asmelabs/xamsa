@@ -4,6 +4,7 @@ import type {
 	GetCompletedGameRecapInputType,
 	GetCompletedGameRecapOutputType,
 } from "@xamsa/schemas/modules/game";
+import { isBadgeId } from "@xamsa/utils/badges";
 
 export async function getCompletedGameRecap(
 	input: GetCompletedGameRecapInputType,
@@ -86,7 +87,9 @@ export async function getCompletedGameRecap(
 		});
 	}
 
-	const [gameTopics, allClicks] = await Promise.all([
+	const playerIds = game.players.map((p) => p.id);
+
+	const [gameTopics, allClicks, rawBadgeAwards] = await Promise.all([
 		prisma.gameTopic.findMany({
 			where: { gameId: game.id },
 			orderBy: { order: "asc" },
@@ -157,7 +160,58 @@ export async function getCompletedGameRecap(
 			},
 			orderBy: [{ questionId: "asc" }, { position: "asc" }],
 		}),
+		prisma.playerBadgeAward.findMany({
+			where: { playerId: { in: playerIds } },
+			orderBy: { earnedAt: "asc" },
+			select: {
+				id: true,
+				badgeId: true,
+				playerId: true,
+				earnedAt: true,
+				gameTopic: {
+					select: {
+						order: true,
+						topic: { select: { slug: true, name: true } },
+					},
+				},
+				gameQuestion: {
+					select: {
+						order: true,
+						gameTopic: {
+							select: {
+								order: true,
+								topic: { select: { slug: true, name: true } },
+							},
+						},
+					},
+				},
+			},
+		}),
 	]);
+
+	const badgeAwards: GetCompletedGameRecapOutputType["badgeAwards"] = [];
+	for (const row of rawBadgeAwards) {
+		if (!isBadgeId(row.badgeId)) continue;
+		const topicFromGt = row.gameTopic;
+		const gq = row.gameQuestion;
+		const topicFromGq = gq?.gameTopic;
+		const topicOrder = topicFromGt?.order ?? topicFromGq?.order ?? null;
+		const topicSlug =
+			topicFromGt?.topic.slug ?? topicFromGq?.topic.slug ?? null;
+		const topicName =
+			topicFromGt?.topic.name ?? topicFromGq?.topic.name ?? null;
+
+		badgeAwards.push({
+			id: row.id,
+			badgeId: row.badgeId,
+			playerId: row.playerId,
+			earnedAt: row.earnedAt,
+			topicOrder,
+			topicSlug,
+			topicName,
+			questionOrder: gq?.order ?? null,
+		});
+	}
 
 	const clicksByQuestionId = new Map<string, typeof allClicks>();
 	for (const c of allClicks) {
@@ -166,7 +220,6 @@ export async function getCompletedGameRecap(
 		clicksByQuestionId.set(c.questionId, list);
 	}
 
-	const playerIds = game.players.map((p) => p.id);
 	const emptyScoreMap = (): Record<string, number> => {
 		const o: Record<string, number> = {};
 		for (const id of playerIds) o[id] = 0;
@@ -292,5 +345,6 @@ export async function getCompletedGameRecap(
 		topics,
 		scoreTimeline,
 		roundPerformance,
+		badgeAwards,
 	};
 }

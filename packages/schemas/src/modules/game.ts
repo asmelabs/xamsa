@@ -11,6 +11,7 @@ import {
 	TopicSchema,
 	UserSchema,
 } from "../db/schemas/models";
+import { BadgeIdSchema } from "./badge";
 
 export const CreateGameInputSchema = z.object({
 	pack: PackSchema.shape.slug,
@@ -399,6 +400,17 @@ const RecapRoundPerformanceRowSchema = z.object({
 	questionsCorrect: z.number().int(),
 });
 
+const RecapBadgeAwardSchema = z.object({
+	id: z.string(),
+	badgeId: BadgeIdSchema,
+	playerId: z.string(),
+	earnedAt: z.coerce.date(),
+	topicOrder: z.number().int().nullable(),
+	topicSlug: z.string().nullable(),
+	topicName: z.string().nullable(),
+	questionOrder: z.number().int().nullable(),
+});
+
 export const GetCompletedGameRecapOutputSchema = z.object({
 	code: z.string(),
 	startedAt: z.coerce.date().nullable(),
@@ -421,6 +433,7 @@ export const GetCompletedGameRecapOutputSchema = z.object({
 	topics: z.array(RecapTopicSchema),
 	scoreTimeline: z.array(RecapScoreTimelineStepSchema),
 	roundPerformance: z.array(RecapRoundPerformanceRowSchema),
+	badgeAwards: z.array(RecapBadgeAwardSchema),
 });
 
 export type GetCompletedGameRecapInputType = z.infer<

@@ -265,7 +265,9 @@ export async function getRecentGames(
 	return { items, nextCursor };
 }
 
-async function requireUserIdByUsername(username: string): Promise<string> {
+export async function requireUserIdByUsername(
+	username: string,
+): Promise<string> {
 	const user = await prisma.user.findUnique({
 		where: { username },
 		select: { id: true },
