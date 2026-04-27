@@ -11,7 +11,12 @@ export default defineConfig({
 		tsconfigPaths(),
 		tailwindcss(),
 		tanstackStart(),
-		nitro(),
+		// `@resvg/resvg-js` ships native `.node` bindings; tell Nitro to trace
+		// (copy) it into the server output rather than bundling so the loader
+		// can `require` the platform-specific binary at runtime.
+		nitro({
+			traceDeps: ["@resvg/resvg-js", /^@resvg\/resvg-js-/],
+		}),
 		viteReact(),
 	] as PluginOption[],
 	server: {
@@ -22,5 +27,13 @@ export default defineConfig({
 		commonjsOptions: {
 			requireReturnsDefault: "auto",
 		},
+	},
+	// Keep the resvg native binding out of the Vite dep-optimizer and SSR bundle
+	// so Vite/esbuild never tries to parse the `.node` file.
+	optimizeDeps: {
+		exclude: ["@resvg/resvg-js"],
+	},
+	ssr: {
+		external: ["@resvg/resvg-js"],
 	},
 });

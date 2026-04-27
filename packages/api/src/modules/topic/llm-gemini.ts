@@ -7,6 +7,8 @@ import type { PackLanguage } from "@xamsa/schemas/db/schemas/enums/PackLanguage.
 import {
 	buildTopicGenerationSystemPrompt,
 	buildTopicGenerationUserPrompt,
+	buildTopicSeedingSystemPrompt,
+	buildTopicSeedingUserPrompt,
 } from "./ai-prompts";
 
 /** Tried in order: best quality first, then lighter models when Pro/Flash are saturated. */
@@ -92,29 +94,17 @@ async function callGeminiModel(
 }
 
 /**
- * @returns parsed JSON (unknown) — caller must validate with Zod
+ * Walk the Gemini model chain (best → lightest) with bounded retries.
+ * Caller validates the parsed JSON with Zod.
  */
-export async function generateTopicQuestionsJson(params: {
-	language: PackLanguage;
-	topicName: string;
-	topicDescription?: string;
-	packName: string;
-	packDescription: string | null;
-	authorPrompt?: string;
-}): Promise<unknown> {
+async function callWithFallbackChain(
+	system: string,
+	user: string,
+): Promise<unknown> {
 	const apiKey = resolveGeminiApiKey();
 	if (!apiKey) {
 		throw new Error("GEMINI_API_KEY is not set");
 	}
-
-	const system = buildTopicGenerationSystemPrompt(params.language);
-	const user = buildTopicGenerationUserPrompt({
-		topicName: params.topicName,
-		topicDescription: params.topicDescription,
-		packName: params.packName,
-		packDescription: params.packDescription,
-		authorPrompt: params.authorPrompt,
-	});
 
 	let lastError: unknown;
 	for (const modelName of MODEL_CHAIN) {
@@ -152,4 +142,51 @@ export async function generateTopicQuestionsJson(params: {
 	throw new Error(
 		`All Gemini models are currently unavailable. ${msg.slice(0, 240)}`,
 	);
+}
+
+/**
+ * @returns parsed JSON (unknown) — caller must validate with Zod
+ */
+export async function generateTopicQuestionsJson(params: {
+	language: PackLanguage;
+	topicName: string;
+	topicDescription?: string;
+	packName: string;
+	packDescription: string | null;
+	authorPrompt?: string;
+}): Promise<unknown> {
+	const system = buildTopicGenerationSystemPrompt(params.language);
+	const user = buildTopicGenerationUserPrompt({
+		topicName: params.topicName,
+		topicDescription: params.topicDescription,
+		packName: params.packName,
+		packDescription: params.packDescription,
+		authorPrompt: params.authorPrompt,
+	});
+	return callWithFallbackChain(system, user);
+}
+
+/**
+ * Generate ONE topic seed (name + 1-sentence description) for an existing pack.
+ * The model is given the existing topic names so it never duplicates.
+ *
+ * @returns parsed JSON (unknown) — caller must validate with Zod
+ */
+export async function generateTopicJson(params: {
+	language: PackLanguage;
+	packName: string;
+	packDescription: string | null;
+	seed?: string;
+	authorPrompt?: string;
+	existingTopicNames: string[];
+}): Promise<unknown> {
+	const system = buildTopicSeedingSystemPrompt(params.language);
+	const user = buildTopicSeedingUserPrompt({
+		packName: params.packName,
+		packDescription: params.packDescription,
+		seed: params.seed,
+		authorPrompt: params.authorPrompt,
+		existingTopicNames: params.existingTopicNames,
+	});
+	return callWithFallbackChain(system, user);
 }

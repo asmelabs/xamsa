@@ -7,12 +7,37 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 11 } as const;
+const current = { year: 2026, month: 4, patch: 12 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-27",
+			year: 2026,
+			month: 4,
+			patch: 12,
+			title: "Dynamic OG images and AI topic seeding",
+			highlights: [
+				{
+					kind: "text",
+					text: "Pack, topic, user, game, badge, and release pages now serve a dedicated Open Graph image generated from live data. The leaderboard, Play, and Join pages also have their own preview images, including the current top three Elo players for the leaderboard.",
+				},
+				{
+					kind: "text",
+					text: "Each preview is rendered on top of the new Xamsa template (orange bars, bow-tie logo) with the entity name, author, key stats, and avatar where applicable. Images are cached for a day with a week of stale-while-revalidate so social platforms always have something to show.",
+				},
+				{
+					kind: "text",
+					text: "Topic creation gains a second AI button: “Generate topic with AI” drafts a name and one-sentence description for an empty row. It uses the same daily AI quota as question generation (one credit per click) and is told the pack’s existing topic names so it never duplicates.",
+				},
+				{
+					kind: "text",
+					text: "The bulk topic creator gets a per-row “AI topic” shortcut that fills only that row’s name and description, leaving the five question rows untouched. Both flows accept an optional seed/hint and optional author instructions.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-27",
 			year: 2026,

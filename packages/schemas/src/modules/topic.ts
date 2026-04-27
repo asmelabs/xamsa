@@ -142,6 +142,28 @@ export type GenerateTopicQuestionsOutputType = z.infer<
 	typeof GenerateTopicQuestionsOutputSchema
 >;
 
+/**
+ * AI: generate a topic name + description for an existing pack (no DB write;
+ * server validates output and never duplicates an existing topic name).
+ */
+export const GenerateTopicInputSchema = z.object({
+	pack: PackSchema.shape.slug,
+	/** Short hint to steer the seed, e.g. "phonetic constraint" or "Cuban history". */
+	seed: z.string().max(200).optional(),
+	/** Optional; merged into the user prompt for this request only. */
+	authorPrompt: z.string().max(2000).optional(),
+	/** If omitted, the pack’s language is used. */
+	language: PackLanguageSchema.optional(),
+});
+
+export const GenerateTopicOutputSchema = TopicSchema.pick({
+	name: true,
+	description: true,
+});
+
+export type GenerateTopicInputType = z.infer<typeof GenerateTopicInputSchema>;
+export type GenerateTopicOutputType = z.infer<typeof GenerateTopicOutputSchema>;
+
 export const GetAiTopicQuotaOutputSchema = z.object({
 	used: z.number().int().min(0),
 	limit: z.number().int().min(0),

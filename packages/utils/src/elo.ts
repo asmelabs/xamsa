@@ -59,9 +59,7 @@ export function calculateEloDeltas(
 
 		const placementScore = (n - p.rank) / (n - 1);
 		const marginScore =
-			spread > 0
-				? clamp01((p.score - sMin) / spread)
-				: placementScore;
+			spread > 0 ? clamp01((p.score - sMin) / spread) : placementScore;
 
 		const actual = clamp01(wP * placementScore + wM * marginScore);
 		out.set(p.userId, Math.round(k * (actual - expected)));

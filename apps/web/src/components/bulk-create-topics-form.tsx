@@ -31,7 +31,7 @@ import {
 } from "@xamsa/ui/components/popover";
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
-import { CircleHelp, Download, Sparkles } from "lucide-react";
+import { CircleHelp, Download, Sparkles, Wand2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
@@ -98,6 +98,11 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 		topicIndex: number;
 		authorPrompt: string;
 	} | null>(null);
+	const [aiTopicDialog, setAiTopicDialog] = useState<{
+		topicIndex: number;
+		seed: string;
+		authorPrompt: string;
+	} | null>(null);
 	const lastSubmittedTopicCount = useRef(0);
 
 	const { data: aiQuota } = useQuery({
@@ -107,6 +112,10 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 
 	const { mutate: generateWithAi, isPending: isAiPending } = useMutation({
 		...orpc.topic.generateQuestions.mutationOptions(),
+	});
+
+	const { mutate: generateTopicAi, isPending: isAiTopicPending } = useMutation({
+		...orpc.topic.generateTopic.mutationOptions(),
 	});
 
 	const form = useAppForm({
@@ -253,12 +262,36 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 						<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
 							<Button
 								type="button"
+								variant="ghost"
+								size="sm"
+								disabled={
+									!session?.user ||
+									isStartingJob ||
+									isAiPending ||
+									isAiTopicPending ||
+									!aiQuota ||
+									aiQuota.used >= aiQuota.limit
+								}
+								onClick={() =>
+									setAiTopicDialog({
+										topicIndex,
+										seed: "",
+										authorPrompt: "",
+									})
+								}
+							>
+								<Wand2 className="mr-1.5 size-4" />
+								{isAiTopicPending ? "Generating…" : "AI topic"}
+							</Button>
+							<Button
+								type="button"
 								variant="secondary"
 								size="sm"
 								disabled={
 									!session?.user ||
 									isStartingJob ||
 									isAiPending ||
+									isAiTopicPending ||
 									!aiQuota ||
 									aiQuota.used >= aiQuota.limit ||
 									!(form.getValues(`topics.${topicIndex}.name`)?.trim() ?? "")
@@ -274,12 +307,13 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 								}}
 							>
 								<Sparkles className="mr-1.5 size-4" />
-								{isAiPending ? "Generating…" : "Generate with AI"}
+								{isAiPending ? "Generating…" : "Generate questions with AI"}
 							</Button>
 						</div>
 						<p className="text-muted-foreground text-xs">
-							Each click uses one daily AI credit and fills that topic’s five
-							questions; verify facts before creating.
+							“AI topic” fills this row’s name and description (one credit).
+							“Generate questions with AI” fills its five questions (one
+							credit). Verify facts before creating.
 						</p>
 
 						<div className="space-y-3">
@@ -361,7 +395,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 			>
 				<DialogContent className="sm:max-w-lg" showCloseButton>
 					<DialogHeader>
-						<DialogTitle>Generate with AI</DialogTitle>
+						<DialogTitle>Generate questions with AI</DialogTitle>
 						<DialogDescription>
 							Optional: add instructions (difficulty, tone, themes to include or
 							avoid). Leave empty for the default prompt.
@@ -465,6 +499,120 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 							type="button"
 						>
 							{isAiPending ? "Generating…" : "Generate"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog
+				onOpenChange={(open) => {
+					if (!open) setAiTopicDialog(null);
+				}}
+				open={aiTopicDialog !== null}
+			>
+				<DialogContent className="sm:max-w-lg" showCloseButton>
+					<DialogHeader>
+						<DialogTitle>Generate topic with AI</DialogTitle>
+						<DialogDescription>
+							AI proposes a topic name and a one-sentence description for this
+							row. The pack’s existing topic names are passed in so the model
+							avoids duplicates. Both fields are optional.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogPanel>
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="bulk-ai-topic-seed">
+									Seed / hint (optional)
+								</Label>
+								<Input
+									id="bulk-ai-topic-seed"
+									maxLength={200}
+									onChange={(e) => {
+										const v = e.target.value;
+										setAiTopicDialog((d) => (d ? { ...d, seed: v } : d));
+									}}
+									placeholder="e.g. phonetic constraint, Cuban history…"
+									value={aiTopicDialog?.seed ?? ""}
+								/>
+								<p className="text-muted-foreground text-xs">
+									{aiTopicDialog?.seed.length ?? 0}/200 characters
+								</p>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="bulk-ai-topic-author-prompt">
+									Additional instructions (optional)
+								</Label>
+								<Textarea
+									id="bulk-ai-topic-author-prompt"
+									maxLength={2000}
+									onChange={(e) => {
+										const v = e.target.value;
+										setAiTopicDialog((d) =>
+											d ? { ...d, authorPrompt: v } : d,
+										);
+									}}
+									placeholder="e.g. avoid sports topics, lean toward literature…"
+									rows={4}
+									value={aiTopicDialog?.authorPrompt ?? ""}
+								/>
+								<p className="text-muted-foreground text-xs">
+									{aiTopicDialog?.authorPrompt.length ?? 0}/2000 characters
+								</p>
+							</div>
+						</div>
+					</DialogPanel>
+					<DialogFooter>
+						<Button
+							onClick={() => setAiTopicDialog(null)}
+							type="button"
+							variant="outline"
+						>
+							Cancel
+						</Button>
+						<Button
+							disabled={isAiTopicPending || aiTopicDialog == null}
+							onClick={() => {
+								if (aiTopicDialog == null) return;
+								const topicIndex = aiTopicDialog.topicIndex;
+								const seed = aiTopicDialog.seed.trim() || undefined;
+								const authorPrompt =
+									aiTopicDialog.authorPrompt.trim() || undefined;
+								setAiTopicDialog(null);
+								generateTopicAi(
+									{
+										pack: packSlug,
+										seed,
+										authorPrompt,
+									},
+									{
+										onSuccess: (data) => {
+											form.setValue(`topics.${topicIndex}.name`, data.name);
+											form.setValue(
+												`topics.${topicIndex}.description`,
+												data.description ?? "",
+											);
+											void queryClient.invalidateQueries({
+												queryKey: orpc.topic.getAiQuota.queryKey({
+													input: {},
+												}),
+											});
+											toast.success(
+												`Topic ${String(topicIndex + 1)}: AI topic added — review before saving.`,
+											);
+										},
+										onError: (err) => {
+											toast.error(
+												err.message ||
+													"AI topic generation failed. Please try again.",
+											);
+										},
+									},
+								);
+							}}
+							type="button"
+						>
+							{isAiTopicPending ? "Generating…" : "Generate"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

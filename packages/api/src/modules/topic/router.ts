@@ -7,6 +7,8 @@ import {
 	DeleteTopicOutputSchema,
 	FindOneTopicInputSchema,
 	FindOneTopicOutputSchema,
+	GenerateTopicInputSchema,
+	GenerateTopicOutputSchema,
 	GenerateTopicQuestionsInputSchema,
 	GenerateTopicQuestionsOutputSchema,
 	GetAiTopicQuotaOutputSchema,
@@ -22,7 +24,11 @@ import {
 } from "@xamsa/schemas/modules/topic";
 import z from "zod";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { generateTopicQuestionsWithAI, getAiTopicQuota } from "./ai.service";
+import {
+	generateTopicQuestionsWithAI,
+	generateTopicWithAI,
+	getAiTopicQuota,
+} from "./ai.service";
 import { getBulkCreateJob, startBulkCreateJob } from "./bulk-job.service";
 import {
 	bulkCreateTopics,
@@ -69,6 +75,13 @@ export const topicRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await generateTopicQuestionsWithAI(input, context.session.user.id),
+		),
+	generateTopic: protectedProcedure
+		.input(GenerateTopicInputSchema)
+		.output(GenerateTopicOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await generateTopicWithAI(input, context.session.user.id),
 		),
 	getAiQuota: protectedProcedure
 		.input(z.object({}))

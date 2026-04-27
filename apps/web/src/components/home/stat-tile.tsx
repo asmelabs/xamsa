@@ -17,9 +17,7 @@ export function StatTile({ icon: Icon, label, value, hint }: StatTileProps) {
 			<div className="font-semibold text-foreground text-lg leading-tight">
 				{value}
 			</div>
-			{hint && (
-				<div className="text-muted-foreground text-xs">{hint}</div>
-			)}
+			{hint && <div className="text-muted-foreground text-xs">{hint}</div>}
 		</div>
 	);
 }

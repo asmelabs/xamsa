@@ -497,3 +497,85 @@ If any answer is "no," rewrite.`,
 
 	return `${base}\n\nADDITIONAL AUTHOR INSTRUCTIONS (apply if consistent with Xamsa style and factual integrity):\n${extra}`;
 }
+
+// ============================================================
+// TOPIC SEEDING PROMPTS — generate ONE topic name + 1-sentence description
+// for an existing pack. The model is shown the same archetype catalog used
+// by the questions chain so the seed is consistent with Xamsa style. The
+// pack's existing topic names are passed in so the model never duplicates
+// or near-duplicates a concept already covered by the pack.
+// ============================================================
+
+export function buildTopicSeedingSystemPrompt(language: PackLanguage): string {
+	const lang = LANGUAGE_LABEL[language];
+	const archetypesJson = JSON.stringify(XAMSA_TOPIC_ARCHETYPES);
+
+	return [
+		`You are a senior question author for "Xamsa" (Xəmsə), a televised Azerbaijani intellectual quiz show. You are seeding ONE new topic for an existing pack: a topic name and a single-sentence description an author can use as the brief when writing 5 questions.`,
+
+		`LANGUAGE RULE (ABSOLUTE): "name" and "description" must be written ONLY in ${lang}. Proper names may stay in their original language but must be embedded inside ${lang} sentences. Do not mix languages within a field.`,
+
+		`OUTPUT FORMAT: Exactly one JSON object, no markdown fences, no preamble, no commentary. Shape: {"name": string, "description": string}.
+- "name": the topic name as it would appear on Xamsa. 1-50 characters. No trailing punctuation. Capitalize naturally.
+- "description": one sentence (max ~250 chars) summarizing the constraint or theme so an author knows what 5 questions belong here. Do NOT include sample questions or sample answers in the description.`,
+
+		`WHAT MAKES A GOOD XAMSA TOPIC: A topic is either CONSTRAINT-BASED (shared word/phoneme/attribute that EVERY answer must satisfy) or THEMATIC (a concept that 5 answers from completely unrelated domains can bridge to via the answer-first method). Choose the archetype that fits the seed best. Avoid generic categories like "Famous people" or "World countries" that have no constraint and no bridge — those become flat trivia.`,
+
+		`TOPIC ARCHETYPES — examples and rules: ${archetypesJson}`,
+
+		`AVOID DUPLICATES: A list of EXISTING topic names already in this pack will be provided. Your topic must be:
+- Not equal (case-insensitive, accent-insensitive) to any existing name.
+- Not a near-paraphrase of an existing topic (same constraint, same theme, same archetype with different wording).
+- Pulled from a different angle: if the pack already has phonetic-constraint topics, prefer a thematic concept; if the pack is heavy on cultural artifacts, prefer a shared-word constraint; etc.`,
+
+		"SAFETY: Family-friendly. No hate, harassment, NSFW topics, or topics that promote real-world harm.",
+
+		`SELF-CHECK BEFORE OUTPUT:
+1. Does the topic fit a recognizable Xamsa archetype?
+2. Could a competent author write 5 bridged, field-diverse questions for it without inventing facts?
+3. Is the topic distinct from every existing topic name in the pack?
+4. Are both fields written entirely in ${lang}?
+If any answer is "no", revise before emitting JSON.`,
+	].join("\n\n");
+}
+
+export function buildTopicSeedingUserPrompt(params: {
+	packName: string;
+	packDescription: string | null;
+	seed?: string;
+	authorPrompt?: string;
+	existingTopicNames: string[];
+}): string {
+	const existing =
+		params.existingTopicNames.length > 0
+			? params.existingTopicNames.map((n) => `- ${n}`).join("\n")
+			: "(none yet)";
+
+	const lines = [
+		`PACK: "${params.packName}"`,
+		params.packDescription
+			? `PACK DESCRIPTION: ${params.packDescription}`
+			: "PACK DESCRIPTION: (none)",
+		"",
+		"EXISTING TOPIC NAMES IN THIS PACK (must not duplicate or paraphrase):",
+		existing,
+		"",
+		params.seed?.trim()
+			? `SEED / HINT: ${params.seed.trim()}`
+			: "SEED / HINT: (none — invent a fresh angle that complements the existing topics)",
+		"",
+		`Generate exactly ONE new Xamsa topic for this pack:
+1. Choose an archetype that complements (does not duplicate) the existing topics.
+2. Pick a name that is concrete enough to write 5 bridged questions for. Avoid generic catch-alls.
+3. Write a one-sentence description telling the author what kind of answers belong here (constraint or theme), without listing sample questions or sample answers.`,
+		"",
+		"OUTPUT ONLY THE JSON OBJECT. No commentary.",
+	];
+
+	const base = lines.join("\n");
+
+	const extra = params.authorPrompt?.trim();
+	if (!extra) return base;
+
+	return `${base}\n\nADDITIONAL AUTHOR INSTRUCTIONS (apply if consistent with Xamsa style and factual integrity):\n${extra}`;
+}

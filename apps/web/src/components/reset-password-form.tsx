@@ -93,8 +93,8 @@ export function ResetPasswordForm() {
 				{tokenMissing ? (
 					<FramePanel className="space-y-4">
 						<p className="text-muted-foreground text-sm">
-							Your password reset link is invalid or has expired. Please
-							request a new one.
+							Your password reset link is invalid or has expired. Please request
+							a new one.
 						</p>
 					</FramePanel>
 				) : (

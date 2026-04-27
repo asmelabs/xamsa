@@ -53,6 +53,7 @@ export const Route = createFileRoute("/packs/$packSlug/topics/$topicSlug/")({
 			ogType: "article",
 			ogTitle: `${loaderData.name} · ${loaderData.pack.name}`,
 			ogDescription: truncateMeta(desc),
+			ogImagePath: `/api/og/topic/${loaderData.pack.slug}/${loaderData.slug}/og.png`,
 			keywords: `${loaderData.name}, ${loaderData.pack.name}, Xamsa topic, quiz questions`,
 			jsonLd: topicPageJsonLd(loaderData),
 		});
