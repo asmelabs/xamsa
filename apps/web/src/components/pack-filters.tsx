@@ -58,15 +58,24 @@ export function PackFilters({ isAuthenticated }: PackFiltersProps) {
 		"only_my_packs",
 		parseAsBoolean.withDefault(false),
 	);
+	const [canHost, setCanHost] = useQueryState(
+		"can_host",
+		parseAsBoolean.withDefault(false),
+	);
 
 	const hasFilters =
-		minPlays > 0 || minAverageRating > 0 || hasRatings || onlyMyPacks;
+		minPlays > 0 ||
+		minAverageRating > 0 ||
+		hasRatings ||
+		onlyMyPacks ||
+		canHost;
 
 	const handleReset = () => {
 		setMinPlays(0);
 		setMinAverageRating(0);
 		setHasRatings(false);
 		setOnlyMyPacks(false);
+		setCanHost(false);
 
 		setFiltersOpened(false);
 	};
@@ -155,6 +164,22 @@ export function PackFilters({ isAuthenticated }: PackFiltersProps) {
 							/>
 							<p className="text-muted-foreground text-sm">
 								See only packs you have created.
+							</p>
+						</div>
+					</div>
+				)}
+				{isAuthenticated && (
+					<div className="space-y-2">
+						<Label htmlFor="can-host">Can host</Label>
+						<div className="flex items-center gap-2">
+							<Switch
+								id="can-host"
+								checked={canHost}
+								onCheckedChange={(checked) => setCanHost(checked ?? false)}
+							/>
+							<p className="text-muted-foreground text-sm">
+								Published packs you can start a live game from (yours, or
+								community packs that allow others to host).
 							</p>
 						</div>
 					</div>

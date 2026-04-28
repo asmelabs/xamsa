@@ -19,6 +19,8 @@ export const CreatePackInputSchema = PackSchema.pick({
 	description: true,
 	language: true,
 	visibility: true,
+}).extend({
+	allowOthersHost: PackSchema.shape.allowOthersHost.optional(),
 });
 
 export const CreatePackOutputSchema = PackSchema.pick({
@@ -74,6 +76,7 @@ export const UpdatePackInputSchema = PackSchema.pick({
 	description: true,
 	language: true,
 	visibility: true,
+	allowOthersHost: true,
 })
 	.partial()
 	.required({ slug: true });
@@ -119,6 +122,8 @@ export const FindOnePackOutputSchema = PackSchema.pick({
 	publishedAt: true,
 	status: true,
 	pdr: true,
+	allowOthersHost: true,
+	showTopicsInfo: true,
 }).extend({
 	isAuthor: z.boolean(),
 	_count: CountSchema("topics"),
@@ -146,6 +151,8 @@ export const ListPacksFiltersSchema = z.object({
 	minPlays: z.number().int().min(0).default(0),
 	hasRatings: z.boolean(),
 	onlyMyPacks: z.boolean(),
+	/** Published packs the current user may host (author, or public + allowOthersHost). Requires signed-in user; ignored when logged out. */
+	canHost: z.boolean(),
 });
 export const ListPacksInputSchema = ListPacksFiltersSchema.partial()
 	.extend(CursorPaginationInputSchema.shape)
@@ -166,6 +173,7 @@ export const ListPacksOutputSchema = CursorPaginationOutputSchema(
 		status: true,
 		visibility: true,
 		pdr: true,
+		allowOthersHost: true,
 	}).extend({
 		_count: CountSchema("topics"),
 		author: UserSchema.pick({

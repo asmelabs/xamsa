@@ -19,6 +19,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@xamsa/ui/components/select";
+import { Switch } from "@xamsa/ui/components/switch";
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { formatCase, formattedEnum } from "@xamsa/utils/case-formatters";
 import { toast } from "sonner";
@@ -37,6 +38,8 @@ export function EditPackForm({ packData }: EditPackFormProps) {
 		schema: UpdatePackInputSchema.omit({ slug: true }),
 		defaultValues: initialData,
 	});
+
+	const visibility = form.watch("visibility");
 
 	const { mutate: updatePack, isPending } = useMutation({
 		...orpc.pack.update.mutationOptions(),
@@ -98,6 +101,34 @@ export function EditPackForm({ packData }: EditPackFormProps) {
 									))}
 								</SelectContent>
 							</Select>
+						)}
+					</form.Input>
+
+					<form.Input
+						name="allowOthersHost"
+						label="Community hosting"
+						description="When this pack is published and public, other signed-in players can host live games from it—not only you."
+					>
+						{(field) => (
+							<div className="flex items-start gap-3">
+								<Switch
+									checked={field.value ?? false}
+									disabled={visibility === "private"}
+									id="edit-pack-allow-others-host"
+									onCheckedChange={field.onChange}
+								/>
+								<label
+									className="text-muted-foreground text-sm leading-snug"
+									htmlFor="edit-pack-allow-others-host"
+								>
+									Allow others to host games with this pack
+									{visibility === "private" ? (
+										<span className="mt-1 block text-xs">
+											Only public packs can use community hosting.
+										</span>
+									) : null}
+								</label>
+							</div>
 						)}
 					</form.Input>
 				</FramePanel>

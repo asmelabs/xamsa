@@ -7,12 +7,33 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 13 } as const;
+const current = { year: 2026, month: 4, patch: 14 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-28",
+			year: 2026,
+			month: 4,
+			patch: 14,
+			title: "Chart readability and community hosting",
+			highlights: [
+				{
+					kind: "text",
+					text: "Score charts on game stats, detailed recap, and profile pages use a clearer multi-series palette with distinct hues in light and dark mode; buzz outcome pies align with success, destructive, and warning tokens.",
+				},
+				{
+					kind: "text",
+					text: "Published packs can opt in to “allow others to host” when visibility is public: non-authors may start live games from that pack. Authors control this when creating or editing pack settings.",
+				},
+				{
+					kind: "text",
+					text: "The packs directory gains a “Can host” filter (signed-in users): published packs you authored or published packs that allow community hosting.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-28",
 			year: 2026,

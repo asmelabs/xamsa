@@ -68,6 +68,10 @@ function RouteComponent() {
 		"only_my_packs",
 		parseAsBoolean.withDefault(false),
 	);
+	const [canHost] = useQueryState(
+		"can_host",
+		parseAsBoolean.withDefault(false),
+	);
 
 	const {
 		data,
@@ -89,6 +93,7 @@ function RouteComponent() {
 				minPlays,
 				hasRatings,
 				onlyMyPacks: !session ? undefined : onlyMyPacks,
+				canHost: !session ? undefined : canHost,
 			}),
 			getNextPageParam: (lastPage) => lastPage.metadata.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,

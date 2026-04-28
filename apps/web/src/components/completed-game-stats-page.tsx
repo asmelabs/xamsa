@@ -76,6 +76,9 @@ const CHART_FILLS = [
 	"var(--chart-3)",
 	"var(--chart-4)",
 	"var(--chart-5)",
+	"var(--chart-6)",
+	"var(--chart-7)",
+	"var(--chart-8)",
 ];
 
 type Recap = GetCompletedGameRecapOutputType;
@@ -221,17 +224,17 @@ function OutcomesPieChart({ recap }: { recap: Recap }) {
 		{
 			name: "Correct",
 			value: totals.totalCorrectAnswers,
-			fill: "oklch(0.65 0.17 145)",
+			fill: "var(--success)",
 		},
 		{
 			name: "Wrong",
 			value: totals.totalIncorrectAnswers,
-			fill: "oklch(0.55 0.2 25)",
+			fill: "var(--destructive)",
 		},
 		{
 			name: "Expired",
 			value: totals.totalExpiredAnswers,
-			fill: "oklch(0.7 0.08 85)",
+			fill: "var(--warning)",
 		},
 	];
 	const data = raw.filter((d) => d.value > 0);

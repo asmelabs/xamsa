@@ -111,9 +111,9 @@ const roleConfig = {
 };
 
 const OUTCOME_PIE_COLORS = {
-	correct: "var(--chart-2)",
-	wrong: "var(--chart-4)",
-	expired: "var(--chart-3)",
+	correct: "var(--success)",
+	wrong: "var(--destructive)",
+	expired: "var(--warning)",
 } as const;
 
 function formatPlayTimeSeconds(totalSeconds: number): string {
@@ -522,7 +522,7 @@ function RouteComponent() {
 														/>
 														<Bar
 															dataKey="games"
-															fill="var(--chart-1)"
+															fill="var(--chart-2)"
 															radius={[3, 3, 0, 0]}
 														/>
 													</BarChart>

@@ -4,7 +4,8 @@ import type { ListPacksOutputType } from "@xamsa/schemas/modules/pack";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Card } from "@xamsa/ui/components/card";
 import { formatDistanceToNow } from "date-fns";
-import { BarChart2, Layers, Lock, Play, Star } from "lucide-react";
+import { BarChart2, Layers, Lock, Play, Star, Users } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 import { formatDifficultyDr } from "@/lib/difficulty-display";
 
 const languageLabels: Record<string, string> = {
@@ -29,8 +30,14 @@ interface PackCardProps {
 }
 
 export function PackCard({ pack }: PackCardProps) {
+	const { data: session } = authClient.useSession();
 	const hasRatings = pack.totalRatings > 0;
 	const status = statusConfig[pack.status];
+	const showCommunityHostBadge =
+		pack.status === "published" &&
+		pack.allowOthersHost === true &&
+		session?.user?.username !== undefined &&
+		session.user.username !== pack.author.username;
 
 	return (
 		<Card className="flex h-full flex-col transition-colors hover:border-primary/30 hover:bg-primary/3">
@@ -44,9 +51,15 @@ export function PackCard({ pack }: PackCardProps) {
 					<h3 className="truncate font-semibold text-base leading-snug">
 						{pack.name}
 					</h3>
-					<div className="flex shrink-0 items-center gap-1.5">
+					<div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
 						{pack.visibility === "private" && (
 							<Lock className="size-3.5 text-muted-foreground" />
+						)}
+						{showCommunityHostBadge && (
+							<Badge className="gap-0.5 text-[10px]" variant="outline">
+								<Users className="size-3" />
+								Others can host
+							</Badge>
 						)}
 						<Badge variant="outline" className="text-[10px]">
 							{languageLabels[pack.language] ?? pack.language}

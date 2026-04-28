@@ -68,6 +68,7 @@ function RouteComponent() {
 					description: pack.description,
 					language: pack.language,
 					visibility: pack.visibility,
+					allowOthersHost: pack.allowOthersHost,
 				}}
 			/>
 		</PacksSubpageContainer>
