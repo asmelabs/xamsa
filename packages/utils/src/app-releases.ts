@@ -36,6 +36,10 @@ export const appReleasesManifest: AppReleasesManifest = {
 					kind: "text",
 					text: "Pack and topic pages, question detail, lists and cards, and live-game host tooling surface these values where helpful (including host-only live question difficulty).",
 				},
+				{
+					kind: "text",
+					text: "On Open Graph images, now the font is monospace, to match the rest of the app.",
+				},
 			],
 		},
 		{
