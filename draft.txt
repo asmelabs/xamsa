@@ -13,6 +13,7 @@ ROADMAP
 
 ## v26.04.16
 
+- Add language selector when creating a new pack, also editing pack settings. Currently language exists, but it is hardcoded to "az" only.
 - Add Pack.settings `allowForking` so the pack can be forked by other users
 - Add Pack forking system, so user can fork a pack and edit it
 
