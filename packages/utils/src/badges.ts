@@ -144,6 +144,25 @@ export const badges = {
 		rarity: "uncommon",
 	},
 
+	magnificent: {
+		id: "magnificent",
+		name: "Magnificent",
+		description:
+			"Awarded when you finish first on the scoreboard after a full game without a single incorrect buzz — every mistake avoided from buzz one to the last round.",
+		requirements: [
+			"Player must finish ranked first after standings tie-breakers",
+			"Player’s aggregate incorrectAnswers for the game must be 0",
+			"Awarded when the game is finalized",
+		],
+		color: "gold",
+		icon: "✨",
+		period: "game",
+		type: "ranking",
+		category: "skill",
+		assignment: "player",
+		rarity: "rare",
+	},
+
 	bankrupt: {
 		id: "bankrupt",
 		name: "Bankrupt",
@@ -181,6 +200,7 @@ const BADGE_ID_ZOD_TUPLE = [
 	"scavenger",
 	"ghost",
 	"jackpot",
+	"magnificent",
 	"bankrupt",
 ] as const;
 

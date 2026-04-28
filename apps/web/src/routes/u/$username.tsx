@@ -16,6 +16,7 @@ import {
 	BarChart3Icon,
 	BookOpenIcon,
 	ChartNoAxesColumnIcon,
+	ChevronRightIcon,
 	ClockIcon,
 	CrownIcon,
 	FlameIcon,
@@ -322,6 +323,33 @@ function RouteComponent() {
 					/>
 				</div>
 			</section>
+
+			{isOwner && (
+				<section className="space-y-3">
+					<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+						My packs
+					</h2>
+					<Link
+						to="/packs"
+						search={{ only_my_packs: true }}
+						className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-xs/5 transition-colors hover:border-primary/30 hover:bg-primary/5"
+					>
+						<div className="flex min-w-0 items-center gap-3">
+							<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+								<Package className="size-5 text-muted-foreground" />
+							</div>
+							<div className="min-w-0">
+								<p className="font-medium text-sm">Open your packs</p>
+								<p className="text-muted-foreground text-xs">
+									Drafts and published packs you created — same filters as on
+									the packs directory.
+								</p>
+							</div>
+						</div>
+						<ChevronRightIcon className="size-5 shrink-0 text-muted-foreground" />
+					</Link>
+				</section>
+			)}
 
 			{publicStats && (
 				<section className="space-y-4">

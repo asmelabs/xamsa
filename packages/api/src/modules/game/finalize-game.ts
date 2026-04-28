@@ -9,6 +9,7 @@ import {
 	computeLevelFromXp,
 	HOST_FULL_GAME_COMPLETION_XP_BONUS,
 } from "@xamsa/utils/progression";
+import { createPlayerBadgeAward } from "../badge/service";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 
 export type FinalizeGameResult = {
@@ -374,6 +375,51 @@ export async function finalizeGame(
 				lastClicks: p.lastClicks,
 			},
 		});
+	}
+
+	const winnerAggregate = ranked[0];
+	if (
+		winnerAggregate &&
+		winnerId === winnerAggregate.id &&
+		winnerAggregate.incorrectAnswers === 0
+	) {
+		const existingMag = await tx.playerBadgeAward.findFirst({
+			where: {
+				playerId: winnerAggregate.id,
+				badgeId: "magnificent",
+			},
+			select: { id: true },
+		});
+		if (!existingMag) {
+			const winnerRow = await tx.player.findUnique({
+				where: { id: winnerAggregate.id },
+				select: {
+					user: { select: { name: true, username: true } },
+				},
+			});
+			if (winnerRow?.user) {
+				await createPlayerBadgeAward(
+					{
+						playerId: winnerAggregate.id,
+						badgeId: "magnificent",
+						gameTopicId: null,
+						gameQuestionId: null,
+					},
+					tx,
+				);
+				badgeEvents = [
+					...badgeEvents,
+					{
+						badgeId: "magnificent",
+						playerId: winnerAggregate.id,
+						playerName: winnerRow.user.name,
+						username: winnerRow.user.username,
+						gameTopicId: null,
+						gameQuestionId: null,
+					},
+				];
+			}
+		}
 	}
 
 	const startedAt = game.startedAt ?? now;
