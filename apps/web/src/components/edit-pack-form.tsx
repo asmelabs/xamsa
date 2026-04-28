@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
+import { PackLanguageSchema } from "@xamsa/schemas/db/schemas/enums/PackLanguage.schema";
 import { PackVisibilitySchema } from "@xamsa/schemas/db/schemas/enums/PackVisibility.schema";
 import {
 	UpdatePackInputSchema,
@@ -84,25 +85,54 @@ export function EditPackForm({ packData }: EditPackFormProps) {
 						)}
 					</form.Input>
 
-					<form.Input name="visibility" label="Visibility">
-						{(field) => (
-							<Select value={field.value || ""} onValueChange={field.onChange}>
-								<SelectTrigger>
-									<SelectValue placeholder="Select visibility">
-										{formatCase(field.value || "", "snake", "title") ||
-											"Select visibility"}
-									</SelectValue>
-								</SelectTrigger>
-								<SelectContent>
-									{formattedEnum(PackVisibilitySchema.options).map((option) => (
-										<SelectItem key={option.value} value={option.value}>
-											{option.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						)}
-					</form.Input>
+					<div className="grid gap-4 sm:grid-cols-2">
+						<form.Input name="language" label="Language">
+							{(field) => (
+								<Select
+									value={field.value || ""}
+									onValueChange={field.onChange}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select language">
+											{formatCase(field.value || "", "snake", "title") ||
+												"Select language"}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										{formattedEnum(PackLanguageSchema.options).map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
+						</form.Input>
+						<form.Input name="visibility" label="Visibility">
+							{(field) => (
+								<Select
+									value={field.value || ""}
+									onValueChange={field.onChange}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select visibility">
+											{formatCase(field.value || "", "snake", "title") ||
+												"Select visibility"}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										{formattedEnum(PackVisibilitySchema.options).map(
+											(option) => (
+												<SelectItem key={option.value} value={option.value}>
+													{option.label}
+												</SelectItem>
+											),
+										)}
+									</SelectContent>
+								</Select>
+							)}
+						</form.Input>
+					</div>
 
 					<form.Input
 						name="allowOthersHost"

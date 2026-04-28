@@ -18,7 +18,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 15,
-			title: "Stats filters, My packs, and the Magnificent badge",
+			title: "Pack language and replay-safe duplicate questions",
 			highlights: [
 				{
 					kind: "text",
@@ -35,6 +35,22 @@ export const appReleasesManifest: AppReleasesManifest = {
 				{
 					kind: "text",
 					text: "On the By player tab, badge awards use compact chips per topic with links to the catalog. Each player’s buzz table adds a multi-select status filter (correct, wrong, expired) with counts per row.",
+				},
+				{
+					kind: "text",
+					text: "When you create or edit a pack, you can set the pack language (English, Azerbaijani, Russian, or Turkish) from the form—no more AZ-only flows for single-pack create; URL query defaults for `/packs/new` still work.",
+				},
+				{
+					kind: "text",
+					text: "Hosts pick a replay policy when starting a game: normal play; block only players who already saw each question in a past finished game with that pack; or block the whole room for a question if anyone in the room saw it before. The server enforces this on buzz; the buzz area shows why you’re blocked when it applies.",
+				},
+				{
+					kind: "text",
+					text: "Hosts can copy an invite link from the live game header so players open `/join/YOUR-CODE`, sign in if needed, and join in one step—the same validations as entering the room code manually still apply.",
+				},
+				{
+					kind: "text",
+					text: "When a replay policy blocks buzzing (room-wide or per-player), the host now sees the same context players get at the buzzer: room lock explains why everyone is muted, and individual blocks list which players cannot buzz on this question.",
 				},
 			],
 		},

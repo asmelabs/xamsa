@@ -27,6 +27,10 @@ import type {
 } from "@xamsa/schemas/modules/game";
 import { MIN_PLAYERS_PER_GAME_TO_START } from "@xamsa/utils/constants";
 import { publishBadgeEarnedMany } from "../badge/publish";
+import {
+	duplicateBuzzBlockedForUser,
+	userIdsWhoSawQuestionInPriorCompletedGames,
+} from "./duplicate-question-policy";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
 import { generateUniqueGameCode } from "./utils";
@@ -263,6 +267,7 @@ export async function findOneGame(
 	const game = await prisma.game.findUnique({
 		where: { code: input.code },
 		select: {
+			id: true,
 			code: true,
 			status: true,
 			startedAt: true,
@@ -275,6 +280,11 @@ export async function findOneGame(
 			hostId: true,
 			packId: true,
 			completionDeltas: true,
+			settings: {
+				select: {
+					duplicateQuestionPolicy: true,
+				},
+			},
 			pack: {
 				select: {
 					id: true,
@@ -399,6 +409,7 @@ export async function findOneGame(
 						},
 					},
 					select: {
+						id: true,
 						slug: true,
 						order: true,
 						text: true,
@@ -487,6 +498,82 @@ export async function findOneGame(
 	);
 	const rewardsRecorded = game.completionDeltas != null;
 
+	let myDuplicateBuzzBlocked = false;
+	let myDuplicateBuzzBlockedReason: "individual" | "room" | null = null;
+
+	if (
+		game.status === "active" &&
+		!game.isQuestionRevealed &&
+		userId &&
+		myPlayerRaw?.status === "playing" &&
+		currentQuestionRecord?.id
+	) {
+		const duplicatePolicy = game.settings?.duplicateQuestionPolicy ?? "none";
+		if (duplicatePolicy !== "none") {
+			const playingUserIds = game.players
+				.filter((p) => p.status === "playing")
+				.map((p) => p.userId);
+			const candidateUserIds =
+				duplicatePolicy === "block_individuals" ? [userId] : playingUserIds;
+			const sawBefore = await userIdsWhoSawQuestionInPriorCompletedGames(
+				prisma,
+				{
+					packId: game.packId,
+					questionId: currentQuestionRecord.id,
+					excludeGameId: game.id,
+					candidateUserIds,
+				},
+			);
+			const evalBuzz = duplicateBuzzBlockedForUser({
+				policy: duplicatePolicy,
+				currentUserId: userId,
+				sawBefore,
+			});
+			myDuplicateBuzzBlocked = evalBuzz.blocked;
+			myDuplicateBuzzBlockedReason = evalBuzz.because;
+		}
+	}
+
+	let hostDuplicateBuzzNotice: FindOneGameOutputType["hostDuplicateBuzzNotice"] =
+		null;
+
+	if (
+		isHost &&
+		game.status === "active" &&
+		!game.isQuestionRevealed &&
+		currentQuestionRecord?.id
+	) {
+		const dupPolicy = game.settings?.duplicateQuestionPolicy ?? "none";
+		if (dupPolicy !== "none") {
+			const playingUserIds = game.players
+				.filter((p) => p.status === "playing")
+				.map((p) => p.userId);
+			if (playingUserIds.length > 0) {
+				const sawBefore = await userIdsWhoSawQuestionInPriorCompletedGames(
+					prisma,
+					{
+						packId: game.packId,
+						questionId: currentQuestionRecord.id,
+						excludeGameId: game.id,
+						candidateUserIds: playingUserIds,
+					},
+				);
+				if (sawBefore.size > 0) {
+					const affectedPlayers = game.players
+						.filter((p) => p.status === "playing" && sawBefore.has(p.userId))
+						.map((p) => ({
+							playerId: p.id,
+							displayName: p.user.name.split(" ")[0] ?? p.user.username,
+						}));
+					hostDuplicateBuzzNotice =
+						dupPolicy === "block_room"
+							? { mode: "room", affectedPlayers }
+							: { mode: "individuals", affectedPlayers };
+				}
+			}
+		}
+	}
+
 	return {
 		code: game.code,
 		status: game.status,
@@ -530,6 +617,9 @@ export async function findOneGame(
 			rewardsRecorded && userId && myPlayerRaw
 				? (eloDeltaByUserId[userId] ?? 0)
 				: null,
+		myDuplicateBuzzBlocked,
+		myDuplicateBuzzBlockedReason,
+		hostDuplicateBuzzNotice,
 	};
 }
 
@@ -659,6 +749,18 @@ export async function startGame(
 				});
 			}
 		}
+
+		await tx.gameSettings.upsert({
+			where: { gameId: game.id },
+			create: {
+				gameId: game.id,
+				allowLaterJoins: true,
+				duplicateQuestionPolicy: input.duplicateQuestionPolicy,
+			},
+			update: {
+				duplicateQuestionPolicy: input.duplicateQuestionPolicy,
+			},
+		});
 
 		return gameRow;
 	});

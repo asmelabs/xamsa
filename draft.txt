@@ -14,11 +14,20 @@ ROADMAP
 ## v26.04.16
 
 - Add language selector when creating a new pack, also editing pack settings. Currently language exists, but it is hardcoded to "az" only.
-- Add Pack.settings `allowForking` so the pack can be forked by other users
-- Add Pack forking system, so user can fork a pack and edit it
+- Duplicate Question See Prevention: So a user can see the same question multiple times. Let's say i have a pack A, and user Jon plays it.
+  Then he plays another time. Now there will be question that he already saw. When starting a game, host can be able to select prevention rules.
+  > Either let players can just normally play the questions they saw
+  > Only those players who has seen the question, will not be able to Buzz on the specific question
+  > Anyone will not be able to Buzz on a question where there are players that have seen the question before
+- When joining a game, current flow is this. Host copies the code, sends to player. Player goes to join page, pastes and enters.
+  There can be a url that when pasting, the app automatically checks everything (can player join, is game not completed, etc.) every validation
+  steps, and automatically joins the player, so player does not have to copy the code and input then join (of course we will
+  keep that functionality as well)
 
 ## v26.04.17
 
+- Make the badges section on profile more compact, since the number of badges is growing.
+- Create badges section on /dashboard like other tables. add filters like minEarners/maxEarners, search etc. and type/category/period filters.
 - Add new badge: "Abomination" - Someone who gets 5/5 incorrect answers in a single topic (opposite of "Ace")
 - Add new badge: "Genius" - When a player gets positive points in all of the topics of a game
 - Add new badge: "Dunce" - When a player gets non-positive points (0 or negative) in all of the topics of a game
@@ -29,3 +38,5 @@ ROADMAP
 - Add friendships/follow system
 - Add pack collections/playlists system
 - Better admin dashboard
+- Add Pack.settings `allowForking` so the pack can be forked by other users
+- Add Pack forking system, so user can fork a pack and edit it

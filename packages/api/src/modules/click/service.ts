@@ -16,6 +16,10 @@ import {
 } from "@xamsa/utils/difficulty-rate";
 import { maybeAwardScavenger } from "../badge/scavenger";
 import { tryPublishTopicBadgesForCompletedCurrentTopic } from "../badge/topic-badges";
+import {
+	duplicateBuzzBlockedForUser,
+	userIdsWhoSawQuestionInPriorCompletedGames,
+} from "../game/duplicate-question-policy";
 
 export async function buzzClick(
 	input: ClickBuzzInputType,
@@ -31,6 +35,11 @@ export async function buzzClick(
 			currentTopicOrder: true,
 			currentQuestionOrder: true,
 			isQuestionRevealed: true,
+			settings: {
+				select: {
+					duplicateQuestionPolicy: true,
+				},
+			},
 		},
 	});
 
@@ -124,6 +133,36 @@ export async function buzzClick(
 		throw new ORPCError("BAD_REQUEST", {
 			message: "You already buzzed on this question",
 		});
+	}
+
+	const duplicatePolicy = game.settings?.duplicateQuestionPolicy ?? "none";
+	if (duplicatePolicy !== "none") {
+		const playingPlayers = await prisma.player.findMany({
+			where: { gameId: game.id, status: "playing" },
+			select: { userId: true },
+		});
+		const playingUserIds = playingPlayers.map((p) => p.userId);
+		const candidateUserIds =
+			duplicatePolicy === "block_individuals" ? [userId] : playingUserIds;
+		const sawBefore = await userIdsWhoSawQuestionInPriorCompletedGames(prisma, {
+			packId: game.packId,
+			questionId: currentQuestion.id,
+			excludeGameId: game.id,
+			candidateUserIds,
+		});
+		const { blocked } = duplicateBuzzBlockedForUser({
+			policy: duplicatePolicy,
+			currentUserId: userId,
+			sawBefore,
+		});
+		if (blocked) {
+			throw new ORPCError("FORBIDDEN", {
+				message:
+					duplicatePolicy === "block_individuals"
+						? "You already played this question in a finished game with this pack."
+						: "Someone in this room already played this question in a finished game with this pack.",
+			});
+		}
 	}
 
 	// count existing clicks for position

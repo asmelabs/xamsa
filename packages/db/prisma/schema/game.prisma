@@ -73,6 +73,13 @@ model Game {
   @@map("game")
 }
 
+/// When replaying the same pack, controls whether players can buzz on questions they (or anyone) have already played in past completed games.
+enum DuplicateQuestionPolicy {
+  none
+  block_individuals
+  block_room
+}
+
 model GameSettings {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -82,6 +89,8 @@ model GameSettings {
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   allowLaterJoins Boolean @default(true) @map("allow_later_joins") // allow players to join the game after it has started
+
+  duplicateQuestionPolicy DuplicateQuestionPolicy @default(none) @map("duplicate_question_policy")
 
   @@map("game_settings")
 }

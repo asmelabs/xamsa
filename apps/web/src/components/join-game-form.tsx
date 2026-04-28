@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Input } from "@xamsa/ui/components/input";
 import { parseAsString, useQueryState } from "nuqs";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
 import { orpc } from "@/utils/orpc";
@@ -14,6 +15,11 @@ interface JoinGameFormProps {
 	title?: string | null;
 	description?: string | null;
 	submitLabel?: string;
+	/**
+	 * When set (e.g. invite link fallback), controls the code field instead of the
+	 * `?code=` query param so the value is correct on `/join/$code` without a redirect.
+	 */
+	codePrefill?: string;
 }
 
 /**
@@ -25,9 +31,22 @@ export function JoinGameForm({
 	title = null,
 	description = "Ask the host for the code or invite link.",
 	submitLabel = "Join game",
+	codePrefill,
 }: JoinGameFormProps) {
 	const navigate = useNavigate();
-	const [code, setCode] = useQueryState("code", parseAsString.withDefault(""));
+	const [urlCode, setUrlCode] = useQueryState(
+		"code",
+		parseAsString.withDefault(""),
+	);
+	const [prefillLocal, setPrefillLocal] = useState(codePrefill ?? "");
+	const usePrefill = codePrefill !== undefined;
+	useEffect(() => {
+		if (codePrefill !== undefined) {
+			setPrefillLocal(codePrefill);
+		}
+	}, [codePrefill]);
+	const code = usePrefill ? prefillLocal : urlCode;
+	const setCode = usePrefill ? setPrefillLocal : setUrlCode;
 
 	const { mutate: joinGame, isPending } = useMutation({
 		...orpc.player.join.mutationOptions(),

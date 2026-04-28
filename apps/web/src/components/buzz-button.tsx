@@ -27,7 +27,8 @@ export function BuzzButton({ game }: BuzzButtonProps) {
 		!!game.myPlayer &&
 		game.myPlayer.status === "playing" &&
 		!hasBuzzed &&
-		game.currentQuestionOrder !== null;
+		game.currentQuestionOrder !== null &&
+		!game.myDuplicateBuzzBlocked;
 
 	const removeTentative = (code: string, intentId: string) => {
 		queryClient.setQueryData<GameData | undefined>(
@@ -153,6 +154,23 @@ export function BuzzButton({ game }: BuzzButtonProps) {
 				</div>
 				<p className="text-amber-600/80 text-sm dark:text-amber-400/80">
 					Waiting for the host to resume
+				</p>
+			</div>
+		);
+	}
+
+	if (
+		game.myDuplicateBuzzBlocked &&
+		game.status === "active" &&
+		!game.isQuestionRevealed &&
+		game.myPlayer?.status === "playing"
+	) {
+		return (
+			<div className="flex min-h-24 w-full flex-col items-center justify-center gap-1 border border-muted-foreground/25 bg-muted/40 px-3 py-2">
+				<p className="text-center text-muted-foreground text-sm leading-snug">
+					{game.myDuplicateBuzzBlockedReason === "individual"
+						? "You already played this question in a finished game with this pack — buzzing is disabled."
+						: "Someone in this room already played this question in a finished game with this pack — buzzing is disabled for everyone."}
 				</p>
 			</div>
 		);

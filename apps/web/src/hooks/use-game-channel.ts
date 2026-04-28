@@ -456,6 +456,7 @@ export function applyQuestionAdvancedToGame(
 		currentQuestion: nextPublicCurrentQuestion,
 		clicks: [],
 		hostData: nextHostData,
+		hostDuplicateBuzzNotice: null,
 	};
 }
 
@@ -799,12 +800,11 @@ export function useGameChannel(
 				applyQuestionAdvancedToGame(old, data),
 			);
 
-			// Safety net: on the authoritative event, refetch so the host picks up
-			// the full hostData.currentQuestion if the mutation response hasn't
-			// been applied yet.
+			// Refetch so the host picks up server-only fields (e.g. duplicate-buzz
+			// notice) after each authoritative advance.
 			if (data.isAuthoritative) {
 				const cached = queryClient.getQueryData<GameData>(queryKey);
-				if (cached?.isHost && !data.hostCurrentQuestion) {
+				if (cached?.isHost) {
 					invalidateGame();
 				}
 			}
