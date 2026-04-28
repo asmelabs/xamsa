@@ -1,5 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import type { GetCompletedGameRecapOutputType } from "@xamsa/schemas/modules/game";
+import { Badge } from "@xamsa/ui/components/badge";
+import {
+	Tooltip,
+	TooltipPopup,
+	TooltipTrigger,
+} from "@xamsa/ui/components/tooltip";
 import { cn } from "@xamsa/ui/lib/utils";
 import type { BadgeId } from "@xamsa/utils/badges";
 import { getBadge, isBadgeId } from "@xamsa/utils/badges";
@@ -85,38 +91,90 @@ export function PlayerRecapBadges({
 	const topicGroups = groupRecapRowsByTopic(valid);
 	const tight = variant === "compact";
 
+	if (tight) {
+		return (
+			<div className={cn("mt-2 border-border/40 border-t pt-2", className)}>
+				<p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+					Badges
+				</p>
+				<div className="mt-1.5 flex flex-col gap-1.5">
+					{topicGroups.map((group) => (
+						<div
+							key={group.key}
+							className="flex flex-wrap items-start gap-x-2 gap-y-1 sm:gap-x-2.5"
+						>
+							<span
+								className="max-w-[min(100%,11rem)] shrink-0 truncate text-[10px] text-muted-foreground leading-tight sm:max-w-[9.5rem]"
+								title={group.heading}
+							>
+								{group.heading}
+							</span>
+							<div className="flex min-w-0 flex-1 flex-wrap gap-1">
+								{group.rows.map((row) => {
+									const def = getBadge(row.badgeId as BadgeId);
+									const q =
+										row.questionOrder != null ? `Q${row.questionOrder}` : null;
+									const tip = [
+										def.name,
+										group.heading !== def.name ? group.heading : null,
+										q,
+									]
+										.filter(Boolean)
+										.join(" · ");
+									return (
+										<Tooltip key={row.id}>
+											<TooltipTrigger
+												render={
+													<Badge
+														variant="outline"
+														size="sm"
+														className="h-6 max-w-[11rem] gap-1 px-1.5 py-0 font-normal"
+														render={
+															<Link
+																params={{ badgeId: row.badgeId }}
+																to="/badges/$badgeId"
+															/>
+														}
+													>
+														<span className="shrink-0 opacity-90" aria-hidden>
+															{def.icon}
+														</span>
+														<span className="truncate">
+															{def.name}
+															{q ? (
+																<span className="text-muted-foreground">
+																	{" "}
+																	· {q}
+																</span>
+															) : null}
+														</span>
+													</Badge>
+												}
+											/>
+											<TooltipPopup className="max-w-xs">{tip}</TooltipPopup>
+										</Tooltip>
+									);
+								})}
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		);
+	}
+
 	return (
-		<div
-			className={cn(
-				"mt-3 border-border/50 border-t pt-3",
-				tight && "mt-2 border-border/40 pt-2",
-				className,
-			)}
-		>
-			<p
-				className={cn(
-					"text-muted-foreground",
-					tight
-						? "text-[10px] uppercase tracking-wider"
-						: "text-[11px] uppercase tracking-wider",
-				)}
-			>
+		<div className={cn("mt-3 border-border/50 border-t pt-3", className)}>
+			<p className="text-[11px] text-muted-foreground uppercase tracking-wider">
 				Badges
 			</p>
-			<div className={cn("mt-1.5 space-y-2", tight && "mt-1 space-y-1.5")}>
+			<div className="mt-1.5 space-y-2">
 				{topicGroups.map((group) => (
 					<div key={group.key}>
-						<p
-							className={cn(
-								"text-muted-foreground",
-								tight
-									? "text-[10px] leading-none tracking-wide"
-									: "text-[11px] leading-none tracking-wide",
-							)}
-						>
+						<p className="text-[11px] text-muted-foreground leading-none tracking-wide">
 							{group.heading}
 						</p>
-						<ul className={cn("mt-0.5 space-y-0.5", !tight && "mt-1")}>
+						<ul className="mt-1 space-y-0.5">
 							{group.rows.map((row) => {
 								const def = getBadge(row.badgeId as BadgeId);
 								const q =

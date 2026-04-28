@@ -13,6 +13,7 @@ export const BadgeIdSchema = z.enum([
 	"scavenger",
 	"ghost",
 	"jackpot",
+	"magnificent",
 	"bankrupt",
 ]);
 

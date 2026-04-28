@@ -7,12 +7,37 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 14 } as const;
+const current = { year: 2026, month: 4, patch: 15 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-28",
+			year: 2026,
+			month: 4,
+			patch: 15,
+			title: "Stats filters, My packs, and the Magnificent badge",
+			highlights: [
+				{
+					kind: "text",
+					text: "On your profile, a “My packs” shortcut opens the packs directory filtered to drafts and packs you published—the same directory page with your packs only.",
+				},
+				{
+					kind: "text",
+					text: "Game stats (`/g/.../stats`) sync the active tab and filters to the URL: Overview, By round, By player, and Flow—plus round search, buzz counts, TDR and average-QDR bounds, and player search plus score/correct/wrong/buzz ranges so links are shareable and back/forward behave as expected.",
+				},
+				{
+					kind: "text",
+					text: "The new Magnificent badge is awarded when the game’s winner finishes with no incorrect answers; it appears in the catalog, recap, and badge flow like other awards.",
+				},
+				{
+					kind: "text",
+					text: "On the By player tab, badge awards use compact chips per topic with links to the catalog. Each player’s buzz table adds a multi-select status filter (correct, wrong, expired) with counts per row.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-28",
 			year: 2026,

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { ClickStatusSchema } from "@xamsa/schemas/db/schemas/enums/ClickStatus.schema";
 import type { GetCompletedGameRecapOutputType } from "@xamsa/schemas/modules/game";
 import {
 	Alert,
@@ -16,6 +17,7 @@ import {
 	CardTitle,
 } from "@xamsa/ui/components/card";
 import { Checkbox } from "@xamsa/ui/components/checkbox";
+import { Input } from "@xamsa/ui/components/input";
 import { Label } from "@xamsa/ui/components/label";
 import {
 	Select,
@@ -42,10 +44,12 @@ import {
 	BarChart2,
 	BarChart3Icon,
 	ClockIcon,
+	FilterIcon,
 	LayoutListIcon,
 	TrophyIcon,
 	UsersIcon,
 } from "lucide-react";
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 import { useMemo, useState } from "react";
 import {
 	Bar,
@@ -1041,42 +1045,320 @@ function collectClicksForPlayer(recap: Recap, playerId: string) {
 	return rows;
 }
 
-export function CompletedGameStatsPage({ code }: { code: string }) {
-	const { data, isLoading, isError, error } = useQuery(
-		orpc.game.getCompletedRecap.queryOptions({ input: { code } }),
+const BUZZ_FILTER_STATUSES = ["correct", "wrong", "expired"] as const;
+
+type BuzzFilterStatus = (typeof BUZZ_FILTER_STATUSES)[number];
+
+function buzzFilterRowLabel(status: BuzzFilterStatus): string {
+	switch (status) {
+		case "correct":
+			return "Correct";
+		case "wrong":
+			return "Wrong";
+		case "expired":
+			return "Expired";
+		default:
+			return status;
+	}
+}
+
+function StatsPlayerBuzzTable({
+	clicks,
+}: {
+	clicks: ReturnType<typeof collectClicksForPlayer>;
+}) {
+	const [included, setIncluded] = useState<Record<BuzzFilterStatus, boolean>>({
+		correct: true,
+		wrong: true,
+		expired: true,
+	});
+
+	const countsByStatus = useMemo(() => {
+		const m: Record<BuzzFilterStatus, number> = {
+			correct: 0,
+			wrong: 0,
+			expired: 0,
+		};
+		for (const row of clicks) {
+			const parsed = ClickStatusSchema.safeParse(row.click.status);
+			if (!parsed.success) continue;
+			if (parsed.data === "pending") continue;
+			m[parsed.data] += 1;
+		}
+		return m;
+	}, [clicks]);
+
+	const filtered = useMemo(
+		() =>
+			clicks.filter((row) => {
+				const parsed = ClickStatusSchema.safeParse(row.click.status);
+				if (!parsed.success) return false;
+				if (parsed.data === "pending") return true;
+				return included[parsed.data];
+			}),
+		[clicks, included],
 	);
 
-	if (isLoading) {
-		return (
-			<div className="flex min-h-[50vh] items-center justify-center">
-				<Spinner />
-			</div>
-		);
-	}
+	const filterActive = BUZZ_FILTER_STATUSES.some((s) => !included[s]);
 
-	if (isError || !data) {
-		return (
-			<div className="mx-auto max-w-lg space-y-4 p-6">
-				<Button
-					variant="outline"
-					size="sm"
-					render={<Link to="/g/$code" params={{ code }} />}
-				>
-					<ArrowLeftIcon />
-					Back to game
-				</Button>
-				<Alert variant="error">
-					<AlertTitle>Could not load stats</AlertTitle>
-					<AlertDescription>
-						{error?.message ??
-							"This game may not exist, or it is not finished yet. Full stats are only available after completion."}
-					</AlertDescription>
-				</Alert>
-			</div>
-		);
-	}
+	const toggleStatus = (s: BuzzFilterStatus) => {
+		setIncluded((p) => ({ ...p, [s]: !p[s] }));
+	};
 
-	const recap = data;
+	const selectAllStatuses = () => {
+		setIncluded({
+			correct: true,
+			wrong: true,
+			expired: true,
+		});
+	};
+
+	return (
+		<div>
+			<div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+				<p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+					Every buzz ({filtered.length}
+					{filterActive ? ` of ${clicks.length}` : ""})
+				</p>
+				{clicks.length > 0 ? (
+					<div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+						<span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+							Status
+						</span>
+						<div className="flex flex-wrap gap-x-3 gap-y-1">
+							{BUZZ_FILTER_STATUSES.map((st) => (
+								<label
+									key={st}
+									className="flex cursor-pointer items-center gap-1.5 text-xs"
+								>
+									<Checkbox
+										checked={included[st]}
+										onCheckedChange={() => {
+											toggleStatus(st);
+										}}
+									/>
+									<span>
+										{buzzFilterRowLabel(st)}
+										<span className="text-muted-foreground">
+											{" "}
+											({countsByStatus[st]})
+										</span>
+									</span>
+								</label>
+							))}
+						</div>
+						{filterActive ? (
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-7 px-2 text-[11px]"
+								onClick={selectAllStatuses}
+							>
+								Show all
+							</Button>
+						) : null}
+					</div>
+				) : null}
+			</div>
+			{clicks.length === 0 ? (
+				<p className="text-muted-foreground text-sm">
+					No buzzes for this player.
+				</p>
+			) : filtered.length === 0 ? (
+				<p className="text-muted-foreground text-sm">
+					No buzzes match the selected statuses.
+				</p>
+			) : (
+				<Table variant="card" className="text-xs">
+					<TableHeader>
+						<TableRow>
+							<TableHead>Round</TableHead>
+							<TableHead>Q</TableHead>
+							<TableHead>#</TableHead>
+							<TableHead>Status</TableHead>
+							<TableHead>Reaction</TableHead>
+							<TableHead>Pts</TableHead>
+							<TableHead>Buzzed</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{filtered.map((row) => (
+							<TableRow key={row.click.id}>
+								<TableCell className="max-w-[100px] truncate">
+									{row.topicName}
+								</TableCell>
+								<TableCell className="tabular-nums">
+									{row.questionOrder}
+								</TableCell>
+								<TableCell className="tabular-nums">
+									{row.click.position}
+								</TableCell>
+								<TableCell>
+									<Badge
+										variant={clickStatusBadgeVariant(row.click.status)}
+										className="text-[10px]"
+									>
+										{row.click.status}
+									</Badge>
+								</TableCell>
+								<TableCell className="tabular-nums">
+									{formatReactionMs(row.click.reactionMs)}
+								</TableCell>
+								<TableCell className="tabular-nums">
+									{row.click.pointsAwarded > 0 ? "+" : ""}
+									{row.click.pointsAwarded}
+								</TableCell>
+								<TableCell className="text-muted-foreground">
+									{format(row.click.clickedAt, "HH:mm:ss.SSS")}
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			)}
+		</div>
+	);
+}
+
+function parseOptionalInt(raw: string | null | undefined): number | null {
+	const t = String(raw ?? "").trim();
+	if (t === "") return null;
+	const n = Number.parseInt(t, 10);
+	return Number.isFinite(n) ? n : null;
+}
+
+function parseOptionalNonNegInt(raw: string | null | undefined): number | null {
+	const n = parseOptionalInt(raw);
+	if (n == null) return null;
+	return n < 0 ? null : n;
+}
+
+/** Float bounds for difficulty (TDR / avg QDR); empty → no bound. */
+function parseOptionalFiniteNumber(
+	raw: string | null | undefined,
+): number | null {
+	const t = String(raw ?? "").trim();
+	if (t === "") return null;
+	const n = Number.parseFloat(t);
+	return Number.isFinite(n) ? n : null;
+}
+
+/** Prefer rollup vs sum of question rows so filters match what users see if data ever diverges. */
+function topicBuzzTotal(topic: Recap["topics"][number]): number {
+	const sumQuestions = topic.questions.reduce((s, q) => s + q.totalClicks, 0);
+	return Math.max(topic.totalClicks, sumQuestions);
+}
+
+function topicAverageRatedQdr(topic: Recap["topics"][number]): number | null {
+	const rated = topic.questions.filter((q) => q.qdrScoredAttempts > 0);
+	if (rated.length === 0) return null;
+	const sum = rated.reduce((s, q) => s + q.qdr, 0);
+	return sum / rated.length;
+}
+
+function roundTopicMatchesSearch(
+	topic: Recap["topics"][number],
+	q: string,
+): boolean {
+	const s = q.trim().toLowerCase();
+	if (s === "") return true;
+	if (topic.topicName.toLowerCase().includes(s)) return true;
+	const orderStr = String(topic.order);
+	if (s === orderStr) return true;
+	if (s === `round ${orderStr}` || s === `r${orderStr}`) return true;
+	if (s.startsWith("round ")) {
+		const rest = s.slice(6).trim();
+		return rest === orderStr;
+	}
+	return false;
+}
+
+function CompletedGameStatsLoaded({
+	recap,
+	code,
+}: {
+	recap: Recap;
+	code: string;
+}) {
+	const [statTab, setStatTab] = useQueryState(
+		"tab",
+		parseAsStringEnum([
+			"overview",
+			"by-round",
+			"by-player",
+			"flow",
+		]).withDefault("overview"),
+	);
+	const [roundQ, setRoundQ] = useQueryState(
+		"round_q",
+		parseAsString.withDefault(""),
+	);
+	const [roundOrder, setRoundOrder] = useQueryState(
+		"round_order",
+		parseAsString.withDefault(""),
+	);
+	const [roundClicksMinRaw, setRoundClicksMinRaw] = useQueryState(
+		"round_clicks_min",
+		parseAsString.withDefault(""),
+	);
+	const [roundClicksMaxRaw, setRoundClicksMaxRaw] = useQueryState(
+		"round_clicks_max",
+		parseAsString.withDefault(""),
+	);
+	const [roundTdrMinRaw, setRoundTdrMinRaw] = useQueryState(
+		"round_tdr_min",
+		parseAsString.withDefault(""),
+	);
+	const [roundTdrMaxRaw, setRoundTdrMaxRaw] = useQueryState(
+		"round_tdr_max",
+		parseAsString.withDefault(""),
+	);
+	const [roundQdrMinRaw, setRoundQdrMinRaw] = useQueryState(
+		"round_qdr_min",
+		parseAsString.withDefault(""),
+	);
+	const [roundQdrMaxRaw, setRoundQdrMaxRaw] = useQueryState(
+		"round_qdr_max",
+		parseAsString.withDefault(""),
+	);
+	const [playerQ, setPlayerQ] = useQueryState(
+		"player_q",
+		parseAsString.withDefault(""),
+	);
+	const [playerScoreMinRaw, setPlayerScoreMinRaw] = useQueryState(
+		"player_score_min",
+		parseAsString.withDefault(""),
+	);
+	const [playerScoreMaxRaw, setPlayerScoreMaxRaw] = useQueryState(
+		"player_score_max",
+		parseAsString.withDefault(""),
+	);
+	const [playerCorrectMinRaw, setPlayerCorrectMinRaw] = useQueryState(
+		"player_correct_min",
+		parseAsString.withDefault(""),
+	);
+	const [playerCorrectMaxRaw, setPlayerCorrectMaxRaw] = useQueryState(
+		"player_correct_max",
+		parseAsString.withDefault(""),
+	);
+	const [playerWrongMinRaw, setPlayerWrongMinRaw] = useQueryState(
+		"player_wrong_min",
+		parseAsString.withDefault(""),
+	);
+	const [playerWrongMaxRaw, setPlayerWrongMaxRaw] = useQueryState(
+		"player_wrong_max",
+		parseAsString.withDefault(""),
+	);
+	const [playerClicksMinRaw, setPlayerClicksMinRaw] = useQueryState(
+		"player_clicks_min",
+		parseAsString.withDefault(""),
+	);
+	const [playerClicksMaxRaw, setPlayerClicksMaxRaw] = useQueryState(
+		"player_clicks_max",
+		parseAsString.withDefault(""),
+	);
+
 	const sortedPlayers = sortGamePlayersForScoreboard(recap.players);
 	const badgesByPlayerId = useMemo(
 		() => buildBadgesByPlayerId(recap.badgeAwards),
@@ -1085,6 +1367,121 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 	const winner = recap.winnerId
 		? recap.players.find((p) => p.id === recap.winnerId)
 		: sortedPlayers[0];
+
+	const topicOrdersSorted = useMemo(() => {
+		const orders = [...new Set(recap.topics.map((t) => t.order))];
+		orders.sort((a, b) => a - b);
+		return orders;
+	}, [recap.topics]);
+
+	const filteredTopics = useMemo(() => {
+		const topics = [...recap.topics];
+		topics.sort((a, b) => a.order - b.order);
+		const rq = roundQ;
+		const ro = roundOrder.trim();
+		const ordFilter = ro === "" ? null : Number.parseInt(ro, 10);
+		const clicksMin = parseOptionalNonNegInt(roundClicksMinRaw);
+		const clicksMax = parseOptionalNonNegInt(roundClicksMaxRaw);
+		const tdrMin = parseOptionalFiniteNumber(roundTdrMinRaw);
+		const tdrMax = parseOptionalFiniteNumber(roundTdrMaxRaw);
+		const qdrMin = parseOptionalFiniteNumber(roundQdrMinRaw);
+		const qdrMax = parseOptionalFiniteNumber(roundQdrMaxRaw);
+		const qdrFilterActive = qdrMin != null || qdrMax != null;
+		return topics.filter((topic) => {
+			if (
+				ordFilter != null &&
+				Number.isFinite(ordFilter) &&
+				topic.order !== ordFilter
+			) {
+				return false;
+			}
+			if (!roundTopicMatchesSearch(topic, rq)) return false;
+			const buzzes = topicBuzzTotal(topic);
+			if (clicksMin != null && buzzes < clicksMin) return false;
+			if (clicksMax != null && buzzes > clicksMax) return false;
+			if (tdrMin != null && topic.tdr < tdrMin) return false;
+			if (tdrMax != null && topic.tdr > tdrMax) return false;
+			if (qdrFilterActive) {
+				const avgQ = topicAverageRatedQdr(topic);
+				if (avgQ == null) return false;
+				if (qdrMin != null && avgQ < qdrMin) return false;
+				if (qdrMax != null && avgQ > qdrMax) return false;
+			}
+			return true;
+		});
+	}, [
+		recap.topics,
+		roundQ,
+		roundOrder,
+		roundClicksMinRaw,
+		roundClicksMaxRaw,
+		roundTdrMinRaw,
+		roundTdrMaxRaw,
+		roundQdrMinRaw,
+		roundQdrMaxRaw,
+	]);
+
+	const filteredPlayers = useMemo(() => {
+		const pq = playerQ.trim().toLowerCase();
+		const smin = parseOptionalInt(playerScoreMinRaw);
+		const smax = parseOptionalInt(playerScoreMaxRaw);
+		const cmin = parseOptionalNonNegInt(playerCorrectMinRaw);
+		const cmax = parseOptionalNonNegInt(playerCorrectMaxRaw);
+		const wmin = parseOptionalNonNegInt(playerWrongMinRaw);
+		const wmax = parseOptionalNonNegInt(playerWrongMaxRaw);
+		const clkmin = parseOptionalNonNegInt(playerClicksMinRaw);
+		const clkmax = parseOptionalNonNegInt(playerClicksMaxRaw);
+		return sortedPlayers.filter((player) => {
+			if (pq) {
+				const un = player.user.username.toLowerCase();
+				const nm = player.user.name.toLowerCase();
+				if (!un.includes(pq) && !nm.includes(pq)) return false;
+			}
+			if (smin != null && player.score < smin) return false;
+			if (smax != null && player.score > smax) return false;
+			if (cmin != null && player.correctAnswers < cmin) return false;
+			if (cmax != null && player.correctAnswers > cmax) return false;
+			if (wmin != null && player.incorrectAnswers < wmin) return false;
+			if (wmax != null && player.incorrectAnswers > wmax) return false;
+			if (clkmin != null && player.totalClicks < clkmin) return false;
+			if (clkmax != null && player.totalClicks > clkmax) return false;
+			return true;
+		});
+	}, [
+		sortedPlayers,
+		playerQ,
+		playerScoreMinRaw,
+		playerScoreMaxRaw,
+		playerCorrectMinRaw,
+		playerCorrectMaxRaw,
+		playerWrongMinRaw,
+		playerWrongMaxRaw,
+		playerClicksMinRaw,
+		playerClicksMaxRaw,
+	]);
+
+	const clearRoundFilters = () => {
+		setRoundQ("");
+		setRoundOrder("");
+		setRoundClicksMinRaw("");
+		setRoundClicksMaxRaw("");
+		setRoundTdrMinRaw("");
+		setRoundTdrMaxRaw("");
+		setRoundQdrMinRaw("");
+		setRoundQdrMaxRaw("");
+	};
+
+	const clearPlayerFilters = () => {
+		setPlayerQ("");
+		setPlayerScoreMinRaw("");
+		setPlayerScoreMaxRaw("");
+		setPlayerCorrectMinRaw("");
+		setPlayerCorrectMaxRaw("");
+		setPlayerWrongMinRaw("");
+		setPlayerWrongMaxRaw("");
+		setPlayerClicksMinRaw("");
+		setPlayerClicksMaxRaw("");
+	};
 
 	return (
 		<div className="min-h-screen bg-muted/30">
@@ -1170,17 +1567,24 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 					/>
 				</div>
 
-				<Tabs defaultValue="overview">
+				<Tabs
+					value={statTab}
+					onValueChange={(value) => {
+						void setStatTab(
+							value as "overview" | "by-round" | "by-player" | "flow",
+						);
+					}}
+				>
 					<TabsList className="w-full min-w-0 flex-wrap justify-start sm:w-auto">
 						<TabsTab value="overview">
 							<BarChart3Icon className="size-4" />
 							Overview
 						</TabsTab>
-						<TabsTab value="rounds">
+						<TabsTab value="by-round">
 							<LayoutListIcon className="size-4" />
 							By round
 						</TabsTab>
-						<TabsTab value="players">
+						<TabsTab value="by-player">
 							<UsersIcon className="size-4" />
 							By player
 						</TabsTab>
@@ -1203,176 +1607,487 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 						<GameFlowSection key={recap.code} recap={recap} />
 					</TabsPanel>
 
-					<TabsPanel value="rounds" className="mt-4 space-y-6">
-						{recap.topics.map((topic) => (
-							<Card key={topic.order}>
-								<CardHeader>
-									<div className="flex flex-wrap items-center gap-2">
-										<CardTitle className="text-base">
-											Round {topic.order}: {topic.topicName}
-										</CardTitle>
-										<Badge
-											variant="outline"
-											className="gap-1 font-normal text-[11px]"
-										>
-											<BarChart2 className="size-3" />
-											TDR{" "}
-											{formatDifficultyDr(topic.tdr, topic.hasRatedDifficulty)}
-										</Badge>
-									</div>
-									<CardDescription className="flex flex-wrap gap-x-3 gap-y-1">
-										<span>
-											Time {formatDurationSeconds(topic.durationSeconds)}
-										</span>
-										<span>
-											Topic difficulty{" "}
-											{formatDifficultyDr(topic.tdr, topic.hasRatedDifficulty)}
-										</span>
-										<span>
-											Clicks {topic.totalClicks} · ✓ {topic.totalCorrectAnswers}{" "}
-											· ✗ {topic.totalIncorrectAnswers} · exp{" "}
-											{topic.totalExpiredClicks}
-										</span>
-										<span>
-											Answered {topic.totalQuestionsAnswered} · skipped{" "}
-											{topic.totalQuestionsSkipped}
-										</span>
-									</CardDescription>
-								</CardHeader>
-								<CardPanel className="space-y-4">
-									{topic.questions.map((q) => (
-										<QuestionBlock key={q.order} q={q} />
-									))}
-								</CardPanel>
-							</Card>
-						))}
-					</TabsPanel>
+					<TabsPanel value="by-round" className="mt-4 space-y-6">
+						<div className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+							<div className="flex flex-wrap items-center gap-2">
+								<FilterIcon className="size-4 text-muted-foreground" />
+								<span className="font-medium text-sm">Round filters</span>
+							</div>
+							<div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+								<div className="grid gap-1.5 md:col-span-2 xl:col-span-2">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-q"
+									>
+										Search topic name or round #
+									</Label>
+									<Input
+										id="stats-round-q"
+										onChange={(e) => setRoundQ(e.target.value)}
+										placeholder="Filter by topic…"
+										value={roundQ}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-order"
+									>
+										Round
+									</Label>
+									<Select
+										onValueChange={(v) =>
+											setRoundOrder(v === "__all__" ? "" : v)
+										}
+										value={roundOrder === "" ? "__all__" : roundOrder}
+									>
+										<SelectTrigger id="stats-round-order">
+											<SelectValue placeholder="All rounds" />
+										</SelectTrigger>
+										<SelectPopup>
+											<SelectItem value="__all__">All rounds</SelectItem>
+											{topicOrdersSorted.map((o) => (
+												<SelectItem key={o} value={String(o)}>
+													Round {o}
+												</SelectItem>
+											))}
+										</SelectPopup>
+									</Select>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-clicks-min"
+									>
+										Min buzzes (topic)
+									</Label>
+									<Input
+										id="stats-round-clicks-min"
+										inputMode="numeric"
+										onChange={(e) => setRoundClicksMinRaw(e.target.value)}
+										placeholder="Any"
+										value={roundClicksMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-clicks-max"
+									>
+										Max buzzes (topic)
+									</Label>
+									<Input
+										id="stats-round-clicks-max"
+										inputMode="numeric"
+										onChange={(e) => setRoundClicksMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={roundClicksMaxRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-tdr-min"
+									>
+										Min TDR
+									</Label>
+									<Input
+										id="stats-round-tdr-min"
+										inputMode="decimal"
+										onChange={(e) => setRoundTdrMinRaw(e.target.value)}
+										placeholder="Any"
+										value={roundTdrMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-tdr-max"
+									>
+										Max TDR
+									</Label>
+									<Input
+										id="stats-round-tdr-max"
+										inputMode="decimal"
+										onChange={(e) => setRoundTdrMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={roundTdrMaxRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-qdr-min"
+										title="Mean QDR across questions with at least one rated attempt"
+									>
+										Min avg QDR
+									</Label>
+									<Input
+										id="stats-round-qdr-min"
+										inputMode="decimal"
+										onChange={(e) => setRoundQdrMinRaw(e.target.value)}
+										placeholder="Any"
+										value={roundQdrMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-round-qdr-max"
+										title="Mean QDR across questions with at least one rated attempt"
+									>
+										Max avg QDR
+									</Label>
+									<Input
+										id="stats-round-qdr-max"
+										inputMode="decimal"
+										onChange={(e) => setRoundQdrMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={roundQdrMaxRaw}
+									/>
+								</div>
+							</div>
+							<p className="text-muted-foreground text-xs">
+								Buzz counts use each topic’s total buzzes (rollup and
+								per-question rows). Avg QDR uses only questions with difficulty
+								data.
+							</p>
+							<div className="flex justify-end">
+								<Button
+									onClick={clearRoundFilters}
+									type="button"
+									variant="outline"
+									size="sm"
+								>
+									Clear round filters
+								</Button>
+							</div>
+						</div>
 
-					<TabsPanel value="players" className="mt-4 space-y-6">
-						{sortedPlayers.map((player, playerIndex) => {
-							const clicks = collectClicksForPlayer(recap, player.id);
-							return (
-								<Card key={player.id}>
+						{filteredTopics.length === 0 ? (
+							<p className="text-muted-foreground text-sm">
+								No rounds match these filters.
+							</p>
+						) : (
+							filteredTopics.map((topic) => (
+								<Card key={topic.order}>
 									<CardHeader>
-										<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-											<div>
-												<CardTitle className="text-base">
-													<span className="me-2 inline-flex size-7 items-center justify-center rounded-lg bg-primary/12 font-semibold text-primary text-xs">
-														{player.rank ?? playerIndex + 1}
-													</span>
-													{player.user.name}
-												</CardTitle>
-												<CardDescription>
-													@{player.user.username}
-												</CardDescription>
-											</div>
-											<div className="text-left sm:text-right">
-												<p className="text-muted-foreground text-xs uppercase tracking-wide">
-													Score
-												</p>
-												<p className="font-bold text-2xl tabular-nums">
-													{player.score.toLocaleString()}
-												</p>
-											</div>
+										<div className="flex flex-wrap items-center gap-2">
+											<CardTitle className="text-base">
+												Round {topic.order}: {topic.topicName}
+											</CardTitle>
+											<Badge
+												variant="outline"
+												className="gap-1 font-normal text-[11px]"
+											>
+												<BarChart2 className="size-3" />
+												TDR{" "}
+												{formatDifficultyDr(
+													topic.tdr,
+													topic.hasRatedDifficulty,
+												)}
+											</Badge>
 										</div>
+										<CardDescription className="flex flex-wrap gap-x-3 gap-y-1">
+											<span>
+												Time {formatDurationSeconds(topic.durationSeconds)}
+											</span>
+											<span>
+												Topic difficulty{" "}
+												{formatDifficultyDr(
+													topic.tdr,
+													topic.hasRatedDifficulty,
+												)}
+											</span>
+											<span>
+												Clicks {topic.totalClicks} · ✓{" "}
+												{topic.totalCorrectAnswers} · ✗{" "}
+												{topic.totalIncorrectAnswers} · exp{" "}
+												{topic.totalExpiredClicks}
+											</span>
+											<span>
+												Answered {topic.totalQuestionsAnswered} · skipped{" "}
+												{topic.totalQuestionsSkipped}
+											</span>
+										</CardDescription>
 									</CardHeader>
 									<CardPanel className="space-y-4">
-										<div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-											<SummaryStat
-												label="Correct"
-												value={player.correctAnswers}
-											/>
-											<SummaryStat
-												label="Wrong"
-												value={player.incorrectAnswers}
-											/>
-											<SummaryStat
-												label="Expired"
-												value={player.expiredClicks}
-											/>
-											<SummaryStat
-												label="1st buzz"
-												value={player.firstClicks}
-											/>
-											<SummaryStat
-												label="Fastest"
-												value={formatReactionMs(player.fastestClickMs)}
-											/>
-											<SummaryStat
-												label="Avg click"
-												value={formatReactionMs(player.averageClickMs)}
-											/>
-										</div>
-										<PlayerRecapBadges
-											rows={badgesByPlayerId.get(player.id)}
-											variant="compact"
-										/>
-										<div>
-											<p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-												Every buzz ({clicks.length})
-											</p>
-											{clicks.length === 0 ? (
-												<p className="text-muted-foreground text-sm">
-													No buzzes for this player.
-												</p>
-											) : (
-												<Table variant="card" className="text-xs">
-													<TableHeader>
-														<TableRow>
-															<TableHead>Round</TableHead>
-															<TableHead>Q</TableHead>
-															<TableHead>#</TableHead>
-															<TableHead>Status</TableHead>
-															<TableHead>Reaction</TableHead>
-															<TableHead>Pts</TableHead>
-															<TableHead>Buzzed</TableHead>
-														</TableRow>
-													</TableHeader>
-													<TableBody>
-														{clicks.map((row) => (
-															<TableRow key={row.click.id}>
-																<TableCell className="max-w-[100px] truncate">
-																	{row.topicName}
-																</TableCell>
-																<TableCell className="tabular-nums">
-																	{row.questionOrder}
-																</TableCell>
-																<TableCell className="tabular-nums">
-																	{row.click.position}
-																</TableCell>
-																<TableCell>
-																	<Badge
-																		variant={clickStatusBadgeVariant(
-																			row.click.status,
-																		)}
-																		className="text-[10px]"
-																	>
-																		{row.click.status}
-																	</Badge>
-																</TableCell>
-																<TableCell className="tabular-nums">
-																	{formatReactionMs(row.click.reactionMs)}
-																</TableCell>
-																<TableCell className="tabular-nums">
-																	{row.click.pointsAwarded > 0 ? "+" : ""}
-																	{row.click.pointsAwarded}
-																</TableCell>
-																<TableCell className="text-muted-foreground">
-																	{format(row.click.clickedAt, "HH:mm:ss.SSS")}
-																</TableCell>
-															</TableRow>
-														))}
-													</TableBody>
-												</Table>
-											)}
-										</div>
+										{topic.questions.map((q) => (
+											<QuestionBlock key={q.order} q={q} />
+										))}
 									</CardPanel>
 								</Card>
-							);
-						})}
+							))
+						)}
+					</TabsPanel>
+
+					<TabsPanel value="by-player" className="mt-4 space-y-6">
+						<div className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+							<div className="flex flex-wrap items-center gap-2">
+								<FilterIcon className="size-4 text-muted-foreground" />
+								<span className="font-medium text-sm">Player filters</span>
+							</div>
+							<div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+								<div className="grid gap-1.5 lg:col-span-2 xl:col-span-2">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-q"
+									>
+										Search name or @username
+									</Label>
+									<Input
+										id="stats-player-q"
+										onChange={(e) => setPlayerQ(e.target.value)}
+										placeholder="Filter players…"
+										value={playerQ}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-score-min"
+									>
+										Min score
+									</Label>
+									<Input
+										id="stats-player-score-min"
+										inputMode="numeric"
+										onChange={(e) => setPlayerScoreMinRaw(e.target.value)}
+										placeholder="Any"
+										value={playerScoreMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-score-max"
+									>
+										Max score
+									</Label>
+									<Input
+										id="stats-player-score-max"
+										inputMode="numeric"
+										onChange={(e) => setPlayerScoreMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={playerScoreMaxRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-correct-min"
+									>
+										Min correct
+									</Label>
+									<Input
+										id="stats-player-correct-min"
+										inputMode="numeric"
+										onChange={(e) => setPlayerCorrectMinRaw(e.target.value)}
+										placeholder="Any"
+										value={playerCorrectMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-correct-max"
+									>
+										Max correct
+									</Label>
+									<Input
+										id="stats-player-correct-max"
+										inputMode="numeric"
+										onChange={(e) => setPlayerCorrectMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={playerCorrectMaxRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-wrong-min"
+									>
+										Min wrong
+									</Label>
+									<Input
+										id="stats-player-wrong-min"
+										inputMode="numeric"
+										onChange={(e) => setPlayerWrongMinRaw(e.target.value)}
+										placeholder="Any"
+										value={playerWrongMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-wrong-max"
+									>
+										Max wrong
+									</Label>
+									<Input
+										id="stats-player-wrong-max"
+										inputMode="numeric"
+										onChange={(e) => setPlayerWrongMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={playerWrongMaxRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-clicks-min"
+									>
+										Min buzzes
+									</Label>
+									<Input
+										id="stats-player-clicks-min"
+										inputMode="numeric"
+										onChange={(e) => setPlayerClicksMinRaw(e.target.value)}
+										placeholder="Any"
+										value={playerClicksMinRaw}
+									/>
+								</div>
+								<div className="grid gap-1.5">
+									<Label
+										className="text-muted-foreground text-xs"
+										htmlFor="stats-player-clicks-max"
+									>
+										Max buzzes
+									</Label>
+									<Input
+										id="stats-player-clicks-max"
+										inputMode="numeric"
+										onChange={(e) => setPlayerClicksMaxRaw(e.target.value)}
+										placeholder="Any"
+										value={playerClicksMaxRaw}
+									/>
+								</div>
+							</div>
+							<div className="flex justify-end">
+								<Button
+									onClick={clearPlayerFilters}
+									type="button"
+									variant="outline"
+									size="sm"
+								>
+									Clear player filters
+								</Button>
+							</div>
+						</div>
+
+						{filteredPlayers.length === 0 ? (
+							<p className="text-muted-foreground text-sm">
+								No players match these filters.
+							</p>
+						) : (
+							filteredPlayers.map((player) => {
+								const clicks = collectClicksForPlayer(recap, player.id);
+								const rankDisplay =
+									player.rank ??
+									sortedPlayers.findIndex((p) => p.id === player.id) + 1;
+								return (
+									<Card key={player.id}>
+										<CardHeader>
+											<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+												<div>
+													<CardTitle className="text-base">
+														<span className="me-2 inline-flex size-7 items-center justify-center rounded-lg bg-primary/12 font-semibold text-primary text-xs">
+															{rankDisplay}
+														</span>
+														{player.user.name}
+													</CardTitle>
+													<CardDescription>
+														@{player.user.username}
+													</CardDescription>
+												</div>
+												<div className="text-left sm:text-right">
+													<p className="text-muted-foreground text-xs uppercase tracking-wide">
+														Score
+													</p>
+													<p className="font-bold text-2xl tabular-nums">
+														{player.score.toLocaleString()}
+													</p>
+												</div>
+											</div>
+										</CardHeader>
+										<CardPanel className="space-y-4">
+											<div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+												<SummaryStat
+													label="Correct"
+													value={player.correctAnswers}
+												/>
+												<SummaryStat
+													label="Wrong"
+													value={player.incorrectAnswers}
+												/>
+												<SummaryStat
+													label="Expired"
+													value={player.expiredClicks}
+												/>
+												<SummaryStat
+													label="1st buzz"
+													value={player.firstClicks}
+												/>
+												<SummaryStat
+													label="Fastest"
+													value={formatReactionMs(player.fastestClickMs)}
+												/>
+												<SummaryStat
+													label="Avg click"
+													value={formatReactionMs(player.averageClickMs)}
+												/>
+											</div>
+											<PlayerRecapBadges
+												rows={badgesByPlayerId.get(player.id)}
+												variant="compact"
+											/>
+											<StatsPlayerBuzzTable clicks={clicks} />
+										</CardPanel>
+									</Card>
+								);
+							})
+						)}
 					</TabsPanel>
 				</Tabs>
 			</div>
 		</div>
 	);
+}
+
+export function CompletedGameStatsPage({ code }: { code: string }) {
+	const { data, isLoading, isError, error } = useQuery(
+		orpc.game.getCompletedRecap.queryOptions({ input: { code } }),
+	);
+
+	if (isLoading) {
+		return (
+			<div className="flex min-h-[50vh] items-center justify-center">
+				<Spinner />
+			</div>
+		);
+	}
+
+	if (isError || !data) {
+		return (
+			<div className="mx-auto max-w-lg space-y-4 p-6">
+				<Button
+					variant="outline"
+					size="sm"
+					render={<Link to="/g/$code" params={{ code }} />}
+				>
+					<ArrowLeftIcon />
+					Back to game
+				</Button>
+				<Alert variant="error">
+					<AlertTitle>Could not load stats</AlertTitle>
+					<AlertDescription>
+						{error?.message ??
+							"This game may not exist, or it is not finished yet. Full stats are only available after completion."}
+					</AlertDescription>
+				</Alert>
+			</div>
+		);
+	}
+
+	return <CompletedGameStatsLoaded recap={data} code={code} />;
 }
