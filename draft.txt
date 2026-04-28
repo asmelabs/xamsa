@@ -34,6 +34,14 @@ ROADMAP
 - On game screen, add better share button. When clicked, it will open a popup, with copy invite link, or directly
   share link on WhatsApp, Telegram, Discord, Twitter, and Facebook.
 
+## v26.04.17
+
+- More analytics/stats/charts on pack, topic and question pages.
+- When starting a game, host can select topics from the pack to play. So, you do not
+  need to play whole pack, you can select only specific topics. (by default, all topics are selected)
+- add DR values of packs, topics and questions to /dashboard tables. Also min/max filtering, and sorting options by DRs.
+
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
