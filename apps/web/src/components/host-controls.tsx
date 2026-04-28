@@ -34,14 +34,14 @@ export function HostControls({ game }: HostControlsProps) {
 	const { mutate: advance, isPending: isAdvancing } = useMutation({
 		...orpc.game.advanceQuestion.mutationOptions(),
 		onSuccess(data) {
-			// Apply authoritative data to the host's own cache so the next question
-			// text/answer shows up instantly without a refetch.
+			// Optimistic patch, then refetch for host-only fields (e.g. duplicate-buzz notice).
 			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
 				applyQuestionAdvancedToGame(old, {
 					...data,
 					isAuthoritative: true,
 				}),
 			);
+			void queryClient.invalidateQueries({ queryKey });
 		},
 		onError(error) {
 			toast.error(error.message || "Failed to advance question");

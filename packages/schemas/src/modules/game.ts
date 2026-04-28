@@ -1,5 +1,6 @@
 import z from "zod";
 import { ClickStatusSchema } from "../db/schemas/enums/ClickStatus.schema";
+import { DuplicateQuestionPolicySchema } from "../db/schemas/enums/DuplicateQuestionPolicy.schema";
 import { GameQuestionStatusSchema } from "../db/schemas/enums/GameQuestionStatus.schema";
 import { GameStatusSchema } from "../db/schemas/enums/GameStatus.schema";
 import {
@@ -200,6 +201,26 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 	hostXpGained: z.number().int().nullable(),
 	eloDeltaByUserId: z.record(z.string(), z.number().int()).default({}),
 	myEloDelta: z.number().int().nullable(),
+
+	/** When duplicate-question policy applies, buzz is disabled for this user on the current question. */
+	myDuplicateBuzzBlocked: z.boolean(),
+	myDuplicateBuzzBlockedReason: z.enum(["individual", "room"]).nullable(),
+
+	/**
+	 * Host-only: explains who is affected by replay-style duplicate blocking on the
+	 * current unrevealed question. Null when not applicable or for non-hosts.
+	 */
+	hostDuplicateBuzzNotice: z
+		.object({
+			mode: z.enum(["room", "individuals"]),
+			affectedPlayers: z.array(
+				z.object({
+					playerId: z.string(),
+					displayName: z.string(),
+				}),
+			),
+		})
+		.nullable(),
 });
 
 export type FindOneGameInputType = z.infer<typeof FindOneGameInputSchema>;
@@ -210,6 +231,7 @@ export type FindOneGameOutputType = z.infer<typeof FindOneGameOutputSchema>;
  */
 export const GameStartInputSchema = z.object({
 	code: GameSchema.shape.code,
+	duplicateQuestionPolicy: DuplicateQuestionPolicySchema.default("none"),
 });
 
 export const GameStartOutputSchema = GameSchema.pick({

@@ -5,6 +5,7 @@ import { CurrentQuestionCard } from "./current-question-card";
 import { GameCompletionBanner } from "./game-completion-banner";
 import { GameHeader } from "./game-header";
 import { HostControls } from "./host-controls";
+import { HostDuplicateBuzzBanner } from "./host-duplicate-buzz-banner";
 import { PlayersPanel } from "./players-panel";
 import { StartGameCard } from "./start-game-card";
 
@@ -30,6 +31,9 @@ export function HostView({ game }: HostViewProps) {
 					) : (
 						<>
 							<HostControls game={game} />
+							{game.status === "active" && (
+								<HostDuplicateBuzzBanner game={game} />
+							)}
 							{game.status === "active" && <BuzzQueueHostStrip game={game} />}
 							<CurrentQuestionCard game={game} isHostView />
 							<BuzzQueueCard game={game} isHostView />

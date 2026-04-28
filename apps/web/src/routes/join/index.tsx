@@ -41,6 +41,13 @@ function RouteComponent() {
 			<Frame>
 				<FrameHeader>
 					<FrameTitle>Join a game</FrameTitle>
+					<p className="text-muted-foreground text-sm">
+						Enter the room code, or open an invite link from your host (
+						<code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+							…/join/YOUR-CODE
+						</code>
+						) to join in one step after signing in.
+					</p>
 				</FrameHeader>
 				<FramePanel>
 					<JoinGameForm />

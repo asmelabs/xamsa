@@ -15,6 +15,7 @@ import {
 	DoorOpenIcon,
 	EllipsisIcon,
 	FlagIcon,
+	Link2Icon,
 	LogOutIcon,
 	ZapIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import type { GameData } from "@/lib/game-types";
+import { getJoinInviteAbsoluteUrl } from "@/lib/join-invite-url";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
@@ -54,6 +56,11 @@ export function GameHeader({ game }: GameHeaderProps) {
 	const handleCopyCode = () => {
 		copy(game.code);
 		toast.success("Code copied");
+	};
+
+	const handleCopyInviteLink = () => {
+		copy(getJoinInviteAbsoluteUrl(game.code));
+		toast.success("Invite link copied");
 	};
 
 	const queryKey = orpc.game.findOne.queryKey({ input: { code: game.code } });
@@ -115,7 +122,7 @@ export function GameHeader({ game }: GameHeaderProps) {
 				</div>
 			</div>
 
-			<div className="flex items-center gap-2">
+			<div className="flex flex-wrap items-center gap-2">
 				<button
 					type="button"
 					onClick={handleCopyCode}
@@ -124,6 +131,19 @@ export function GameHeader({ game }: GameHeaderProps) {
 					{game.code}
 					<CopyIcon className="size-3.5 text-muted-foreground" />
 				</button>
+
+				{game.isHost && !isCompleted ? (
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="gap-1.5"
+						onClick={handleCopyInviteLink}
+					>
+						<Link2Icon className="size-3.5" />
+						Copy invite link
+					</Button>
+				) : null}
 
 				{(canShowHostEnd || canShowPlayerLeave) && (
 					<Menu>

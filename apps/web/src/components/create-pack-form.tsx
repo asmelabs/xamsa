@@ -28,8 +28,16 @@ import {
 	PopoverPopup,
 	PopoverTrigger,
 } from "@xamsa/ui/components/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@xamsa/ui/components/select";
 import { Switch } from "@xamsa/ui/components/switch";
 import { Textarea } from "@xamsa/ui/components/textarea";
+import { formatCase, formattedEnum } from "@xamsa/utils/case-formatters";
 import { CircleHelp, Download } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
@@ -228,6 +236,61 @@ export function CreatePackForm() {
 							/>
 						)}
 					</form.Input>
+
+					<div className="grid gap-3 sm:grid-cols-2">
+						<form.Input name="language" label="Language">
+							{(field) => (
+								<Select
+									value={field.value as string}
+									onValueChange={field.onChange}
+								>
+									<SelectTrigger>
+										<SelectValue
+											placeholder="Language"
+											aria-label="Pack language"
+										>
+											{formatCase(field.value as string, "snake", "title") ||
+												"Language"}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										{formattedEnum(PackLanguageSchema.options).map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
+						</form.Input>
+						<form.Input name="visibility" label="Visibility">
+							{(field) => (
+								<Select
+									value={field.value as string}
+									onValueChange={field.onChange}
+								>
+									<SelectTrigger>
+										<SelectValue
+											placeholder="Visibility"
+											aria-label="Pack visibility"
+										>
+											{formatCase(field.value as string, "snake", "title") ||
+												"Visibility"}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										{formattedEnum(PackVisibilitySchema.options).map(
+											(option) => (
+												<SelectItem key={option.value} value={option.value}>
+													{option.label}
+												</SelectItem>
+											),
+										)}
+									</SelectContent>
+								</Select>
+							)}
+						</form.Input>
+					</div>
 
 					<form.Input
 						name="allowOthersHost"

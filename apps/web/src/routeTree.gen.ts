@@ -32,6 +32,7 @@ import { Route as WhatsNewVersionIndexRouteImport } from './routes/whats-new/$ve
 import { Route as PacksNewIndexRouteImport } from './routes/packs/new/index'
 import { Route as PacksBulkNewIndexRouteImport } from './routes/packs/bulk-new/index'
 import { Route as PacksPackSlugIndexRouteImport } from './routes/packs/$packSlug/index'
+import { Route as JoinCodeIndexRouteImport } from './routes/join/$code/index'
 import { Route as GamesHistoryIndexRouteImport } from './routes/games/history/index'
 import { Route as GCodeIndexRouteImport } from './routes/g/$code/index'
 import { Route as DevOgPreviewIndexRouteImport } from './routes/dev/og-preview/index'
@@ -182,6 +183,11 @@ const PacksBulkNewIndexRoute = PacksBulkNewIndexRouteImport.update({
 const PacksPackSlugIndexRoute = PacksPackSlugIndexRouteImport.update({
   id: '/packs/$packSlug/',
   path: '/packs/$packSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinCodeIndexRoute = JoinCodeIndexRouteImport.update({
+  id: '/join/$code/',
+  path: '/join/$code/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesHistoryIndexRoute = GamesHistoryIndexRouteImport.update({
@@ -416,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/dev/og-preview/': typeof DevOgPreviewIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/games/history/': typeof GamesHistoryIndexRoute
+  '/join/$code/': typeof JoinCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
@@ -475,6 +482,7 @@ export interface FileRoutesByTo {
   '/dev/og-preview': typeof DevOgPreviewIndexRoute
   '/g/$code': typeof GCodeIndexRoute
   '/games/history': typeof GamesHistoryIndexRoute
+  '/join/$code': typeof JoinCodeIndexRoute
   '/packs/$packSlug': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new': typeof PacksBulkNewIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
@@ -537,6 +545,7 @@ export interface FileRoutesById {
   '/dev/og-preview/': typeof DevOgPreviewIndexRoute
   '/g/$code/': typeof GCodeIndexRoute
   '/games/history/': typeof GamesHistoryIndexRoute
+  '/join/$code/': typeof JoinCodeIndexRoute
   '/packs/$packSlug/': typeof PacksPackSlugIndexRoute
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
@@ -600,6 +609,7 @@ export interface FileRouteTypes {
     | '/dev/og-preview/'
     | '/g/$code/'
     | '/games/history/'
+    | '/join/$code/'
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
     | '/packs/new/'
@@ -659,6 +669,7 @@ export interface FileRouteTypes {
     | '/dev/og-preview'
     | '/g/$code'
     | '/games/history'
+    | '/join/$code'
     | '/packs/$packSlug'
     | '/packs/bulk-new'
     | '/packs/new'
@@ -720,6 +731,7 @@ export interface FileRouteTypes {
     | '/dev/og-preview/'
     | '/g/$code/'
     | '/games/history/'
+    | '/join/$code/'
     | '/packs/$packSlug/'
     | '/packs/bulk-new/'
     | '/packs/new/'
@@ -769,6 +781,7 @@ export interface RootRouteChildren {
   DevOgPreviewIndexRoute: typeof DevOgPreviewIndexRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
   GamesHistoryIndexRoute: typeof GamesHistoryIndexRoute
+  JoinCodeIndexRoute: typeof JoinCodeIndexRoute
   PacksPackSlugIndexRoute: typeof PacksPackSlugIndexRoute
   PacksBulkNewIndexRoute: typeof PacksBulkNewIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
@@ -955,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/packs/$packSlug'
       fullPath: '/packs/$packSlug/'
       preLoaderRoute: typeof PacksPackSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$code/': {
+      id: '/join/$code/'
+      path: '/join/$code'
+      fullPath: '/join/$code/'
+      preLoaderRoute: typeof JoinCodeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games/history/': {
@@ -1280,6 +1300,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevOgPreviewIndexRoute: DevOgPreviewIndexRoute,
   GCodeIndexRoute: GCodeIndexRoute,
   GamesHistoryIndexRoute: GamesHistoryIndexRoute,
+  JoinCodeIndexRoute: JoinCodeIndexRoute,
   PacksPackSlugIndexRoute: PacksPackSlugIndexRoute,
   PacksBulkNewIndexRoute: PacksBulkNewIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
