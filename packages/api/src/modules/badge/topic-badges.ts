@@ -12,7 +12,7 @@ type PlayingPlayer = {
 };
 
 /**
- * Topic boundary badges: ace, ghost, jackpot, bankrupt.
+ * Topic boundary badges: ace, abomination, ghost, jackpot, bankrupt.
  * Idempotent: already-earned (player + topic + badge) is skipped. Safe to call
  * at question reveal and again in finalizeGameTopic (advance) so realtime can
  * fire as soon as the 5th question is done without duplicate rows/Ably.
@@ -103,6 +103,9 @@ export async function awardTopicBadges(
 
 		if (a.correct === 5 && a.wrong === 0) {
 			await push(p, "ace");
+		}
+		if (a.wrong === 5 && a.correct === 0) {
+			await push(p, "abomination");
 		}
 		if (a.buzzes === 0) {
 			await push(p, "ghost");

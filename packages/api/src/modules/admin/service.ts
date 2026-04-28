@@ -1,6 +1,8 @@
 import { ORPCError } from "@orpc/server";
 import prisma, { type Prisma } from "@xamsa/db";
 import type {
+	ListAdminBadgesInputType,
+	ListAdminBadgesOutputType,
 	ListAdminClicksInputType,
 	ListAdminClicksOutputType,
 	ListAdminGamesInputType,
@@ -27,6 +29,7 @@ import {
 	adminTopicSort,
 	adminUserSort,
 } from "@xamsa/schemas/modules/listings/admin";
+import { ALL_BADGE_IDS, getBadge } from "@xamsa/utils/badges";
 import { definePagination } from "@xamsa/utils/pagination";
 import {
 	buildAdminClicksWhere,
@@ -339,4 +342,113 @@ export async function listAdminTopicBulkJobs(
 	]);
 
 	return p.output(rows, total);
+}
+
+export async function listAdminBadges(
+	input: ListAdminBadgesInputType,
+): Promise<ListAdminBadgesOutputType> {
+	const {
+		page,
+		limit,
+		sort,
+		dir,
+		query,
+		periods,
+		types,
+		categories,
+		minTotalAwards,
+		maxTotalAwards,
+		minEarners,
+		maxEarners,
+	} = input;
+
+	const aggRows = await prisma.$queryRaw<
+		Array<{ badge_id: string; total_awards: bigint; distinct_earners: bigint }>
+	>`
+    SELECT pba.badge_id AS badge_id,
+           COUNT(*)::bigint AS total_awards,
+           COUNT(DISTINCT p.user_id)::bigint AS distinct_earners
+    FROM player_badge_award pba
+    INNER JOIN player p ON p.id = pba.player_id
+    GROUP BY pba.badge_id
+  `;
+
+	const agg = new Map<
+		string,
+		{ totalAwards: number; distinctEarners: number }
+	>();
+	for (const row of aggRows) {
+		agg.set(row.badge_id, {
+			totalAwards: Number(row.total_awards),
+			distinctEarners: Number(row.distinct_earners),
+		});
+	}
+
+	const qlow = query?.trim().toLowerCase();
+
+	let rows = ALL_BADGE_IDS.map((id) => {
+		const meta = getBadge(id);
+		const a = agg.get(id) ?? { totalAwards: 0, distinctEarners: 0 };
+		return {
+			badgeId: id,
+			name: meta.name,
+			period: meta.period,
+			type: meta.type,
+			category: meta.category,
+			totalAwards: a.totalAwards,
+			distinctEarners: a.distinctEarners,
+		};
+	});
+
+	if (qlow) {
+		rows = rows.filter(
+			(r) =>
+				r.badgeId.toLowerCase().includes(qlow) ||
+				r.name.toLowerCase().includes(qlow),
+		);
+	}
+	if (periods?.length) {
+		rows = rows.filter((r) => periods.includes(r.period));
+	}
+	if (types?.length) {
+		rows = rows.filter((r) => types.includes(r.type));
+	}
+	if (categories?.length) {
+		rows = rows.filter((r) => categories.includes(r.category));
+	}
+	if (minTotalAwards != null) {
+		rows = rows.filter((r) => r.totalAwards >= minTotalAwards);
+	}
+	if (maxTotalAwards != null) {
+		rows = rows.filter((r) => r.totalAwards <= maxTotalAwards);
+	}
+	if (minEarners != null) {
+		rows = rows.filter((r) => r.distinctEarners >= minEarners);
+	}
+	if (maxEarners != null) {
+		rows = rows.filter((r) => r.distinctEarners <= maxEarners);
+	}
+
+	const mult = dir === "asc" ? 1 : -1;
+	const sorted = [...rows].sort((a, b) => {
+		switch (sort) {
+			case "name":
+				return mult * a.name.localeCompare(b.name);
+			case "badge_id":
+				return mult * a.badgeId.localeCompare(b.badgeId);
+			case "total_awards":
+				return mult * (a.totalAwards - b.totalAwards);
+			case "distinct_earners":
+				return mult * (a.distinctEarners - b.distinctEarners);
+			default:
+				return 0;
+		}
+	});
+
+	const p = definePagination(page, limit);
+	const total = sorted.length;
+	const { skip, take } = p.use();
+	const slice = sorted.slice(skip, skip + take);
+
+	return p.output(slice, total);
 }

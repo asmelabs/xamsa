@@ -7,12 +7,46 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 15 } as const;
+const current = { year: 2026, month: 4, patch: 17 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-28",
+			year: 2026,
+			month: 4,
+			patch: 17,
+			title: "Share sheet for live games",
+			highlights: [
+				{
+					kind: "text",
+					text: "The live game header replaces separate copy-code and copy-invite controls with one Share button that opens a sheet: native Share when available (mobile-first), tap targets for WhatsApp, Telegram, X/Twitter, and Facebook, copy-friendly Discord (paste anywhere), plus quick copy for room code and invite URL.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-04-28",
+			year: 2026,
+			month: 4,
+			patch: 16,
+			title: "Badges catalog, profile density, and staff badge stats",
+			highlights: [
+				{
+					kind: "text",
+					text: "Profile badges use a denser grid so the list stays scannable as new awards are added.",
+				},
+				{
+					kind: "text",
+					text: "Staff dashboard adds a Badges table: total awards and distinct earners per catalog entry, with search, period/type/category filters, and min/max thresholds for awards and earners.",
+				},
+				{
+					kind: "text",
+					text: "New Abomination (5/5 wrong in a topic), Genius (positive net in every topic of a finished game), and Dunce (non-positive net in every topic) badges—metadata in the catalog; server awards at topic end or game finalize like other badges.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-28",
 			year: 2026,
@@ -46,7 +80,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Hosts can copy an invite link from the live game header so players open `/join/YOUR-CODE`, sign in if needed, and join in one step—the same validations as entering the room code manually still apply.",
+					text: "Hosts can open Share on the live game header to copy the invite URL or send it via common apps—players still land on `/join/YOUR-CODE` with the same validations as typing the room code manually.",
 				},
 				{
 					kind: "text",

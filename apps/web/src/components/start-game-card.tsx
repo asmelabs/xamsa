@@ -71,10 +71,10 @@ export function StartGameCard({ game, activePlayers }: StartGameCardProps) {
 			<div className="space-y-1">
 				<h2 className="font-bold text-xl">Ready to host?</h2>
 				<p className="text-muted-foreground text-sm">
-					Share the game code or use{" "}
-					<span className="font-medium text-foreground">Copy invite link</span>{" "}
-					in the header so players open the room in one tap after signing in.
-					When everyone&apos;s in, start the game.
+					Use <span className="font-medium text-foreground">Share</span> in the
+					header to copy the room code or invite link, open
+					WhatsApp/Telegram/X/Facebook, or use your device&apos;s native share
+					sheet. When everyone&apos;s in, start the game.
 				</p>
 			</div>
 

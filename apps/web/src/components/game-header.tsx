@@ -11,21 +11,21 @@ import {
 	MenuTrigger,
 } from "@xamsa/ui/components/menu";
 import {
-	CopyIcon,
 	DoorOpenIcon,
 	EllipsisIcon,
 	FlagIcon,
-	Link2Icon,
 	LogOutIcon,
+	Share2Icon,
 	ZapIcon,
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { useState } from "react";
 import { toast } from "sonner";
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import type { GameData } from "@/lib/game-types";
 import { getJoinInviteAbsoluteUrl } from "@/lib/join-invite-url";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
+import { GameShareSheet } from "./game-share-sheet";
 import { LoadingButton } from "./loading-button";
 
 const statusConfig = {
@@ -40,7 +40,6 @@ interface GameHeaderProps {
 }
 
 export function GameHeader({ game }: GameHeaderProps) {
-	const { copy } = useCopyToClipboard();
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 
@@ -52,16 +51,7 @@ export function GameHeader({ game }: GameHeaderProps) {
 		"leave-game",
 		parseAsBoolean.withDefault(false),
 	);
-
-	const handleCopyCode = () => {
-		copy(game.code);
-		toast.success("Code copied");
-	};
-
-	const handleCopyInviteLink = () => {
-		copy(getJoinInviteAbsoluteUrl(game.code));
-		toast.success("Invite link copied");
-	};
+	const [shareOpen, setShareOpen] = useState(false);
 
 	const queryKey = orpc.game.findOne.queryKey({ input: { code: game.code } });
 
@@ -123,27 +113,32 @@ export function GameHeader({ game }: GameHeaderProps) {
 			</div>
 
 			<div className="flex flex-wrap items-center gap-2">
-				<button
-					type="button"
-					onClick={handleCopyCode}
-					className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 font-mono text-sm transition-colors hover:bg-muted"
-				>
+				<span className="rounded-lg border border-border bg-muted/30 px-3 py-1.5 font-mono text-sm tracking-wide">
 					{game.code}
-					<CopyIcon className="size-3.5 text-muted-foreground" />
-				</button>
+				</span>
 
-				{game.isHost && !isCompleted ? (
+				{!isCompleted ? (
 					<Button
 						type="button"
-						variant="outline"
+						variant="default"
 						size="sm"
-						className="gap-1.5"
-						onClick={handleCopyInviteLink}
+						className="gap-2 shadow-sm"
+						onClick={() => setShareOpen(true)}
 					>
-						<Link2Icon className="size-3.5" />
-						Copy invite link
+						<Share2Icon className="size-4" />
+						Share
 					</Button>
 				) : null}
+
+				<GameShareSheet
+					open={shareOpen}
+					onOpenChange={setShareOpen}
+					context={{
+						packName: game.pack.name,
+						code: game.code,
+						inviteUrl: getJoinInviteAbsoluteUrl(game.code),
+					}}
+				/>
 
 				{(canShowHostEnd || canShowPlayerLeave) && (
 					<Menu>

@@ -2,6 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { pageSeo } from "@/lib/seo";
 
 const SECTIONS = [
+	{
+		to: "/dashboard/badges",
+		title: "Badges",
+		hint: "Catalog stats and filters",
+	},
 	{ to: "/dashboard/packs", title: "Packs", hint: "All packs (unfiltered)" },
 	{ to: "/dashboard/users", title: "Users", hint: "Accounts and roles" },
 	{ to: "/dashboard/games", title: "Games", hint: "Sessions and codes" },

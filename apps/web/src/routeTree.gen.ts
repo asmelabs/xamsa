@@ -43,6 +43,7 @@ import { Route as DashboardPacksIndexRouteImport } from './routes/dashboard/pack
 import { Route as DashboardJobsIndexRouteImport } from './routes/dashboard/jobs/index'
 import { Route as DashboardGamesIndexRouteImport } from './routes/dashboard/games/index'
 import { Route as DashboardClicksIndexRouteImport } from './routes/dashboard/clicks/index'
+import { Route as DashboardBadgesIndexRouteImport } from './routes/dashboard/badges/index'
 import { Route as BadgesBadgeIdIndexRouteImport } from './routes/badges/$badgeId/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
@@ -240,6 +241,11 @@ const DashboardClicksIndexRoute = DashboardClicksIndexRouteImport.update({
   path: '/clicks/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBadgesIndexRoute = DashboardBadgesIndexRouteImport.update({
+  id: '/badges/',
+  path: '/badges/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const BadgesBadgeIdIndexRoute = BadgesBadgeIdIndexRouteImport.update({
   id: '/badges/$badgeId/',
   path: '/badges/$badgeId/',
@@ -412,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
+  '/dashboard/badges/': typeof DashboardBadgesIndexRoute
   '/dashboard/clicks/': typeof DashboardClicksIndexRoute
   '/dashboard/games/': typeof DashboardGamesIndexRoute
   '/dashboard/jobs/': typeof DashboardJobsIndexRoute
@@ -472,6 +479,7 @@ export interface FileRoutesByTo {
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId': typeof BadgesBadgeIdIndexRoute
+  '/dashboard/badges': typeof DashboardBadgesIndexRoute
   '/dashboard/clicks': typeof DashboardClicksIndexRoute
   '/dashboard/games': typeof DashboardGamesIndexRoute
   '/dashboard/jobs': typeof DashboardJobsIndexRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
+  '/dashboard/badges/': typeof DashboardBadgesIndexRoute
   '/dashboard/clicks/': typeof DashboardClicksIndexRoute
   '/dashboard/games/': typeof DashboardGamesIndexRoute
   '/dashboard/jobs/': typeof DashboardJobsIndexRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/api/rpc/$'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
+    | '/dashboard/badges/'
     | '/dashboard/clicks/'
     | '/dashboard/games/'
     | '/dashboard/jobs/'
@@ -659,6 +669,7 @@ export interface FileRouteTypes {
     | '/api/rpc/$'
     | '/auth/reset-password'
     | '/badges/$badgeId'
+    | '/dashboard/badges'
     | '/dashboard/clicks'
     | '/dashboard/games'
     | '/dashboard/jobs'
@@ -721,6 +732,7 @@ export interface FileRouteTypes {
     | '/api/rpc/$'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
+    | '/dashboard/badges/'
     | '/dashboard/clicks/'
     | '/dashboard/games/'
     | '/dashboard/jobs/'
@@ -1047,6 +1059,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardClicksIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/badges/': {
+      id: '/dashboard/badges/'
+      path: '/badges'
+      fullPath: '/dashboard/badges/'
+      preLoaderRoute: typeof DashboardBadgesIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/badges/$badgeId/': {
       id: '/badges/$badgeId/'
       path: '/badges/$badgeId'
@@ -1252,6 +1271,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardBadgesIndexRoute: typeof DashboardBadgesIndexRoute
   DashboardClicksIndexRoute: typeof DashboardClicksIndexRoute
   DashboardGamesIndexRoute: typeof DashboardGamesIndexRoute
   DashboardJobsIndexRoute: typeof DashboardJobsIndexRoute
@@ -1263,6 +1283,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardBadgesIndexRoute: DashboardBadgesIndexRoute,
   DashboardClicksIndexRoute: DashboardClicksIndexRoute,
   DashboardGamesIndexRoute: DashboardGamesIndexRoute,
   DashboardJobsIndexRoute: DashboardJobsIndexRoute,

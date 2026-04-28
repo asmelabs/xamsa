@@ -1,4 +1,5 @@
 import type { Prisma } from "@xamsa/db";
+import z from "zod";
 import { definePeriod } from "../../common/period.schema";
 import { defineSearch } from "../../common/search.schema";
 import { defineSorting } from "../../common/sorting";
@@ -169,3 +170,15 @@ export const adminTopicBulkJobSearch =
 
 export const adminTopicBulkJobPeriod =
 	definePeriod<Prisma.TopicBulkJobWhereInput>("createdAt");
+
+/** Admin: badge catalog stats — sort applied in memory after aggregation */
+export const adminBadgeSort = {
+	options: ["name", "badge_id", "total_awards", "distinct_earners"] as const,
+	defaultOption: "total_awards" as const,
+	shape: () => ({
+		sort: z
+			.enum(["name", "badge_id", "total_awards", "distinct_earners"])
+			.default("total_awards"),
+		dir: z.enum(["asc", "desc"]).optional(),
+	}),
+};
