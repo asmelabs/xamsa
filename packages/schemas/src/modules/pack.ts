@@ -118,6 +118,7 @@ export const FindOnePackOutputSchema = PackSchema.pick({
 	totalRatings: true,
 	publishedAt: true,
 	status: true,
+	pdr: true,
 }).extend({
 	isAuthor: z.boolean(),
 	_count: CountSchema("topics"),
@@ -126,6 +127,8 @@ export const FindOnePackOutputSchema = PackSchema.pick({
 		name: true,
 		username: true,
 	}),
+	/** True once any question in the pack has a scored QDR play. */
+	hasRatedDifficulty: z.boolean(),
 });
 
 export type FindOnePackInputType = z.infer<typeof FindOnePackInputSchema>;
@@ -162,12 +165,15 @@ export const ListPacksOutputSchema = CursorPaginationOutputSchema(
 		language: true,
 		status: true,
 		visibility: true,
+		pdr: true,
 	}).extend({
 		_count: CountSchema("topics"),
 		author: UserSchema.pick({
 			username: true,
 			name: true,
 		}),
+		/** True once any question in the pack has a scored QDR play. */
+		hasRatedDifficulty: z.boolean(),
 	}),
 );
 

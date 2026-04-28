@@ -1,5 +1,6 @@
 import {
 	OG_COLORS,
+	OG_FONT_FAMILY,
 	OgAvatar,
 	OgEyebrow,
 	OgFooter,
@@ -40,11 +41,13 @@ function PodiumTile({ row }: { row: LeaderboardOgRow }) {
 				borderRadius: 24,
 				border: `1px solid ${OG_COLORS.border}`,
 				backgroundColor: "#ffffff",
+				fontFamily: OG_FONT_FAMILY,
 			}}
 		>
 			<div
 				style={{
 					display: "flex",
+					fontFamily: OG_FONT_FAMILY,
 					alignItems: "center",
 					justifyContent: "center",
 					width: 48,
@@ -62,6 +65,7 @@ function PodiumTile({ row }: { row: LeaderboardOgRow }) {
 			<div
 				style={{
 					display: "flex",
+					fontFamily: OG_FONT_FAMILY,
 					fontSize: 26,
 					fontWeight: 700,
 					color: OG_COLORS.fg,
@@ -74,6 +78,7 @@ function PodiumTile({ row }: { row: LeaderboardOgRow }) {
 			<div
 				style={{
 					display: "flex",
+					fontFamily: OG_FONT_FAMILY,
 					fontSize: 22,
 					color: OG_COLORS.muted,
 				}}
@@ -83,15 +88,30 @@ function PodiumTile({ row }: { row: LeaderboardOgRow }) {
 			<div
 				style={{
 					display: "flex",
+					fontFamily: OG_FONT_FAMILY,
 					gap: 6,
 					alignItems: "baseline",
 					fontSize: 28,
 				}}
 			>
-				<span style={{ fontWeight: 700, color: OG_COLORS.primary }}>
+				<span
+					style={{
+						fontFamily: OG_FONT_FAMILY,
+						fontWeight: 700,
+						color: OG_COLORS.primary,
+					}}
+				>
 					{row.elo.toLocaleString()}
 				</span>
-				<span style={{ color: OG_COLORS.muted, fontSize: 22 }}>Elo</span>
+				<span
+					style={{
+						fontFamily: OG_FONT_FAMILY,
+						color: OG_COLORS.muted,
+						fontSize: 22,
+					}}
+				>
+					Elo
+				</span>
 			</div>
 		</div>
 	);

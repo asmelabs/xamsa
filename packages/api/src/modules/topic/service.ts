@@ -249,15 +249,26 @@ export async function listTopics(
 				name: true,
 				description: true,
 				order: true,
+				tdr: true,
 				_count: {
 					select: { questions: true },
+				},
+				questions: {
+					where: { qdrScoredAttempts: { gt: 0 } },
+					take: 1,
+					select: { id: true },
 				},
 			},
 		}),
 		prisma.topic.count({ where }),
 	]);
 
-	return p.output(topics, total);
+	const items = topics.map(({ questions: scored, ...t }) => ({
+		...t,
+		hasRatedDifficulty: scored.length > 0,
+	}));
+
+	return p.output(items, total);
 }
 
 export async function updateTopicsOrder(
@@ -348,20 +359,25 @@ export async function findOneTopic(
 			name: true,
 			order: true,
 			description: true,
+			tdr: true,
 			questions: {
 				select: {
 					text: true,
 					slug: true,
 					order: true,
+					qdr: true,
+					qdrScoredAttempts: true,
 				},
 				orderBy: { order: "asc" },
 			},
 			pack: {
 				select: {
+					id: true,
 					slug: true,
 					name: true,
 					status: true,
 					visibility: true,
+					pdr: true,
 					authorId: true,
 					author: {
 						select: {
@@ -382,12 +398,28 @@ export async function findOneTopic(
 
 	const isAuthor = !!userId && topic.pack.authorId === userId;
 
-	const { authorId, ...pack } = topic.pack;
+	const { authorId, id: packId, ...packRest } = topic.pack;
+
+	const [packHasRatedDifficulty, topicHasRatedDifficulty] = await Promise.all([
+		prisma.question
+			.count({
+				where: {
+					topic: { packId },
+					qdrScoredAttempts: { gt: 0 },
+				},
+			})
+			.then((n) => n > 0),
+		Promise.resolve(topic.questions.some((q) => q.qdrScoredAttempts > 0)),
+	]);
 
 	return {
 		...topic,
 		isAuthor,
-		pack,
+		hasRatedDifficulty: topicHasRatedDifficulty,
+		pack: {
+			...packRest,
+			hasRatedDifficulty: packHasRatedDifficulty,
+		},
 		questions: isAuthor ? topic.questions : [],
 	};
 }

@@ -7,12 +7,41 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 12 } as const;
+const current = { year: 2026, month: 4, patch: 13 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-27",
+			year: 2026,
+			month: 4,
+			patch: 13,
+			title: "Live difficulty ratings for questions, topics, and packs",
+			highlights: [
+				{
+					kind: "text",
+					text: "Each question, topic, and published pack now carries difficulty ratings (QDR, TDR, PDR on a 1–10 scale) that update when ranked games finish and the host marks buzzes correct or wrong. Ratings use players’ Elo at game start so stronger opponents raising or lowering difficulty means something.",
+				},
+				{
+					kind: "text",
+					text: "Draft and published packs both contribute—only archived packs are skipped—so playtests while you iterate move the numbers before go-live.",
+				},
+				{
+					kind: "text",
+					text: "Ratings store two decimal places so gradual shifts stay visible instead of rounding away small moves.",
+				},
+				{
+					kind: "text",
+					text: "Pack and topic pages, question detail, lists and cards, and live-game host tooling surface these values where helpful (including host-only live question difficulty).",
+				},
+				{
+					kind: "text",
+					text: "On Open Graph images, now the font is monospace, to match the rest of the app.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-27",
 			year: 2026,

@@ -9,7 +9,7 @@ import {
 	mockTopicOg,
 	mockUserOg,
 } from "@/lib/og/dev-mocks";
-import { ogImageResponse } from "@/lib/og/render";
+import { OG_DEV_PREVIEW_CACHE_CONTROL, ogImageResponse } from "@/lib/og/render";
 import { BadgeOg } from "@/lib/og/templates/badge";
 import { GameOg } from "@/lib/og/templates/game";
 import { JoinOg } from "@/lib/og/templates/join";
@@ -38,25 +38,29 @@ export const Route = createFileRoute("/api/dev/og-preview/$kind/og.png")({
 					return new Response("Not found", { status: 404 });
 				}
 
+				const preview = { cacheControl: OG_DEV_PREVIEW_CACHE_CONTROL };
 				switch (kind) {
 					case "play":
-						return ogImageResponse(<PlayOg />);
+						return ogImageResponse(<PlayOg />, preview);
 					case "join":
-						return ogImageResponse(<JoinOg />);
+						return ogImageResponse(<JoinOg />, preview);
 					case "leaderboard":
-						return ogImageResponse(<LeaderboardOg data={mockLeaderboardOg} />);
+						return ogImageResponse(
+							<LeaderboardOg data={mockLeaderboardOg} />,
+							preview,
+						);
 					case "pack":
-						return ogImageResponse(<PackOg data={mockPackOg} />);
+						return ogImageResponse(<PackOg data={mockPackOg} />, preview);
 					case "topic":
-						return ogImageResponse(<TopicOg data={mockTopicOg} />);
+						return ogImageResponse(<TopicOg data={mockTopicOg} />, preview);
 					case "user":
-						return ogImageResponse(<UserOg data={mockUserOg} />);
+						return ogImageResponse(<UserOg data={mockUserOg} />, preview);
 					case "game":
-						return ogImageResponse(<GameOg data={mockGameOg} />);
+						return ogImageResponse(<GameOg data={mockGameOg} />, preview);
 					case "badge":
-						return ogImageResponse(<BadgeOg data={mockBadgeOg} />);
+						return ogImageResponse(<BadgeOg data={mockBadgeOg} />, preview);
 					case "release":
-						return ogImageResponse(<ReleaseOg data={mockReleaseOg} />);
+						return ogImageResponse(<ReleaseOg data={mockReleaseOg} />, preview);
 					default: {
 						const _exhaustive: never = kind;
 						return _exhaustive;

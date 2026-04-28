@@ -20,6 +20,8 @@ export const PackSchema = z.object({
   totalPlays: z.number().int(),
   allowOthersHost: z.boolean(),
   showTopicsInfo: z.boolean().default(true),
+  pdr: z.number().default(4.5),
+  pdrUpdatedAt: z.coerce.date().nullish(),
   authorId: z.string(),
 });
 

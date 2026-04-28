@@ -18,6 +18,9 @@ import {
 } from "@/lib/og/dev-mocks";
 import { OG_HEIGHT, OG_WIDTH } from "@/lib/og/dimensions";
 
+/** Bust caches for preview PNGs (service worker / disk) while iterating on OG assets. */
+const OG_PREVIEW_IMG_QUERY = "?v=geistmono-2";
+
 export const Route = createFileRoute("/dev/og-preview/")({
 	beforeLoad: () => {
 		if (!import.meta.env.DEV) {
@@ -29,6 +32,7 @@ export const Route = createFileRoute("/dev/og-preview/")({
 
 function OgPreviewPage() {
 	const [focusKind, setFocusKind] = useState<OgPreviewKind | null>(null);
+	const imgQuery = import.meta.env.DEV ? OG_PREVIEW_IMG_QUERY : "";
 
 	return (
 		<div className="min-h-screen bg-zinc-950 p-8 text-zinc-100">
@@ -63,6 +67,7 @@ function OgPreviewPage() {
 						<PreviewCard
 							key={kind}
 							kind={kind}
+							imgQuery={imgQuery}
 							onOpen={() => setFocusKind(kind)}
 						/>
 					))}
@@ -97,7 +102,7 @@ function OgPreviewPage() {
 								<div className="flex min-h-[min(78vh,900px)] items-center justify-center">
 									<img
 										key={focusKind}
-										src={`/api/dev/og-preview/${focusKind}/og.png`}
+										src={`/api/dev/og-preview/${focusKind}/og.png${imgQuery}`}
 										alt={`${OG_PREVIEW_LABELS[focusKind]} — Open Graph preview (${OG_WIDTH}×${OG_HEIGHT})`}
 										width={OG_WIDTH}
 										height={OG_HEIGHT}
@@ -115,13 +120,15 @@ function OgPreviewPage() {
 
 function PreviewCard({
 	kind,
+	imgQuery,
 	onOpen,
 }: {
 	kind: OgPreviewKind;
+	imgQuery: string;
 	onOpen: () => void;
 }) {
 	const label = OG_PREVIEW_LABELS[kind];
-	const src = `/api/dev/og-preview/${kind}/og.png`;
+	const src = `/api/dev/og-preview/${kind}/og.png${imgQuery}`;
 
 	return (
 		<section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">

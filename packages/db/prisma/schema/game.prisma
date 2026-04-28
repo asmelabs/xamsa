@@ -138,6 +138,9 @@ model Player {
   /// topic participation ///
   topicsPlayed Int @default(0) @map("topics_played") // how many topics they participated in
 
+  /// User.elo at game start for in-lobby players; late joiners: snapshot at join/rejoin. Used for QDR. ///
+  eloAtGameStart Int? @map("elo_at_game_start")
+
   winningGame  Game?             @relation("GameWinner")
   clicks       Click[]
   questionWins GameQuestion[]    @relation("QuestionWinner")

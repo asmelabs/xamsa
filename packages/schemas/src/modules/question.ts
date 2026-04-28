@@ -102,21 +102,31 @@ export const FindOneQuestionOutputSchema = QuestionSchema.pick({
 	explanation: true,
 	order: true,
 	text: true,
+	qdr: true,
+	qdrScoredAttempts: true,
 }).extend({
 	topic: TopicSchema.pick({
 		slug: true,
 		name: true,
 		order: true,
+		tdr: true,
 	}),
 	pack: PackSchema.pick({
 		slug: true,
 		name: true,
 		status: true,
+		pdr: true,
 	}),
 	author: UserSchema.pick({
 		name: true,
 		username: true,
 	}),
+	/** At least one scored play on this question. */
+	hasRatedQuestionDifficulty: z.boolean(),
+	/** Any question in this topic has scored plays. */
+	hasRatedTopicDifficulty: z.boolean(),
+	/** Any question in this pack has scored plays. */
+	hasRatedPackDifficulty: z.boolean(),
 });
 
 export type FindOneQuestionInputType = z.infer<

@@ -12,6 +12,10 @@ export const QuestionSchema = z.object({
   acceptableAnswers: z.array(z.string()).max(5, 'Acceptable answers must be less than or equal to 5'),
   explanation: z.string().max(1000, 'Explanation must be less than 1000 characters').nullish(),
   topicId: z.string(),
+  qdr: z.number().default(4.5),
+  qdrEloEquiv: z.number().default(1000.0),
+  qdrScoredAttempts: z.number().int(),
+  qdrUpdatedAt: z.coerce.date().nullish(),
 });
 
 export type QuestionType = z.infer<typeof QuestionSchema>;

@@ -4,6 +4,7 @@ import {
 	notFound,
 	useNavigate,
 } from "@tanstack/react-router";
+import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
@@ -14,12 +15,14 @@ import {
 import {
 	ArrowLeftIcon,
 	ArrowUpDown,
+	BarChart2,
 	ChevronRight,
 	EyeOff,
 	PencilIcon,
 } from "lucide-react";
 import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
+import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { topicPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -147,10 +150,30 @@ function RouteComponent() {
 						: "space-y-3"
 				}
 			>
-				<h1 className="font-bold text-2xl tracking-tight sm:text-3xl">
-					<span className="text-muted-foreground">#{String(topic.order)}</span>{" "}
-					{topic.name}
-				</h1>
+				<div className="flex flex-wrap items-center gap-2">
+					<h1 className="font-bold text-2xl tracking-tight sm:text-3xl">
+						<span className="text-muted-foreground">
+							#{String(topic.order)}
+						</span>{" "}
+						{topic.name}
+					</h1>
+					<Badge
+						variant="outline"
+						className="gap-1 font-normal text-[11px]"
+						title="Topic difficulty (TDR) from live games in published packs"
+					>
+						<BarChart2 className="size-3" />
+						TDR {formatDifficultyDr(topic.tdr, topic.hasRatedDifficulty)}
+					</Badge>
+					<Badge
+						variant="secondary"
+						className="gap-1 font-normal text-[11px]"
+						title="Pack difficulty (PDR)"
+					>
+						PDR{" "}
+						{formatDifficultyDr(topic.pack.pdr, topic.pack.hasRatedDifficulty)}
+					</Badge>
+				</div>
 
 				{topic.description && (
 					<p className="text-muted-foreground">{topic.description}</p>
@@ -211,6 +234,13 @@ function RouteComponent() {
 									<p className="min-w-0 flex-1 truncate text-sm">
 										{question.text}
 									</p>
+									<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+										QDR{" "}
+										{formatDifficultyDr(
+											question.qdr,
+											question.qdrScoredAttempts > 0,
+										)}
+									</span>
 									<span className="shrink-0 text-muted-foreground text-xs">
 										{question.order * 100} pts
 									</span>

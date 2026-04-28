@@ -229,6 +229,7 @@ export async function findOnePack(
 			],
 		},
 		select: {
+			id: true,
 			_count: {
 				select: {
 					topics: true,
@@ -243,6 +244,7 @@ export async function findOnePack(
 			averageRating: true,
 			description: true,
 			status: true,
+			pdr: true,
 			totalPlays: true,
 			totalRatings: true,
 			ratings: {
@@ -269,7 +271,15 @@ export async function findOnePack(
 		});
 	}
 
-	const { authorId, ratings, status: packStatus, ...rest } = pack;
+	const { authorId, ratings, id: packId, status: packStatus, ...rest } = pack;
+
+	const hasRatedDifficulty =
+		(await prisma.question.count({
+			where: {
+				topic: { packId },
+				qdrScoredAttempts: { gt: 0 },
+			},
+		})) > 0;
 
 	const status = packStatus as Exclude<PackStatus, "deleted">;
 	const isAuthor = authorId === userId;
@@ -280,6 +290,7 @@ export async function findOnePack(
 		status,
 		isAuthor,
 		rating,
+		hasRatedDifficulty,
 	};
 }
 
@@ -342,12 +353,14 @@ export async function listPacks(
 		orderBy,
 		...p.use("slug"),
 		select: {
+			id: true,
 			slug: true,
 			name: true,
 			description: true,
 			averageRating: true,
 			totalPlays: true,
 			totalRatings: true,
+			pdr: true,
 			status: true,
 			visibility: true,
 			publishedAt: true,
@@ -366,7 +379,26 @@ export async function listPacks(
 		},
 	});
 
-	return p.output(packs, (i) => i.slug);
+	const packIds = packs.map((x) => x.id);
+	const ratedRows =
+		packIds.length === 0
+			? []
+			: await prisma.topic.findMany({
+					where: {
+						packId: { in: packIds },
+						questions: { some: { qdrScoredAttempts: { gt: 0 } } },
+					},
+					select: { packId: true },
+					distinct: ["packId"],
+				});
+	const ratedPackIds = new Set(ratedRows.map((r) => r.packId));
+
+	const withDifficulty = packs.map(({ id, ...row }) => ({
+		...row,
+		hasRatedDifficulty: ratedPackIds.has(id),
+	}));
+
+	return p.output(withDifficulty, (i) => i.slug);
 }
 
 export async function deletePack(

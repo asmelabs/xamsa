@@ -185,13 +185,18 @@ export const FindOneTopicOutputSchema = TopicSchema.pick({
 	name: true,
 	order: true,
 	description: true,
+	tdr: true,
 }).extend({
 	isAuthor: z.boolean(),
+	/** True if any question in this topic has at least one scored QDR play. */
+	hasRatedDifficulty: z.boolean(),
 	questions: z.array(
 		QuestionSchema.pick({
 			text: true,
 			slug: true,
 			order: true,
+			qdr: true,
+			qdrScoredAttempts: true,
 		}),
 	),
 	pack: PackSchema.pick({
@@ -199,11 +204,14 @@ export const FindOneTopicOutputSchema = TopicSchema.pick({
 		name: true,
 		status: true,
 		visibility: true,
+		pdr: true,
 	}).extend({
 		author: UserSchema.pick({
 			name: true,
 			username: true,
 		}),
+		/** True if any question in the pack has a scored QDR play. */
+		hasRatedDifficulty: z.boolean(),
 	}),
 });
 
@@ -227,10 +235,12 @@ export const ListTopicsItemSchema = TopicSchema.pick({
 	name: true,
 	description: true,
 	order: true,
+	tdr: true,
 }).extend({
 	_count: z.object({
 		questions: z.int().min(0),
 	}),
+	hasRatedDifficulty: z.boolean(),
 });
 
 export const ListTopicsOutputSchema =

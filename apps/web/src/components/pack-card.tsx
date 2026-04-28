@@ -4,7 +4,8 @@ import type { ListPacksOutputType } from "@xamsa/schemas/modules/pack";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Card } from "@xamsa/ui/components/card";
 import { formatDistanceToNow } from "date-fns";
-import { Layers, Lock, Play, Star } from "lucide-react";
+import { BarChart2, Layers, Lock, Play, Star } from "lucide-react";
+import { formatDifficultyDr } from "@/lib/difficulty-display";
 
 const languageLabels: Record<string, string> = {
 	az: "AZ",
@@ -73,6 +74,10 @@ export function PackCard({ pack }: PackCardProps) {
 					<span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
 						<Star className="size-3" />
 						{hasRatings ? pack.averageRating.toFixed(1) : "—"}
+					</span>
+					<span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+						<BarChart2 className="size-3" />
+						PDR {formatDifficultyDr(pack.pdr, pack.hasRatedDifficulty)}
 					</span>
 					{pack.status !== "published" && (
 						<Badge variant={status.variant} className="ml-auto text-[10px]">
