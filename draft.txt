@@ -9,6 +9,7 @@ ROADMAP
 
 - Add to profile page `my draft packs` section, so user can directly see and manage their draft packs
 - Add new badge: "Magnificent" - Someone who wins the game without single incorrect answer
+- Add filtering to game stats 'By Round' and 'By Player' section. Selectors, min/max values, searching, etc. Also make those tabs url-saved with nuqs, and their filters as well.
 
 ## v26.04.16
 
