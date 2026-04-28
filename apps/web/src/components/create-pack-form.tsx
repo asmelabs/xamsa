@@ -28,6 +28,7 @@ import {
 	PopoverPopup,
 	PopoverTrigger,
 } from "@xamsa/ui/components/popover";
+import { Switch } from "@xamsa/ui/components/switch";
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { CircleHelp, Download } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -85,6 +86,7 @@ export function CreatePackForm() {
 			description: defaultDescription || "",
 			language: defaultLanguage,
 			visibility: defaultVisibility,
+			allowOthersHost: false,
 		},
 	});
 
@@ -224,6 +226,28 @@ export function CreatePackForm() {
 								placeholder="Enter your pack description"
 								maxLength={1000}
 							/>
+						)}
+					</form.Input>
+
+					<form.Input
+						name="allowOthersHost"
+						label="Community hosting"
+						description="Only applies once the pack is published and visibility is public."
+					>
+						{(field) => (
+							<div className="flex items-start gap-3">
+								<Switch
+									checked={field.value ?? false}
+									id="create-pack-allow-others-host"
+									onCheckedChange={field.onChange}
+								/>
+								<label
+									className="text-muted-foreground text-sm leading-snug"
+									htmlFor="create-pack-allow-others-host"
+								>
+									Allow others to host games with this pack (when published)
+								</label>
+							</div>
 						)}
 					</form.Input>
 				</FramePanel>

@@ -59,11 +59,14 @@ export async function createGame(
 	input: CreateGameInputType,
 	userId: string,
 ): Promise<CreateGameOutputType> {
-	const pack = await prisma.pack.findUnique({
+	const pack = await prisma.pack.findFirst({
 		where: {
 			slug: input.pack,
-			authorId: userId,
 			status: "published",
+			OR: [
+				{ authorId: userId },
+				{ allowOthersHost: true, visibility: "public" },
+			],
 		},
 		select: {
 			slug: true,

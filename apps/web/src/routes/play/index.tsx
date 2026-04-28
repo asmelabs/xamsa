@@ -195,7 +195,7 @@ function HostTab() {
 			input: (pageParam: string | undefined) => ({
 				cursor: pageParam,
 				limit: 10,
-				onlyMyPacks: true,
+				canHost: true,
 				statuses: ["published"],
 				sort: "newest",
 				dir: "desc",
@@ -235,7 +235,7 @@ function HostTab() {
 	if (isError) {
 		return (
 			<Alert variant="error">
-				<AlertTitle>Failed to load your packs</AlertTitle>
+				<AlertTitle>Failed to load packs</AlertTitle>
 				<AlertDescription>
 					Something went wrong. Please try refreshing the page.
 				</AlertDescription>
@@ -244,7 +244,7 @@ function HostTab() {
 	}
 
 	if (packs.length === 0) {
-		return <NoPublishedPacksView />;
+		return <NoHostablePacksView />;
 	}
 
 	return (
@@ -277,21 +277,28 @@ function JoinTab() {
 	);
 }
 
-function NoPublishedPacksView() {
+function NoHostablePacksView() {
 	return (
 		<div className="rounded-xl border border-border border-dashed py-12 text-center">
 			<div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-muted">
 				<PackageIcon className="size-5 text-muted-foreground" />
 			</div>
-			<h2 className="mt-4 font-semibold">No published packs yet</h2>
+			<h2 className="mt-4 font-semibold">No packs you can host</h2>
 			<p className="mx-auto mt-1 max-w-sm text-muted-foreground text-sm">
-				To host a game, you need to publish a pack with at least{" "}
-				{MIN_TOPICS_PER_PACK_TO_PUBLISH} topics.
+				You can host published packs you created, or published community packs
+				whose authors allow others to host. Publish your own pack with at least{" "}
+				{MIN_TOPICS_PER_PACK_TO_PUBLISH} topics, or browse packs with hosting
+				enabled.
 			</p>
-			<Button className="mt-4" render={<Link to="/packs/new" />}>
-				<PlusIcon />
-				Create your first pack
-			</Button>
+			<div className="mt-4 flex flex-wrap justify-center gap-2">
+				<Button render={<Link to="/packs/new" />}>
+					<PlusIcon />
+					Create a pack
+				</Button>
+				<Button variant="outline" render={<Link to="/packs" />}>
+					Browse packs
+				</Button>
+			</div>
 		</div>
 	);
 }

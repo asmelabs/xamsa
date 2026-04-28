@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import prisma, { type Prisma } from "@xamsa/db";
+import type { GetPaginatedItem } from "@xamsa/schemas/common/pagination";
 import type { PackStatus } from "@xamsa/schemas/db/schemas/enums/PackStatus.schema";
 import {
 	packPeriod,
@@ -247,6 +248,8 @@ export async function findOnePack(
 			pdr: true,
 			totalPlays: true,
 			totalRatings: true,
+			allowOthersHost: true,
+			showTopicsInfo: true,
 			ratings: {
 				where: {
 					userId,
@@ -314,18 +317,38 @@ export async function listPacks(
 		minPlays,
 		hasRatings,
 		onlyMyPacks,
+		canHost,
 	} = input;
 
 	const p = defineCursorPagination(cursor, limit);
+
+	if (canHost === true && !userId) {
+		return p.output(
+			[] as GetPaginatedItem<ListPacksOutputType>[],
+			(i) => i.slug,
+		);
+	}
 
 	const orderBy = packSort.resolve(sort, dir);
 	const searchWhere = packSearch.resolve(query);
 	const periodWhere = packPeriod.resolve(from, to);
 
+	const canHostWhere: Prisma.PackWhereInput | undefined =
+		canHost === true && userId
+			? {
+					status: "published",
+					OR: [
+						{ authorId: userId },
+						{ allowOthersHost: true, visibility: "public" },
+					],
+				}
+			: undefined;
+
 	const where: Prisma.PackWhereInput = {
 		AND: [
 			searchWhere ?? {},
 			periodWhere ?? {},
+			...(canHostWhere ? [canHostWhere] : []),
 			{
 				...(onlyMyPacks === true && userId
 					? { authorId: userId }
@@ -365,6 +388,7 @@ export async function listPacks(
 			visibility: true,
 			publishedAt: true,
 			language: true,
+			allowOthersHost: true,
 			_count: {
 				select: {
 					topics: true,

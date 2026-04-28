@@ -3,6 +3,7 @@ import {
 	createFileRoute,
 	Link,
 	notFound,
+	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
 import {
@@ -27,16 +28,26 @@ import { orpc } from "@/utils/orpc";
 export const Route = createFileRoute("/play/new/$packSlug/")({
 	component: RouteComponent,
 
-	loader: async ({ params }) => {
+	loader: async ({ params, context }) => {
+		if (!context.session) {
+			throw redirect({
+				to: "/auth/login",
+				search: {
+					redirect_url: `/play/new/${params.packSlug}`,
+				},
+			});
+		}
+
 		try {
 			const pack = await orpc.pack.findOne.call({ slug: params.packSlug });
 
-			if (!pack.isAuthor) {
-				throw new Error("You can only host games from your own packs");
-			}
+			const canHostThisPack =
+				pack.status === "published" &&
+				(pack.isAuthor ||
+					(pack.allowOthersHost === true && pack.visibility === "public"));
 
-			if (pack.status !== "published") {
-				throw new Error("Only published packs can be played");
+			if (!canHostThisPack) {
+				throw new Error("You cannot host a game with this pack");
 			}
 
 			return pack;

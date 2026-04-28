@@ -25,6 +25,7 @@ import { PackTopicsList } from "@/components/pack-topics-list";
 import { PacksSubpageContainer } from "@/components/packs";
 import { RatePackDialog } from "@/components/rate-pack-dialog";
 import { StatCard } from "@/components/stat-card";
+import { authClient } from "@/lib/auth-client";
 import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { packPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
@@ -68,8 +69,14 @@ export const Route = createFileRoute("/packs/$packSlug/")({
 
 function RouteComponent() {
 	const pack = Route.useLoaderData();
+	const { data: session } = authClient.useSession();
 
 	const hasRatings = pack.totalRatings > 0;
+	const canHostPublishedGame =
+		pack.status === "published" &&
+		(pack.isAuthor ||
+			(pack.allowOthersHost === true && pack.visibility === "public"));
+	const showPlayToHost = !!session?.user && canHostPublishedGame;
 	const topicCount = pack._count.topics;
 	const canPublish = topicCount >= MIN_TOPICS_PER_PACK_TO_PUBLISH;
 
@@ -243,11 +250,13 @@ function RouteComponent() {
 				/>
 			</div>
 
-			{pack.isAuthor && pack.status === "published" && (
+			{showPlayToHost && (
 				<Button
 					size="lg"
 					className="w-full"
-					render={<Link to="/play" search={{ pack: pack.slug }} />}
+					render={
+						<Link to="/play/new/$packSlug" params={{ packSlug: pack.slug }} />
+					}
 				>
 					<Trophy />
 					Play this pack
