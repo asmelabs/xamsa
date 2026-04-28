@@ -7,7 +7,7 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 17 } as const;
+const current = { year: 2026, month: 4, patch: 16 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
@@ -17,21 +17,9 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-04-28",
 			year: 2026,
 			month: 4,
-			patch: 17,
-			title: "Share sheet for live games",
-			highlights: [
-				{
-					kind: "text",
-					text: "The live game header replaces separate copy-code and copy-invite controls with one Share button that opens a sheet: native Share when available (mobile-first), tap targets for WhatsApp, Telegram, X/Twitter, and Facebook, copy-friendly Discord (paste anywhere), plus quick copy for room code and invite URL.",
-				},
-			],
-		},
-		{
-			releasedAt: "2026-04-28",
-			year: 2026,
-			month: 4,
 			patch: 16,
-			title: "Badges catalog, profile density, and staff badge stats",
+			title:
+				"Badges catalog, profile density, and staff badge stats, share sheet for live games",
 			highlights: [
 				{
 					kind: "text",
@@ -44,6 +32,10 @@ export const appReleasesManifest: AppReleasesManifest = {
 				{
 					kind: "text",
 					text: "New Abomination (5/5 wrong in a topic), Genius (positive net in every topic of a finished game), and Dunce (non-positive net in every topic) badges—metadata in the catalog; server awards at topic end or game finalize like other badges.",
+				},
+				{
+					kind: "text",
+					text: "The live game header replaces separate copy-code and copy-invite controls with one Share button that opens a sheet: native Share when available (mobile-first), tap targets for WhatsApp, Telegram, X/Twitter, and Facebook, copy-friendly Discord (paste anywhere), plus quick copy for room code and invite URL.",
 				},
 			],
 		},
