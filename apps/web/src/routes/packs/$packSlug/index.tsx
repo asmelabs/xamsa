@@ -9,7 +9,14 @@ import {
 } from "@xamsa/ui/components/tooltip";
 import { MIN_TOPICS_PER_PACK_TO_PUBLISH } from "@xamsa/utils/constants";
 import { format } from "date-fns";
-import { ArchiveIcon, GlobeIcon, Play, Star, Trophy } from "lucide-react";
+import {
+	ArchiveIcon,
+	BarChart2,
+	GlobeIcon,
+	Play,
+	Star,
+	Trophy,
+} from "lucide-react";
 import { ChangePackStatusDrawer } from "@/components/change-pack-status-drawer";
 import { PackActionsMenu } from "@/components/pack-actions-menu";
 import { PackHeaderChips } from "@/components/pack-header-chips";
@@ -18,6 +25,7 @@ import { PackTopicsList } from "@/components/pack-topics-list";
 import { PacksSubpageContainer } from "@/components/packs";
 import { RatePackDialog } from "@/components/rate-pack-dialog";
 import { StatCard } from "@/components/stat-card";
+import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { packPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -210,7 +218,7 @@ function RouteComponent() {
 				</p>
 			</div>
 
-			<div className="grid grid-cols-2 gap-3">
+			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
 				<StatCard
 					icon={<Play className="size-4" />}
 					label="Plays"
@@ -226,6 +234,12 @@ function RouteComponent() {
 							? `Total ${pack.totalRatings} rating${pack.totalRatings === 1 ? "" : "s"}`
 							: "No ratings yet"
 					}
+				/>
+				<StatCard
+					icon={<BarChart2 className="size-4" />}
+					label="Pack difficulty (PDR)"
+					sub="From live play"
+					value={formatDifficultyDr(pack.pdr, pack.hasRatedDifficulty)}
 				/>
 			</div>
 

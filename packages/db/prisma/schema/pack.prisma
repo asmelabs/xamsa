@@ -40,6 +40,10 @@ model Pack {
   allowOthersHost Boolean @default(false) @map("allow_others_host") // other people can also host a game with this pack
   showTopicsInfo  Boolean @default(true) @map("show_topics_info") // will show list of topics in the pack page
 
+  /// difficulty (see DIFFICULTY_RATE_IMPLEMENTATION_SPEC) ///
+  pdr           Float     @default(4.5) @map("pdr")
+  pdrUpdatedAt  DateTime? @map("pdr_updated_at")
+
   authorId String @map("author_id")
   author   User   @relation(fields: [authorId], references: [id])
 
@@ -90,6 +94,10 @@ model Topic {
   packId String @map("pack_id")
   pack   Pack   @relation(fields: [packId], references: [id], onDelete: Cascade)
 
+  /// difficulty (see DIFFICULTY_RATE_IMPLEMENTATION_SPEC) ///
+  tdr          Float     @default(4.5) @map("tdr")
+  tdrUpdatedAt DateTime? @map("tdr_updated_at")
+
   questions Question[]
   clicks    Click[]
   games     GameTopic[]
@@ -117,6 +125,11 @@ model Question {
 
   topicId       String         @map("topic_id")
   topic         Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  /// difficulty (see DIFFICULTY_RATE_IMPLEMENTATION_SPEC) ///
+  qdr               Float     @default(4.5) @map("qdr")
+  qdrEloEquiv       Float     @default(1000) @map("qdr_elo_equiv")
+  qdrScoredAttempts Int       @default(0) @map("qdr_scored_attempts")
+  qdrUpdatedAt      DateTime? @map("qdr_updated_at")
   clicks        Click[]
   gameQuestions GameQuestion[]
 

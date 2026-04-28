@@ -9,6 +9,11 @@ import type {
 	ClickResolveInputType,
 	ClickResolveOutputType,
 } from "@xamsa/schemas/modules/click";
+import {
+	computeQdrUpdate,
+	recomputePdr,
+	recomputeTdr,
+} from "@xamsa/utils/difficulty-rate";
 import { maybeAwardScavenger } from "../badge/scavenger";
 import { tryPublishTopicBadgesForCompletedCurrentTopic } from "../badge/topic-badges";
 
@@ -203,6 +208,7 @@ export async function resolveClick(
 			hostId: true,
 			status: true,
 			packId: true,
+			pack: { select: { id: true, status: true } },
 			currentTopicOrder: true,
 			currentQuestionOrder: true,
 			isQuestionRevealed: true,
@@ -245,7 +251,16 @@ export async function resolveClick(
 				order: game.currentTopicOrder,
 			},
 		},
-		select: { id: true, order: true, text: true, answer: true },
+		select: {
+			id: true,
+			order: true,
+			text: true,
+			answer: true,
+			topicId: true,
+			qdr: true,
+			qdrEloEquiv: true,
+			qdrScoredAttempts: true,
+		},
 	});
 
 	if (!currentQuestion) {
@@ -306,7 +321,7 @@ export async function resolveClick(
 		// 2. update resolving player's stats
 		const player = await tx.player.findUnique({
 			where: { id: click.playerId },
-			select: PLAYER_STATS_SELECT,
+			select: { ...PLAYER_STATS_SELECT, eloAtGameStart: true },
 		});
 
 		if (!player) {
@@ -346,6 +361,57 @@ export async function resolveClick(
 			},
 			select: PLAYER_STATS_SELECT,
 		});
+
+		// 2b. QDR / TDR / PDR — published or draft (author playtests); skip archived only.
+		if (game.pack.status !== "archived") {
+			const qRow = await tx.question.findUnique({
+				where: { id: currentQuestion.id },
+				select: {
+					qdrEloEquiv: true,
+					qdrScoredAttempts: true,
+					topicId: true,
+				},
+			});
+			if (qRow) {
+				const outcome: 0 | 1 = isCorrect ? 1 : 0;
+				const qUp = computeQdrUpdate({
+					qdrEloEquiv: qRow.qdrEloEquiv,
+					qdrScoredAttempts: qRow.qdrScoredAttempts,
+					userEloAtGameStart: player.eloAtGameStart,
+					outcome,
+				});
+				await tx.question.update({
+					where: { id: currentQuestion.id },
+					data: {
+						qdrEloEquiv: qUp.qdrEloEquiv,
+						qdrScoredAttempts: qUp.qdrScoredAttempts,
+						qdr: qUp.qdr,
+						qdrUpdatedAt: now,
+					},
+				});
+				const topicQuestions = await tx.question.findMany({
+					where: { topicId: qRow.topicId },
+					select: { qdr: true, qdrScoredAttempts: true },
+				});
+				const newTdr = recomputeTdr(
+					topicQuestions.map((q) => q.qdr),
+					topicQuestions.map((q) => q.qdrScoredAttempts),
+				);
+				await tx.topic.update({
+					where: { id: qRow.topicId },
+					data: { tdr: newTdr, tdrUpdatedAt: now },
+				});
+				const packTopics = await tx.topic.findMany({
+					where: { packId: game.packId },
+					select: { tdr: true },
+				});
+				const newPdr = recomputePdr(packTopics.map((t) => t.tdr));
+				await tx.pack.update({
+					where: { id: game.packId },
+					data: { pdr: newPdr, pdrUpdatedAt: now },
+				});
+			}
+		}
 
 		// 3. cascade: on correct answer, expire every other pending click
 		const expiredPlayerUpdates: PlayerStats[] = [];

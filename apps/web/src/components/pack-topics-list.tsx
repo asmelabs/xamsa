@@ -34,6 +34,7 @@ import {
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect } from "react";
 import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
+import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { orpc } from "@/utils/orpc";
 
 type PackTopicsListBase = "pack" | "topicsPage";
@@ -234,6 +235,9 @@ function TopicCard({
 						</h3>
 						<span className="shrink-0 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0 text-[11px] text-muted-foreground leading-none">
 							{String(q)}/{String(QUESTIONS_PER_TOPIC)} Q
+						</span>
+						<span className="shrink-0 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0 text-[11px] text-muted-foreground tabular-nums leading-none">
+							TDR {formatDifficultyDr(topic.tdr, topic.hasRatedDifficulty)}
 						</span>
 					</div>
 					{topic.description && (

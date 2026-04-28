@@ -28,10 +28,12 @@ export async function getCompletedGameRecap(
 			totalExpiredAnswers: true,
 			totalPointsAwarded: true,
 			totalPointsDeducted: true,
+			packId: true,
 			pack: {
 				select: {
 					slug: true,
 					name: true,
+					pdr: true,
 				},
 			},
 			players: {
@@ -87,6 +89,14 @@ export async function getCompletedGameRecap(
 		});
 	}
 
+	const packHasRatedDifficulty =
+		(await prisma.question.count({
+			where: {
+				topic: { packId: game.packId },
+				qdrScoredAttempts: { gt: 0 },
+			},
+		})) > 0;
+
 	const playerIds = game.players.map((p) => p.id);
 
 	const [gameTopics, allClicks, rawBadgeAwards] = await Promise.all([
@@ -106,6 +116,8 @@ export async function getCompletedGameRecap(
 					select: {
 						slug: true,
 						name: true,
+						tdr: true,
+						questions: { select: { qdrScoredAttempts: true } },
 					},
 				},
 				questions: {
@@ -128,6 +140,8 @@ export async function getCompletedGameRecap(
 								id: true,
 								text: true,
 								answer: true,
+								qdr: true,
+								qdrScoredAttempts: true,
 							},
 						},
 						winner: {
@@ -275,51 +289,60 @@ export async function getCompletedGameRecap(
 		}
 	}
 
-	const topics = gameTopics.map((gt) => ({
-		order: gt.order,
-		topicName: gt.topic.name,
-		topicSlug: gt.topic.slug,
-		durationSeconds: gt.durationSeconds,
-		totalClicks: gt.totalClicks,
-		totalCorrectAnswers: gt.totalCorrectAnswers,
-		totalIncorrectAnswers: gt.totalIncorrectAnswers,
-		totalExpiredClicks: gt.totalExpiredClicks,
-		totalQuestionsAnswered: gt.totalQuestionsAnswered,
-		totalQuestionsSkipped: gt.totalQuestionsSkipped,
-		questions: gt.questions.map((gq) => {
-			const rawClicks = clicksByQuestionId.get(gq.question.id) ?? [];
-			const clicks = rawClicks.map((c) => ({
-				id: c.id,
-				position: c.position,
-				status: c.status,
-				clickedAt: c.clickedAt,
-				answeredAt: c.answeredAt,
-				reactionMs: c.reactionMs,
-				pointsAwarded: c.pointsAwarded,
-				playerId: c.playerId,
-				playerName: c.player.user.name ?? "Player",
-			}));
+	const topics = gameTopics.map((gt) => {
+		const hasRatedDifficulty = gt.topic.questions.some(
+			(q) => q.qdrScoredAttempts > 0,
+		);
+		return {
+			order: gt.order,
+			topicName: gt.topic.name,
+			topicSlug: gt.topic.slug,
+			tdr: gt.topic.tdr,
+			hasRatedDifficulty,
+			durationSeconds: gt.durationSeconds,
+			totalClicks: gt.totalClicks,
+			totalCorrectAnswers: gt.totalCorrectAnswers,
+			totalIncorrectAnswers: gt.totalIncorrectAnswers,
+			totalExpiredClicks: gt.totalExpiredClicks,
+			totalQuestionsAnswered: gt.totalQuestionsAnswered,
+			totalQuestionsSkipped: gt.totalQuestionsSkipped,
+			questions: gt.questions.map((gq) => {
+				const rawClicks = clicksByQuestionId.get(gq.question.id) ?? [];
+				const clicks = rawClicks.map((c) => ({
+					id: c.id,
+					position: c.position,
+					status: c.status,
+					clickedAt: c.clickedAt,
+					answeredAt: c.answeredAt,
+					reactionMs: c.reactionMs,
+					pointsAwarded: c.pointsAwarded,
+					playerId: c.playerId,
+					playerName: c.player.user.name ?? "Player",
+				}));
 
-			return {
-				order: gq.order,
-				points: gq.points,
-				status: gq.status,
-				wasSkipped: gq.wasSkipped,
-				wasRevealed: gq.wasRevealed,
-				text: gq.question.text,
-				answer: gq.question.answer,
-				winnerPlayerId: gq.winner?.id ?? null,
-				winnerName: gq.winner?.user?.name ?? null,
-				firstBuzzMs: gq.firstBuzzMs,
-				durationSeconds: gq.durationSeconds,
-				totalClicks: gq.totalClicks,
-				totalCorrectAnswers: gq.totalCorrectAnswers,
-				totalIncorrectAnswers: gq.totalIncorrectAnswers,
-				totalExpiredClicks: gq.totalExpiredClicks,
-				clicks,
-			};
-		}),
-	}));
+				return {
+					order: gq.order,
+					points: gq.points,
+					status: gq.status,
+					wasSkipped: gq.wasSkipped,
+					wasRevealed: gq.wasRevealed,
+					text: gq.question.text,
+					answer: gq.question.answer,
+					winnerPlayerId: gq.winner?.id ?? null,
+					winnerName: gq.winner?.user?.name ?? null,
+					firstBuzzMs: gq.firstBuzzMs,
+					durationSeconds: gq.durationSeconds,
+					totalClicks: gq.totalClicks,
+					totalCorrectAnswers: gq.totalCorrectAnswers,
+					totalIncorrectAnswers: gq.totalIncorrectAnswers,
+					totalExpiredClicks: gq.totalExpiredClicks,
+					qdr: gq.question.qdr,
+					qdrScoredAttempts: gq.question.qdrScoredAttempts,
+					clicks,
+				};
+			}),
+		};
+	});
 
 	const players = game.players.map(({ userId: _, ...p }) => p);
 
@@ -328,7 +351,7 @@ export async function getCompletedGameRecap(
 		startedAt: game.startedAt,
 		finishedAt: game.finishedAt,
 		durationSeconds: game.durationSeconds,
-		pack: game.pack,
+		pack: { ...game.pack, hasRatedDifficulty: packHasRatedDifficulty },
 		winnerId: game.winnerId,
 		totals: {
 			totalTopics: game.totalTopics,

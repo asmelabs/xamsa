@@ -84,7 +84,20 @@ export type HostCurrentQuestion = {
 	answer: string;
 	acceptableAnswers: string[];
 	explanation?: string | null;
+	/** Omitted in Ably `QuestionAdvanced` payloads; filled when refetching. */
+	qdr?: number;
+	qdrScoredAttempts?: number;
 };
+
+function withHostQdrDefaults(
+	q: HostCurrentQuestion,
+): NonNullable<GameData["hostData"]>["currentQuestion"] {
+	return {
+		...q,
+		qdr: q.qdr ?? 4.5,
+		qdrScoredAttempts: q.qdrScoredAttempts ?? 0,
+	};
+}
 
 export type QuestionAdvancedData = {
 	currentTopicOrder: number;
@@ -429,7 +442,7 @@ export function applyQuestionAdvancedToGame(
 				...old.hostData,
 				clickDetails: [],
 				currentQuestion: data.hostCurrentQuestion
-					? data.hostCurrentQuestion
+					? withHostQdrDefaults(data.hostCurrentQuestion)
 					: old.hostData.currentQuestion,
 			}
 		: old.hostData;

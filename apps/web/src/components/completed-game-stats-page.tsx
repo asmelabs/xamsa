@@ -39,6 +39,7 @@ import { format } from "date-fns";
 import {
 	ActivityIcon,
 	ArrowLeftIcon,
+	BarChart2,
 	BarChart3Icon,
 	ClockIcon,
 	LayoutListIcon,
@@ -61,6 +62,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { sortGamePlayersForScoreboard } from "@/lib/sort-game-players";
 import { orpc } from "@/utils/orpc";
 import {
@@ -988,6 +990,10 @@ function QuestionBlock({
 						{q.totalCorrectAnswers} / {q.totalIncorrectAnswers} /{" "}
 						{q.totalExpiredClicks}
 					</span>
+					<span className="text-muted-foreground">QDR</span>
+					<span className="tabular-nums">
+						{formatDifficultyDr(q.qdr, q.qdrScoredAttempts > 0)}
+					</span>
 				</div>
 			</div>
 			<Separator className="my-3" />
@@ -1117,7 +1123,7 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 					</Button>
 				</div>
 
-				<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
 					<SummaryStat label="Topics" value={recap.totals.totalTopics} />
 					<SummaryStat label="Questions" value={recap.totals.totalQuestions} />
 					<SummaryStat
@@ -1125,6 +1131,13 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 						value={recap.totals.totalSkippedQuestions}
 					/>
 					<SummaryStat label="Players" value={recap.players.length} />
+					<SummaryStat
+						label="Pack difficulty"
+						value={formatDifficultyDr(
+							recap.pack.pdr,
+							recap.pack.hasRatedDifficulty,
+						)}
+					/>
 				</div>
 
 				<div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -1191,12 +1204,26 @@ export function CompletedGameStatsPage({ code }: { code: string }) {
 						{recap.topics.map((topic) => (
 							<Card key={topic.order}>
 								<CardHeader>
-									<CardTitle className="text-base">
-										Round {topic.order}: {topic.topicName}
-									</CardTitle>
+									<div className="flex flex-wrap items-center gap-2">
+										<CardTitle className="text-base">
+											Round {topic.order}: {topic.topicName}
+										</CardTitle>
+										<Badge
+											variant="outline"
+											className="gap-1 font-normal text-[11px]"
+										>
+											<BarChart2 className="size-3" />
+											TDR{" "}
+											{formatDifficultyDr(topic.tdr, topic.hasRatedDifficulty)}
+										</Badge>
+									</div>
 									<CardDescription className="flex flex-wrap gap-x-3 gap-y-1">
 										<span>
 											Time {formatDurationSeconds(topic.durationSeconds)}
+										</span>
+										<span>
+											Topic difficulty{" "}
+											{formatDifficultyDr(topic.tdr, topic.hasRatedDifficulty)}
 										</span>
 										<span>
 											Clicks {topic.totalClicks} · ✓ {topic.totalCorrectAnswers}{" "}

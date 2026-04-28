@@ -66,6 +66,15 @@ export async function joinPlayer(
 		});
 	}
 
+	const userEloForSnapshot = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { elo: true },
+	});
+	const snapshotEloOnJoin =
+		game.status === "active" && userEloForSnapshot
+			? userEloForSnapshot.elo
+			: null;
+
 	const existingPlayer = await prisma.player.findUnique({
 		where: {
 			userId_gameId: {
@@ -139,6 +148,9 @@ export async function joinPlayer(
 				status: "playing",
 				leftAt: null,
 				leaveReason: null,
+				...(snapshotEloOnJoin != null
+					? { eloAtGameStart: snapshotEloOnJoin }
+					: {}),
 			},
 			select: {
 				id: true,
@@ -162,6 +174,7 @@ export async function joinPlayer(
 			gameId: game.id,
 			status: "playing",
 			startedAt: new Date(),
+			eloAtGameStart: snapshotEloOnJoin ?? undefined,
 		},
 		select: {
 			id: true,

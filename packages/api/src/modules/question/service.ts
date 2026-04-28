@@ -201,16 +201,22 @@ export async function findOneQuestion(
 			explanation: true,
 			order: true,
 			text: true,
+			qdr: true,
+			qdrScoredAttempts: true,
 			topic: {
 				select: {
+					id: true,
 					slug: true,
 					name: true,
 					order: true,
+					tdr: true,
 					pack: {
 						select: {
+							id: true,
 							slug: true,
 							name: true,
 							status: true,
+							pdr: true,
 							author: {
 								select: {
 									name: true,
@@ -241,13 +247,34 @@ export async function findOneQuestion(
 	}
 
 	const { topic, ...questionData } = question;
-	const { pack, ...topicData } = topic;
-	const { author, ...packData } = pack;
+	const { pack, id: topicId, ...topicData } = topic;
+	const { author, id: packId, ...packData } = pack;
+
+	const hasRatedQuestionDifficulty = questionData.qdrScoredAttempts > 0;
+
+	const [hasRatedTopicDifficulty, hasRatedPackDifficulty] = await Promise.all([
+		prisma.question
+			.count({
+				where: { topicId, qdrScoredAttempts: { gt: 0 } },
+			})
+			.then((n) => n > 0),
+		prisma.question
+			.count({
+				where: {
+					topic: { packId },
+					qdrScoredAttempts: { gt: 0 },
+				},
+			})
+			.then((n) => n > 0),
+	]);
 
 	return {
 		...questionData,
 		topic: topicData,
 		pack: packData,
 		author,
+		hasRatedQuestionDifficulty,
+		hasRatedTopicDifficulty,
+		hasRatedPackDifficulty,
 	};
 }

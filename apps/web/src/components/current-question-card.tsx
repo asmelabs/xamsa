@@ -97,11 +97,21 @@ export function CurrentQuestionCard({
 						{points} pts
 					</Badge>
 				</FrameTitle>
-				{game.currentTopic && (
-					<p className="text-muted-foreground text-xs">
-						{game.currentTopic.name}
-					</p>
-				)}
+				<div className="text-right">
+					{game.currentTopic && (
+						<p className="text-muted-foreground text-xs">
+							{game.currentTopic.name}
+						</p>
+					)}
+					{isHostView && hostQuestion ? (
+						<p className="text-muted-foreground text-xs">
+							Question difficulty:{" "}
+							{hostQuestion.qdrScoredAttempts > 0
+								? hostQuestion.qdr.toFixed(2)
+								: "—"}
+						</p>
+					) : null}
+				</div>
 			</FrameHeader>
 
 			<FramePanel className="space-y-4">

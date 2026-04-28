@@ -1,5 +1,7 @@
 # Difficulty rate (DR) — technical specification
 
+> **Note:** The **shipped** algorithm and data model are summarized in [DIFFICULTY_RATE_IMPLEMENTATION_SPEC.md](./DIFFICULTY_RATE_IMPLEMENTATION_SPEC.md). This file remains as broader design context (alternatives, tradeoffs).
+
 This document describes **Question Difficulty Rate (QDR)**, **Topic Difficulty Rate (TDR)**, and **Pack Difficulty Rate (PDR)** for Xamsa: definitions, update algorithms, normalization, data model, and implementation notes. It is intended to be implementation-ready but parameters should be tuned against production traffic.
 
 ---

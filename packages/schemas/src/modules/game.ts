@@ -134,7 +134,13 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 		name: true,
 		order: true,
 		description: true,
-	}).nullable(),
+	})
+		.extend({
+			/** Host-only: omitted for players during live play. */
+			tdr: z.number().optional(),
+			hasRatedDifficulty: z.boolean().optional(),
+		})
+		.nullable(),
 
 	currentQuestion: z
 		.object({
@@ -160,6 +166,8 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 				answer: true,
 				acceptableAnswers: true,
 				explanation: true,
+				qdr: true,
+				qdrScoredAttempts: true,
 			}).nullable(),
 
 			clickDetails: z.array(GameHostClickSchema),
@@ -176,6 +184,9 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 			username: true,
 			name: true,
 		}),
+		/** Host-only: omitted for players during live play. */
+		pdr: z.number().optional(),
+		hasRatedDifficulty: z.boolean().optional(),
 	}),
 
 	packTotalTopics: z.number().int(),
@@ -368,6 +379,8 @@ const RecapQuestionSchema = z.object({
 	totalCorrectAnswers: z.number().int(),
 	totalIncorrectAnswers: z.number().int(),
 	totalExpiredClicks: z.number().int(),
+	qdr: z.number(),
+	qdrScoredAttempts: z.number().int(),
 	clicks: z.array(RecapClickSchema),
 });
 
@@ -375,6 +388,8 @@ const RecapTopicSchema = z.object({
 	order: z.number().int(),
 	topicName: z.string(),
 	topicSlug: z.string(),
+	tdr: z.number(),
+	hasRatedDifficulty: z.boolean(),
 	durationSeconds: z.number().int().nullable(),
 	totalClicks: z.number().int(),
 	totalCorrectAnswers: z.number().int(),
@@ -416,7 +431,9 @@ export const GetCompletedGameRecapOutputSchema = z.object({
 	startedAt: z.coerce.date().nullable(),
 	finishedAt: z.coerce.date().nullable(),
 	durationSeconds: z.number().int().nullable(),
-	pack: PackSchema.pick({ slug: true, name: true }),
+	pack: PackSchema.pick({ slug: true, name: true, pdr: true }).extend({
+		hasRatedDifficulty: z.boolean(),
+	}),
 	winnerId: z.string().nullable(),
 	totals: z.object({
 		totalTopics: z.number().int(),

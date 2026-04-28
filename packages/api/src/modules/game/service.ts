@@ -279,6 +279,7 @@ export async function findOneGame(
 					name: true,
 					description: true,
 					language: true,
+					pdr: true,
 					author: {
 						select: {
 							username: true,
@@ -343,7 +344,7 @@ export async function findOneGame(
 	const players = game.players.map(({ userId: _, ...p }) => p);
 
 	// find the current topic (if game has started)
-	const currentTopic =
+	const currentTopicRow =
 		game.currentTopicOrder !== null
 			? await prisma.topic.findFirst({
 					where: {
@@ -355,9 +356,33 @@ export async function findOneGame(
 						name: true,
 						description: true,
 						order: true,
+						tdr: true,
+						questions: { select: { qdrScoredAttempts: true } },
 					},
 				})
 			: null;
+
+	const topicHasRatedDifficulty = currentTopicRow
+		? currentTopicRow.questions.some((q) => q.qdrScoredAttempts > 0)
+		: false;
+
+	const currentTopic = currentTopicRow
+		? isHost
+			? {
+					slug: currentTopicRow.slug,
+					name: currentTopicRow.name,
+					description: currentTopicRow.description,
+					order: currentTopicRow.order,
+					tdr: currentTopicRow.tdr,
+					hasRatedDifficulty: topicHasRatedDifficulty,
+				}
+			: {
+					slug: currentTopicRow.slug,
+					name: currentTopicRow.name,
+					description: currentTopicRow.description,
+					order: currentTopicRow.order,
+				}
+		: null;
 
 	// find the current question (if one is active)
 	const currentQuestionRecord =
@@ -377,6 +402,8 @@ export async function findOneGame(
 						answer: true,
 						acceptableAnswers: true,
 						explanation: true,
+						qdr: true,
+						qdrScoredAttempts: true,
 					},
 				})
 			: null;
@@ -431,7 +458,7 @@ export async function findOneGame(
 		playerId: c.playerId,
 	}));
 
-	// host-only data
+	// host-only data (includes per-question QDR for the live question)
 	const hostData = isHost
 		? {
 				currentQuestion: currentQuestionRecord,
@@ -440,9 +467,17 @@ export async function findOneGame(
 		: null;
 
 	// count total topics in the pack for last-topic detection on the host UI
-	const packTotalTopics = await prisma.topic.count({
-		where: { packId: game.packId },
-	});
+	const [packTotalTopics, packHasRatedDifficulty] = await Promise.all([
+		prisma.topic.count({ where: { packId: game.packId } }),
+		prisma.question
+			.count({
+				where: {
+					topic: { packId: game.packId },
+					qdrScoredAttempts: { gt: 0 },
+				},
+			})
+			.then((n) => n > 0),
+	]);
 
 	const { hostXpGained, eloDeltaByUserId } = mapGameCompletionDeltas(
 		game.completionDeltas,
@@ -460,13 +495,23 @@ export async function findOneGame(
 		isQuestionRevealed: game.isQuestionRevealed,
 		winnerId: game.winnerId,
 		hostId: game.hostId,
-		pack: {
-			slug: game.pack.slug,
-			name: game.pack.name,
-			description: game.pack.description,
-			language: game.pack.language,
-			author: game.pack.author,
-		},
+		pack: isHost
+			? {
+					slug: game.pack.slug,
+					name: game.pack.name,
+					description: game.pack.description,
+					language: game.pack.language,
+					author: game.pack.author,
+					pdr: game.pack.pdr,
+					hasRatedDifficulty: packHasRatedDifficulty,
+				}
+			: {
+					slug: game.pack.slug,
+					name: game.pack.name,
+					description: game.pack.description,
+					language: game.pack.language,
+					author: game.pack.author,
+				},
 		packTotalTopics,
 		currentTopic,
 		currentQuestion,
@@ -591,6 +636,26 @@ export async function startGame(
 				startedAt: now,
 			},
 		});
+
+		// Elo at game start for QDR: snapshot every playing user's current `User.elo`.
+		const playingPlayers = await tx.player.findMany({
+			where: { gameId: game.id, status: "playing" },
+			select: { id: true, userId: true },
+		});
+		if (playingPlayers.length > 0) {
+			const userIds = [...new Set(playingPlayers.map((p) => p.userId))];
+			const users = await tx.user.findMany({
+				where: { id: { in: userIds } },
+				select: { id: true, elo: true },
+			});
+			const eloByUserId = new Map(users.map((u) => [u.id, u.elo]));
+			for (const p of playingPlayers) {
+				await tx.player.update({
+					where: { id: p.id },
+					data: { eloAtGameStart: eloByUserId.get(p.userId) ?? 1000 },
+				});
+			}
+		}
 
 		return gameRow;
 	});

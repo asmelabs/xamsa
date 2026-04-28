@@ -10,6 +10,7 @@ import {
 import { cn } from "@xamsa/ui/lib/utils";
 import {
 	ArrowLeftIcon,
+	BarChart2,
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	EyeIcon,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
+import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { questionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -155,6 +157,32 @@ function RouteComponent() {
 						Question {String(question.order)}
 					</Badge>
 					<Badge variant="outline">{String(points)} pts</Badge>
+					<Badge
+						variant="outline"
+						className="gap-1 font-normal"
+						title="Question difficulty (QDR)"
+					>
+						<BarChart2 className="size-3" />
+						QDR{" "}
+						{formatDifficultyDr(
+							question.qdr,
+							question.hasRatedQuestionDifficulty,
+						)}
+					</Badge>
+					<Badge variant="secondary" className="font-normal text-xs">
+						TDR{" "}
+						{formatDifficultyDr(
+							question.topic.tdr,
+							question.hasRatedTopicDifficulty,
+						)}
+					</Badge>
+					<Badge variant="secondary" className="font-normal text-xs">
+						PDR{" "}
+						{formatDifficultyDr(
+							question.pack.pdr,
+							question.hasRatedPackDifficulty,
+						)}
+					</Badge>
 				</div>
 
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
