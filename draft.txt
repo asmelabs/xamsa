@@ -11,7 +11,7 @@ ROADMAP
 - Add new badge: "Magnificent" - Someone who wins the game without single incorrect answer
 - Add filtering to game stats 'By Round' and 'By Player' section. Selectors, min/max values, searching, etc. Also make those tabs url-saved with nuqs, and their filters as well.
 
-## v26.04.16
+## v26.04.15
 
 - Add language selector when creating a new pack, also editing pack settings. Currently language exists, but it is hardcoded to "az" only.
 - Duplicate Question See Prevention: So a user can see the same question multiple times. Let's say i have a pack A, and user Jon plays it.
@@ -24,13 +24,15 @@ ROADMAP
   steps, and automatically joins the player, so player does not have to copy the code and input then join (of course we will
   keep that functionality as well)
 
-## v26.04.17
+## v26.04.16
 
 - Make the badges section on profile more compact, since the number of badges is growing.
 - Create badges section on /dashboard like other tables. add filters like minEarners/maxEarners, search etc. and type/category/period filters.
 - Add new badge: "Abomination" - Someone who gets 5/5 incorrect answers in a single topic (opposite of "Ace")
 - Add new badge: "Genius" - When a player gets positive points in all of the topics of a game
 - Add new badge: "Dunce" - When a player gets non-positive points (0 or negative) in all of the topics of a game
+- On game screen, add better share button. When clicked, it will open a popup, with copy invite link, or directly
+  share link on WhatsApp, Telegram, Discord, Twitter, and Facebook.
 
 ### UNKNOWN VERSIONS:
 

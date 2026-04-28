@@ -182,6 +182,64 @@ export const badges = {
 		assignment: "player",
 		rarity: "uncommon",
 	},
+
+	abomination: {
+		id: "abomination",
+		name: "Abomination",
+		description:
+			"Awarded to a player who answers all five questions of a topic incorrectly — the inverse of an Ace. Five buzzes, five misses; the topic ends in flames.",
+		requirements: [
+			"Player must be in 'playing' status throughout the topic",
+			"Player must have exactly 5 incorrect answers in the topic",
+			"Player must have 0 correct answers in the topic",
+			"Awarded at the moment the topic finishes (last question resolved)",
+		],
+		color: "red",
+		icon: "👹",
+		period: "topic",
+		type: "answer",
+		category: "struggle",
+		assignment: "player",
+		rarity: "rare",
+	},
+
+	genius: {
+		id: "genius",
+		name: "Genius",
+		description:
+			"Awarded when your net score is strictly positive in every topic of a finished game — every round paid off; nowhere did you tread water or sink.",
+		requirements: [
+			"The game must have at least one played topic (GameTopic rows)",
+			"For each topic in the session, the player's net points on that topic (sum of click pointsAwarded) must be greater than zero",
+			"Awarded when the game is finalized",
+		],
+		color: "gold",
+		icon: "🧠",
+		period: "game",
+		type: "score",
+		category: "skill",
+		assignment: "player",
+		rarity: "rare",
+	},
+
+	dunce: {
+		id: "dunce",
+		name: "Dunce",
+		description:
+			"Awarded when your net score is zero or negative in every topic of a finished game — every round was a slog or a silence; nowhere did you pull ahead.",
+		requirements: [
+			"The game must have at least one played topic (GameTopic rows)",
+			"For each topic in the session, the player's net points on that topic must be zero or less",
+			"Awarded when the game is finalized",
+		],
+		color: "gray",
+		icon: "🎓",
+		period: "game",
+		type: "score",
+		category: "struggle",
+		assignment: "player",
+		rarity: "uncommon",
+	},
 } as const satisfies Record<string, Badge>;
 
 export type BadgeId = keyof typeof badges;
@@ -202,6 +260,9 @@ const BADGE_ID_ZOD_TUPLE = [
 	"jackpot",
 	"magnificent",
 	"bankrupt",
+	"abomination",
+	"genius",
+	"dunce",
 ] as const;
 
 export const BadgeIdSchema = z.enum(BADGE_ID_ZOD_TUPLE);

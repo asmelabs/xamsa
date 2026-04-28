@@ -1,4 +1,6 @@
 import {
+	ListAdminBadgesInputSchema,
+	ListAdminBadgesOutputSchema,
 	ListAdminClicksInputSchema,
 	ListAdminClicksOutputSchema,
 	ListAdminGamesInputSchema,
@@ -16,6 +18,7 @@ import {
 } from "@xamsa/schemas/modules/admin";
 import { moderatorProcedure } from "../../procedures";
 import {
+	listAdminBadges,
 	listAdminClicks,
 	listAdminGames,
 	listAdminPacks,
@@ -26,6 +29,10 @@ import {
 } from "./service";
 
 export const adminRouter = {
+	listBadges: moderatorProcedure
+		.input(ListAdminBadgesInputSchema)
+		.output(ListAdminBadgesOutputSchema)
+		.handler(async ({ input }) => await listAdminBadges(input)),
 	listPacks: moderatorProcedure
 		.input(ListAdminPacksInputSchema)
 		.output(ListAdminPacksOutputSchema)

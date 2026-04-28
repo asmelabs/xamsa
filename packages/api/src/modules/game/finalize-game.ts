@@ -422,6 +422,98 @@ export async function finalizeGame(
 		}
 	}
 
+	const gameTopicsForBadges = await tx.gameTopic.findMany({
+		where: { gameId },
+		select: { topicId: true },
+	});
+
+	if (gameTopicsForBadges.length > 0) {
+		const netRows = await tx.click.groupBy({
+			by: ["playerId", "topicId"],
+			where: { gameId },
+			_sum: { pointsAwarded: true },
+		});
+
+		const netByPlayerTopic = new Map<string, Map<string, number>>();
+		for (const row of netRows) {
+			let inner = netByPlayerTopic.get(row.playerId);
+			if (!inner) {
+				inner = new Map();
+				netByPlayerTopic.set(row.playerId, inner);
+			}
+			inner.set(row.topicId, row._sum.pointsAwarded ?? 0);
+		}
+
+		const topicIds = gameTopicsForBadges.map((gt) => gt.topicId);
+
+		const appendGameBadgeEvent = async (
+			playerId: string,
+			badgeId: "genius" | "dunce",
+		) => {
+			const existing = await tx.playerBadgeAward.findFirst({
+				where: {
+					playerId,
+					badgeId,
+					player: { gameId },
+				},
+				select: { id: true },
+			});
+			if (existing) {
+				return;
+			}
+			const prow = await tx.player.findUnique({
+				where: { id: playerId },
+				select: {
+					user: { select: { name: true, username: true } },
+				},
+			});
+			if (!prow?.user) {
+				return;
+			}
+			await createPlayerBadgeAward(
+				{
+					playerId,
+					badgeId,
+					gameTopicId: null,
+					gameQuestionId: null,
+				},
+				tx,
+			);
+			badgeEvents = [
+				...badgeEvents,
+				{
+					badgeId,
+					playerId,
+					playerName: prow.user.name,
+					username: prow.user.username,
+					gameTopicId: null,
+					gameQuestionId: null,
+				},
+			];
+		};
+
+		for (const p of ranked) {
+			const topicNet = netByPlayerTopic.get(p.id) ?? new Map<string, number>();
+			let geniusOk = true;
+			let dunceOk = true;
+			for (const tid of topicIds) {
+				const net = topicNet.get(tid) ?? 0;
+				if (net <= 0) {
+					geniusOk = false;
+				}
+				if (net > 0) {
+					dunceOk = false;
+				}
+			}
+			if (geniusOk) {
+				await appendGameBadgeEvent(p.id, "genius");
+			}
+			if (dunceOk) {
+				await appendGameBadgeEvent(p.id, "dunce");
+			}
+		}
+	}
+
 	const startedAt = game.startedAt ?? now;
 	const durationSeconds = Math.max(
 		0,

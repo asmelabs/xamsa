@@ -3,6 +3,7 @@ import {
 	PaginationInputSchema,
 	PaginationOutputSchema,
 } from "../common/pagination";
+import { SearchInputSchema } from "../common/search.schema";
 import { ClickStatusSchema } from "../db/schemas/enums/ClickStatus.schema";
 import { GameStatusSchema } from "../db/schemas/enums/GameStatus.schema";
 import { PackLanguageSchema } from "../db/schemas/enums/PackLanguage.schema";
@@ -12,6 +13,7 @@ import { RoleSchema } from "../db/schemas/enums/Role.schema";
 import { TopicBulkJobStatusSchema } from "../db/schemas/enums/TopicBulkJobStatus.schema";
 import { UserSchema } from "../db/schemas/models/User.schema";
 import {
+	adminBadgeSort,
 	adminClickPeriod,
 	adminClickSearch,
 	adminClickSort,
@@ -381,4 +383,71 @@ export type ListAdminTopicBulkJobsInputType = z.infer<
 >;
 export type ListAdminTopicBulkJobsOutputType = z.infer<
 	typeof ListAdminTopicBulkJobsOutputSchema
+>;
+
+// --- Badges (catalog + aggregates) ---
+
+export const AdminBadgeCatalogPeriodSchema = z.enum([
+	"lifetime",
+	"game",
+	"topic",
+	"question",
+]);
+
+export const AdminBadgeCatalogTypeSchema = z.enum([
+	"answer",
+	"buzz",
+	"speed",
+	"score",
+	"ranking",
+	"participation",
+	"streak",
+	"milestone",
+	"social",
+]);
+
+export const AdminBadgeCatalogCategorySchema = z.enum([
+	"skill",
+	"struggle",
+	"moment",
+	"dedication",
+	"creator",
+	"host",
+	"discovery",
+]);
+
+export const ListAdminBadgesFiltersSchema = z.object({
+	periods: z.array(AdminBadgeCatalogPeriodSchema),
+	types: z.array(AdminBadgeCatalogTypeSchema),
+	categories: z.array(AdminBadgeCatalogCategorySchema),
+	minTotalAwards: z.number().int(),
+	maxTotalAwards: z.number().int(),
+	minEarners: z.number().int(),
+	maxEarners: z.number().int(),
+});
+
+export const ListAdminBadgesInputSchema = ListAdminBadgesFiltersSchema.partial()
+	.extend(PaginationInputSchema.shape)
+	.extend(adminBadgeSort.shape())
+	.extend(SearchInputSchema.shape);
+
+export const ListAdminBadgesItemSchema = z.object({
+	badgeId: z.string(),
+	name: z.string(),
+	period: AdminBadgeCatalogPeriodSchema,
+	type: AdminBadgeCatalogTypeSchema,
+	category: AdminBadgeCatalogCategorySchema,
+	totalAwards: z.number().int().min(0),
+	distinctEarners: z.number().int().min(0),
+});
+
+export const ListAdminBadgesOutputSchema = PaginationOutputSchema(
+	ListAdminBadgesItemSchema,
+);
+
+export type ListAdminBadgesInputType = z.infer<
+	typeof ListAdminBadgesInputSchema
+>;
+export type ListAdminBadgesOutputType = z.infer<
+	typeof ListAdminBadgesOutputSchema
 >;

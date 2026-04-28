@@ -51,7 +51,7 @@ export function ProfileBadgesSection({ username }: Props) {
 					Browse all
 				</Link>
 			</div>
-			<div className="grid gap-2 sm:grid-cols-2">
+			<div className="grid grid-cols-2 gap-1.5 md:grid-cols-3 lg:grid-cols-4">
 				{ALL_BADGE_IDS.map((id) => {
 					const def = getBadge(id);
 					const row = countBy.get(id);
@@ -59,18 +59,20 @@ export function ProfileBadgesSection({ username }: Props) {
 						<button
 							key={id}
 							type="button"
-							className="flex items-start gap-2 rounded-lg border border-border/80 bg-card p-3 text-left text-sm transition-colors hover:bg-muted/40"
+							className="flex items-start gap-1.5 rounded-md border border-border/80 bg-card p-2 text-left transition-colors hover:bg-muted/40"
 							onClick={() => {
 								setDetailId(id);
 								setOpen(true);
 							}}
 						>
-							<span className="text-xl" aria-hidden>
+							<span className="text-lg leading-none" aria-hidden>
 								{def.icon}
 							</span>
 							<div className="min-w-0 flex-1">
-								<p className="font-medium">{def.name}</p>
-								<p className="text-muted-foreground text-xs">
+								<p className="truncate font-medium text-xs leading-tight">
+									{def.name}
+								</p>
+								<p className="text-[11px] text-muted-foreground leading-snug">
 									{row && row.count > 0
 										? `${row.count}×${
 												row.lastEarnedAt
@@ -106,11 +108,11 @@ export function ProfileBadgesSection({ username }: Props) {
 							detailPage.items.length === 0 ? (
 								<p className="text-muted-foreground text-sm">No entries.</p>
 							) : (
-								<ul className="space-y-2 text-sm">
+								<ul className="space-y-1.5 text-sm">
 									{detailPage.items.map((it) => (
 										<li
 											key={it.id}
-											className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/20 px-2 py-1.5"
+											className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/20 px-2 py-1"
 										>
 											<Link
 												className="font-medium hover:underline"

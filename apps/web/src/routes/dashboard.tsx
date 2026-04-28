@@ -12,6 +12,7 @@ import { isStaffRole } from "@/lib/staff";
 
 const DASH_LINKS = [
 	{ to: "/dashboard" as const, label: "Overview" },
+	{ to: "/dashboard/badges" as const, label: "Badges" },
 	{ to: "/dashboard/packs" as const, label: "Packs" },
 	{ to: "/dashboard/users" as const, label: "Users" },
 	{ to: "/dashboard/games" as const, label: "Games" },
