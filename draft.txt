@@ -1,4 +1,29 @@
-1. Implement streaming to AI topic generation
-2. Implement topic name/description generation with AI as well (currently it only generates questions with given Pack, and Topic)
-3. For scavenger badge to be worked, there must be at least 3 players (so on 1v1 - 2 players game no scavenger badge is awarded)
-4. 
+ROADMAP
+
+## v26.04.14
+
+- Implement Pack.settings `allowOthersHost` so the pack can be hosted by non-author users
+- Fix chart colors
+
+## v26.04.15
+
+- Add to profile page `my draft packs` section, so user can directly see and manage their draft packs
+- Add new badge: "Magnificent" - Someone who wins the game without single incorrect answer
+
+## v26.04.16
+
+- Add Pack.settings `allowForking` so the pack can be forked by other users
+- Add Pack forking system, so user can fork a pack and edit it
+
+## v26.04.17
+
+- Add new badge: "Abomination" - Someone who gets 5/5 incorrect answers in a single topic (opposite of "Ace")
+- Add new badge: "Genius" - When a player gets positive points in all of the topics of a game
+- Add new badge: "Dunce" - When a player gets non-positive points (0 or negative) in all of the topics of a game
+
+### UNKNOWN VERSIONS:
+
+- Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
+- Add friendships/follow system
+- Add pack collections/playlists system
+- Better admin dashboard
