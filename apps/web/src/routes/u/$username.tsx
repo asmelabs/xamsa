@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
@@ -9,6 +14,13 @@ import {
 	CardPanel,
 	CardTitle,
 } from "@xamsa/ui/components/card";
+import {
+	Dialog,
+	DialogHeader,
+	DialogPanel,
+	DialogPopup,
+	DialogTitle,
+} from "@xamsa/ui/components/dialog";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import { getLevelProgress } from "@xamsa/utils/levels";
 import { format, parse } from "date-fns";
@@ -29,6 +41,8 @@ import {
 	TargetIcon,
 	TimerOffIcon,
 	TrophyIcon,
+	UserMinusIcon,
+	UserPlusIcon,
 	XCircleIcon,
 	ZapIcon,
 } from "lucide-react";
@@ -59,6 +73,7 @@ import { isStaffRole } from "@/lib/staff";
 import { orpc } from "@/utils/orpc";
 
 const HISTORY_PAGE = 15;
+const FOLLOW_LIST_PAGE = 20;
 
 export const Route = createFileRoute("/u/$username")({
 	component: RouteComponent,
@@ -131,9 +146,18 @@ function formatPlayTimeSeconds(totalSeconds: number): string {
 
 function RouteComponent() {
 	const { username } = Route.useParams();
-	const { profile, user, isOwner } = Route.useLoaderData();
+	const { profile: loaderProfile, user, isOwner } = Route.useLoaderData();
+	const qc = useQueryClient();
 	const showStaffDashboard = isOwner && isStaffRole(user?.role);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const [followDialog, setFollowDialog] = useState<
+		null | "followers" | "following"
+	>(null);
+
+	const { data: profile } = useQuery({
+		...orpc.user.findOne.queryOptions({ input: { username } }),
+		initialData: loaderProfile,
+	});
 
 	const { data: publicStats } = useQuery(
 		orpc.user.getPublicStats.queryOptions({ input: { username } }),
@@ -172,9 +196,97 @@ function RouteComponent() {
 		}),
 	});
 
+	const { data: followState } = useQuery({
+		...orpc.user.getFollowState.queryOptions({ input: { username } }),
+		enabled: Boolean(user && !isOwner),
+	});
+
+	const {
+		data: followersPages,
+		fetchNextPage: fetchNextFollowers,
+		hasNextPage: hasNextFollowers,
+		isFetchingNextPage: isFetchingNextFollowers,
+		isLoading: followersLoading,
+	} = useInfiniteQuery({
+		...orpc.user.listFollowers.infiniteOptions({
+			input: (pageParam: string | undefined) => ({
+				username,
+				cursor: pageParam,
+				limit: FOLLOW_LIST_PAGE,
+			}),
+			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+			initialPageParam: undefined as string | undefined,
+		}),
+		enabled: followDialog === "followers",
+	});
+
+	const {
+		data: followingPages,
+		fetchNextPage: fetchNextFollowing,
+		hasNextPage: hasNextFollowing,
+		isFetchingNextPage: isFetchingNextFollowing,
+		isLoading: followingLoading,
+	} = useInfiniteQuery({
+		...orpc.user.listFollowing.infiniteOptions({
+			input: (pageParam: string | undefined) => ({
+				username,
+				cursor: pageParam,
+				limit: FOLLOW_LIST_PAGE,
+			}),
+			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+			initialPageParam: undefined as string | undefined,
+		}),
+		enabled: followDialog === "following",
+	});
+
+	const invalidateFollowRelated = () => {
+		void qc.invalidateQueries({
+			queryKey: orpc.user.findOne.queryKey({ input: { username } }),
+		});
+		void qc.invalidateQueries({
+			queryKey: orpc.user.getFollowState.queryKey({ input: { username } }),
+		});
+		void qc.invalidateQueries({
+			queryKey: orpc.user.listFollowers.queryKey({
+				input: { username, limit: FOLLOW_LIST_PAGE },
+			}),
+		});
+		void qc.invalidateQueries({
+			queryKey: orpc.user.listFollowing.queryKey({
+				input: { username, limit: FOLLOW_LIST_PAGE },
+			}),
+		});
+	};
+
+	const { mutate: followMut, isPending: isFollowPending } = useMutation({
+		...orpc.user.follow.mutationOptions(),
+		onSuccess() {
+			invalidateFollowRelated();
+			toast.success("You are now following this player");
+		},
+		onError(error) {
+			toast.error(error.message || "Could not follow");
+		},
+	});
+
+	const { mutate: unfollowMut, isPending: isUnfollowPending } = useMutation({
+		...orpc.user.unfollow.mutationOptions(),
+		onSuccess() {
+			invalidateFollowRelated();
+			toast.success("Unfollowed");
+		},
+		onError(error) {
+			toast.error(error.message || "Could not unfollow");
+		},
+	});
+
 	const gameRows = gamesData?.pages.flatMap((p) => p.items) ?? [];
 	const packRows = packsData?.items ?? [];
 	const sentinelRef = useRef<HTMLDivElement>(null);
+	const followSentinelRef = useRef<HTMLDivElement>(null);
+
+	const followerRows = followersPages?.pages.flatMap((p) => p.items) ?? [];
+	const followingRows = followingPages?.pages.flatMap((p) => p.items) ?? [];
 
 	useEffect(() => {
 		if (!sentinelRef.current) return;
@@ -190,6 +302,38 @@ function RouteComponent() {
 		observer.observe(el);
 		return () => observer.disconnect();
 	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+	useEffect(() => {
+		if (followDialog === null) return;
+		const el = followSentinelRef.current;
+		if (!el) return;
+		const hasNext =
+			followDialog === "followers" ? hasNextFollowers : hasNextFollowing;
+		const isFetching =
+			followDialog === "followers"
+				? isFetchingNextFollowers
+				: isFetchingNextFollowing;
+		const fetchNext =
+			followDialog === "followers" ? fetchNextFollowers : fetchNextFollowing;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting && hasNext && !isFetching) {
+					fetchNext();
+				}
+			},
+			{ threshold: 0 },
+		);
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, [
+		followDialog,
+		hasNextFollowers,
+		hasNextFollowing,
+		isFetchingNextFollowers,
+		isFetchingNextFollowing,
+		fetchNextFollowers,
+		fetchNextFollowing,
+	]);
 	const levelProgress = getLevelProgress(profile.xp);
 	const xpToNext =
 		!levelProgress.isMaxLevel && levelProgress.xpForCurrentLevel > 0
@@ -248,9 +392,31 @@ function RouteComponent() {
 						)}
 					</div>
 					<p className="text-muted-foreground">@{profile.username}</p>
+					<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+						<button
+							type="button"
+							className="text-left text-muted-foreground transition-colors hover:text-foreground"
+							onClick={() => setFollowDialog("followers")}
+						>
+							<span className="font-semibold text-foreground tabular-nums">
+								{profile.totalFollowers.toLocaleString()}
+							</span>{" "}
+							Followers
+						</button>
+						<button
+							type="button"
+							className="text-left text-muted-foreground transition-colors hover:text-foreground"
+							onClick={() => setFollowDialog("following")}
+						>
+							<span className="font-semibold text-foreground tabular-nums">
+								{profile.totalFollowing.toLocaleString()}
+							</span>{" "}
+							Following
+						</button>
+					</div>
 				</div>
 
-				{isOwner && (
+				{isOwner ? (
 					<div className="flex flex-wrap items-center gap-2 sm:ml-auto">
 						{showStaffDashboard ? (
 							<Button
@@ -271,7 +437,34 @@ function RouteComponent() {
 							Settings
 						</Button>
 					</div>
-				)}
+				) : user ? (
+					<div className="flex shrink-0 flex-wrap items-center gap-2 sm:ml-auto">
+						{followState === undefined ? (
+							<Button disabled size="sm" variant="outline">
+								<Spinner className="size-4" />
+							</Button>
+						) : followState.isFollowing ? (
+							<LoadingButton
+								variant="outline"
+								size="sm"
+								isLoading={isUnfollowPending}
+								onClick={() => unfollowMut({ username })}
+							>
+								<UserMinusIcon className="size-4" />
+								Unfollow
+							</LoadingButton>
+						) : (
+							<LoadingButton
+								size="sm"
+								isLoading={isFollowPending}
+								onClick={() => followMut({ username })}
+							>
+								<UserPlusIcon className="size-4" />
+								Follow
+							</LoadingButton>
+						)}
+					</div>
+				) : null}
 			</div>
 
 			<ProfileBadgesSection username={username} />
@@ -629,6 +822,112 @@ function RouteComponent() {
 					</LoadingButton>
 				</div>
 			)}
+
+			<Dialog
+				open={followDialog !== null}
+				onOpenChange={(open) => {
+					if (!open) setFollowDialog(null);
+				}}
+			>
+				<DialogPopup className="max-w-md" showCloseButton>
+					<DialogHeader>
+						<DialogTitle>
+							{followDialog === "followers"
+								? "Followers"
+								: followDialog === "following"
+									? "Following"
+									: ""}
+						</DialogTitle>
+					</DialogHeader>
+					<DialogPanel className="max-h-[min(60vh,440px)] space-y-2 overflow-y-auto px-6 in-[[data-slot=dialog-popup]:has([data-slot=dialog-header])]:pt-1 pb-6">
+						{followDialog
+							? (() => {
+									const rows =
+										followDialog === "followers" ? followerRows : followingRows;
+									const loading =
+										followDialog === "followers"
+											? followersLoading
+											: followingLoading;
+									const fetchingNext =
+										followDialog === "followers"
+											? isFetchingNextFollowers
+											: isFetchingNextFollowing;
+
+									if (loading && rows.length === 0) {
+										return (
+											<div className="flex justify-center py-10">
+												<Spinner />
+											</div>
+										);
+									}
+
+									if (rows.length === 0) {
+										return (
+											<p className="text-muted-foreground text-sm">
+												{followDialog === "followers"
+													? "No followers yet."
+													: "Not following anyone yet."}
+											</p>
+										);
+									}
+
+									return (
+										<>
+											<ul className="space-y-2">
+												{rows.map((row) => {
+													const rowInitials = row.name
+														.split(" ")
+														.map((part) => part[0])
+														.slice(0, 2)
+														.join("")
+														.toUpperCase();
+													return (
+														<li key={row.username}>
+															<Link
+																to="/u/$username"
+																params={{ username: row.username }}
+																className="flex items-center gap-3 rounded-lg border border-transparent px-1 py-1.5 transition-colors hover:border-border hover:bg-muted/50"
+																onClick={() => setFollowDialog(null)}
+															>
+																<div className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+																	{row.image ? (
+																		<img
+																			src={row.image}
+																			alt={row.name}
+																			className="size-full object-cover"
+																		/>
+																	) : (
+																		<div className="flex size-full items-center justify-center font-semibold text-primary text-xs">
+																			{rowInitials}
+																		</div>
+																	)}
+																</div>
+																<div className="min-w-0">
+																	<p className="truncate font-medium text-sm">
+																		{row.name}
+																	</p>
+																	<p className="truncate text-muted-foreground text-xs">
+																		@{row.username}
+																	</p>
+																</div>
+															</Link>
+														</li>
+													);
+												})}
+											</ul>
+											<div ref={followSentinelRef} className="h-2" />
+											{fetchingNext ? (
+												<div className="flex justify-center py-2">
+													<Spinner className="size-5" />
+												</div>
+											) : null}
+										</>
+									);
+								})()
+							: null}
+					</DialogPanel>
+				</DialogPopup>
+			</Dialog>
 		</div>
 	);
 }

@@ -4,6 +4,11 @@ enum Role {
   admin
 }
 
+/// Follow rows are automatic for now; more statuses may be added later (e.g. pending).
+enum FollowStatus {
+  accepted
+}
+
 model User {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -54,6 +59,15 @@ model User {
   /// content creation ///
   totalPacksPublished Int @default(0) @map("total_packs_published")
 
+  /// follow relationships (denormalized counts) ///
+  totalFollowers Int @default(0) @map("total_followers")
+  totalFollowing Int @default(0) @map("total_following")
+
+  /// Users this user is following (this user is the follower)
+  following UserFollow[] @relation("UserFollows")
+  /// Users following this user (this user is being followed)
+  followers UserFollow[] @relation("UserFollowers")
+
   /// AI topic generation (daily quota, UTC day window) ///
   lastAiUsedAt     DateTime? @map("last_ai_used_at")
   aiUseCount       Int       @default(0) @map("ai_use_count")
@@ -78,6 +92,24 @@ model User {
   @@index([totalWins])
   @@index([totalPointsEarned])
   @@map("user")
+}
+
+model UserFollow {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  status FollowStatus @default(accepted)
+
+  followerId  String @map("follower_id")
+  followingId String @map("following_id")
+
+  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follow")
 }
 
 model Session {

@@ -1,7 +1,11 @@
 import {
 	FindOneProfileInputSchema,
 	FindOneProfileOutputSchema,
+	FollowUserInputSchema,
+	FollowUserOutputSchema,
 	GetActiveGameOutputSchema,
+	GetFollowStateInputSchema,
+	GetFollowStateOutputSchema,
 	GetGlobalLeaderboardInputSchema,
 	GetGlobalLeaderboardOutputSchema,
 	GetMyStatsOutputSchema,
@@ -13,6 +17,12 @@ import {
 	GetPublicStatsOutputSchema,
 	GetRecentGamesInputSchema,
 	GetRecentGamesOutputSchema,
+	ListFollowersInputSchema,
+	ListFollowersOutputSchema,
+	ListFollowingInputSchema,
+	ListFollowingOutputSchema,
+	UnfollowUserInputSchema,
+	UnfollowUserOutputSchema,
 	UpdateProfileInputSchema,
 	UpdateProfileOutputSchema,
 } from "@xamsa/schemas/modules/user";
@@ -20,12 +30,17 @@ import { protectedProcedure, publicProcedure } from "../../procedures";
 import { getGlobalLeaderboard } from "./global-leaderboard";
 import {
 	findOneProfile,
+	followUser,
 	getActiveGame,
+	getFollowState,
 	getMyStats,
 	getPublicGameActivity,
 	getPublicRecentGames,
 	getPublicStats,
 	getRecentGames,
+	listFollowers,
+	listFollowing,
+	unfollowUser,
 	updateProfile,
 } from "./service";
 
@@ -72,4 +87,45 @@ export const userRouter = {
 			async ({ input, context }) =>
 				await getRecentGames(input, context.session.user.id),
 		),
+	getFollowState: protectedProcedure
+		.input(GetFollowStateInputSchema)
+		.output(GetFollowStateOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await getFollowState(
+					input,
+					context.session.user.id,
+					context.session.user.username,
+				),
+		),
+	follow: protectedProcedure
+		.input(FollowUserInputSchema)
+		.output(FollowUserOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await followUser(
+					input,
+					context.session.user.id,
+					context.session.user.username,
+				),
+		),
+	unfollow: protectedProcedure
+		.input(UnfollowUserInputSchema)
+		.output(UnfollowUserOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await unfollowUser(
+					input,
+					context.session.user.id,
+					context.session.user.username,
+				),
+		),
+	listFollowers: publicProcedure
+		.input(ListFollowersInputSchema)
+		.output(ListFollowersOutputSchema)
+		.handler(async ({ input }) => await listFollowers(input)),
+	listFollowing: publicProcedure
+		.input(ListFollowingInputSchema)
+		.output(ListFollowingOutputSchema)
+		.handler(async ({ input }) => await listFollowing(input)),
 };
