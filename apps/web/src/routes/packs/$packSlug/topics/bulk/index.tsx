@@ -66,7 +66,7 @@ function RouteComponent() {
 				]}
 			/>
 			<PacksSubpageHeader
-				description="Paste or import several topics at once while this pack is still a draft. Large imports may finish in the background — keep the page open."
+				description="Paste, upload, or fetch topics (TXT, CSV, JSON, XML, YAML), or load from 3sual when available — while this pack is still a draft. Large imports may finish in the background — keep the page open."
 				eyebrow="Pack editor"
 				title="Create multiple topics"
 			/>

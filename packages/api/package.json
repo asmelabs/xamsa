@@ -24,7 +24,9 @@
 		"@xamsa/db": "workspace:*",
 		"@xamsa/env": "workspace:*",
 		"dotenv": "catalog:",
-		"zod": "catalog:"
+		"fast-xml-parser": "catalog:",
+		"zod": "catalog:",
+		"yaml": "catalog:"
 	},
 	"devDependencies": {
 		"@xamsa/config": "workspace:*",

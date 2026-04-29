@@ -48,7 +48,8 @@ export type CreateTopicPayloadType = z.infer<typeof CreateTopicPayloadSchema>;
 /**
  * BULK CREATE (single pack, many topics)
  * — Default max: `BULK_TOPICS_MAX` (20).
- * — With `importedFromTsualPackageId` (3sual import): `BULK_TOPICS_MAX_TSUAL_IMPORT` (200).
+ * — Larger batch: `BULK_TOPICS_MAX_TSUAL_IMPORT` (200) when importing from 3sual
+ *   (`importedFromTsualPackageId`) or structured file/URL/paste (`importedViaStructuredImport`).
  */
 export const BulkCreateTopicsInputSchema = z
 	.object({
@@ -56,26 +57,67 @@ export const BulkCreateTopicsInputSchema = z
 		topics: z.array(CreateTopicPayloadSchema).min(1),
 		/** 3sual `package.id` if topics came from a moderator import (records UserTsualPackageImport) */
 		importedFromTsualPackageId: z.number().int().positive().optional(),
+		/** True when topics were loaded via structured import preview (file, URL, or copy/paste). */
+		importedViaStructuredImport: z.boolean().optional(),
 	})
 	.superRefine((data, ctx) => {
-		const cap =
-			data.importedFromTsualPackageId != null
-				? BULK_TOPICS_MAX_TSUAL_IMPORT
-				: BULK_TOPICS_MAX;
+		const large =
+			data.importedFromTsualPackageId != null ||
+			data.importedViaStructuredImport === true;
+		const cap = large ? BULK_TOPICS_MAX_TSUAL_IMPORT : BULK_TOPICS_MAX;
 		if (data.topics.length > cap) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.too_big,
 				inclusive: true,
 				maximum: cap,
 				origin: "array",
-				message:
-					data.importedFromTsualPackageId != null
-						? `Ən çoxu ${String(cap)} mövzu (3sual import).`
-						: `Ən çoxu ${String(cap)} mövzu bir dəfəyə (əl ilə).`,
+				message: large
+					? `Ən çoxu ${String(cap)} mövzu (import).`
+					: `Ən çoxu ${String(cap)} mövzu bir dəfəyə (əl ilə).`,
 				path: ["topics"],
 			});
 		}
 	});
+
+/** Max UTF-8 length for paste/file body sent to `previewStructuredImport`. */
+export const STRUCTURED_IMPORT_RAW_MAX = 2_000_000 as const;
+
+export const PreviewStructuredImportInputSchema = z.object({
+	raw: z.string().max(STRUCTURED_IMPORT_RAW_MAX),
+	/** Original filename e.g. `topics.csv` — guides format when content is ambiguous */
+	filenameHint: z.string().max(260).optional(),
+});
+
+export const PreviewStructuredImportOutputSchema = z.object({
+	topics: z.array(CreateTopicPayloadSchema).max(BULK_TOPICS_MAX_TSUAL_IMPORT),
+});
+
+export const PreviewStructuredImportFromUrlInputSchema = z.object({
+	url: z
+		.string()
+		.url()
+		.max(2048)
+		.refine(
+			(u) => {
+				try {
+					return new URL(u).protocol === "https:";
+				} catch {
+					return false;
+				}
+			},
+			{ message: "Only HTTPS URLs are allowed" },
+		),
+});
+
+export type PreviewStructuredImportInputType = z.infer<
+	typeof PreviewStructuredImportInputSchema
+>;
+export type PreviewStructuredImportOutputType = z.infer<
+	typeof PreviewStructuredImportOutputSchema
+>;
+export type PreviewStructuredImportFromUrlInputType = z.infer<
+	typeof PreviewStructuredImportFromUrlInputSchema
+>;
 
 export const BulkCreateTopicsOutputSchema = z.object({
 	created: z.array(TopicSchema.pick({ slug: true })),

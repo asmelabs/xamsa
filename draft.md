@@ -184,6 +184,150 @@ Notes:
 
 - Better leaderboard. On leaderboard currently there are 4 sections. By Elo, Xp/Level, Wins, Points. Turn that to selector and put on left side. It should have [Elo, XP (name it XP remove '/Level'), Wins, Hosts (new section, shows total hosted count), Plays (new section, shows total played count)], also currently the table on all sections have same columns, just include user and proper / needed column for each section. e.g. Only Elo for Elo section. And on right side add a switch, "Only Following" - if not checked, it will show all users (current behavior). If checked, it will show only users that the current user is following. That switch must be rendered only if user is authorized.
 
+## v26.04.21
+
+- Import topics/questions from CSV (Excel, Sheets, etc.) files.
+- Import topics/questions from JSON/XML/YAML files.
+- Import topics/questions from URL (e.g. https://example.com/topics.csv) (or .json, .xml, .yaml, etc.)
+- Import topics/questions from TXT files.
+- Import topics/questions from computer file with extension (e.g. .csv, .json, .xml, .yaml, .txt, etc.)
+
+RULES:
+TXT:
+
+- First line is a topic name, followed by ";" and then optional topic description;
+- After topic line, there are 5 lines, each line is a question text, followed by ";" and then the answer, followed by ";" and then optional explanation, followed by ";" and then optional acceptable answers (comma separated);
+- After those 5 lines, again start with a new topic line.
+- Note: all empty lines will be ignored;
+
+JSON:
+
+```json
+{
+	"topics": [
+		{
+			"name": "string",
+			"description": "string or null",
+			"questions": [
+				{
+					"text": "string",
+					"answer": "string",
+					"acceptableAnswers": ["string", "string", "string"],
+					"explanation": "string or null"
+				},
+				{
+					"text": "string",
+					"answer": "string",
+					"acceptableAnswers": ["string", "string", "string"],
+					"explanation": "string or null"
+				},
+				{
+					"text": "string",
+					"answer": "string",
+					"acceptableAnswers": ["string", "string", "string"],
+					"explanation": "string or null"
+				},
+				{
+					"text": "string",
+					"answer": "string",
+					"acceptableAnswers": ["string", "string", "string"],
+					"explanation": "string or null"
+				},
+				{
+					"text": "string",
+					"answer": "string",
+					"acceptableAnswers": ["string", "string", "string"],
+					"explanation": "string or null"
+				}
+			],
+      "..."
+		},
+    "..."
+	]
+}
+
+notes: or directly an array without { "topics": [{ ... }, { ... }] } wrapper just [ { ... }, { ... } ]
+same thing applies for XML and YAML as well.
+```
+
+XML:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<topics>
+  <topic>
+    <name>string</name>
+    <description>string or null</description>
+    <questions>
+      <question>
+        <text>string</text>
+        <answer>string</answer>
+        <acceptableAnswers>
+          <acceptableAnswer>string</acceptableAnswer>
+          <acceptableAnswer>string</acceptableAnswer>
+          <acceptableAnswer>string</acceptableAnswer>
+        </acceptableAnswers>
+        <explanation>string or null</explanation>
+      </question>
+      ...
+    </questions>
+  </topic>
+  ...
+</topics>
+```
+
+YAML:
+
+```yaml
+- topics:
+    - name: string
+    - description: string or null
+    - questions:
+        - text: string
+        - answer: string
+        - acceptableAnswers:
+            - string
+            - string
+        - explanation: string or null
+        - ...
+    - ...
+```
+
+CSV:
+
+```csv
+topic1_name;topic1_description;
+question1_text;question1_answer;question1_acceptableAnswers;question1_explanation;
+question2_text;question2_answer;question2_acceptableAnswers;question2_explanation;
+question3_text;question3_answer;question3_acceptableAnswers;question3_explanation;
+question4_text;question4_answer;question4_acceptableAnswers;question4_explanation;
+question5_text;question5_answer;question5_acceptableAnswers;question5_explanation;
+topic2_name;topic2_description;
+question1_text;question1_answer;question1_acceptableAnswers;question1_explanation;
+question2_text;question2_answer;question2_acceptableAnswers;question2_explanation;
+question3_text;question3_answer;question3_acceptableAnswers;question3_explanation;
+question4_text;question4_answer;question4_acceptableAnswers;question4_explanation;
+question5_text;question5_answer;question5_acceptableAnswers;question5_explanation;
+...
+topicN_name;topicN_description;
+question1_text;question1_answer;question1_acceptableAnswers;question1_explanation;
+question2_text;question2_answer;question2_acceptableAnswers;question2_explanation;
+question3_text;question3_answer;question3_acceptableAnswers;question3_explanation;
+question4_text;question4_answer;question4_acceptableAnswers;question4_explanation;
+question5_text;question5_answer;question5_acceptableAnswers;question5_explanation;
+...
+```
+
+Importing with URL and file.
+
+- Instead of copy/paste, users can paste a URL (which is a supported file type) or upload a file from their computer/device.
+
+The file/content/url must be validated to be a supported file type, also fit the rules of the file type.
+
+UI:
+
+- on /packs/$packSlug/topics/new or /packs/$packSlug/topics/bulk page, there is already a [Import with 3sual] button. Now, convert that to [Import] button, which should open a dialog. On the dialog, there will be 4 tabs at the top: [URL], [FILE], [3Sual] and [COPY/PASTE]. (note: copy/paste is just a file, but instead of uploading a file, users can just copy json/xml/yaml/csv/txt text and paste it) if they don't want to copy/paste but they have the file, they can just upload with file, if they do not have the file, but have a url they can paste the url, or they have found the topics on 3sual.az, they can use 3sual.
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
