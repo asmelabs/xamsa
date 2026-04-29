@@ -178,10 +178,15 @@ Notes:
 - Add total followers and total following counts on user profile page (when clicking on them it should open a list of followers/following people with cursor pagination)
 - Currently follows have no implementation further. In future, we will add features for follows. Like home page feed, notifications, follower only packs, etc.
 
+## v26.04.20
+
+- Add a global search, on home page - at the top of the page, there should be a search bar, when clicked, it should open a glassmorphic popup. It should be able to search users (except self - by name/username), packs (either self or published packs - by title/description), topics (either self or published pack topics - by title/description), games (all games - by code). The results should be displayed in a list, limited to 8 results on popup. Each different type should have a different icon and indicator. Each should have a title/description/icon/link.
+
+- Better leaderboard. On leaderboard currently there are 4 sections. By Elo, Xp/Level, Wins, Points. Turn that to selector and put on left side. It should have [Elo, XP (name it XP remove '/Level'), Wins, Hosts (new section, shows total hosted count), Plays (new section, shows total played count)], also currently the table on all sections have same columns, just include user and proper / needed column for each section. e.g. Only Elo for Elo section. And on right side add a switch, "Only Following" - if not checked, it will show all users (current behavior). If checked, it will show only users that the current user is following. That switch must be rendered only if user is authorized.
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
-- Add friendships/follow system
 - Add pack collections/playlists system
 - Better admin dashboard
 - Add Pack.settings `allowForking` so the pack can be forked by other users

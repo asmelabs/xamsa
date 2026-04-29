@@ -40,15 +40,30 @@ type WinsCursor = {
 	username: string;
 };
 
-type PointsCursor = {
+type HostsCursor = {
 	v: typeof CURSOR_VERSION;
-	b: "points";
-	totalPointsEarned: number;
-	totalWins: number;
+	b: "hosts";
+	totalGamesHosted: number;
+	totalGamesPlayed: number;
+	elo: number;
 	username: string;
 };
 
-type LeaderboardCursor = EloCursor | XpCursor | WinsCursor | PointsCursor;
+type PlaysCursor = {
+	v: typeof CURSOR_VERSION;
+	b: "plays";
+	totalGamesPlayed: number;
+	totalWins: number;
+	elo: number;
+	username: string;
+};
+
+type LeaderboardCursor =
+	| EloCursor
+	| XpCursor
+	| WinsCursor
+	| HostsCursor
+	| PlaysCursor;
 
 function encodeCursor(cursor: LeaderboardCursor): string {
 	return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
@@ -135,10 +150,11 @@ function decodeCursor(
 				elo: c.elo,
 				username: c.username,
 			};
-		case "points":
+		case "hosts":
 			if (
-				typeof c.totalPointsEarned !== "number" ||
-				typeof c.totalWins !== "number" ||
+				typeof c.totalGamesHosted !== "number" ||
+				typeof c.totalGamesPlayed !== "number" ||
+				typeof c.elo !== "number" ||
 				typeof c.username !== "string"
 			) {
 				throw new ORPCError("BAD_REQUEST", {
@@ -147,9 +163,29 @@ function decodeCursor(
 			}
 			return {
 				v: CURSOR_VERSION,
-				b: "points",
-				totalPointsEarned: c.totalPointsEarned,
+				b: "hosts",
+				totalGamesHosted: c.totalGamesHosted,
+				totalGamesPlayed: c.totalGamesPlayed,
+				elo: c.elo,
+				username: c.username,
+			};
+		case "plays":
+			if (
+				typeof c.totalGamesPlayed !== "number" ||
+				typeof c.totalWins !== "number" ||
+				typeof c.elo !== "number" ||
+				typeof c.username !== "string"
+			) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Invalid leaderboard cursor",
+				});
+			}
+			return {
+				v: CURSOR_VERSION,
+				b: "plays",
+				totalGamesPlayed: c.totalGamesPlayed,
 				totalWins: c.totalWins,
+				elo: c.elo,
 				username: c.username,
 			};
 		default:
@@ -159,18 +195,21 @@ function decodeCursor(
 	}
 }
 
+type RowCursorFields = {
+	username: string;
+	elo: number;
+	peakElo: number;
+	xp: number;
+	level: number;
+	totalWins: number;
+	totalGamesHosted: number;
+	totalGamesPlayed: number;
+	totalPointsEarned: number;
+};
+
 function rowToCursor(
 	board: GlobalLeaderboardBoardType,
-	row: {
-		username: string;
-		elo: number;
-		peakElo: number;
-		xp: number;
-		level: number;
-		totalWins: number;
-		totalGamesPlayed: number;
-		totalPointsEarned: number;
-	},
+	row: RowCursorFields,
 ): LeaderboardCursor {
 	switch (board) {
 		case "elo":
@@ -200,12 +239,22 @@ function rowToCursor(
 				elo: row.elo,
 				username: row.username,
 			};
-		case "points":
+		case "hosts":
 			return {
 				v: CURSOR_VERSION,
-				b: "points",
-				totalPointsEarned: row.totalPointsEarned,
+				b: "hosts",
+				totalGamesHosted: row.totalGamesHosted,
+				totalGamesPlayed: row.totalGamesPlayed,
+				elo: row.elo,
+				username: row.username,
+			};
+		case "plays":
+			return {
+				v: CURSOR_VERSION,
+				b: "plays",
+				totalGamesPlayed: row.totalGamesPlayed,
 				totalWins: row.totalWins,
+				elo: row.elo,
 				username: row.username,
 			};
 	}
@@ -288,20 +337,55 @@ function strictlyBetterWhere(cursor: LeaderboardCursor): Prisma.UserWhereInput {
 					},
 				],
 			};
-		case "points":
+		case "hosts":
 			return {
 				OR: [
-					{ totalPointsEarned: { gt: cursor.totalPointsEarned } },
+					{ totalGamesHosted: { gt: cursor.totalGamesHosted } },
 					{
 						AND: [
-							{ totalPointsEarned: cursor.totalPointsEarned },
+							{ totalGamesHosted: cursor.totalGamesHosted },
+							{ totalGamesPlayed: { gt: cursor.totalGamesPlayed } },
+						],
+					},
+					{
+						AND: [
+							{ totalGamesHosted: cursor.totalGamesHosted },
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
+							{ elo: { gt: cursor.elo } },
+						],
+					},
+					{
+						AND: [
+							{ totalGamesHosted: cursor.totalGamesHosted },
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
+							{ elo: cursor.elo },
+							{ username: { lt: cursor.username } },
+						],
+					},
+				],
+			};
+		case "plays":
+			return {
+				OR: [
+					{ totalGamesPlayed: { gt: cursor.totalGamesPlayed } },
+					{
+						AND: [
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
 							{ totalWins: { gt: cursor.totalWins } },
 						],
 					},
 					{
 						AND: [
-							{ totalPointsEarned: cursor.totalPointsEarned },
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
 							{ totalWins: cursor.totalWins },
+							{ elo: { gt: cursor.elo } },
+						],
+					},
+					{
+						AND: [
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
+							{ totalWins: cursor.totalWins },
+							{ elo: cursor.elo },
 							{ username: { lt: cursor.username } },
 						],
 					},
@@ -387,20 +471,55 @@ function strictlyAfterWhere(cursor: LeaderboardCursor): Prisma.UserWhereInput {
 					},
 				],
 			};
-		case "points":
+		case "hosts":
 			return {
 				OR: [
-					{ totalPointsEarned: { lt: cursor.totalPointsEarned } },
+					{ totalGamesHosted: { lt: cursor.totalGamesHosted } },
 					{
 						AND: [
-							{ totalPointsEarned: cursor.totalPointsEarned },
+							{ totalGamesHosted: cursor.totalGamesHosted },
+							{ totalGamesPlayed: { lt: cursor.totalGamesPlayed } },
+						],
+					},
+					{
+						AND: [
+							{ totalGamesHosted: cursor.totalGamesHosted },
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
+							{ elo: { lt: cursor.elo } },
+						],
+					},
+					{
+						AND: [
+							{ totalGamesHosted: cursor.totalGamesHosted },
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
+							{ elo: cursor.elo },
+							{ username: { gt: cursor.username } },
+						],
+					},
+				],
+			};
+		case "plays":
+			return {
+				OR: [
+					{ totalGamesPlayed: { lt: cursor.totalGamesPlayed } },
+					{
+						AND: [
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
 							{ totalWins: { lt: cursor.totalWins } },
 						],
 					},
 					{
 						AND: [
-							{ totalPointsEarned: cursor.totalPointsEarned },
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
 							{ totalWins: cursor.totalWins },
+							{ elo: { lt: cursor.elo } },
+						],
+					},
+					{
+						AND: [
+							{ totalGamesPlayed: cursor.totalGamesPlayed },
+							{ totalWins: cursor.totalWins },
+							{ elo: cursor.elo },
 							{ username: { gt: cursor.username } },
 						],
 					},
@@ -415,7 +534,12 @@ function baseWhereForBoard(
 	if (board === "elo") {
 		return { totalGamesPlayed: { gte: MIN_GAMES_PLAYED_ELO } };
 	}
-	// XP / wins / points: include active hosts who may have zero `totalGamesPlayed`
+	if (board === "hosts") {
+		return { totalGamesHosted: { gte: 1 } };
+	}
+	if (board === "plays") {
+		return { totalGamesPlayed: { gte: 1 } };
+	}
 	return {
 		OR: [{ totalGamesPlayed: { gte: 1 } }, { totalGamesHosted: { gte: 1 } }],
 	};
@@ -446,10 +570,18 @@ function orderByForBoard(
 				{ elo: "desc" },
 				{ username: "asc" },
 			];
-		case "points":
+		case "hosts":
 			return [
-				{ totalPointsEarned: "desc" },
+				{ totalGamesHosted: "desc" },
+				{ totalGamesPlayed: "desc" },
+				{ elo: "desc" },
+				{ username: "asc" },
+			];
+		case "plays":
+			return [
+				{ totalGamesPlayed: "desc" },
 				{ totalWins: "desc" },
+				{ elo: "desc" },
 				{ username: "asc" },
 			];
 	}
@@ -457,11 +589,22 @@ function orderByForBoard(
 
 export async function getGlobalLeaderboard(
 	input: GetGlobalLeaderboardInputType,
+	viewerUserId: string | undefined,
 ): Promise<GetGlobalLeaderboardOutputType> {
 	const board = input.board;
 	const limit = input.limit;
 
-	const baseWhere = baseWhereForBoard(board);
+	const boardBase = baseWhereForBoard(board);
+	const followingFilter: Prisma.UserWhereInput | undefined =
+		input.onlyFollowing && viewerUserId
+			? {
+					followers: { some: { followerId: viewerUserId } },
+				}
+			: undefined;
+
+	const baseWhere: Prisma.UserWhereInput = followingFilter
+		? { AND: [boardBase, followingFilter] }
+		: boardBase;
 
 	let cursorDecoded: LeaderboardCursor | null = null;
 	if (input.cursor) {
@@ -492,6 +635,7 @@ export async function getGlobalLeaderboard(
 			level: true,
 			xp: true,
 			totalWins: true,
+			totalGamesHosted: true,
 			totalGamesPlayed: true,
 			totalPointsEarned: true,
 		},
@@ -509,6 +653,7 @@ export async function getGlobalLeaderboard(
 		level: row.level,
 		xp: row.xp,
 		totalWins: row.totalWins,
+		totalGamesHosted: row.totalGamesHosted,
 		totalGamesPlayed: row.totalGamesPlayed,
 		totalPointsEarned: row.totalPointsEarned,
 	}));
@@ -524,6 +669,7 @@ export async function getGlobalLeaderboard(
 						xp: last.xp,
 						level: last.level,
 						totalWins: last.totalWins,
+						totalGamesHosted: last.totalGamesHosted,
 						totalGamesPlayed: last.totalGamesPlayed,
 						totalPointsEarned: last.totalPointsEarned,
 					}),

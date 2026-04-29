@@ -13,6 +13,7 @@ import {
 } from "@xamsa/ui/components/avatar";
 import { Button } from "@xamsa/ui/components/button";
 import { Spinner } from "@xamsa/ui/components/spinner";
+import { Switch } from "@xamsa/ui/components/switch";
 import {
 	Table,
 	TableBody,
@@ -21,15 +22,25 @@ import {
 	TableHeader,
 	TableRow,
 } from "@xamsa/ui/components/table";
-import { Tabs, TabsList, TabsPanel, TabsTab } from "@xamsa/ui/components/tabs";
+import { cn } from "@xamsa/ui/lib/utils";
 import { CrownIcon, MedalIcon, TrendingUpIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
+import { useEffect, useRef } from "react";
+import { getUser } from "@/functions/get-user";
 import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
+const BOARD_IDS = [
+	"elo",
+	"xp",
+	"wins",
+	"hosts",
+	"plays",
+] as const satisfies readonly GlobalLeaderboardBoardType[];
+
 const BOARDS: {
-	id: GlobalLeaderboardBoardType;
+	id: (typeof BOARD_IDS)[number];
 	label: string;
 	hint: string;
 }[] = [
@@ -40,17 +51,26 @@ const BOARDS: {
 	},
 	{
 		id: "xp",
-		label: "XP / Level",
+		label: "XP",
 		hint: "Progression from playing and hosting",
 	},
 	{ id: "wins", label: "Wins", hint: "First-place finishes" },
-	{ id: "points", label: "Points", hint: "Total score earned" },
+	{
+		id: "hosts",
+		label: "Hosts",
+		hint: "Total sessions hosted",
+	},
+	{
+		id: "plays",
+		label: "Plays",
+		hint: "Total sessions joined as a player",
+	},
 ];
 
 export const Route = createFileRoute("/leaderboard/")({
 	head: () => {
 		const description =
-			"Global Xamsa rankings: Elo, XP and level, wins, and career points. Compare players who host and play live buzzer quizzes.";
+			"Global Xamsa rankings: Elo, XP, wins, games hosted, and games played. Compare players who host and play live buzzer quizzes.";
 		return pageSeo({
 			title: "Leaderboard",
 			description,
@@ -65,11 +85,22 @@ export const Route = createFileRoute("/leaderboard/")({
 			}),
 		});
 	},
+	loader: async () => ({ session: await getUser() }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const [board, setBoard] = useState<GlobalLeaderboardBoardType>("elo");
+	const { session } = Route.useLoaderData();
+	const [tab, setTab] = useQueryState(
+		"tab",
+		parseAsStringLiteral(BOARD_IDS).withDefault("elo"),
+	);
+	const [onlyFollowingParam, setOnlyFollowingParam] = useQueryState(
+		"only-followers",
+		parseAsBoolean.withDefault(false),
+	);
+	const effectiveOnlyFollowing = !!session?.user && onlyFollowingParam;
+	const currentHint = BOARDS.find((b) => b.id === tab)?.hint ?? "";
 
 	return (
 		<div className="container mx-auto max-w-5xl space-y-6 px-4 py-8">
@@ -86,27 +117,49 @@ function RouteComponent() {
 				</p>
 			</div>
 
-			<Tabs
-				value={board}
-				onValueChange={(v) => setBoard(v as GlobalLeaderboardBoardType)}
-			>
-				<TabsList
-					variant="underline"
-					className="w-full min-w-0 flex-wrap justify-start gap-1"
-				>
+			<div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+				<aside className="shrink-0 space-y-1 lg:w-44">
+					<p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+						Rank by
+					</p>
 					{BOARDS.map((b) => (
-						<TabsTab key={b.id} value={b.id}>
+						<button
+							key={b.id}
+							type="button"
+							onClick={() => void setTab(b.id)}
+							className={cn(
+								"w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
+								tab === b.id
+									? "bg-primary/12 font-semibold text-foreground"
+									: "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+							)}
+						>
 							{b.label}
-						</TabsTab>
+						</button>
 					))}
-				</TabsList>
-				{BOARDS.map((b) => (
-					<TabsPanel key={b.id} value={b.id} className="mt-4">
-						<p className="mb-4 text-muted-foreground text-sm">{b.hint}</p>
-						<LeaderboardBoard key={b.id} board={b.id} active={board === b.id} />
-					</TabsPanel>
-				))}
-			</Tabs>
+				</aside>
+
+				<div className="min-w-0 flex-1 space-y-4">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<p className="text-muted-foreground text-sm">{currentHint}</p>
+						{session?.user ? (
+							<label className="flex cursor-pointer items-center gap-2 text-sm">
+								<Switch
+									checked={onlyFollowingParam}
+									onCheckedChange={(c) =>
+										void setOnlyFollowingParam(c ?? false)
+									}
+								/>
+								<span className="font-medium">Only following</span>
+							</label>
+						) : null}
+					</div>
+					<LeaderboardBoard
+						board={tab}
+						onlyFollowing={effectiveOnlyFollowing}
+					/>
+				</div>
+			</div>
 		</div>
 	);
 }
@@ -138,10 +191,10 @@ function rankDisplay(rank: number) {
 
 function LeaderboardBoard({
 	board,
-	active,
+	onlyFollowing,
 }: {
 	board: GlobalLeaderboardBoardType;
-	active: boolean;
+	onlyFollowing: boolean;
 }) {
 	const {
 		data,
@@ -156,18 +209,18 @@ function LeaderboardBoard({
 				board,
 				limit: 50,
 				cursor: pageParam,
+				onlyFollowing,
 			}),
 			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
 		}),
-		enabled: active,
 	});
 
 	const rows = data?.pages.flatMap((p) => p.items) ?? [];
 	const sentinelRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (!active || !sentinelRef.current) return;
+		if (!sentinelRef.current) return;
 		const el = sentinelRef.current;
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -179,11 +232,7 @@ function LeaderboardBoard({
 		);
 		observer.observe(el);
 		return () => observer.disconnect();
-	}, [active, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-	if (!active) {
-		return null;
-	}
+	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	if (isLoading) {
 		return (
@@ -207,10 +256,23 @@ function LeaderboardBoard({
 	if (rows.length === 0) {
 		return (
 			<p className="py-12 text-center text-muted-foreground text-sm">
-				No players on this board yet. Finish a few games to appear here.
+				{onlyFollowing
+					? "No one you follow appears on this board yet, or you are not following anyone."
+					: "No players on this board yet. Finish a few games to appear here."}
 			</p>
 		);
 	}
+
+	const metricHead =
+		board === "elo"
+			? "Elo"
+			: board === "xp"
+				? "Lv / XP"
+				: board === "wins"
+					? "Wins"
+					: board === "hosts"
+						? "Hosted"
+						: "Plays";
 
 	return (
 		<div className="space-y-4">
@@ -219,34 +281,8 @@ function LeaderboardBoard({
 					<TableRow>
 						<TableHead className="w-12">#</TableHead>
 						<TableHead>Player</TableHead>
-						<TableHead
-							className={
-								board === "elo" ? "font-semibold text-foreground" : undefined
-							}
-						>
-							Elo
-						</TableHead>
-						<TableHead
-							className={
-								board === "xp" ? "font-semibold text-foreground" : undefined
-							}
-						>
-							Lv / XP
-						</TableHead>
-						<TableHead
-							className={
-								board === "wins" ? "font-semibold text-foreground" : undefined
-							}
-						>
-							Wins
-						</TableHead>
-						<TableHead>Games</TableHead>
-						<TableHead
-							className={
-								board === "points" ? "font-semibold text-foreground" : undefined
-							}
-						>
-							Pts
+						<TableHead className="text-end sm:text-start">
+							{metricHead}
 						</TableHead>
 					</TableRow>
 				</TableHeader>
@@ -277,21 +313,23 @@ function LeaderboardBoard({
 								</Link>
 							</TableCell>
 							<TableCell className="tabular-nums">
-								{row.elo.toLocaleString()}
-							</TableCell>
-							<TableCell className="text-sm tabular-nums">
-								<span className="font-medium">{row.level}</span>
-								<span className="text-muted-foreground">
-									{" "}
-									· {row.xp.toLocaleString()}
-								</span>
-							</TableCell>
-							<TableCell className="tabular-nums">{row.totalWins}</TableCell>
-							<TableCell className="tabular-nums">
-								{row.totalGamesPlayed}
-							</TableCell>
-							<TableCell className="tabular-nums">
-								{row.totalPointsEarned.toLocaleString()}
+								{board === "elo" ? (
+									row.elo.toLocaleString()
+								) : board === "xp" ? (
+									<span className="text-sm">
+										<span className="font-medium">{row.level}</span>
+										<span className="text-muted-foreground">
+											{" "}
+											· {row.xp.toLocaleString()}
+										</span>
+									</span>
+								) : board === "wins" ? (
+									row.totalWins
+								) : board === "hosts" ? (
+									row.totalGamesHosted
+								) : (
+									row.totalGamesPlayed
+								)}
 							</TableCell>
 						</TableRow>
 					))}

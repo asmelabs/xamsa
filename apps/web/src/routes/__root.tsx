@@ -13,6 +13,7 @@ import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { AppContentShell } from "@/components/app-content-shell";
 import { BottomTabMenu } from "@/components/bottom-tab-menu";
 import { DeferredPostHogProvider } from "@/components/deferred-posthog-provider";
+import { GlobalSearchProvider } from "@/components/global-search-provider";
 import { getUser } from "@/functions/get-user";
 import { rootIconLinks } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -112,8 +113,10 @@ function RootDocument() {
 	const app = (
 		<>
 			<NuqsAdapter>
-				<AppContentShell />
-				<BottomTabMenu />
+				<GlobalSearchProvider>
+					<AppContentShell />
+					<BottomTabMenu />
+				</GlobalSearchProvider>
 				<Toaster richColors position="top-center" />
 				<TanStackRouterDevtools position="bottom-left" />
 				<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />

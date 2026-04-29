@@ -7,12 +7,30 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 19 } as const;
+const current = { year: 2026, month: 4, patch: 20 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-01",
+			year: 2026,
+			month: 4,
+			patch: 20,
+			title:
+				"Home global search and leaderboard: hosts, plays, following filter",
+			highlights: [
+				{
+					kind: "text",
+					text: "The home page opens a glass-style search dialog (⌘K) where you can find users, your or published packs, topics, and games by code—up to eight mixed results with type badges and deep links, with debounced queries.",
+				},
+				{
+					kind: "text",
+					text: "The leaderboard uses a left-hand board picker (Elo, XP, wins, games hosted, games played), one metric column per board, URL state via tab and only-followers, and an “Only following” switch when signed in.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,

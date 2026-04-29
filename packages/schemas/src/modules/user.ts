@@ -268,13 +268,16 @@ export const GlobalLeaderboardBoardSchema = z.enum([
 	"elo",
 	"xp",
 	"wins",
-	"points",
+	"hosts",
+	"plays",
 ]);
 
 export const GetGlobalLeaderboardInputSchema = z.object({
 	board: GlobalLeaderboardBoardSchema.default("elo"),
 	limit: z.number().int().min(1).max(100).default(50),
 	cursor: z.string().optional(),
+	/** When true, only users the signed-in viewer follows. Requires auth (API returns UNAUTHORIZED if absent). */
+	onlyFollowing: z.boolean().optional().default(false),
 });
 
 export const GlobalLeaderboardRowSchema = z.object({
@@ -286,6 +289,7 @@ export const GlobalLeaderboardRowSchema = z.object({
 	level: z.number().int(),
 	xp: z.number().int(),
 	totalWins: z.number().int(),
+	totalGamesHosted: z.number().int(),
 	totalGamesPlayed: z.number().int(),
 	totalPointsEarned: z.number().int(),
 });

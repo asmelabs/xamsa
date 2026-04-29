@@ -91,6 +91,8 @@ model User {
   @@index([xp])
   @@index([totalWins])
   @@index([totalPointsEarned])
+  @@index([totalGamesHosted])
+  @@index([totalGamesPlayed])
   @@map("user")
 }
 

@@ -26,6 +26,7 @@ import {
 	ZapIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { HomeGlobalSearch } from "@/components/home/home-global-search";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
@@ -162,6 +163,8 @@ function HomeComponent() {
 function SignedOutHome() {
 	return (
 		<div className="flex flex-col gap-8 py-10">
+			<HomeGlobalSearch />
+
 			<div className="space-y-3">
 				<div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-primary text-xs">
 					<SparklesIcon className="size-3" />
@@ -242,6 +245,8 @@ function SignedInHome({ userName, username }: SignedInHomeProps) {
 
 	return (
 		<div className="flex flex-col gap-8 py-8">
+			<HomeGlobalSearch />
+
 			{activeGame && (
 				<Link
 					to="/g/$code"

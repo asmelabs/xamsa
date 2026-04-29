@@ -1,3 +1,8 @@
+import { ORPCError } from "@orpc/server";
+import {
+	HomeSearchInputSchema,
+	HomeSearchOutputSchema,
+} from "@xamsa/schemas/modules/search";
 import {
 	FindOneProfileInputSchema,
 	FindOneProfileOutputSchema,
@@ -28,6 +33,7 @@ import {
 } from "@xamsa/schemas/modules/user";
 import { protectedProcedure, publicProcedure } from "../../procedures";
 import { getGlobalLeaderboard } from "./global-leaderboard";
+import { homeSearch } from "./home-search";
 import {
 	findOneProfile,
 	followUser,
@@ -64,7 +70,20 @@ export const userRouter = {
 	getGlobalLeaderboard: publicProcedure
 		.input(GetGlobalLeaderboardInputSchema)
 		.output(GetGlobalLeaderboardOutputSchema)
-		.handler(async ({ input }) => await getGlobalLeaderboard(input)),
+		.handler(async ({ input, context }) => {
+			if (input.onlyFollowing && !context.session?.user?.id) {
+				throw new ORPCError("UNAUTHORIZED", {
+					message: "Sign in to filter the leaderboard by people you follow.",
+				});
+			}
+			return getGlobalLeaderboard(input, context.session?.user?.id);
+		}),
+	homeSearch: publicProcedure
+		.input(HomeSearchInputSchema)
+		.output(HomeSearchOutputSchema)
+		.handler(async ({ input, context }) =>
+			homeSearch(input, context.session?.user?.id),
+		),
 	update: protectedProcedure
 		.input(UpdateProfileInputSchema)
 		.output(UpdateProfileOutputSchema)
