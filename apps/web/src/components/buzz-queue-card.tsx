@@ -7,8 +7,8 @@ import {
 	FramePanel,
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
-import { CheckIcon, CircleIcon, XIcon } from "lucide-react";
-import { useMemo } from "react";
+import { CheckIcon, CircleIcon, Trash2Icon, XIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
 	applyClickResolvedToGame,
@@ -17,6 +17,7 @@ import {
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
 import { orpc } from "@/utils/orpc";
+import { BetterDialog } from "./better-dialog";
 
 interface BuzzQueueCardProps {
 	game: GameData;
@@ -82,6 +83,7 @@ export function BuzzQueueHostStrip({ game }: { game: GameData }) {
 
 export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 	const queryClient = useQueryClient();
+	const [removeClickId, setRemoveClickId] = useState<string | null>(null);
 
 	// Use host click details if available, fall back to public clicks
 	const clicks =
@@ -97,6 +99,22 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 		onError(error) {
 			toast.error(error.message || "Failed to resolve click");
 			// server remains source of truth; invalidate to reconcile
+			queryClient.invalidateQueries({
+				queryKey: orpc.game.findOne.queryKey({ input: { code: game.code } }),
+			});
+		},
+	});
+
+	const { mutate: removeClickMut, isPending: isRemoving } = useMutation({
+		...orpc.click.remove.mutationOptions(),
+		onError(error) {
+			toast.error(error.message || "Failed to remove click");
+			queryClient.invalidateQueries({
+				queryKey: orpc.game.findOne.queryKey({ input: { code: game.code } }),
+			});
+		},
+		onSuccess() {
+			setRemoveClickId(null);
 			queryClient.invalidateQueries({
 				queryKey: orpc.game.findOne.queryKey({ input: { code: game.code } }),
 			});
@@ -170,6 +188,8 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 							order: hostQ.order,
 							text: hostQ.text,
 							answer: hostQ.answer,
+							explanation: hostQ.explanation ?? null,
+							acceptableAnswers: hostQ.acceptableAnswers,
 						}
 					: null;
 
@@ -277,6 +297,11 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 							!isTentative &&
 							game.status === "active";
 
+						const canModerateClicks =
+							isHostView &&
+							(game.status === "active" || game.status === "paused") &&
+							!isTentative;
+
 						const rowClass =
 							click.status === "correct"
 								? "border-green-500/30 bg-green-500/5"
@@ -364,11 +389,48 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 										</Button>
 									</div>
 								)}
+								{canModerateClicks && (
+									<Button
+										size="sm"
+										variant="ghost"
+										className="text-muted-foreground hover:text-destructive"
+										disabled={isRemoving}
+										onClick={() => setRemoveClickId(click.id)}
+										aria-label="Remove click"
+									>
+										<Trash2Icon className="size-3.5" />
+									</Button>
+								)}
 							</div>
 						);
 					})}
 				</div>
 			</FramePanel>
+			<BetterDialog
+				opened={removeClickId != null}
+				setOpened={(open) => {
+					if (!open) setRemoveClickId(null);
+				}}
+				title="Remove this click?"
+				description="This cannot be undone. Player score and stats will be reverted."
+				submit={
+					<Button
+						type="button"
+						variant="destructive"
+						disabled={isRemoving || !removeClickId}
+						onClick={() => {
+							if (!removeClickId) return;
+							removeClickMut({ code: game.code, clickId: removeClickId });
+						}}
+					>
+						Remove
+					</Button>
+				}
+			>
+				<p className="text-muted-foreground text-sm">
+					Use this when a buzz was accidental or a resolution should be undone.
+				</p>
+			</BetterDialog>
 		</Frame>
 	);
 }

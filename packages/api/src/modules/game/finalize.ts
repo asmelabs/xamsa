@@ -295,3 +295,109 @@ export async function finalizeGameTopic(
 
 	return awardTopicBadges(tx, gameTopicId);
 }
+
+/**
+ * Recompute denormalized GameTopic counters from finalized child GameQuestions
+ * and live topic clicks — without bumping topicsPlayed or emitting badges.
+ * Used after retroactive click removal corrupts a closed topic rollup.
+ */
+export async function rollupFinalizedGameTopicTotals(
+	tx: Prisma.TransactionClient,
+	gameTopicId: string,
+): Promise<void> {
+	const gameTopic = await tx.gameTopic.findUnique({
+		where: { id: gameTopicId },
+		select: {
+			id: true,
+			gameId: true,
+			topicId: true,
+			startedAt: true,
+			finishedAt: true,
+			questions: {
+				select: {
+					status: true,
+					totalClicks: true,
+					totalCorrectAnswers: true,
+					totalIncorrectAnswers: true,
+					totalExpiredClicks: true,
+				},
+			},
+		},
+	});
+
+	if (!gameTopic?.finishedAt) {
+		return;
+	}
+
+	const now = new Date();
+	const topicClicks = await tx.click.findMany({
+		where: { gameId: gameTopic.gameId, topicId: gameTopic.topicId },
+		select: { playerId: true, pointsAwarded: true },
+	});
+
+	const totals = gameTopic.questions.reduce(
+		(acc, q) => ({
+			totalClicks: acc.totalClicks + q.totalClicks,
+			totalCorrectAnswers: acc.totalCorrectAnswers + q.totalCorrectAnswers,
+			totalIncorrectAnswers:
+				acc.totalIncorrectAnswers + q.totalIncorrectAnswers,
+			totalExpiredClicks: acc.totalExpiredClicks + q.totalExpiredClicks,
+		}),
+		{
+			totalClicks: 0,
+			totalCorrectAnswers: 0,
+			totalIncorrectAnswers: 0,
+			totalExpiredClicks: 0,
+		},
+	);
+
+	const totalQuestionsAnswered = gameTopic.questions.filter(
+		(q) => q.status === "answered",
+	).length;
+	const totalQuestionsSkipped =
+		gameTopic.questions.length - totalQuestionsAnswered;
+
+	const scoreByPlayer = new Map<string, number>();
+	let pointsAwardedSum = 0;
+	let pointsDeductedSum = 0;
+	for (const c of topicClicks) {
+		if (c.pointsAwarded > 0) pointsAwardedSum += c.pointsAwarded;
+		if (c.pointsAwarded < 0) pointsDeductedSum += Math.abs(c.pointsAwarded);
+		scoreByPlayer.set(
+			c.playerId,
+			(scoreByPlayer.get(c.playerId) ?? 0) + c.pointsAwarded,
+		);
+	}
+
+	let topScorerId: string | null = null;
+	let topScorerPoints = 0;
+	for (const [playerId, points] of scoreByPlayer) {
+		if (points > topScorerPoints) {
+			topScorerId = playerId;
+			topScorerPoints = points;
+		}
+	}
+
+	const startedAt = gameTopic.startedAt ?? now;
+	const durationSeconds = Math.max(
+		0,
+		Math.round((gameTopic.finishedAt.getTime() - startedAt.getTime()) / 1000),
+	);
+
+	await tx.gameTopic.update({
+		where: { id: gameTopicId },
+		data: {
+			totalClicks: totals.totalClicks,
+			totalCorrectAnswers: totals.totalCorrectAnswers,
+			totalIncorrectAnswers: totals.totalIncorrectAnswers,
+			totalExpiredClicks: totals.totalExpiredClicks,
+			totalQuestionsAnswered,
+			totalQuestionsSkipped,
+			totalPointsAwarded: pointsAwardedSum,
+			totalPointsDeducted: pointsDeductedSum,
+			topScorerId,
+			topScorerPoints,
+			durationSeconds,
+		},
+	});
+}

@@ -22,6 +22,7 @@ import type {
 	LeaveAsHostOutputType,
 	RevealQuestionInputType,
 	RevealQuestionOutputType,
+	SkipQuestionInputType,
 	UpdateGameStatusInputType,
 	UpdateGameStatusOutputType,
 } from "@xamsa/schemas/modules/game";
@@ -30,6 +31,7 @@ import {
 	MIN_TOPICS_PER_GAME_SUBSET,
 } from "@xamsa/utils/constants";
 import { publishBadgeEarnedMany } from "../badge/publish";
+import { stripAllClicksForQuestionInTx } from "../click/remove-click";
 import {
 	duplicateBuzzBlockedForUser,
 	userIdsWhoSawQuestionInPriorCompletedGames,
@@ -437,6 +439,9 @@ export async function findOneGame(
 				explanation: game.isQuestionRevealed
 					? currentQuestionRecord.explanation
 					: null,
+				acceptableAnswers: game.isQuestionRevealed
+					? currentQuestionRecord.acceptableAnswers
+					: [],
 			}
 		: null;
 
@@ -832,7 +837,11 @@ export async function startGame(
  * enforcing host, active state, and a valid current position. Shared by
  * reveal / advance / complete flows.
  */
-async function loadHostGameContext(code: string, userId: string) {
+async function loadHostGameContext(
+	code: string,
+	userId: string,
+	options: { allowPaused?: boolean } = {},
+) {
 	const game = await prisma.game.findUnique({
 		where: { code },
 		select: {
@@ -858,10 +867,15 @@ async function loadHostGameContext(code: string, userId: string) {
 		});
 	}
 
-	if (game.status !== "active") {
+	const allowPaused = options.allowPaused === true;
+	const canPlay =
+		game.status === "active" || (allowPaused && game.status === "paused");
+	if (!canPlay) {
 		throw new ORPCError("BAD_REQUEST", {
 			message:
-				game.status === "paused" ? "Game is paused" : "Game is not active",
+				game.status === "paused" && !allowPaused
+					? "Game is paused"
+					: "Game is not active",
 		});
 	}
 
@@ -986,6 +1000,8 @@ export async function revealQuestion(
 			order: question.order,
 			text: question.text,
 			answer: question.answer,
+			explanation: question.explanation,
+			acceptableAnswers: question.acceptableAnswers,
 			expiredClicks: [],
 			isAuthoritative: true,
 		});
@@ -993,6 +1009,8 @@ export async function revealQuestion(
 			order: question.order,
 			text: question.text,
 			answer: question.answer,
+			explanation: question.explanation,
+			acceptableAnswers: question.acceptableAnswers,
 		};
 	}
 
@@ -1052,6 +1070,8 @@ export async function revealQuestion(
 		order: question.order,
 		text: question.text,
 		answer: question.answer,
+		explanation: question.explanation,
+		acceptableAnswers: question.acceptableAnswers,
 		expiredClicks,
 		isAuthoritative: true,
 	});
@@ -1060,6 +1080,8 @@ export async function revealQuestion(
 		order: question.order,
 		text: question.text,
 		answer: question.answer,
+		explanation: question.explanation,
+		acceptableAnswers: question.acceptableAnswers,
 	};
 }
 
@@ -1213,7 +1235,9 @@ export async function advanceQuestion(
 				currentQuestionOrder: nextQuestionOrder,
 				isQuestionRevealed: false,
 				totalQuestions: { increment: 1 },
-				totalSkippedQuestions: leavingWasSkipped ? { increment: 1 } : undefined,
+				totalUnresolvedQuestions: leavingWasSkipped
+					? { increment: 1 }
+					: undefined,
 				totalTopics: crossedTopicBoundary ? { increment: 1 } : undefined,
 			},
 		});
@@ -1264,6 +1288,207 @@ export async function advanceQuestion(
 		isQuestionRevealed: false,
 		currentTopic: output.currentTopic,
 		currentQuestionPublic: output.currentQuestionPublic,
+		isAuthoritative: true,
+	});
+
+	return output;
+}
+
+/**
+ * SKIP QUESTION
+ *
+ * Host abandons the current question entirely (no stats, no QDR). Deletes all
+ * buzzes and the active GameQuestion row, then moves to the next question
+ * without incrementing `totalQuestions`.
+ */
+export async function skipQuestion(
+	input: SkipQuestionInputType,
+	userId: string,
+): Promise<AdvanceQuestionOutputType> {
+	const { game, gameTopic, gameQuestion, question } = await loadHostGameContext(
+		input.code,
+		userId,
+		{ allowPaused: true },
+	);
+
+	const currentQuestionOrder = game.currentQuestionOrder as number;
+	const currentTopicOrder = game.currentTopicOrder as number;
+
+	const inclusion = await resolveSessionTopicPackOrders(
+		game.packId,
+		game.includedTopicPackOrders,
+	);
+	const lastPackTopicOrder = inclusion[inclusion.length - 1];
+
+	const isLastQuestionInTopic = currentQuestionOrder >= 5;
+	const isLastTopicInPack =
+		inclusion.length > 0 && currentTopicOrder === lastPackTopicOrder;
+
+	if (isLastQuestionInTopic && isLastTopicInPack) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "No more questions. Use 'Finish game' to complete the game.",
+		});
+	}
+
+	const now = new Date();
+	let nextTopicOrder: number;
+	let nextQuestionOrder: number;
+	let nextTopicId: string;
+
+	if (isLastQuestionInTopic) {
+		const idx = inclusion.indexOf(currentTopicOrder);
+		if (idx < 0 || idx >= inclusion.length - 1) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Next topic not found in session",
+			});
+		}
+		const nextInSession = inclusion[idx + 1];
+		if (nextInSession === undefined) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Next topic not found in session",
+			});
+		}
+		nextTopicOrder = nextInSession;
+		nextQuestionOrder = 1;
+		const nextTopic = await prisma.topic.findFirst({
+			where: { packId: game.packId, order: nextTopicOrder },
+			select: { id: true },
+		});
+		if (!nextTopic) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Next topic not found",
+			});
+		}
+		nextTopicId = nextTopic.id;
+	} else {
+		nextTopicOrder = currentTopicOrder;
+		nextQuestionOrder = currentQuestionOrder + 1;
+		nextTopicId = gameTopic.topicId;
+	}
+
+	const nextQuestion = await prisma.question.findFirst({
+		where: {
+			topicId: nextTopicId,
+			order: nextQuestionOrder,
+		},
+		select: {
+			id: true,
+			order: true,
+			text: true,
+			answer: true,
+			acceptableAnswers: true,
+			explanation: true,
+		},
+	});
+
+	if (!nextQuestion) {
+		throw new ORPCError("INTERNAL_SERVER_ERROR", {
+			message: "Next question not found",
+		});
+	}
+
+	const crossedTopicBoundary = isLastQuestionInTopic;
+
+	const packRow = await prisma.pack.findUnique({
+		where: { id: game.packId },
+		select: { status: true },
+	});
+
+	let topicBadgeEvents: Awaited<ReturnType<typeof finalizeGameTopic>> = [];
+
+	await prisma.$transaction(async (tx) => {
+		await stripAllClicksForQuestionInTx(tx, {
+			gameId: game.id,
+			packId: game.packId,
+			questionId: question.id,
+			packStatus: packRow?.status ?? null,
+		});
+
+		await tx.gameQuestion.delete({
+			where: { id: gameQuestion.id },
+		});
+
+		let nextGameTopicId = gameTopic.id;
+		if (crossedTopicBoundary) {
+			topicBadgeEvents = await finalizeGameTopic(tx, gameTopic.id);
+
+			const nextGameTopic = await tx.gameTopic.create({
+				data: {
+					gameId: game.id,
+					topicId: nextTopicId,
+					order: nextTopicOrder,
+					startedAt: now,
+				},
+				select: { id: true },
+			});
+			nextGameTopicId = nextGameTopic.id;
+		}
+
+		await tx.gameQuestion.create({
+			data: {
+				gameTopicId: nextGameTopicId,
+				questionId: nextQuestion.id,
+				order: nextQuestionOrder,
+				points: nextQuestionOrder * 100,
+				status: "active",
+				startedAt: now,
+			},
+		});
+
+		await tx.game.update({
+			where: { id: game.id },
+			data: {
+				currentTopicOrder: nextTopicOrder,
+				currentQuestionOrder: nextQuestionOrder,
+				isQuestionRevealed: false,
+				totalHostSkippedQuestions: { increment: 1 },
+				totalTopics: crossedTopicBoundary ? { increment: 1 } : undefined,
+			},
+		});
+	});
+
+	if (topicBadgeEvents.length > 0) {
+		await publishBadgeEarnedMany(input.code, topicBadgeEvents);
+	}
+
+	const nextTopicInfo = await prisma.topic.findUnique({
+		where: { id: nextTopicId },
+		select: {
+			slug: true,
+			name: true,
+			order: true,
+			description: true,
+		},
+	});
+
+	const output: AdvanceQuestionOutputType = {
+		currentTopicOrder: nextTopicOrder,
+		currentQuestionOrder: nextQuestionOrder,
+		isQuestionRevealed: false,
+		currentTopic: nextTopicInfo,
+		currentQuestionPublic: {
+			order: nextQuestion.order,
+			points: nextQuestion.order * 100,
+		},
+		hostCurrentQuestion: {
+			order: nextQuestion.order,
+			text: nextQuestion.text,
+			answer: nextQuestion.answer,
+			acceptableAnswers: nextQuestion.acceptableAnswers,
+			explanation: nextQuestion.explanation,
+		},
+	};
+
+	const channel = ablyRest.channels.get(channels.game(input.code));
+	await channel.publish(GAME_EVENTS.QUESTION_SKIPPED, {
+		currentTopicOrder: output.currentTopicOrder,
+		currentQuestionOrder: output.currentQuestionOrder,
+		isQuestionRevealed: false,
+		currentTopic: output.currentTopic,
+		currentQuestionPublic: output.currentQuestionPublic,
+		hostCurrentQuestion: output.hostCurrentQuestion,
+		skippedQuestionId: question.id,
+		skippedTopicId: gameTopic.topicId,
 		isAuthoritative: true,
 	});
 

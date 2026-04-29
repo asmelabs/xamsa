@@ -7,12 +7,34 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 17 } as const;
+const current = { year: 2026, month: 4, patch: 18 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-29",
+			year: 2026,
+			month: 4,
+			patch: 18,
+			title:
+				"Revealed answers show explanation and acceptable answers; host click removal; host skip question",
+			highlights: [
+				{
+					kind: "text",
+					text: "When a question is revealed (manually or after a resolution), players see the explanation and acceptable alternate answers when the pack defines them—same Ably payloads and API shapes as the primary answer.",
+				},
+				{
+					kind: "text",
+					text: "Hosts can remove any buzz on the current question with confirmation; score, streaks, and aggregates rewind, QDR deltas reverse for scored attempts, and clients get a CLICK_REMOVED event. Removing a correct buzz that expired others is blocked in favor of skip question.",
+				},
+				{
+					kind: "text",
+					text: "Hosts can skip the current question entirely: all buzzes are cleared without difficulty updates, the session advances without counting the question as played, and QUESTION_SKIPPED syncs the room. Recap totals split unresolved (no winner) vs host-skipped counts.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-29",
 			year: 2026,

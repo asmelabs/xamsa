@@ -21,6 +21,8 @@ import {
 	ListPublicGameHistoryOutputSchema,
 	RevealQuestionInputSchema,
 	RevealQuestionOutputSchema,
+	SkipQuestionInputSchema,
+	SkipQuestionOutputSchema,
 	UpdateGameStatusInputSchema,
 	UpdateGameStatusOutputSchema,
 } from "@xamsa/schemas/modules/game";
@@ -36,6 +38,7 @@ import {
 	handleHostDisconnect,
 	leaveAsHost,
 	revealQuestion,
+	skipQuestion,
 	startGame,
 	updateGameStatus,
 } from "./service";
@@ -97,6 +100,13 @@ export const gameRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await advanceQuestion(input, context.session.user.id),
+		),
+	skipQuestion: protectedProcedure
+		.input(SkipQuestionInputSchema)
+		.output(SkipQuestionOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await skipQuestion(input, context.session.user.id),
 		),
 	completeGame: protectedProcedure
 		.input(CompleteGameInputSchema)

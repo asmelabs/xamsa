@@ -15,6 +15,7 @@ export const ClickSchema = z.object({
   position: z.number().int(),
   reactionMs: z.number().int().nullish(),
   pointsAwarded: z.number().int(),
+  qdrEloEquivDelta: z.number().nullish(),
 });
 
 export type ClickType = z.infer<typeof ClickSchema>;

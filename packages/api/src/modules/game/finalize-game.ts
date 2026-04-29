@@ -645,7 +645,9 @@ export async function finalizeGame(
 				? { increment: 1 }
 				: undefined,
 			totalTopics: topicWasClosed ? { increment: 1 } : undefined,
-			totalSkippedQuestions: leavingWasSkipped ? { increment: 1 } : undefined,
+			totalUnresolvedQuestions: leavingWasSkipped
+				? { increment: 1 }
+				: undefined,
 			completionDeltas,
 		},
 	});

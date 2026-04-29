@@ -1523,12 +1523,16 @@ function CompletedGameStatsLoaded({
 					</Button>
 				</div>
 
-				<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+				<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
 					<SummaryStat label="Topics" value={recap.totals.totalTopics} />
 					<SummaryStat label="Questions" value={recap.totals.totalQuestions} />
 					<SummaryStat
-						label="Skipped Qs"
-						value={recap.totals.totalSkippedQuestions}
+						label="Unresolved Qs"
+						value={recap.totals.totalUnresolvedQuestions}
+					/>
+					<SummaryStat
+						label="Host skipped Qs"
+						value={recap.totals.totalHostSkippedQuestions}
 					/>
 					<SummaryStat label="Players" value={recap.players.length} />
 					<SummaryStat

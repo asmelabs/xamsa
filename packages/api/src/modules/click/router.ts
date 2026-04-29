@@ -1,10 +1,13 @@
 import {
 	ClickBuzzInputSchema,
 	ClickBuzzOutputSchema,
+	ClickRemoveInputSchema,
+	ClickRemoveOutputSchema,
 	ClickResolveInputSchema,
 	ClickResolveOutputSchema,
 } from "@xamsa/schemas/modules/click";
 import { protectedProcedure } from "../../procedures";
+import { removeClick } from "./remove-click";
 import { buzzClick, resolveClick } from "./service";
 
 export const clickRouter = {
@@ -21,5 +24,12 @@ export const clickRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await resolveClick(input, context.session.user.id),
+		),
+	remove: protectedProcedure
+		.input(ClickRemoveInputSchema)
+		.output(ClickRemoveOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await removeClick(input, context.session.user.id),
 		),
 };
