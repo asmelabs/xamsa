@@ -9,6 +9,7 @@ import {
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
 import { parseAsString, useQueryState } from "nuqs";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
@@ -43,6 +44,11 @@ export function LoginForm() {
 			if (result.error) {
 				throw new Error(result.error.message || result.error.statusText);
 			}
+
+			const {
+				user: { id, email, username, name },
+			} = result.data;
+			posthog.identify(id, { email, username, name });
 
 			assignPostAuthRedirect(callbackURL);
 		} catch (error) {

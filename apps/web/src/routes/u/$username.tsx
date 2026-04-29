@@ -46,6 +46,7 @@ import {
 	XCircleIcon,
 	ZapIcon,
 } from "lucide-react";
+import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import {
 	Bar,
@@ -353,6 +354,7 @@ function RouteComponent() {
 
 		try {
 			await authClient.signOut();
+			posthog.reset();
 			toast.success("Signed out");
 			window.location.href = "/";
 		} catch {

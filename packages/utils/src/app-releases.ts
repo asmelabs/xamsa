@@ -7,12 +7,30 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 21 } as const;
+const current = { year: 2026, month: 4, patch: 22 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-29",
+			year: 2026,
+			month: 4,
+			patch: 22,
+			title:
+				"Start implementing categories and tags, identify users for web analytics",
+			highlights: [
+				{
+					kind: "text",
+					text: "Start implementing categories and tags, identify users for web analytics",
+				},
+				{
+					kind: "text",
+					text: "For web analytics, we are identifying users by their names and usernames.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-29",
 			year: 2026,
