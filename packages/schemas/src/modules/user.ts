@@ -16,6 +16,8 @@ export const FindOneProfileOutputSchema = UserSchema.pick({
 	elo: true,
 	peakElo: true,
 	lowestElo: true,
+	totalFollowers: true,
+	totalFollowing: true,
 });
 
 export type FindOneProfileInputType = z.infer<typeof FindOneProfileInputSchema>;
@@ -191,6 +193,70 @@ export type GetPublicGameActivityInputType = z.infer<
 export type GetPublicGameActivityOutputType = z.infer<
 	typeof GetPublicGameActivityOutputSchema
 >;
+
+/**
+ * FOLLOW — state for the signed-in user viewing a profile
+ */
+export const GetFollowStateInputSchema = UserSchema.pick({
+	username: true,
+});
+
+export const GetFollowStateOutputSchema = z.object({
+	isFollowing: z.boolean(),
+});
+
+export type GetFollowStateInputType = z.infer<typeof GetFollowStateInputSchema>;
+export type GetFollowStateOutputType = z.infer<
+	typeof GetFollowStateOutputSchema
+>;
+
+export const FollowUserInputSchema = UserSchema.pick({
+	username: true,
+});
+
+export const FollowUserOutputSchema = z.object({
+	ok: z.literal(true),
+});
+
+export type FollowUserInputType = z.infer<typeof FollowUserInputSchema>;
+export type FollowUserOutputType = z.infer<typeof FollowUserOutputSchema>;
+
+export const UnfollowUserInputSchema = UserSchema.pick({
+	username: true,
+});
+
+export const UnfollowUserOutputSchema = z.object({
+	ok: z.literal(true),
+});
+
+export type UnfollowUserInputType = z.infer<typeof UnfollowUserInputSchema>;
+export type UnfollowUserOutputType = z.infer<typeof UnfollowUserOutputSchema>;
+
+const FollowListUserRowSchema = UserSchema.pick({
+	username: true,
+	name: true,
+	image: true,
+});
+
+export const ListFollowersInputSchema = z.object({
+	username: UserSchema.shape.username,
+	limit: z.number().int().min(1).max(50).default(20),
+	cursor: z.string().optional(),
+});
+
+export const ListFollowersOutputSchema = z.object({
+	items: z.array(FollowListUserRowSchema),
+	nextCursor: z.string().nullable(),
+});
+
+export type ListFollowersInputType = z.infer<typeof ListFollowersInputSchema>;
+export type ListFollowersOutputType = z.infer<typeof ListFollowersOutputSchema>;
+
+export const ListFollowingInputSchema = ListFollowersInputSchema;
+export const ListFollowingOutputSchema = ListFollowersOutputSchema;
+
+export type ListFollowingInputType = z.infer<typeof ListFollowingInputSchema>;
+export type ListFollowingOutputType = z.infer<typeof ListFollowingOutputSchema>;
 
 /**
  * GLOBAL LEADERBOARD

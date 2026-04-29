@@ -3,7 +3,11 @@ import prisma from "@xamsa/db";
 import type {
 	FindOneProfileInputType,
 	FindOneProfileOutputType,
+	FollowUserInputType,
+	FollowUserOutputType,
 	GetActiveGameOutputType,
+	GetFollowStateInputType,
+	GetFollowStateOutputType,
 	GetMyStatsOutputType,
 	GetPublicGameActivityInputType,
 	GetPublicGameActivityOutputType,
@@ -13,7 +17,13 @@ import type {
 	GetPublicStatsOutputType,
 	GetRecentGamesInputType,
 	GetRecentGamesOutputType,
+	ListFollowersInputType,
+	ListFollowersOutputType,
+	ListFollowingInputType,
+	ListFollowingOutputType,
 	RecentGameRow,
+	UnfollowUserInputType,
+	UnfollowUserOutputType,
 	UpdateProfileInputType,
 	UpdateProfileOutputType,
 } from "@xamsa/schemas/modules/user";
@@ -35,6 +45,8 @@ export async function findOneProfile(
 			elo: true,
 			peakElo: true,
 			lowestElo: true,
+			totalFollowers: true,
+			totalFollowing: true,
 		},
 	});
 
@@ -331,4 +343,212 @@ export async function getPublicRecentGames(
 	const { username, ...pagination } = input;
 	const userId = await requireUserIdByUsername(username);
 	return getRecentGames(pagination, userId);
+}
+
+function isPrismaUniqueViolation(err: unknown): boolean {
+	return (
+		typeof err === "object" &&
+		err !== null &&
+		"code" in err &&
+		(err as { code: string }).code === "P2002"
+	);
+}
+
+export async function getFollowState(
+	input: GetFollowStateInputType,
+	followerId: string,
+	followerUsername: string,
+): Promise<GetFollowStateOutputType> {
+	if (input.username === followerUsername) {
+		return { isFollowing: false };
+	}
+	const followingId = await requireUserIdByUsername(input.username);
+	const row = await prisma.userFollow.findFirst({
+		where: {
+			followerId,
+			followingId,
+			status: "accepted",
+		},
+		select: { id: true },
+	});
+	return { isFollowing: row !== null };
+}
+
+export async function followUser(
+	input: FollowUserInputType,
+	followerId: string,
+	followerUsername: string,
+): Promise<FollowUserOutputType> {
+	if (input.username === followerUsername) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "You cannot follow yourself",
+		});
+	}
+
+	const target = await prisma.user.findUnique({
+		where: { username: input.username },
+		select: { id: true },
+	});
+	if (!target) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Profile not found",
+		});
+	}
+
+	try {
+		await prisma.$transaction(async (tx) => {
+			const existing = await tx.userFollow.findUnique({
+				where: {
+					followerId_followingId: {
+						followerId,
+						followingId: target.id,
+					},
+				},
+				select: { id: true },
+			});
+			if (existing) return;
+
+			await tx.userFollow.create({
+				data: {
+					followerId,
+					followingId: target.id,
+					status: "accepted",
+				},
+			});
+			await tx.user.update({
+				where: { id: followerId },
+				data: { totalFollowing: { increment: 1 } },
+			});
+			await tx.user.update({
+				where: { id: target.id },
+				data: { totalFollowers: { increment: 1 } },
+			});
+		});
+	} catch (err) {
+		if (!isPrismaUniqueViolation(err)) throw err;
+	}
+
+	return { ok: true as const };
+}
+
+export async function unfollowUser(
+	input: UnfollowUserInputType,
+	followerId: string,
+	followerUsername: string,
+): Promise<UnfollowUserOutputType> {
+	if (input.username === followerUsername) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "You cannot unfollow yourself",
+		});
+	}
+
+	const target = await prisma.user.findUnique({
+		where: { username: input.username },
+		select: { id: true },
+	});
+	if (!target) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Profile not found",
+		});
+	}
+
+	await prisma.$transaction(async (tx) => {
+		const deleted = await tx.userFollow.deleteMany({
+			where: {
+				followerId,
+				followingId: target.id,
+				status: "accepted",
+			},
+		});
+		if (deleted.count === 0) return;
+
+		await tx.user.update({
+			where: { id: followerId },
+			data: { totalFollowing: { decrement: 1 } },
+		});
+		await tx.user.update({
+			where: { id: target.id },
+			data: { totalFollowers: { decrement: 1 } },
+		});
+	});
+
+	return { ok: true as const };
+}
+
+export async function listFollowers(
+	input: ListFollowersInputType,
+): Promise<ListFollowersOutputType> {
+	const limit = input.limit;
+	const profileId = await requireUserIdByUsername(input.username);
+
+	const rows = await prisma.userFollow.findMany({
+		where: {
+			followingId: profileId,
+			status: "accepted",
+		},
+		orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+		take: limit + 1,
+		...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+		select: {
+			id: true,
+			follower: {
+				select: { username: true, name: true, image: true },
+			},
+		},
+	});
+
+	const hasNext = rows.length > limit;
+	const pageRows = hasNext ? rows.slice(0, limit) : rows;
+
+	const items = pageRows.map((r) => ({
+		username: r.follower.username,
+		name: r.follower.name,
+		image: r.follower.image,
+	}));
+
+	const nextCursor =
+		hasNext && pageRows.length > 0
+			? (pageRows[pageRows.length - 1]?.id ?? null)
+			: null;
+
+	return { items, nextCursor };
+}
+
+export async function listFollowing(
+	input: ListFollowingInputType,
+): Promise<ListFollowingOutputType> {
+	const limit = input.limit;
+	const profileId = await requireUserIdByUsername(input.username);
+
+	const rows = await prisma.userFollow.findMany({
+		where: {
+			followerId: profileId,
+			status: "accepted",
+		},
+		orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+		take: limit + 1,
+		...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+		select: {
+			id: true,
+			following: {
+				select: { username: true, name: true, image: true },
+			},
+		},
+	});
+
+	const hasNext = rows.length > limit;
+	const pageRows = hasNext ? rows.slice(0, limit) : rows;
+
+	const items = pageRows.map((r) => ({
+		username: r.following.username,
+		name: r.following.name,
+		image: r.following.image,
+	}));
+
+	const nextCursor =
+		hasNext && pageRows.length > 0
+			? (pageRows[pageRows.length - 1]?.id ?? null)
+			: null;
+
+	return { items, nextCursor };
 }

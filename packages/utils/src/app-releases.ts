@@ -7,12 +7,30 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 18 } as const;
+const current = { year: 2026, month: 4, patch: 19 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 19,
+			title:
+				"User follow system: profile counts, follow/unfollow, follower and following lists",
+			highlights: [
+				{
+					kind: "text",
+					text: "Public profiles show follower and following counts; signed-in visitors can follow or unfollow other players (not themselves). Denormalized totals stay in sync with the new user_follow table.",
+				},
+				{
+					kind: "text",
+					text: "Tapping followers or following opens a paginated list of people with avatars and links to their profiles—ready for future feed, notification, and follower-only pack features.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-29",
 			year: 2026,

@@ -4,6 +4,7 @@
  */
 
 export { UserSchema } from './User.schema';
+export { UserFollowSchema } from './UserFollow.schema';
 export { SessionSchema } from './Session.schema';
 export { AccountSchema } from './Account.schema';
 export { VerificationSchema } from './Verification.schema';

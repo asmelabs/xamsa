@@ -118,6 +118,66 @@ Then introduce a new field `Game.totalHostSkippedQuestions: Int @default(0)` to 
 
 ## v26.04.19
 
+- Introduce following system
+- Add UserFollow table.
+
+something like this:
+
+```prisma
+enum FollowStatus {
+  accepted // the following user has accepted the follow request, currently active follow
+}
+
+// note: for now, there is only accepted status, follows are automatic
+// in future, we will add other statuses like pending, rejected, etc.
+
+model UserFollow {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  status FollowStatus @default(accepted)
+
+  followerId  String @map("follower_id")
+  followingId String @map("following_id")
+
+  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follow")
+}
+```
+
+add this to User model:
+
+```prisma
+ /// follow relationships ///
+  totalFollowers  Int @default(0) @map("total_followers")
+  totalFollowing  Int @default(0) @map("total_following")
+
+ /// Users this user is following (this user is the follower)
+  following UserFollow[] @relation("UserFollows")
+  /// Users following this user (this user is being followed)
+  followers UserFollow[] @relation("UserFollowers")
+
+  // ...rest stays the same...
+```
+
+Anti-patterns to avoid:
+
+- do not forget self-follow prevention
+- do not forget to update totalFollowers and totalFollowing when following/unfollowing
+
+Notes:
+
+- Implement database changes
+- Add follow/unfollow services to api
+- Add follow/unfollow buttons on user profile page (if authorized, and not self)
+- Add total followers and total following counts on user profile page (when clicking on them it should open a list of followers/following people with cursor pagination)
+- Currently follows have no implementation further. In future, we will add features for follows. Like home page feed, notifications, follower only packs, etc.
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
