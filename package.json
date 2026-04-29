@@ -23,7 +23,9 @@
 			"@orpc/zod": "^1.12.2",
 			"better-auth": "1.5.5",
 			"@types/react": "^19.2.10",
-			"@types/react-dom": "^19.2.3"
+			"@types/react-dom": "^19.2.3",
+			"fast-xml-parser": "^4.5.1",
+			"yaml": "^2.7.0"
 		}
 	},
 	"type": "module",

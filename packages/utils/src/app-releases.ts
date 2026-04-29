@@ -7,12 +7,34 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 20 } as const;
+const current = { year: 2026, month: 4, patch: 21 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-29",
+			year: 2026,
+			month: 4,
+			patch: 21,
+			title:
+				"Structured topic import: TXT, CSV, JSON, XML, YAML, HTTPS URL, and Import dialog",
+			highlights: [
+				{
+					kind: "text",
+					text: "Bulk topic creation uses one Import dialog with tabs for copy/paste, local file, HTTPS URL (server fetch with SSRF and size limits), and 3sual (moderators/admins). Parsed drafts fill the bulk editor for review before you start the background job.",
+				},
+				{
+					kind: "text",
+					text: "Up to 200 topics apply when topics are loaded via structured import or 3sual; manual entry without import stays capped at 20 per submission, matching server validation.",
+				},
+				{
+					kind: "text",
+					text: "On bulk topic creation, each row’s five questions use the same carousel and step dots as the single-topic editor, so you can see progress (text + answer filled) without scrolling a long stack.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-29",
 			year: 2026,

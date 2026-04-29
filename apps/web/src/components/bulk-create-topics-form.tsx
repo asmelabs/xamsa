@@ -1,11 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
 	BULK_TOPICS_MAX,
 	BULK_TOPICS_MAX_TSUAL_IMPORT,
 } from "@xamsa/schemas/common/bulk";
 import { CreateTopicPayloadSchema } from "@xamsa/schemas/modules/topic";
 import { Button } from "@xamsa/ui/components/button";
+import {
+	Carousel,
+	type CarouselApi,
+	CarouselContent,
+	CarouselItem,
+	CarouselNext,
+	CarouselPrevious,
+} from "@xamsa/ui/components/carousel";
 import {
 	Dialog,
 	DialogContent,
@@ -24,22 +32,20 @@ import {
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
 import { Label } from "@xamsa/ui/components/label";
-import {
-	Popover,
-	PopoverPopup,
-	PopoverTrigger,
-} from "@xamsa/ui/components/popover";
 import { Textarea } from "@xamsa/ui/components/textarea";
+import { cn } from "@xamsa/ui/lib/utils";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
-import { CircleHelp, Download, Sparkles, Wand2 } from "lucide-react";
-import { useRef, useState } from "react";
-import { useFieldArray } from "react-hook-form";
+import { Check, Download, Sparkles, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FormProvider, useFieldArray, useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { FormInput } from "@/components/form-input";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 import { TopicBulkJobDialog } from "./topic-bulk-job-dialog";
+import { TopicImportDialog } from "./topic-import-dialog";
 
 const emptyQuestion = {
 	text: "",
@@ -49,16 +55,7 @@ const emptyQuestion = {
 	explanation: "",
 };
 
-const FormSchema = z.object({
-	topics: z
-		.array(CreateTopicPayloadSchema)
-		.min(1)
-		.max(BULK_TOPICS_MAX_TSUAL_IMPORT),
-});
-
-type FormValues = z.infer<typeof FormSchema>;
-
-function emptyTopic(): FormValues["topics"][number] {
+function emptyTopic(): z.infer<typeof CreateTopicPayloadSchema> {
 	return {
 		name: "",
 		description: "",
@@ -79,14 +76,145 @@ function isModeratorOrAdmin(
 	return r === "moderator" || r === "admin";
 }
 
+type BulkTopicsFormValues = {
+	topics: z.infer<typeof CreateTopicPayloadSchema>[];
+};
+
+function BulkTopicQuestionsCarousel({ topicIndex }: { topicIndex: number }) {
+	const { control, watch } = useFormContext<BulkTopicsFormValues>();
+	const [api, setApi] = useState<CarouselApi>();
+	const [currentSlide, setCurrentSlide] = useState(0);
+
+	const questions = watch(`topics.${topicIndex}.questions`) ?? [];
+	const questionStatus = questions.map(
+		(q) => q.text.trim().length > 0 && q.answer.trim().length > 0,
+	);
+	const filledCount = questionStatus.filter(Boolean).length;
+
+	useEffect(() => {
+		if (!api) return;
+		const onSelect = () => setCurrentSlide(api.selectedScrollSnap());
+		api.on("select", onSelect);
+		return () => {
+			api.off("select", onSelect);
+		};
+	}, [api]);
+
+	return (
+		<div className="space-y-4">
+			<div className="flex items-center justify-between">
+				<p className="font-semibold text-sm">
+					Questions{" "}
+					<span className="font-normal text-muted-foreground">
+						({filledCount}/{QUESTIONS_PER_TOPIC})
+					</span>
+				</p>
+			</div>
+
+			<div className="flex items-center justify-center gap-2">
+				{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, i) => (
+					<button
+						key={i}
+						type="button"
+						onClick={() => api?.scrollTo(i)}
+						className={cn(
+							"flex size-7 items-center justify-center rounded-full border text-xs transition-all",
+							currentSlide === i
+								? "border-primary bg-primary text-primary-foreground"
+								: questionStatus[i]
+									? "border-primary/50 bg-primary/10 text-primary"
+									: "border-border text-muted-foreground",
+						)}
+					>
+						{questionStatus[i] ? <Check className="size-3.5" /> : i + 1}
+					</button>
+				))}
+			</div>
+
+			<Carousel
+				className="mx-auto w-full"
+				opts={{ watchDrag: false }}
+				setApi={setApi}
+			>
+				<CarouselContent>
+					{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, index) => (
+						<CarouselItem key={index}>
+							<div className="space-y-5 px-1">
+								<FormInput
+									control={control}
+									name={`topics.${topicIndex}.questions.${index}.text`}
+									label={`Question ${index + 1}`}
+								>
+									{(f) => (
+										<Textarea
+											{...f}
+											placeholder="Clue / question"
+											maxLength={1000}
+											rows={3}
+										/>
+									)}
+								</FormInput>
+
+								<FormInput
+									control={control}
+									name={`topics.${topicIndex}.questions.${index}.answer`}
+									label="Answer"
+								>
+									{(f) => (
+										<Input
+											{...f}
+											placeholder="Primary answer"
+											maxLength={250}
+										/>
+									)}
+								</FormInput>
+
+								<FormInput
+									control={control}
+									name={`topics.${topicIndex}.questions.${index}.explanation`}
+									label="Explanation (optional)"
+								>
+									{(f) => (
+										<Textarea
+											{...f}
+											maxLength={1000}
+											placeholder="Optional note about the answer for the host"
+											rows={2}
+											value={f.value || ""}
+										/>
+									)}
+								</FormInput>
+							</div>
+						</CarouselItem>
+					))}
+				</CarouselContent>
+
+				<div className="mt-4 flex items-center justify-between">
+					<CarouselPrevious className="static translate-y-0" type="button" />
+					<p className="text-muted-foreground text-xs">
+						{currentSlide + 1} of {QUESTIONS_PER_TOPIC}
+					</p>
+					<CarouselNext className="static translate-y-0" type="button" />
+				</div>
+			</Carousel>
+		</div>
+	);
+}
+
 export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const { data: session } = authClient.useSession();
 	const canImport3sual = isModeratorOrAdmin(session?.user);
 
-	const [tsualDialogOpen, setTsualDialogOpen] = useState(false);
-	const [tsualRaw, setTsualRaw] = useState("");
+	const locationState = useRouterState({
+		select: (s) => s.location.state,
+	});
+	const consumedLocationPrefillRef = useRef(false);
+
+	const [importDialogOpen, setImportDialogOpen] = useState(false);
+	const [importedViaStructuredImport, setImportedViaStructuredImport] =
+		useState(false);
 	/** Set after a successful 3sual preview; sent with bulkCreate to record the import. */
 	const [pendingTsualPackageId, setPendingTsualPackageId] = useState<
 		number | null
@@ -118,37 +246,80 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 		...orpc.topic.generateTopic.mutationOptions(),
 	});
 
+	const largeBatchAllowed =
+		pendingTsualPackageId !== null || importedViaStructuredImport;
+
+	const formSchema = useMemo(
+		() =>
+			z.object({
+				topics: z
+					.array(CreateTopicPayloadSchema)
+					.min(1)
+					.max(
+						largeBatchAllowed ? BULK_TOPICS_MAX_TSUAL_IMPORT : BULK_TOPICS_MAX,
+					),
+			}),
+		[largeBatchAllowed],
+	);
+
 	const form = useAppForm({
-		schema: FormSchema,
+		schema: formSchema,
 		defaultValues: {
 			topics: [emptyTopic()],
 		},
 	});
 
-	const { mutate: previewTsualImport, isPending: isTsualPending } = useMutation(
-		{
-			...orpc.tsual.previewImport.mutationOptions(),
-			onSuccess: (data) => {
-				if (data.topics.length > BULK_TOPICS_MAX_TSUAL_IMPORT) {
-					toast.error(
-						`This package has more than ${String(BULK_TOPICS_MAX_TSUAL_IMPORT)} topics; cannot load.`,
-					);
-					return;
-				}
-				form.reset({ topics: data.topics });
-				setPendingTsualPackageId(data.tsualPackageId);
-				setTsualSourceName(data.sourceName);
-				setTsualDialogOpen(false);
-				setTsualRaw("");
-				toast.success(
-					"3sual draft loaded — review and edit, then create topics.",
-				);
-			},
-			onError: (error) => {
-				toast.error(error.message || "3sual import failed.");
-			},
-		},
-	);
+	useEffect(() => {
+		const s = locationState as
+			| {
+					prefilledTopics?: z.infer<typeof CreateTopicPayloadSchema>[];
+					importedViaStructuredImport?: boolean;
+					prefilledTsualPackageId?: number;
+					prefilledTsualSourceName?: string;
+			  }
+			| undefined;
+
+		if (!s?.prefilledTopics?.length) {
+			consumedLocationPrefillRef.current = false;
+			return;
+		}
+		if (consumedLocationPrefillRef.current) return;
+		consumedLocationPrefillRef.current = true;
+
+		form.reset({ topics: s.prefilledTopics });
+		if (s.prefilledTsualPackageId != null) {
+			setPendingTsualPackageId(s.prefilledTsualPackageId);
+			setTsualSourceName(s.prefilledTsualSourceName ?? null);
+			setImportedViaStructuredImport(false);
+		} else {
+			setPendingTsualPackageId(null);
+			setTsualSourceName(null);
+			setImportedViaStructuredImport(!!s.importedViaStructuredImport);
+		}
+
+		void navigate({
+			to: "/packs/$packSlug/topics/bulk",
+			params: { packSlug },
+			replace: true,
+			state: {},
+		});
+	}, [locationState, navigate, packSlug]);
+
+	const onTopicsImported = (payload: {
+		topics: z.infer<typeof CreateTopicPayloadSchema>[];
+		meta?: { tsualPackageId?: number; sourceLabel?: string };
+	}) => {
+		form.reset({ topics: payload.topics });
+		if (payload.meta?.tsualPackageId != null) {
+			setPendingTsualPackageId(payload.meta.tsualPackageId);
+			setTsualSourceName(payload.meta.sourceLabel ?? null);
+			setImportedViaStructuredImport(false);
+		} else {
+			setPendingTsualPackageId(null);
+			setTsualSourceName(null);
+			setImportedViaStructuredImport(true);
+		}
+	};
 
 	const { fields, append, remove } = useFieldArray({
 		control: form.control,
@@ -168,6 +339,9 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 				...(pendingTsualPackageId != null
 					? { importedFromTsualPackageId: pendingTsualPackageId }
 					: {}),
+				...(importedViaStructuredImport && pendingTsualPackageId == null
+					? { importedViaStructuredImport: true }
+					: {}),
 			});
 			setActiveJobId(jobId);
 			setJobDialogOpen(true);
@@ -179,6 +353,12 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 		}
 	});
 
+	const {
+		Input: TopicsFormInput,
+		Submit: TopicsFormSubmit,
+		...formProviderState
+	} = form;
+
 	return (
 		<Frame>
 			<FrameHeader>
@@ -186,29 +366,27 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 				<p className="text-muted-foreground text-sm">
 					Each topic needs {String(QUESTIONS_PER_TOPIC)} questions. Up to{" "}
 					{String(BULK_TOPICS_MAX)} per submission when adding by hand, or up to{" "}
-					{String(BULK_TOPICS_MAX_TSUAL_IMPORT)} when using Import from 3sual.
+					{String(BULK_TOPICS_MAX_TSUAL_IMPORT)} when using Import (file, URL,
+					paste, or 3sual for moderators).
 				</p>
-				{canImport3sual && (
-					<div className="flex flex-wrap items-center gap-2 pt-1">
-						<Button
-							type="button"
-							variant="secondary"
-							size="sm"
-							disabled={isStartingJob || isTsualPending}
-							onClick={() => setTsualDialogOpen(true)}
-						>
-							<Download className="mr-1.5 size-4" />
-							Import from 3sual
-						</Button>
-						{tsualSourceName && pendingTsualPackageId != null && (
-							<p className="text-muted-foreground text-xs">
-								3sual pack “{tsualSourceName}” (ID{" "}
-								{String(pendingTsualPackageId)}) — not saved until you create
-								topics.
-							</p>
-						)}
-					</div>
-				)}
+				<div className="flex flex-wrap items-center gap-2 pt-1">
+					<Button
+						type="button"
+						variant="secondary"
+						size="sm"
+						disabled={isStartingJob}
+						onClick={() => setImportDialogOpen(true)}
+					>
+						<Download className="mr-1.5 size-4" />
+						Import
+					</Button>
+					{tsualSourceName && pendingTsualPackageId != null && (
+						<p className="text-muted-foreground text-xs">
+							3sual pack “{tsualSourceName}” (ID {String(pendingTsualPackageId)}
+							) — not saved until you create topics.
+						</p>
+					)}
+				</div>
 				{aiQuota && session?.user && (
 					<p className="text-muted-foreground text-xs">
 						AI generations today: {String(aiQuota.used)} /{" "}
@@ -218,174 +396,136 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 					</p>
 				)}
 			</FrameHeader>
-			<form onSubmit={onSubmit} className="space-y-6">
-				{fields.map((field, topicIndex) => (
-					<FramePanel key={field.id} className="space-y-4">
-						<div className="flex items-center justify-between gap-2">
-							<p className="font-medium text-sm">Topic {topicIndex + 1}</p>
-							{fields.length > 1 && (
+			<FormProvider {...formProviderState}>
+				<form className="space-y-6" onSubmit={onSubmit}>
+					{fields.map((field, topicIndex) => (
+						<FramePanel key={field.id} className="space-y-4">
+							<div className="flex items-center justify-between gap-2">
+								<p className="font-medium text-sm">Topic {topicIndex + 1}</p>
+								{fields.length > 1 && (
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onClick={() => remove(topicIndex)}
+									>
+										Remove topic
+									</Button>
+								)}
+							</div>
+							<TopicsFormInput name={`topics.${topicIndex}.name`} label="Name">
+								{(f) => (
+									<Input
+										{...f}
+										placeholder="Topic name"
+										maxLength={100}
+										autoComplete="off"
+									/>
+								)}
+							</TopicsFormInput>
+							<TopicsFormInput
+								name={`topics.${topicIndex}.description`}
+								label="Description"
+							>
+								{(f) => (
+									<Textarea
+										{...f}
+										value={f.value || ""}
+										placeholder="Optional"
+										maxLength={1000}
+										rows={2}
+									/>
+								)}
+							</TopicsFormInput>
+
+							<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
 								<Button
 									type="button"
 									variant="ghost"
 									size="sm"
-									onClick={() => remove(topicIndex)}
-								>
-									Remove topic
-								</Button>
-							)}
-						</div>
-						<form.Input name={`topics.${topicIndex}.name`} label="Name">
-							{(f) => (
-								<Input
-									{...f}
-									placeholder="Topic name"
-									maxLength={100}
-									autoComplete="off"
-								/>
-							)}
-						</form.Input>
-						<form.Input
-							name={`topics.${topicIndex}.description`}
-							label="Description"
-						>
-							{(f) => (
-								<Textarea
-									{...f}
-									value={f.value || ""}
-									placeholder="Optional"
-									maxLength={1000}
-									rows={2}
-								/>
-							)}
-						</form.Input>
-
-						<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								disabled={
-									!session?.user ||
-									isStartingJob ||
-									isAiPending ||
-									isAiTopicPending ||
-									!aiQuota ||
-									aiQuota.used >= aiQuota.limit
-								}
-								onClick={() =>
-									setAiTopicDialog({
-										topicIndex,
-										seed: "",
-										authorPrompt: "",
-									})
-								}
-							>
-								<Wand2 className="mr-1.5 size-4" />
-								{isAiTopicPending ? "Generating…" : "AI topic"}
-							</Button>
-							<Button
-								type="button"
-								variant="secondary"
-								size="sm"
-								disabled={
-									!session?.user ||
-									isStartingJob ||
-									isAiPending ||
-									isAiTopicPending ||
-									!aiQuota ||
-									aiQuota.used >= aiQuota.limit ||
-									!(form.getValues(`topics.${topicIndex}.name`)?.trim() ?? "")
-								}
-								onClick={() => {
-									const topicName =
-										form.getValues(`topics.${topicIndex}.name`)?.trim() ?? "";
-									if (!topicName) {
-										toast.error("Enter a name for this topic first.");
-										return;
+									disabled={
+										!session?.user ||
+										isStartingJob ||
+										isAiPending ||
+										isAiTopicPending ||
+										!aiQuota ||
+										aiQuota.used >= aiQuota.limit
 									}
-									setAiAuthorDialog({ topicIndex, authorPrompt: "" });
-								}}
-							>
-								<Sparkles className="mr-1.5 size-4" />
-								{isAiPending ? "Generating…" : "Generate questions with AI"}
-							</Button>
-						</div>
-						<p className="text-muted-foreground text-xs">
-							“AI topic” fills this row’s name and description (one credit).
-							“Generate questions with AI” fills its five questions (one
-							credit). Verify facts before creating.
-						</p>
-
-						<div className="space-y-3">
-							<p className="text-muted-foreground text-xs">Questions</p>
-							{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, qIndex) => (
-								<div
-									key={qIndex}
-									className="space-y-2 rounded-lg border bg-muted/30 p-3"
+									onClick={() =>
+										setAiTopicDialog({
+											topicIndex,
+											seed: "",
+											authorPrompt: "",
+										})
+									}
 								>
-									<p className="font-medium text-xs">Question {qIndex + 1}</p>
-									<form.Input
-										name={`topics.${topicIndex}.questions.${qIndex}.text`}
-										label="Text"
-									>
-										{(f) => (
-											<Textarea
-												{...f}
-												placeholder="Clue / question"
-												maxLength={1000}
-												rows={2}
-											/>
-										)}
-									</form.Input>
-									<form.Input
-										name={`topics.${topicIndex}.questions.${qIndex}.answer`}
-										label="Answer"
-									>
-										{(f) => (
-											<Input
-												{...f}
-												placeholder="Primary answer"
-												maxLength={250}
-											/>
-										)}
-									</form.Input>
-									<form.Input
-										name={`topics.${topicIndex}.questions.${qIndex}.explanation`}
-										label="Explanation (optional)"
-									>
-										{(f) => (
-											<Textarea
-												{...f}
-												value={f.value || ""}
-												rows={1}
-												maxLength={1000}
-											/>
-										)}
-									</form.Input>
-								</div>
-							))}
-						</div>
+									<Wand2 className="mr-1.5 size-4" />
+									{isAiTopicPending ? "Generating…" : "AI topic"}
+								</Button>
+								<Button
+									type="button"
+									variant="secondary"
+									size="sm"
+									disabled={
+										!session?.user ||
+										isStartingJob ||
+										isAiPending ||
+										isAiTopicPending ||
+										!aiQuota ||
+										aiQuota.used >= aiQuota.limit ||
+										!(form.getValues(`topics.${topicIndex}.name`)?.trim() ?? "")
+									}
+									onClick={() => {
+										const topicName =
+											form.getValues(`topics.${topicIndex}.name`)?.trim() ?? "";
+										if (!topicName) {
+											toast.error("Enter a name for this topic first.");
+											return;
+										}
+										setAiAuthorDialog({ topicIndex, authorPrompt: "" });
+									}}
+								>
+									<Sparkles className="mr-1.5 size-4" />
+									{isAiPending ? "Generating…" : "Generate questions with AI"}
+								</Button>
+							</div>
+							<p className="text-muted-foreground text-xs">
+								“AI topic” fills this row’s name and description (one credit).
+								“Generate questions with AI” fills its five questions (one
+								credit). Verify facts before creating.
+							</p>
+
+							<BulkTopicQuestionsCarousel topicIndex={topicIndex} />
+						</FramePanel>
+					))}
+
+					<FramePanel className="border-dashed">
+						<Button
+							type="button"
+							variant="outline"
+							className="w-full"
+							disabled={
+								fields.length >=
+								(largeBatchAllowed
+									? BULK_TOPICS_MAX_TSUAL_IMPORT
+									: BULK_TOPICS_MAX)
+							}
+							onClick={() => append(emptyTopic())}
+						>
+							Add another topic
+						</Button>
 					</FramePanel>
-				))}
 
-				<FramePanel className="border-dashed">
-					<Button
-						type="button"
-						variant="outline"
-						className="w-full"
-						disabled={fields.length >= BULK_TOPICS_MAX_TSUAL_IMPORT}
-						onClick={() => append(emptyTopic())}
-					>
-						Add another topic
-					</Button>
-				</FramePanel>
-
-				<FrameFooter>
-					<form.Submit isLoading={isStartingJob} loadingText="Starting import…">
-						Create {fields.length} topic{fields.length > 1 ? "s" : ""}
-					</form.Submit>
-				</FrameFooter>
-			</form>
+					<FrameFooter>
+						<TopicsFormSubmit
+							isLoading={isStartingJob}
+							loadingText="Starting import…"
+						>
+							Create {fields.length} topic{fields.length > 1 ? "s" : ""}
+						</TopicsFormSubmit>
+					</FrameFooter>
+				</form>
+			</FormProvider>
 
 			<Dialog
 				onOpenChange={(open) => {
@@ -618,75 +758,12 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 				</DialogContent>
 			</Dialog>
 
-			<Dialog onOpenChange={setTsualDialogOpen} open={tsualDialogOpen}>
-				<DialogContent className="sm:max-w-md" showCloseButton>
-					<DialogHeader>
-						<div className="flex items-center gap-1">
-							<DialogTitle>Import from 3sual.az</DialogTitle>
-							<Popover>
-								<PopoverTrigger
-									aria-label="How to get package id"
-									className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground"
-									type="button"
-								>
-									<CircleHelp className="size-4" />
-								</PopoverTrigger>
-								<PopoverPopup align="start" className="max-w-sm" side="bottom">
-									<div className="space-y-2 text-muted-foreground text-sm">
-										<p>
-											Open a package on 3sual.az for <strong>Fərdi Oyun</strong>{" "}
-											or <strong>Xəmsə Milli İntellektual Oyunu</strong> (other
-											game types are not supported).
-										</p>
-										<p>
-											Copy the number from the URL bar, for example{" "}
-											<code className="text-foreground text-xs">
-												https://3sual.az/package/3946
-											</code>{" "}
-											→ use <strong>3946</strong>, or paste the full URL in the
-											field.
-										</p>
-									</div>
-								</PopoverPopup>
-							</Popover>
-						</div>
-						<DialogDescription>
-							Loads a preview into this form. Nothing is saved until you click
-							Create.
-						</DialogDescription>
-					</DialogHeader>
-					<DialogPanel>
-						<div className="space-y-2">
-							<label className="font-medium text-sm" htmlFor="tsual-raw">
-								Package ID or 3sual URL
-							</label>
-							<Input
-								autoComplete="off"
-								id="tsual-raw"
-								onChange={(e) => setTsualRaw(e.target.value)}
-								placeholder="3946 or https://3sual.az/package/3946"
-								value={tsualRaw}
-							/>
-						</div>
-					</DialogPanel>
-					<DialogFooter>
-						<Button
-							onClick={() => setTsualDialogOpen(false)}
-							type="button"
-							variant="outline"
-						>
-							Cancel
-						</Button>
-						<Button
-							disabled={!tsualRaw.trim() || isTsualPending}
-							onClick={() => previewTsualImport({ raw: tsualRaw })}
-							type="button"
-						>
-							{isTsualPending ? "Loading…" : "Load preview"}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<TopicImportDialog
+				canImport3sual={canImport3sual}
+				onImported={onTopicsImported}
+				onOpenChange={setImportDialogOpen}
+				open={importDialogOpen}
+			/>
 
 			<TopicBulkJobDialog
 				jobId={activeJobId}
@@ -698,6 +775,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 					form.reset({ topics: [emptyTopic()] });
 					setPendingTsualPackageId(null);
 					setTsualSourceName(null);
+					setImportedViaStructuredImport(false);
 					setActiveJobId(null);
 					setJobDialogOpen(false);
 					navigate({

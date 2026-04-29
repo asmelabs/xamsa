@@ -17,6 +17,9 @@ import {
 	GetBulkCreateJobOutputSchema,
 	ListTopicsInputSchema,
 	ListTopicsOutputSchema,
+	PreviewStructuredImportFromUrlInputSchema,
+	PreviewStructuredImportInputSchema,
+	PreviewStructuredImportOutputSchema,
 	StartBulkCreateJobOutputSchema,
 	UpdateTopicInputSchema,
 	UpdateTopicOutputSchema,
@@ -31,6 +34,7 @@ import {
 	getAiTopicQuota,
 } from "./ai.service";
 import { getBulkCreateJob, startBulkCreateJob } from "./bulk-job.service";
+import { previewStructuredImportFromRemoteUrl } from "./fetch-import-url";
 import {
 	bulkCreateTopics,
 	createTopic,
@@ -41,6 +45,7 @@ import {
 	updateTopic,
 	updateTopicsOrder,
 } from "./service";
+import { previewStructuredImportFromBody } from "./structured-import";
 
 export const topicRouter = {
 	create: protectedProcedure
@@ -89,6 +94,14 @@ export const topicRouter = {
 		.input(z.object({}))
 		.output(GetAiTopicQuotaOutputSchema)
 		.handler(async ({ context }) => getAiTopicQuota(context.session.user.id)),
+	previewStructuredImport: protectedProcedure
+		.input(PreviewStructuredImportInputSchema)
+		.output(PreviewStructuredImportOutputSchema)
+		.handler(({ input }) => previewStructuredImportFromBody(input)),
+	previewStructuredImportFromUrl: protectedProcedure
+		.input(PreviewStructuredImportFromUrlInputSchema)
+		.output(PreviewStructuredImportOutputSchema)
+		.handler(async ({ input }) => previewStructuredImportFromRemoteUrl(input)),
 	list: publicProcedure
 		.input(ListTopicsInputSchema)
 		.output(ListTopicsOutputSchema)
