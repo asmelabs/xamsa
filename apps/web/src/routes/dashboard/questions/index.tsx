@@ -29,6 +29,7 @@ const SORT_OPTIONS: AdminSortOption[] = (
 			order: "Order",
 			topic_order: "Topic order",
 			text_length: "Text length",
+			qdr: "QDR",
 		}[value] ?? value,
 }));
 
@@ -81,6 +82,10 @@ function RouteComponent() {
 				},
 			}),
 			col.accessor("order", { header: "Q #" }),
+			col.accessor("qdr", {
+				header: "QDR",
+				cell: (c) => c.getValue().toFixed(2),
+			}),
 			col.accessor("topic", {
 				header: "Topic / pack",
 				cell: (c) => {

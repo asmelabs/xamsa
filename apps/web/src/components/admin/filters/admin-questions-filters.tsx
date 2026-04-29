@@ -9,12 +9,20 @@ import { BetterDialog } from "@/components/better-dialog";
 import { useAdminPeriodQuery } from "@/hooks/admin-filters/period";
 import { countTruthy, parseCommaList } from "@/lib/csv-query";
 
+function parseOptionalNum(s: string | null | undefined): number | undefined {
+	if (s == null || s === "") return undefined;
+	const n = Number(s);
+	return Number.isFinite(n) ? n : undefined;
+}
+
 export function useAdminQuestionsFilterUI() {
 	const { from, to, fromStr, toStr, setFromStr, setToStr } =
 		useAdminPeriodQuery();
 	const [packs, setPacks] = useQueryState("qps", parseAsString);
 	const [top, setTop] = useQueryState("qts", parseAsString);
 	const [auths, setAuths] = useQueryState("qau", parseAsString);
+	const [minQdr, setMinQdr] = useQueryState("mqdr", parseAsString);
+	const [maxQdr, setMaxQdr] = useQueryState("xqdr", parseAsString);
 	const [fo, setFo] = useQueryState("qfo", parseAsBoolean.withDefault(false));
 
 	const filterInput = useMemo((): Partial<ListAdminQuestionsInputType> => {
@@ -28,7 +36,7 @@ export function useAdminQuestionsFilterUI() {
 			...(from ? { from } : {}),
 			...(to ? { to } : {}),
 		};
-	}, [packs, top, auths, from, to]);
+	}, [packs, top, auths, minQdr, maxQdr, from, to]);
 
 	const activeCount = useMemo(
 		() =>
@@ -36,16 +44,20 @@ export function useAdminQuestionsFilterUI() {
 				{ value: parseCommaList(packs) },
 				{ value: parseCommaList(top) },
 				{ value: parseCommaList(auths) },
+				{ value: parseOptionalNum(minQdr) },
+				{ value: parseOptionalNum(maxQdr) },
 				{ value: fromStr },
 				{ value: toStr },
 			]),
-		[packs, top, auths, fromStr, toStr],
+		[packs, top, auths, minQdr, maxQdr, fromStr, toStr],
 	);
 
 	const clear = () => {
 		void setPacks(null);
 		void setTop(null);
 		void setAuths(null);
+		void setMinQdr(null);
+		void setMaxQdr(null);
 		void setFromStr(null);
 		void setToStr(null);
 	};
@@ -94,6 +106,26 @@ export function useAdminQuestionsFilterUI() {
 							value={auths ?? ""}
 							onChange={(e) => void setAuths(e.target.value || null)}
 						/>
+					</div>
+					<div className="grid grid-cols-2 gap-2">
+						<div className="space-y-1">
+							<Label>Min QDR</Label>
+							<Input
+								type="number"
+								step="0.01"
+								value={minQdr ?? ""}
+								onChange={(e) => void setMinQdr(e.target.value || null)}
+							/>
+						</div>
+						<div className="space-y-1">
+							<Label>Max QDR</Label>
+							<Input
+								type="number"
+								step="0.01"
+								value={maxQdr ?? ""}
+								onChange={(e) => void setMaxQdr(e.target.value || null)}
+							/>
+						</div>
 					</div>
 					<div className="grid grid-cols-2 gap-2">
 						<div className="space-y-1">

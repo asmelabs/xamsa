@@ -43,6 +43,8 @@ export function useAdminPacksFilterUI() {
 	const [maxR, setMaxR] = useQueryState("xrat", parseAsString);
 	const [minP, setMinP] = useQueryState("mplay", parseAsString);
 	const [maxP, setMaxP] = useQueryState("xplay", parseAsString);
+	const [minPdr, setMinPdr] = useQueryState("mpdr", parseAsString);
+	const [maxPdr, setMaxPdr] = useQueryState("xpdr", parseAsString);
 	const [hasRatings, setHasRatings] = useQueryState(
 		"hasr",
 		parseAsBoolean.withDefault(false),
@@ -60,6 +62,8 @@ export function useAdminPacksFilterUI() {
 		const maxRating = parseOptionalNum(maxR);
 		const minPlay = parseOptionalNum(minP);
 		const maxPlay = parseOptionalNum(maxP);
+		const minPdrN = parseOptionalNum(minPdr);
+		const maxPdrN = parseOptionalNum(maxPdr);
 
 		return {
 			...(authorUsernames ? { authorUsernames } : {}),
@@ -69,6 +73,8 @@ export function useAdminPacksFilterUI() {
 			...(maxRating != null ? { maxRating } : {}),
 			...(minPlay != null ? { minPlay } : {}),
 			...(maxPlay != null ? { maxPlay } : {}),
+			...(minPdrN != null ? { minPdr: minPdrN } : {}),
+			...(maxPdrN != null ? { maxPdr: maxPdrN } : {}),
 			...(hasRatings ? { hasRating: true } : {}),
 			...(from ? { from } : {}),
 			...(to ? { to } : {}),
@@ -81,6 +87,8 @@ export function useAdminPacksFilterUI() {
 		maxR,
 		minP,
 		maxP,
+		minPdr,
+		maxPdr,
 		hasRatings,
 		from,
 		to,
@@ -96,6 +104,8 @@ export function useAdminPacksFilterUI() {
 				{ value: parseOptionalNum(maxR) },
 				{ value: parseOptionalNum(minP) },
 				{ value: parseOptionalNum(maxP) },
+				{ value: parseOptionalNum(minPdr) },
+				{ value: parseOptionalNum(maxPdr) },
 				{ value: hasRatings, isActive: (v) => v === true },
 				{ value: fromStr },
 				{ value: toStr },
@@ -108,6 +118,8 @@ export function useAdminPacksFilterUI() {
 			maxR,
 			minP,
 			maxP,
+			minPdr,
+			maxPdr,
 			hasRatings,
 			fromStr,
 			toStr,
@@ -122,6 +134,8 @@ export function useAdminPacksFilterUI() {
 		void setMaxR(null);
 		void setMinP(null);
 		void setMaxP(null);
+		void setMinPdr(null);
+		void setMaxPdr(null);
 		void setHasRatings(false);
 		void setFromStr(null);
 		void setToStr(null);
@@ -215,6 +229,26 @@ export function useAdminPacksFilterUI() {
 								type="number"
 								value={maxP ?? ""}
 								onChange={(e) => void setMaxP(e.target.value || null)}
+							/>
+						</div>
+						<div className="space-y-1.5">
+							<Label htmlFor="pf-mpdr">Min PDR</Label>
+							<Input
+								id="pf-mpdr"
+								type="number"
+								step="0.01"
+								value={minPdr ?? ""}
+								onChange={(e) => void setMinPdr(e.target.value || null)}
+							/>
+						</div>
+						<div className="space-y-1.5">
+							<Label htmlFor="pf-xpdr">Max PDR</Label>
+							<Input
+								id="pf-xpdr"
+								type="number"
+								step="0.01"
+								value={maxPdr ?? ""}
+								onChange={(e) => void setMaxPdr(e.target.value || null)}
 							/>
 						</div>
 					</div>

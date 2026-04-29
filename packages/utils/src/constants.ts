@@ -1,6 +1,9 @@
 export const QUESTIONS_PER_TOPIC = 5;
 
 export const MIN_TOPICS_PER_PACK_TO_PUBLISH = 5;
+
+/** Minimum topics when the host submits an explicit subset (`topicPackOrders`). */
+export const MIN_TOPICS_PER_GAME_SUBSET = 5;
 export const MAX_TOPICS_PER_PACK = 100;
 
 export const MIN_PLAYERS_PER_GAME_TO_START = 2;

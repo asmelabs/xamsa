@@ -49,6 +49,8 @@ export const ListAdminPacksFiltersSchema = z.object({
 	minPlay: z.int(),
 	maxPlay: z.int(),
 	hasRating: z.boolean(),
+	minPdr: z.number(),
+	maxPdr: z.number(),
 });
 
 export const ListAdminPacksInputSchema = ListAdminPacksFiltersSchema.partial()
@@ -74,6 +76,7 @@ export const ListAdminPacksItemSchema = z.object({
 		username: z.string(),
 		name: z.string(),
 	}),
+	pdr: z.number(),
 	_count: z.object({ topics: z.number().int() }),
 });
 
@@ -191,6 +194,8 @@ export type ListAdminGamesOutputType = z.infer<
 export const ListAdminTopicsFiltersSchema = z.object({
 	packSlugs: z.array(z.string()),
 	authorUsernames: z.array(z.string().min(1)),
+	minTdr: z.number(),
+	maxTdr: z.number(),
 });
 
 export const ListAdminTopicsInputSchema = ListAdminTopicsFiltersSchema.partial()
@@ -205,6 +210,7 @@ export const ListAdminTopicsItemSchema = z.object({
 	name: z.string(),
 	description: z.string().nullable(),
 	order: z.number().int(),
+	tdr: z.number(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
 	pack: z.object({
@@ -236,6 +242,8 @@ export const ListAdminQuestionsFiltersSchema = z.object({
 	packSlugs: z.array(z.string()),
 	topicSlugs: z.array(z.string()),
 	authorUsernames: z.array(z.string().min(1)),
+	minQdr: z.number(),
+	maxQdr: z.number(),
 });
 
 export const ListAdminQuestionsInputSchema =
@@ -251,6 +259,7 @@ export const ListAdminQuestionsItemSchema = z.object({
 	text: z.string(),
 	description: z.string().nullable(),
 	order: z.number().int(),
+	qdr: z.number(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
 	topic: z.object({

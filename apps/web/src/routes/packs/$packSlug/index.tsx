@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Alert, AlertDescription } from "@xamsa/ui/components/alert";
 import { Button } from "@xamsa/ui/components/button";
@@ -23,6 +24,7 @@ import { PackHeaderChips } from "@/components/pack-header-chips";
 import { PackNotFound } from "@/components/pack-not-found";
 import { PackTopicsList } from "@/components/pack-topics-list";
 import { PacksSubpageContainer } from "@/components/packs";
+import { PublicAnalyticsSection } from "@/components/public-analytics-section";
 import { RatePackDialog } from "@/components/rate-pack-dialog";
 import { StatCard } from "@/components/stat-card";
 import { authClient } from "@/lib/auth-client";
@@ -70,6 +72,10 @@ export const Route = createFileRoute("/packs/$packSlug/")({
 function RouteComponent() {
 	const pack = Route.useLoaderData();
 	const { data: session } = authClient.useSession();
+
+	const analyticsQuery = useQuery(
+		orpc.pack.getAnalytics.queryOptions({ input: { slug: pack.slug } }),
+	);
 
 	const hasRatings = pack.totalRatings > 0;
 	const canHostPublishedGame =
@@ -262,6 +268,12 @@ function RouteComponent() {
 					Play this pack
 				</Button>
 			)}
+
+			<PublicAnalyticsSection
+				data={analyticsQuery.data}
+				isLoading={analyticsQuery.isLoading}
+				errorMessage={analyticsQuery.error?.message}
+			/>
 
 			{pack.isAuthor && pack.status === "draft" && !canPublish && (
 				<Alert variant="info">

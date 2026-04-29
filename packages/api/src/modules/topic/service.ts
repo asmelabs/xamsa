@@ -5,6 +5,7 @@ import {
 	topicSearch,
 	topicSort,
 } from "@xamsa/schemas/modules/listings/topic";
+import type { TopicAnalyticsOutputType } from "@xamsa/schemas/modules/public-analytics";
 import type {
 	BulkCreateTopicsInputType,
 	BulkCreateTopicsOutputType,
@@ -24,6 +25,7 @@ import type {
 } from "@xamsa/schemas/modules/topic";
 import { definePagination } from "@xamsa/utils/pagination";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { computeTopicAnalytics } from "../analytics/public-stats";
 import { assertUserCanCommitTsualImport } from "../tsual/service";
 
 /** Prisma default interactive tx timeout is 5s; large 3sual imports exceed that. */
@@ -422,6 +424,33 @@ export async function findOneTopic(
 		},
 		questions: isAuthor ? topic.questions : [],
 	};
+}
+
+export async function getTopicAnalytics(
+	input: FindOneTopicInputType,
+	userId?: string,
+): Promise<TopicAnalyticsOutputType> {
+	const topic = await prisma.topic.findFirst({
+		where: {
+			slug: input.slug,
+			pack: {
+				slug: input.pack,
+				OR: [
+					{ visibility: "public", status: "published" },
+					{ authorId: userId ?? "" },
+				],
+			},
+		},
+		select: { id: true, order: true },
+	});
+
+	if (!topic) {
+		throw new ORPCError("NOT_FOUND", {
+			message: `Topic with slug "${input.slug}" not found`,
+		});
+	}
+
+	return computeTopicAnalytics(topic.id, topic.order);
 }
 
 export async function updateTopic(

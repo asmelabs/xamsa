@@ -29,6 +29,7 @@ const SORT_OPTIONS: AdminSortOption[] = (
 			newest: "Newest",
 			name: "Name",
 			pack_name: "Pack name",
+			tdr: "TDR",
 		}[value] ?? value,
 }));
 
@@ -77,6 +78,10 @@ function RouteComponent() {
 			}),
 			col.accessor("slug", { header: "Slug" }),
 			col.accessor("order", { header: "Order" }),
+			col.accessor("tdr", {
+				header: "TDR",
+				cell: (c) => c.getValue().toFixed(2),
+			}),
 			col.accessor("pack", {
 				header: "Pack",
 				cell: (c) => {

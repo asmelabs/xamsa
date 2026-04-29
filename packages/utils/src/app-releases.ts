@@ -7,12 +7,34 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 16 } as const;
+const current = { year: 2026, month: 4, patch: 17 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-29",
+			year: 2026,
+			month: 4,
+			patch: 17,
+			title:
+				"Staff DR filters and sorts, public analytics on pack pages, host topic picks at game start",
+			highlights: [
+				{
+					kind: "text",
+					text: "Staff dashboard tables list pack PDR, topic TDR, and question QDR with optional min/max filters and sorting alongside existing columns.",
+				},
+				{
+					kind: "text",
+					text: "Published pack, topic, and author-visible question pages include an Analytics section: completed-game counts, buzz outcome charts, hosts and top buzzers, and first/last played timestamps—matching who can already view each entity.",
+				},
+				{
+					kind: "text",
+					text: "Hosts starting a live game choose which topics to include (defaults to all topics; explicit subsets require at least five). Sessions advance and finish against that subset while legacy games without stored picks behave like full-pack runs.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-28",
 			year: 2026,

@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
@@ -19,6 +20,8 @@ import {
 } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
+import { PublicAnalyticsSection } from "@/components/public-analytics-section";
+import { authClient } from "@/lib/auth-client";
 import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { questionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
@@ -96,6 +99,17 @@ export const Route = createFileRoute(
 function RouteComponent() {
 	const { packSlug, topicSlug } = Route.useParams();
 	const { question, neighborPrev, neighborNext } = Route.useLoaderData();
+	const { data: session } = authClient.useSession();
+	const analyticsQuery = useQuery({
+		...orpc.question.getAnalytics.queryOptions({
+			input: {
+				pack: packSlug,
+				topic: topicSlug,
+				question: question.slug,
+			},
+		}),
+		enabled: !!session?.user,
+	});
 	const [answerVisible, setAnswerVisible] = useQueryState(
 		"answer_visible",
 		parseAsBoolean.withDefault(false),
@@ -246,6 +260,14 @@ function RouteComponent() {
 					</div>
 				)}
 			</div>
+
+			{session?.user ? (
+				<PublicAnalyticsSection
+					data={analyticsQuery.data}
+					isLoading={analyticsQuery.isLoading}
+					errorMessage={analyticsQuery.error?.message}
+				/>
+			) : null}
 
 			<Frame>
 				<FrameHeader>

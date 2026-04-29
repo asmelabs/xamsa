@@ -31,6 +31,7 @@ const SORT_OPTIONS: AdminSortOption[] = (
 			most_topics: "Most topics",
 			rating: "Rating",
 			plays: "Plays",
+			pdr: "PDR",
 		}[value] ?? value,
 }));
 
@@ -99,6 +100,10 @@ function RouteComponent() {
 			}),
 			col.accessor("averageRating", {
 				header: "Rating",
+				cell: (c) => c.getValue().toFixed(2),
+			}),
+			col.accessor("pdr", {
+				header: "PDR",
 				cell: (c) => c.getValue().toFixed(2),
 			}),
 			col.accessor("totalPlays", { header: "Plays" }),

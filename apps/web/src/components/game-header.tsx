@@ -23,6 +23,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { GameData } from "@/lib/game-types";
 import { getJoinInviteAbsoluteUrl } from "@/lib/join-invite-url";
+import { formatLiveTopicProgressLine } from "@/lib/session-topic-progress";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { GameShareSheet } from "./game-share-sheet";
@@ -85,6 +86,8 @@ export function GameHeader({ game }: GameHeaderProps) {
 	const canShowPlayerLeave =
 		!game.isHost && !!game.myPlayer && game.myPlayer.status === "playing";
 
+	const topicProgressLine = formatLiveTopicProgressLine(game);
+
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-4">
 			<div className="flex items-center gap-3">
@@ -103,12 +106,9 @@ export function GameHeader({ game }: GameHeaderProps) {
 							{status.label}
 						</Badge>
 					</div>
-					{game.currentTopicOrder && game.currentQuestionOrder && (
-						<p className="text-muted-foreground text-xs">
-							Topic {game.currentTopicOrder} · Question{" "}
-							{game.currentQuestionOrder}
-						</p>
-					)}
+					{topicProgressLine ? (
+						<p className="text-muted-foreground text-xs">{topicProgressLine}</p>
+					) : null}
 				</div>
 			</div>
 

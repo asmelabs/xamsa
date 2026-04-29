@@ -192,6 +192,9 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 
 	packTotalTopics: z.number().int(),
 
+	/** Sorted pack topic orders included in this session (same length as `packTotalTopics`). */
+	sessionTopicPackOrders: z.array(z.number().int()),
+
 	winnerId: z.string().nullable(),
 
 	/** True when completion rewards were persisted (games finalized after this shipped). */
@@ -232,6 +235,8 @@ export type FindOneGameOutputType = z.infer<typeof FindOneGameOutputSchema>;
 export const GameStartInputSchema = z.object({
 	code: GameSchema.shape.code,
 	duplicateQuestionPolicy: DuplicateQuestionPolicySchema.default("none"),
+	/** Explicit subset of pack topic `order` values; omit for all topics (legacy). */
+	topicPackOrders: z.array(z.number().int()).optional(),
 });
 
 export const GameStartOutputSchema = GameSchema.pick({

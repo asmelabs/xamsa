@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	Link,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
+import { PublicAnalyticsSection } from "@/components/public-analytics-section";
 import { formatDifficultyDr } from "@/lib/difficulty-display";
 import { topicPageJsonLd } from "@/lib/json-ld";
 import { pageSeo, truncateMeta } from "@/lib/seo";
@@ -67,6 +69,12 @@ function RouteComponent() {
 	const { packSlug } = Route.useParams();
 	const topic = Route.useLoaderData();
 	const navigate = useNavigate();
+
+	const analyticsQuery = useQuery(
+		orpc.topic.getAnalytics.queryOptions({
+			input: { pack: packSlug, slug: topic.slug },
+		}),
+	);
 
 	const showAuthorTools = topic.isAuthor && topic.pack.status === "draft";
 
@@ -190,6 +198,12 @@ function RouteComponent() {
 					</Link>
 				</p>
 			</div>
+
+			<PublicAnalyticsSection
+				data={analyticsQuery.data}
+				isLoading={analyticsQuery.isLoading}
+				errorMessage={analyticsQuery.error?.message}
+			/>
 
 			<Frame>
 				<FrameHeader>

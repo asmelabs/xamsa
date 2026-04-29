@@ -38,6 +38,8 @@ export function buildAdminPacksWhere(
 		minPlay,
 		maxPlay,
 		hasRating,
+		minPdr,
+		maxPdr,
 	} = input;
 	const searchWhere = adminPackSearch.resolve(query);
 	const periodWhere = adminPackPeriod.resolve(from, to);
@@ -70,6 +72,14 @@ export function buildAdminPacksWhere(
 						}
 					: {}),
 				...(hasRating === true ? { totalRatings: { gt: 0 } } : {}),
+				...(minPdr != null || maxPdr != null
+					? {
+							pdr: {
+								...(minPdr != null ? { gte: minPdr } : {}),
+								...(maxPdr != null ? { lte: maxPdr } : {}),
+							},
+						}
+					: {}),
 			},
 		],
 	};
@@ -210,7 +220,7 @@ export function buildAdminGamesWhere(
 export function buildAdminTopicsWhere(
 	input: ListAdminTopicsInputType,
 ): Prisma.TopicWhereInput {
-	const { query, from, to, packSlugs, authorUsernames } = input;
+	const { query, from, to, packSlugs, authorUsernames, minTdr, maxTdr } = input;
 	const searchWhere = adminTopicSearch.resolve(query);
 	const periodWhere = adminTopicPeriod.resolve(from, to);
 
@@ -226,6 +236,16 @@ export function buildAdminTopicsWhere(
 						},
 					]
 				: []),
+			...(minTdr != null || maxTdr != null
+				? [
+						{
+							tdr: {
+								...(minTdr != null ? { gte: minTdr } : {}),
+								...(maxTdr != null ? { lte: maxTdr } : {}),
+							},
+						},
+					]
+				: []),
 		],
 	};
 }
@@ -233,7 +253,16 @@ export function buildAdminTopicsWhere(
 export function buildAdminQuestionsWhere(
 	input: ListAdminQuestionsInputType,
 ): Prisma.QuestionWhereInput {
-	const { query, from, to, packSlugs, topicSlugs, authorUsernames } = input;
+	const {
+		query,
+		from,
+		to,
+		packSlugs,
+		topicSlugs,
+		authorUsernames,
+		minQdr,
+		maxQdr,
+	} = input;
 	const searchWhere = adminQuestionSearch.resolve(query);
 	const periodWhere = adminQuestionPeriod.resolve(from, to);
 
@@ -252,6 +281,16 @@ export function buildAdminQuestionsWhere(
 								pack: {
 									author: { username: { in: authorUsernames } },
 								},
+							},
+						},
+					]
+				: []),
+			...(minQdr != null || maxQdr != null
+				? [
+						{
+							qdr: {
+								...(minQdr != null ? { gte: minQdr } : {}),
+								...(maxQdr != null ? { lte: maxQdr } : {}),
 							},
 						},
 					]

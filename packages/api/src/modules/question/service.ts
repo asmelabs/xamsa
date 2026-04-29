@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import prisma from "@xamsa/db";
+import type { QuestionAnalyticsOutputType } from "@xamsa/schemas/modules/public-analytics";
 import type {
 	FindOneQuestionInputType,
 	FindOneQuestionOutputType,
@@ -12,6 +13,7 @@ import type {
 } from "@xamsa/schemas/modules/question";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { computeQuestionAnalytics } from "../analytics/public-stats";
 
 export async function updateQuestion(
 	input: UpdateQuestionInputType,
@@ -277,4 +279,32 @@ export async function findOneQuestion(
 		hasRatedTopicDifficulty,
 		hasRatedPackDifficulty,
 	};
+}
+
+export async function getQuestionAnalytics(
+	input: FindOneQuestionInputType,
+	userId: string,
+): Promise<QuestionAnalyticsOutputType> {
+	const question = await prisma.question.findFirst({
+		where: {
+			slug: input.question,
+			topic: {
+				slug: input.topic,
+				pack: {
+					slug: input.pack,
+					authorId: userId,
+				},
+			},
+		},
+		select: { id: true, order: true },
+	});
+
+	if (!question) {
+		throw new ORPCError("NOT_FOUND", {
+			message:
+				"Question not found or you don't have permission to view analytics",
+		});
+	}
+
+	return computeQuestionAnalytics(question.id, question.order);
 }
