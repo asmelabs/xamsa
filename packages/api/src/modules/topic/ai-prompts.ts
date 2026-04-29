@@ -189,6 +189,35 @@ const XAMSA_TOPIC_ARCHETYPES = {
 			},
 		],
 	},
+
+	// ARCHETYPE 7: Closed fictional set
+	// Topic is a finite set of characters, places, or objects from a single
+	// fictional work (TV series, film franchise, book series, video game,
+	// comic universe). The names typically have NO meaningful real-world
+	// bridges; do NOT force bridges that don't exist.
+	closedFictionalSet: {
+		rule: "When the topic is a closed fictional universe (e.g., 'Game of Thrones characters', 'Marvel villains', 'Star Wars planets', 'Pokemon types'), DO NOT apply the bridge principle. Bridges fail here because fictional names don't have rich real-world double meanings. Instead, write clues that describe the character/place/object through their IN-UNIVERSE actions, words, fate, relationships, or signature moments. Use narrative voice and misdirection — but stay within the fictional universe.",
+		examples: [
+			{
+				topic: "Taxt Oyunları obrazları (Game of Thrones characters)",
+				why: "The 5 answers are all GoT characters. Each clue describes that character through their canonical in-show actions, but uses narrative voice and a single distinctive in-universe fact rather than directly naming them.",
+				questions: [
+					{
+						text: "Qışyurdunun ən kiçik oğullarından biri olaraq dünyaya gələn bu uşaq, divardan yıxıldıqdan sonra Üçgözlü Qarğanın səsini eşitməyə başlayır.",
+						answer: "Bran Stark",
+					},
+					{
+						text: "Atasının başının kəsildiyini Beyl Septası önündə müşahidə etdikdən sonra qaçan bu qız, üzlər tanrısının evində 'heç kim' olmağı öyrənir.",
+						answer: "Arya Stark",
+					},
+					{
+						text: "Qardaşı Reqarın ölümündən sonra anasının yataq otağına od salaraq özünü kraliça elan edən bu personaj 'Mən şahzadə deyiləm, mən qadınam' deyirdi.",
+						answer: "Daenerys Targaryen",
+					},
+				],
+			},
+		],
+	},
 };
 
 // ============================================================
@@ -293,6 +322,30 @@ const FAILURE_MODES = {
 			"The model invented literal translations of film titles. 'Hurt Locker' does not translate to 'Məhbus' (which means 'prisoner'). These are not actual Azerbaijani release titles — they are the model hallucinating translations. This misleads players and is factually wrong.",
 		rule: "PROPER NAMES OF FILMS, BOOKS, ALBUMS, BRANDS, AND TV SHOWS MUST STAY IN THEIR ORIGINAL LANGUAGE. Do not translate 'The Hurt Locker' to Azerbaijani. Do not translate 'The Shawshank Redemption.' If you are certain a work has a widely-used Azerbaijani release title (e.g., 'Kiçik Su pərisi' for The Little Mermaid), you may use it — but if you are unsure, use the original title. Never fabricate a literal translation of a title you cannot verify. The answer field should contain the canonical form (original language); acceptableAnswers may contain real verified alternate forms (not invented translations).",
 	},
+
+	overBridging: {
+		badTopic: "Taxt Oyunları obrazları (Game of Thrones characters)",
+		badQuestions: [
+			"Onun aparıcısı olduğu 'Hell's Kitchen' və 'Kitchen Nightmares' kimi kulinariya realiti-şouları bütün dünyada məşhurdur. → Answer: Ramsay Bolton",
+			"İtalyan dilindən 'hava' mənasını verən bu musiqi termini operada bir səs üçün yazılmış vokal əsəridir. → Answer: Arya Stark",
+			"Polşalı yazıçı və futuroloq, 'Solaris' romanı ilə tanınır. → Answer: Stannis Baratheon",
+		],
+		whyBad:
+			"The topic is GoT characters. The answers MUST be GoT characters. But these clues describe Gordon Ramsay (a chef, not a character), an aria (a musical term, not a character), and Stanisław Lem (a Polish author, not a character). The model bridged to a SUBSTRING or HOMOPHONE of a character's name — 'Ramsay' (different from 'Ramsay Bolton'), 'Arya' (different from 'Aria the musical term'), 'Stannis' (which doesn't even match 'Stanisław'). This is over-bridging. The answer becomes a forced match that the player cannot derive from the clue. The clue leads to 'Gordon Ramsay,' not 'Ramsay Bolton.'",
+		rule: "For CLOSED FICTIONAL SET topics, DO NOT BRIDGE. The answer is a specific fictional character; the clue must describe that character through in-universe facts. Do not bridge from a real-world person whose first name happens to match a character's first name. The answer 'Ramsay Bolton' must be derived from a clue about Ramsay Bolton's actions in Game of Thrones — not from a clue about a real chef named Gordon Ramsay.",
+		goodAlternative: {
+			approach:
+				"Write clues using in-universe facts. For 'Ramsay Bolton': describe his actions toward Theon Greyjoy or his marriage to Sansa. For 'Arya Stark': describe her training in Braavos or her killing of the Freys. For 'Stannis Baratheon': describe his burning of Shireen or his claim to the Iron Throne. Use narrative voice and misdirection — but the clue must be ABOUT the character, not about a real-world homophone.",
+		},
+	},
+
+	substringBridge: {
+		badExample:
+			"Topic: Famous Steves. Clue: 'This famous chef created the BBQ chain Smokey Bones.' Answer: 'Stevenson Bolton' (because the chef is named Steve).",
+		whyBad:
+			"The clue led the player to 'Steve' (the chef), but the answer is 'Stevenson Bolton.' The clue failed to lead to the full answer. The bridge must lead to the COMPLETE canonical answer, not just a substring.",
+		rule: "The clue must lead the player to the FULL canonical answer. If the answer is 'Sebastian Stan,' the clue must establish 'Sebastian Stan' as a complete identification — not just 'Sebastian.' If the answer is 'Ramsay Bolton,' the clue must establish 'Ramsay Bolton' (the GoT character) — not 'Ramsay' (any person named Ramsay). Substring or first-name-only bridges are forbidden.",
+	},
 };
 
 const LANGUAGE_LABEL: Record<PackLanguage, string> = {
@@ -394,7 +447,10 @@ If you cannot find 5 answers satisfying the constraint, regenerate. Do not cheat
 
 6. ANSWERS AND TITLES: Film, book, album, brand, and TV show titles stay in their ORIGINAL language. "Braveheart" — not "Cəsur ürək." "The Hurt Locker" — not "Məhbus." "Schindler's List" → you may use "Şindlerin siyahısı" only if this is the actual Azerbaijani release title (verify mentally — classical/famous works often have real AZ titles; modern films usually do not). If unsure, use the original. For answer field, provide the canonical form; for acceptableAnswers, add verified alternate forms only. Never invent a literal translation.
 
-7. EXPLANATION field is for host delight. When included, it reveals a clever connection the player might have missed. Example: for Neo, the explanation connects Trinity's 'white rabbit' tattoo to Alice in Wonderland. Not just restating what the answer is.`,
+7. EXPLANATION field is for host delight. When included, it reveals a clever connection the player might have missed. Example: for Neo, the explanation connects Trinity's 'white rabbit' tattoo to Alice in Wonderland. Not just restating what the answer is.
+
+8. THE FULL-ANSWER RULE. The clue must lead the player to the COMPLETE canonical answer, not a substring or partial match. If the answer is 'Ramsay Bolton', the clue must lead to 'Ramsay Bolton' specifically — not to any person whose first name is Ramsay, and not to a homophone like 'Ramsey.' If you cannot construct a clue that leads to the full answer, the answer is wrong for this clue — pick a different answer or rewrite the clue.
+`,
 
 		// ============ FAILURE MODES ============
 		`FAILURE MODES — STUDY THESE. These are patterns the AI historically falls into. Reject these outputs and rewrite. ${failuresJson}`,
@@ -433,6 +489,9 @@ If you find yourself about to write a clue that contains any phrase, person, pla
 7. Am I writing in narrative voice ("bu", "onun", "o") and NOT in Wikipedia style?
 8. Is the difficulty progression Q1 → Q5 (easiest to hardest)?
 9. Did I use ORIGINAL surface subjects, people, places, dates, and events in my clues? Or did I copy any facts/phrases from the prompt's examples? If the latter, rewrite with original content.
+10. For each answer: does the clue lead to the FULL ANSWER, or just a substring/first name? If the answer is "Arya Stark," does the clue actually lead to Arya Stark (the character) — or just to "Arya/Aria" the word? If the latter, the question is broken. Rewrite.
+11. For closed fictional sets (GoT characters, etc.): is each clue ABOUT the actual character/object in their fictional universe? Not about a real-world homophone of their name?
+
 
 If ANY answer is "no," rewrite those questions. Do not output until all checks pass.`,
 	].join("\n\n");
@@ -459,6 +518,7 @@ export function buildTopicGenerationUserPrompt(params: {
 		"",
 		`STEP 1 — Identify the archetype:
 - Is this a CONSTRAINT-BASED topic (shared word like "Sebastian"; phonetic like "Palindromes"; shared attribute like "same surname")? If yes → use the diversity-by-field method: pick 5 field-diverse answers that satisfy the constraint.
+- Is this a CLOSED FICTIONAL SET (characters from one TV series, planets in one franchise, items in one video game)? If yes → DO NOT BRIDGE. Write in-universe descriptive clues with narrative voice and misdirection. The answer must be derivable from in-universe facts about that specific character/object.
 - Is this a THEMATIC topic (Oscar films, horses, revolutions, countries)? If yes → use the BRIDGE PRINCIPLE: you MUST write clues about non-topic surface subjects, not about the topic itself.
 `,
 		"",
