@@ -23,9 +23,11 @@ import type {
 	UpdatePackStatusInputType,
 	UpdatePackStatusOutputType,
 } from "@xamsa/schemas/modules/pack";
+import type { PackAnalyticsOutputType } from "@xamsa/schemas/modules/public-analytics";
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 import { computeLevelFromXp } from "@xamsa/utils/progression";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { computePackAnalytics } from "../analytics/public-stats";
 import { COMMON_PACK_SLUGS } from "./utils";
 
 export async function createPack(
@@ -295,6 +297,37 @@ export async function findOnePack(
 		rating,
 		hasRatedDifficulty,
 	};
+}
+
+export async function getPackAnalytics(
+	slug: string,
+	userId?: string,
+): Promise<PackAnalyticsOutputType> {
+	const pack = await prisma.pack.findFirst({
+		where: {
+			slug,
+			AND: [
+				{
+					OR: [
+						{ visibility: "public" },
+						{ visibility: "private", authorId: userId },
+					],
+				},
+				{
+					OR: [{ status: "published" }, { authorId: userId }],
+				},
+			],
+		},
+		select: { id: true, totalPlays: true },
+	});
+
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: `Pack with slug ${slug} not found`,
+		});
+	}
+
+	return computePackAnalytics(pack.id, pack.totalPlays);
 }
 
 export async function listPacks(

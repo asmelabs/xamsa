@@ -25,7 +25,10 @@ import type {
 	UpdateGameStatusInputType,
 	UpdateGameStatusOutputType,
 } from "@xamsa/schemas/modules/game";
-import { MIN_PLAYERS_PER_GAME_TO_START } from "@xamsa/utils/constants";
+import {
+	MIN_PLAYERS_PER_GAME_TO_START,
+	MIN_TOPICS_PER_GAME_SUBSET,
+} from "@xamsa/utils/constants";
 import { publishBadgeEarnedMany } from "../badge/publish";
 import {
 	duplicateBuzzBlockedForUser,
@@ -33,6 +36,7 @@ import {
 } from "./duplicate-question-policy";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
+import { resolveSessionTopicPackOrders } from "./included-topics";
 import { generateUniqueGameCode } from "./utils";
 
 function mapGameCompletionDeltas(raw: Prisma.JsonValue | null): {
@@ -280,6 +284,7 @@ export async function findOneGame(
 			hostId: true,
 			packId: true,
 			completionDeltas: true,
+			includedTopicPackOrders: true,
 			settings: {
 				select: {
 					duplicateQuestionPolicy: true,
@@ -480,18 +485,20 @@ export async function findOneGame(
 			}
 		: null;
 
-	// count total topics in the pack for last-topic detection on the host UI
-	const [packTotalTopics, packHasRatedDifficulty] = await Promise.all([
-		prisma.topic.count({ where: { packId: game.packId } }),
-		prisma.question
-			.count({
-				where: {
-					topic: { packId: game.packId },
-					qdrScoredAttempts: { gt: 0 },
-				},
-			})
-			.then((n) => n > 0),
-	]);
+	const sessionTopicPackOrders = await resolveSessionTopicPackOrders(
+		game.packId,
+		game.includedTopicPackOrders,
+	);
+	const packTotalTopics = sessionTopicPackOrders.length;
+
+	const packHasRatedDifficulty = await prisma.question
+		.count({
+			where: {
+				topic: { packId: game.packId },
+				qdrScoredAttempts: { gt: 0 },
+			},
+		})
+		.then((n) => n > 0);
 
 	const { hostXpGained, eloDeltaByUserId } = mapGameCompletionDeltas(
 		game.completionDeltas,
@@ -603,6 +610,7 @@ export async function findOneGame(
 					author: game.pack.author,
 				},
 		packTotalTopics,
+		sessionTopicPackOrders,
 		currentTopic,
 		currentQuestion,
 		players,
@@ -665,9 +673,53 @@ export async function startGame(
 		});
 	}
 
-	// Guard: pack must have at least one topic with at least one question.
+	const packTopics = await prisma.topic.findMany({
+		where: { packId: game.packId },
+		select: { order: true },
+		orderBy: { order: "asc" },
+	});
+	const validOrders = new Set(packTopics.map((t) => t.order));
+	const fullOrders = packTopics.map((t) => t.order);
+
+	let persistedInclusion: number[] | null = null;
+	let inclusion: number[];
+
+	if (input.topicPackOrders != null && input.topicPackOrders.length > 0) {
+		inclusion = [
+			...new Set(input.topicPackOrders.map((x) => Math.trunc(x))),
+		].sort((a, b) => a - b);
+		if (inclusion.length < MIN_TOPICS_PER_GAME_SUBSET) {
+			throw new ORPCError("BAD_REQUEST", {
+				message: `Select at least ${String(MIN_TOPICS_PER_GAME_SUBSET)} topics`,
+			});
+		}
+		for (const o of inclusion) {
+			if (!validOrders.has(o)) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Topic selection includes orders not in this pack",
+				});
+			}
+		}
+		persistedInclusion = inclusion;
+	} else {
+		inclusion = fullOrders;
+	}
+
+	if (inclusion.length === 0) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Pack must have at least one topic with questions",
+		});
+	}
+
+	const firstOrder = inclusion[0];
+	if (firstOrder === undefined) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Pack must have at least one topic with questions",
+		});
+	}
+
 	const firstTopic = await prisma.topic.findFirst({
-		where: { packId: game.packId, order: 1 },
+		where: { packId: game.packId, order: firstOrder },
 		select: {
 			id: true,
 			questions: {
@@ -687,8 +739,6 @@ export async function startGame(
 
 	const firstQuestionId = firstQuestion.id;
 
-	// start game → active, position at first topic's first question,
-	// plus create the first GameTopic + GameQuestion aggregate rows.
 	const now = new Date();
 	const updated = await prisma.$transaction(async (tx) => {
 		const gameRow = await tx.game.update({
@@ -696,9 +746,12 @@ export async function startGame(
 			data: {
 				status: "active",
 				startedAt: now,
-				currentTopicOrder: 1,
+				currentTopicOrder: firstOrder,
 				currentQuestionOrder: 1,
 				isQuestionRevealed: false,
+				...(persistedInclusion != null
+					? { includedTopicPackOrders: persistedInclusion }
+					: {}),
 			},
 			select: {
 				code: true,
@@ -713,7 +766,7 @@ export async function startGame(
 			data: {
 				gameId: game.id,
 				topicId: firstTopic.id,
-				order: 1,
+				order: firstOrder,
 				startedAt: now,
 			},
 			select: { id: true },
@@ -791,6 +844,7 @@ async function loadHostGameContext(code: string, userId: string) {
 			currentQuestionOrder: true,
 			isQuestionRevealed: true,
 			startedAt: true,
+			includedTopicPackOrders: true,
 		},
 	});
 
@@ -1038,12 +1092,15 @@ export async function advanceQuestion(
 	const currentQuestionOrder = game.currentQuestionOrder as number;
 	const currentTopicOrder = game.currentTopicOrder as number;
 
-	const packTotalTopics = await prisma.topic.count({
-		where: { packId: game.packId },
-	});
+	const inclusion = await resolveSessionTopicPackOrders(
+		game.packId,
+		game.includedTopicPackOrders,
+	);
+	const lastPackTopicOrder = inclusion[inclusion.length - 1];
 
 	const isLastQuestionInTopic = currentQuestionOrder >= 5;
-	const isLastTopicInPack = currentTopicOrder >= packTotalTopics;
+	const isLastTopicInPack =
+		inclusion.length > 0 && currentTopicOrder === lastPackTopicOrder;
 
 	if (isLastQuestionInTopic && isLastTopicInPack) {
 		throw new ORPCError("BAD_REQUEST", {
@@ -1059,7 +1116,19 @@ export async function advanceQuestion(
 	let nextTopicId: string;
 
 	if (isLastQuestionInTopic) {
-		nextTopicOrder = currentTopicOrder + 1;
+		const idx = inclusion.indexOf(currentTopicOrder);
+		if (idx < 0 || idx >= inclusion.length - 1) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Next topic not found in session",
+			});
+		}
+		const nextInSession = inclusion[idx + 1];
+		if (nextInSession === undefined) {
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Next topic not found in session",
+			});
+		}
+		nextTopicOrder = nextInSession;
 		nextQuestionOrder = 1;
 		const nextTopic = await prisma.topic.findFirst({
 			where: { packId: game.packId, order: nextTopicOrder },
@@ -1224,11 +1293,17 @@ export async function completeGame(
 	const currentQuestionOrder = game.currentQuestionOrder as number;
 	const currentTopicOrder = game.currentTopicOrder as number;
 
-	const packTotalTopics = await prisma.topic.count({
-		where: { packId: game.packId },
-	});
+	const inclusion = await resolveSessionTopicPackOrders(
+		game.packId,
+		game.includedTopicPackOrders,
+	);
+	const lastPackTopicOrder = inclusion[inclusion.length - 1];
 
-	if (currentQuestionOrder < 5 || currentTopicOrder < packTotalTopics) {
+	if (
+		currentQuestionOrder < 5 ||
+		currentTopicOrder !== lastPackTopicOrder ||
+		lastPackTopicOrder === undefined
+	) {
 		throw new ORPCError("BAD_REQUEST", {
 			message: "Can only finish the game on the last question",
 		});

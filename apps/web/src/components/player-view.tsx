@@ -18,6 +18,7 @@ import { EllipsisIcon, EyeOffIcon, LogOutIcon, ZapIcon } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { toast } from "sonner";
 import type { GameData } from "@/lib/game-types";
+import { formatLiveTopicProgressLine } from "@/lib/session-topic-progress";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { BuzzButton } from "./buzz-button";
@@ -40,6 +41,10 @@ export function PlayerView({ game }: PlayerViewProps) {
 	const isCompleted = game.status === "completed";
 	const canLeave =
 		!game.isHost && !!game.myPlayer && game.myPlayer.status === "playing";
+
+	const topicProgressLine = formatLiveTopicProgressLine(game, {
+		compactQuestion: true,
+	});
 
 	const navigate = useNavigate();
 	const [leaveOpen, setLeaveOpen] = useQueryState(
@@ -71,11 +76,11 @@ export function PlayerView({ game }: PlayerViewProps) {
 					</div>
 					<div>
 						<p className="font-semibold text-xs">{game.pack.name}</p>
-						{game.currentTopicOrder && game.currentQuestionOrder && (
+						{topicProgressLine ? (
 							<p className="text-[10px] text-muted-foreground">
-								Topic {game.currentTopicOrder} · Q{game.currentQuestionOrder}
+								{topicProgressLine}
 							</p>
-						)}
+						) : null}
 					</div>
 				</div>
 				<div className="flex items-center gap-2">

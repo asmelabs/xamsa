@@ -27,8 +27,11 @@ export function HostControls({ game }: HostControlsProps) {
 	const isPaused = game.status === "paused";
 	const currentTopicOrder = game.currentTopicOrder ?? 0;
 	const currentQuestionOrder = game.currentQuestionOrder ?? 0;
+	const orders = game.sessionTopicPackOrders;
+	const lastPackTopicOrder = orders[orders.length - 1] ?? 0;
 	const isLastQuestionInTopic = currentQuestionOrder >= 5;
-	const isLastTopic = currentTopicOrder >= game.packTotalTopics;
+	const isLastTopic =
+		orders.length > 0 && currentTopicOrder === lastPackTopicOrder;
 	const isLastQuestion = isLastQuestionInTopic && isLastTopic;
 
 	const { mutate: advance, isPending: isAdvancing } = useMutation({
@@ -100,9 +103,13 @@ export function HostControls({ game }: HostControlsProps) {
 		// pointers. We don't yet know the next question text — the host's
 		// mutation onSuccess will fill hostData.currentQuestion with the full
 		// payload. Players just see the order flip.
-		const nextTopicOrder = isLastQuestionInTopic
-			? currentTopicOrder + 1
-			: currentTopicOrder;
+		const idx = orders.indexOf(currentTopicOrder);
+		const maybeNext =
+			isLastQuestionInTopic && idx >= 0 && idx < orders.length - 1
+				? orders[idx + 1]
+				: undefined;
+		const nextTopicOrder =
+			maybeNext !== undefined ? maybeNext : currentTopicOrder;
 		const nextQuestionOrder = isLastQuestionInTopic
 			? 1
 			: currentQuestionOrder + 1;

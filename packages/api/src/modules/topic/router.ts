@@ -1,3 +1,4 @@
+import { TopicAnalyticsOutputSchema } from "@xamsa/schemas/modules/public-analytics";
 import {
 	BulkCreateTopicsInputSchema,
 	BulkCreateTopicsOutputSchema,
@@ -35,6 +36,7 @@ import {
 	createTopic,
 	deleteTopic,
 	findOneTopic,
+	getTopicAnalytics,
 	listTopics,
 	updateTopic,
 	updateTopicsOrder,
@@ -114,6 +116,13 @@ export const topicRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await findOneTopic(input, context.session?.user.id),
+		),
+	getAnalytics: publicProcedure
+		.input(FindOneTopicInputSchema)
+		.output(TopicAnalyticsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await getTopicAnalytics(input, context.session?.user.id),
 		),
 	delete: protectedProcedure
 		.input(DeleteTopicInputSchema)

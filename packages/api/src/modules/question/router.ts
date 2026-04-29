@@ -1,3 +1,4 @@
+import { QuestionAnalyticsOutputSchema } from "@xamsa/schemas/modules/public-analytics";
 import {
 	FindOneQuestionInputSchema,
 	FindOneQuestionOutputSchema,
@@ -11,6 +12,7 @@ import {
 import { protectedProcedure } from "../../procedures";
 import {
 	findOneQuestion,
+	getQuestionAnalytics,
 	listTopicQuestions,
 	updateQuestion,
 	updateQuestionsOrder,
@@ -44,5 +46,12 @@ export const questionRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await findOneQuestion(input, context.session.user.id),
+		),
+	getAnalytics: protectedProcedure
+		.input(FindOneQuestionInputSchema)
+		.output(QuestionAnalyticsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await getQuestionAnalytics(input, context.session.user.id),
 		),
 };

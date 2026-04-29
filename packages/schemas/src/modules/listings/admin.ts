@@ -15,6 +15,7 @@ export const adminPackSort =
 			most_topics: { topics: { _count: "desc" } },
 			rating: { averageRating: "desc" },
 			plays: { totalPlays: "desc" },
+			pdr: { pdr: "desc" },
 		},
 		default: "newest",
 	});
@@ -110,6 +111,7 @@ export const adminQuestionSort =
 			topic_order: { topic: { order: "asc" } },
 			/** Placeholder: service branches to char_length(text) sort */
 			text_length: { id: "asc" },
+			qdr: { qdr: "desc" },
 		},
 		default: "newest",
 	});

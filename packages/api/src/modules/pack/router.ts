@@ -14,12 +14,14 @@ import {
 	UpdatePackStatusInputSchema,
 	UpdatePackStatusOutputSchema,
 } from "@xamsa/schemas/modules/pack";
+import { PackAnalyticsOutputSchema } from "@xamsa/schemas/modules/public-analytics";
 import { protectedProcedure, publicProcedure } from "../../procedures";
 import {
 	bulkCreatePacks,
 	createPack,
 	deletePack,
 	findOnePack,
+	getPackAnalytics,
 	listPacks,
 	updatePack,
 	updatePackStatus,
@@ -60,6 +62,13 @@ export const packRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await findOnePack(input, context.session?.user.id),
+		),
+	getAnalytics: publicProcedure
+		.input(FindOnePackInputSchema)
+		.output(PackAnalyticsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await getPackAnalytics(input.slug, context.session?.user.id),
 		),
 	list: publicProcedure
 		.input(ListPacksInputSchema)

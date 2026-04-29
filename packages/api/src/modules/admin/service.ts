@@ -65,6 +65,7 @@ export async function listAdminPacks(
 				publishedAt: true,
 				totalPlays: true,
 				averageRating: true,
+				pdr: true,
 				author: {
 					select: { id: true, username: true, name: true },
 				},
@@ -167,6 +168,7 @@ export async function listAdminTopics(
 				name: true,
 				description: true,
 				order: true,
+				tdr: true,
 				createdAt: true,
 				updatedAt: true,
 				_count: { select: { questions: true } },
@@ -194,6 +196,7 @@ const questionListSelect = {
 	text: true,
 	description: true,
 	order: true,
+	qdr: true,
 	createdAt: true,
 	updatedAt: true,
 	topic: {
