@@ -39,7 +39,10 @@ model Game {
   /// content played ///
   totalTopics           Int @default(0) @map("total_topics") // topics actually played through
   totalQuestions        Int @default(0) @map("total_questions") // questions actually played through
-  totalSkippedQuestions Int @default(0) @map("total_skipped_questions") // questions where no one got it right
+  /// Questions that finished without a correct answer (legacy column: total_skipped_questions).
+  totalUnresolvedQuestions Int @default(0) @map("total_skipped_questions")
+  /// Host used "Skip question" — not counted as played through.
+  totalHostSkippedQuestions Int @default(0) @map("total_host_skipped_questions")
 
   /// answers ///
   totalAnswers          Int @default(0) @map("total_answers") // all resolved clicks (correct+wrong+expired)
@@ -198,6 +201,9 @@ model Click {
   /// derived metrics — stored for query performance ///
   reactionMs    Int? @map("reaction_ms") // time from question shown to click (ms)
   pointsAwarded Int  @default(0) @map("points_awarded") // +positive if correct, -negative if wrong, 0 if expired
+
+  /// When set, this click contributed one QDR scored attempt; reverse by subtracting from Question.qdrEloEquiv.
+  qdrEloEquivDelta Float? @map("qdr_elo_equiv_delta")
 
   @@unique([playerId, gameId, questionId])
   @@index([gameId, questionId, position]) // for rendering queue in order

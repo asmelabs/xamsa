@@ -295,6 +295,8 @@ export async function resolveClick(
 			order: true,
 			text: true,
 			answer: true,
+			explanation: true,
+			acceptableAnswers: true,
 			topicId: true,
 			qdr: true,
 			qdrEloEquiv: true,
@@ -413,12 +415,14 @@ export async function resolveClick(
 			});
 			if (qRow) {
 				const outcome: 0 | 1 = isCorrect ? 1 : 0;
+				const eloBefore = qRow.qdrEloEquiv;
 				const qUp = computeQdrUpdate({
 					qdrEloEquiv: qRow.qdrEloEquiv,
 					qdrScoredAttempts: qRow.qdrScoredAttempts,
 					userEloAtGameStart: player.eloAtGameStart,
 					outcome,
 				});
+				const qdrEloEquivDelta = qUp.qdrEloEquiv - eloBefore;
 				await tx.question.update({
 					where: { id: currentQuestion.id },
 					data: {
@@ -427,6 +431,10 @@ export async function resolveClick(
 						qdr: qUp.qdr,
 						qdrUpdatedAt: now,
 					},
+				});
+				await tx.click.update({
+					where: { id: click.id },
+					data: { qdrEloEquivDelta },
 				});
 				const topicQuestions = await tx.question.findMany({
 					where: { topicId: qRow.topicId },
@@ -587,6 +595,8 @@ export async function resolveClick(
 					order: currentQuestion.order,
 					text: currentQuestion.text,
 					answer: currentQuestion.answer,
+					explanation: currentQuestion.explanation,
+					acceptableAnswers: currentQuestion.acceptableAnswers,
 				}
 			: null,
 		isAuthoritative: true,

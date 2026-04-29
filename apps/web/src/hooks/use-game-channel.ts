@@ -52,6 +52,8 @@ export type QuestionReveal = {
 	order: number;
 	text: string | null;
 	answer: string | null;
+	explanation?: string | null;
+	acceptableAnswers?: string[];
 };
 
 export type ClickResolvedData = {
@@ -69,10 +71,20 @@ export type ClickResolvedData = {
 	isAuthoritative?: boolean;
 };
 
+export type ClickRemovedData = {
+	clickId: string;
+	questionId: string;
+	playerId: string;
+	playerScores: PlayerScoreUpdate[];
+	isAuthoritative?: boolean;
+};
+
 export type QuestionRevealedData = {
 	order: number;
 	text: string | null;
 	answer: string | null;
+	explanation?: string | null;
+	acceptableAnswers?: string[];
 	/** When host reveals manually, pending buzzes are expired on the server. */
 	expiredClicks?: { id: string; playerId: string }[];
 	isAuthoritative?: boolean;
@@ -114,6 +126,9 @@ export type QuestionAdvancedData = {
 		points: number;
 	};
 	hostCurrentQuestion?: HostCurrentQuestion | null;
+	/** Present on QUESTION_SKIPPED (and ignored by advance reducer). */
+	skippedQuestionId?: string;
+	skippedTopicId?: string;
 	isAuthoritative?: boolean;
 };
 
@@ -345,6 +360,12 @@ export function applyClickResolvedToGame(
 			...old.currentQuestion,
 			text: data.questionReveal.text ?? old.currentQuestion.text,
 			answer: data.questionReveal.answer ?? old.currentQuestion.answer,
+			explanation:
+				data.questionReveal.explanation ?? old.currentQuestion.explanation,
+			acceptableAnswers:
+				data.questionReveal.acceptableAnswers ??
+				old.currentQuestion.acceptableAnswers ??
+				[],
 		};
 	}
 
@@ -356,6 +377,58 @@ export function applyClickResolvedToGame(
 		myPlayer: nextMyPlayer,
 		isQuestionRevealed: nextIsQuestionRevealed,
 		currentQuestion: nextCurrentQuestion,
+	};
+}
+
+/**
+ * Removes a click from the buzz queue / history and patches player scores.
+ */
+export function applyClickRemovedToGame(
+	old: GameData | undefined,
+	data: ClickRemovedData,
+): GameData | undefined {
+	if (!old) return old;
+
+	const scoresByPlayerId = new Map(
+		data.playerScores.map((s) => [s.playerId, s]),
+	);
+
+	const applyScoreUpdate = <P extends { id: string; score: number }>(
+		player: P,
+	): P => {
+		const update = scoresByPlayerId.get(player.id);
+		if (!update) return player;
+		return {
+			...player,
+			score: update.score,
+			correctAnswers: update.correctAnswers,
+			incorrectAnswers: update.incorrectAnswers,
+			expiredClicks: update.expiredClicks,
+			currentCorrectStreak: update.currentCorrectStreak,
+			currentWrongStreak: update.currentWrongStreak,
+			longestCorrectStreak: update.longestCorrectStreak,
+			longestWrongStreak: update.longestWrongStreak,
+			peakScore: update.peakScore,
+			lowestScore: update.lowestScore,
+		};
+	};
+
+	const nextClicks = old.clicks.filter((c) => c.id !== data.clickId);
+	const nextHostData = old.hostData
+		? {
+				...old.hostData,
+				clickDetails: old.hostData.clickDetails.filter(
+					(c) => c.id !== data.clickId,
+				),
+			}
+		: old.hostData;
+
+	return {
+		...old,
+		clicks: nextClicks,
+		hostData: nextHostData,
+		players: old.players.map(applyScoreUpdate),
+		myPlayer: old.myPlayer ? applyScoreUpdate(old.myPlayer) : null,
 	};
 }
 
@@ -374,6 +447,9 @@ export function applyQuestionRevealToGame(
 		...old.currentQuestion,
 		text: data.text ?? old.currentQuestion.text,
 		answer: data.answer ?? old.currentQuestion.answer,
+		explanation: data.explanation ?? old.currentQuestion.explanation,
+		acceptableAnswers:
+			data.acceptableAnswers ?? old.currentQuestion.acceptableAnswers ?? [],
 	};
 
 	const expiredIds = new Set((data.expiredClicks ?? []).map((c) => c.id));
@@ -435,6 +511,7 @@ export function applyQuestionAdvancedToGame(
 		text: null,
 		answer: null,
 		explanation: null,
+		acceptableAnswers: [] as string[],
 	};
 
 	const nextHostData = old.hostData
@@ -786,6 +863,20 @@ export function useGameChannel(
 			}
 		};
 
+		const onClickRemoved = (msg: { data?: unknown }) => {
+			const data = msg.data as ClickRemovedData;
+			const prev = queryClient.getQueryData<GameData>(queryKey);
+			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
+				applyClickRemovedToGame(old, data),
+			);
+			if (data.isAuthoritative && prev?.myPlayer?.id === data.playerId) {
+				toast.info("Host removed your click on this question");
+			}
+			if (data.isAuthoritative) {
+				void queryClient.invalidateQueries({ queryKey });
+			}
+		};
+
 		const onQuestionRevealed = (msg: { data?: unknown }) => {
 			const data = msg.data as QuestionRevealedData;
 			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
@@ -797,11 +888,33 @@ export function useGameChannel(
 			const data = msg.data as QuestionAdvancedData;
 			buzzIntentToastIdsRef.current.clear();
 			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
-				applyQuestionAdvancedToGame(old, data),
+				applyQuestionAdvancedToGame(old, stripSkipMetadata(data)),
 			);
 
 			// Refetch so the host picks up server-only fields (e.g. duplicate-buzz
 			// notice) after each authoritative advance.
+			if (data.isAuthoritative) {
+				const cached = queryClient.getQueryData<GameData>(queryKey);
+				if (cached?.isHost) {
+					invalidateGame();
+				}
+			}
+		};
+
+		/** Strip QUESTION_SKIPPED-only fields so the payload matches advance. */
+		function stripSkipMetadata(
+			data: QuestionAdvancedData,
+		): QuestionAdvancedData {
+			const { skippedQuestionId: _sqi, skippedTopicId: _sti, ...rest } = data;
+			return rest;
+		}
+
+		const onQuestionSkipped = (msg: { data?: unknown }) => {
+			const data = msg.data as QuestionAdvancedData;
+			buzzIntentToastIdsRef.current.clear();
+			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
+				applyQuestionAdvancedToGame(old, stripSkipMetadata(data)),
+			);
 			if (data.isAuthoritative) {
 				const cached = queryClient.getQueryData<GameData>(queryKey);
 				if (cached?.isHost) {
@@ -903,10 +1016,12 @@ export function useGameChannel(
 		channel.subscribe(GAME_EVENTS.BUZZ_INTENT, onBuzzIntent);
 		channel.subscribe(GAME_EVENTS.CLICK_RESOLVE_INTENT, onClickResolved);
 		channel.subscribe(GAME_EVENTS.CLICK_RESOLVED, onClickResolved);
+		channel.subscribe(GAME_EVENTS.CLICK_REMOVED, onClickRemoved);
 		channel.subscribe(GAME_EVENTS.QUESTION_REVEAL_INTENT, onQuestionRevealed);
 		channel.subscribe(GAME_EVENTS.QUESTION_REVEALED, onQuestionRevealed);
 		channel.subscribe(GAME_EVENTS.QUESTION_ADVANCE_INTENT, onQuestionAdvanced);
 		channel.subscribe(GAME_EVENTS.QUESTION_ADVANCED, onQuestionAdvanced);
+		channel.subscribe(GAME_EVENTS.QUESTION_SKIPPED, onQuestionSkipped);
 		channel.subscribe(GAME_EVENTS.GAME_COMPLETE_INTENT, onGameCompleted);
 		channel.subscribe(GAME_EVENTS.GAME_ENDED, onGameCompleted);
 		channel.subscribe(GAME_EVENTS.GAME_PAUSED, onGamePaused);
@@ -922,6 +1037,7 @@ export function useGameChannel(
 			channel.unsubscribe(GAME_EVENTS.BUZZ_INTENT, onBuzzIntent);
 			channel.unsubscribe(GAME_EVENTS.CLICK_RESOLVE_INTENT, onClickResolved);
 			channel.unsubscribe(GAME_EVENTS.CLICK_RESOLVED, onClickResolved);
+			channel.unsubscribe(GAME_EVENTS.CLICK_REMOVED, onClickRemoved);
 			channel.unsubscribe(
 				GAME_EVENTS.QUESTION_REVEAL_INTENT,
 				onQuestionRevealed,
@@ -932,6 +1048,7 @@ export function useGameChannel(
 				onQuestionAdvanced,
 			);
 			channel.unsubscribe(GAME_EVENTS.QUESTION_ADVANCED, onQuestionAdvanced);
+			channel.unsubscribe(GAME_EVENTS.QUESTION_SKIPPED, onQuestionSkipped);
 			channel.unsubscribe(GAME_EVENTS.GAME_COMPLETE_INTENT, onGameCompleted);
 			channel.unsubscribe(GAME_EVENTS.GAME_ENDED, onGameCompleted);
 			channel.unsubscribe(GAME_EVENTS.GAME_PAUSED, onGamePaused);

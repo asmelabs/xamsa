@@ -150,6 +150,7 @@ export const FindOneGameOutputSchema = GameSchema.pick({
 			text: z.string().nullable(),
 			answer: z.string().nullable(),
 			explanation: z.string().nullable(),
+			acceptableAnswers: z.array(z.string()),
 		})
 		.nullable(),
 
@@ -261,6 +262,8 @@ export const RevealQuestionOutputSchema = z.object({
 	order: z.number().int(),
 	text: z.string(),
 	answer: z.string(),
+	explanation: z.string().nullable(),
+	acceptableAnswers: z.array(z.string()),
 });
 
 export type RevealQuestionInputType = z.infer<typeof RevealQuestionInputSchema>;
@@ -308,6 +311,15 @@ export type AdvanceQuestionInputType = z.infer<
 export type AdvanceQuestionOutputType = z.infer<
 	typeof AdvanceQuestionOutputSchema
 >;
+
+export const SkipQuestionInputSchema = z.object({
+	code: GameSchema.shape.code,
+});
+
+export const SkipQuestionOutputSchema = AdvanceQuestionOutputSchema;
+
+export type SkipQuestionInputType = z.infer<typeof SkipQuestionInputSchema>;
+export type SkipQuestionOutputType = z.infer<typeof SkipQuestionOutputSchema>;
 
 /**
  * COMPLETE GAME
@@ -465,7 +477,8 @@ export const GetCompletedGameRecapOutputSchema = z.object({
 	totals: z.object({
 		totalTopics: z.number().int(),
 		totalQuestions: z.number().int(),
-		totalSkippedQuestions: z.number().int(),
+		totalUnresolvedQuestions: z.number().int(),
+		totalHostSkippedQuestions: z.number().int(),
 		totalAnswers: z.number().int(),
 		totalCorrectAnswers: z.number().int(),
 		totalIncorrectAnswers: z.number().int(),

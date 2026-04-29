@@ -1,7 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { channels, GAME_EVENTS } from "@xamsa/ably/channels";
 import { Button } from "@xamsa/ui/components/button";
-import { ArrowRightIcon, FlagIcon, PauseIcon, PlayIcon } from "lucide-react";
+import {
+	ArrowRightIcon,
+	FlagIcon,
+	PauseIcon,
+	PlayIcon,
+	SkipForwardIcon,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
 	applyGameCompletedToGame,
@@ -14,6 +21,7 @@ import {
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
 import { orpc } from "@/utils/orpc";
+import { BetterDialog } from "./better-dialog";
 
 interface HostControlsProps {
 	game: GameData;
@@ -22,6 +30,7 @@ interface HostControlsProps {
 export function HostControls({ game }: HostControlsProps) {
 	const queryClient = useQueryClient();
 	const queryKey = orpc.game.findOne.queryKey({ input: { code: game.code } });
+	const [skipOpen, setSkipOpen] = useState(false);
 
 	const isActive = game.status === "active";
 	const isPaused = game.status === "paused";
@@ -70,8 +79,44 @@ export function HostControls({ game }: HostControlsProps) {
 		},
 	});
 
-	const isBusy = isAdvancing || isCompleting;
+	const { mutate: skipQuestionMut, isPending: isSkipping } = useMutation({
+		...orpc.game.skipQuestion.mutationOptions(),
+		onSuccess(data) {
+			queryClient.setQueryData<GameData | undefined>(queryKey, (old) =>
+				applyQuestionAdvancedToGame(old, {
+					...data,
+					isAuthoritative: true,
+				}),
+			);
+			void queryClient.invalidateQueries({ queryKey });
+			setSkipOpen(false);
+		},
+		onError(error) {
+			toast.error(error.message || "Failed to skip question");
+			queryClient.invalidateQueries({ queryKey });
+		},
+	});
+
+	const isBusy = isAdvancing || isCompleting || isSkipping;
 	const canAct = isActive && game.isQuestionRevealed && !isBusy;
+
+	const currentQuestionClicks = game.hostData?.clickDetails ?? game.clicks;
+	const hasResolvedClickOnCurrentQuestion = useMemo(
+		() => currentQuestionClicks.some((c) => c.status !== "pending"),
+		[currentQuestionClicks],
+	);
+
+	const canSkipQuestion =
+		!isLastQuestion &&
+		(isActive || isPaused) &&
+		!isBusy &&
+		!game.isQuestionRevealed &&
+		!hasResolvedClickOnCurrentQuestion;
+
+	const handleSkip = () => {
+		if (!canSkipQuestion) return;
+		skipQuestionMut({ code: game.code });
+	};
 	const canTogglePause = (isActive || isPaused) && !isTogglingPause;
 
 	const handleTogglePause = () => {
@@ -206,10 +251,46 @@ export function HostControls({ game }: HostControlsProps) {
 					Finish game
 				</Button>
 			) : (
-				<Button size="sm" disabled={!canAct} onClick={handleNext}>
-					Next question
-					<ArrowRightIcon />
-				</Button>
+				<>
+					<BetterDialog
+						opened={skipOpen}
+						setOpened={(o) => setSkipOpen(o ?? false)}
+						title="Skip this question?"
+						description="The question will be removed from the game. No stats or difficulty updates apply."
+						submit={
+							<Button
+								type="button"
+								variant="destructive"
+								disabled={!canSkipQuestion || isSkipping}
+								onClick={handleSkip}
+							>
+								Skip question
+							</Button>
+						}
+					>
+						<p className="text-muted-foreground text-sm">
+							All buzzes on this question are cleared. This cannot be undone.
+						</p>
+					</BetterDialog>
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={!canSkipQuestion}
+						title={
+							canSkipQuestion
+								? undefined
+								: "Skip is only available before any buzz is resolved and before the answer is revealed."
+						}
+						onClick={() => setSkipOpen(true)}
+					>
+						<SkipForwardIcon className="size-4" />
+						Skip
+					</Button>
+					<Button size="sm" disabled={!canAct} onClick={handleNext}>
+						Next question
+						<ArrowRightIcon />
+					</Button>
+				</>
 			)}
 		</div>
 	);

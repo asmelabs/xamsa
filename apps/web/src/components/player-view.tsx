@@ -190,8 +190,36 @@ export function PlayerView({ game }: PlayerViewProps) {
 							<p className="mt-1 font-semibold text-green-700 dark:text-green-400">
 								{game.currentQuestion.answer}
 							</p>
+							{game.currentQuestion.acceptableAnswers.length > 0 && (
+								<div className="mt-2">
+									<p className="text-[10px] text-green-700 uppercase tracking-wide opacity-90 dark:text-green-400">
+										Also accepted
+									</p>
+									<div className="mt-1 flex flex-wrap gap-1">
+										{game.currentQuestion.acceptableAnswers.map((alt) => (
+											<Badge
+												key={alt}
+												variant="outline"
+												className="text-[10px]"
+											>
+												{alt}
+											</Badge>
+										))}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
+					{game.currentQuestion.explanation ? (
+						<div className="rounded-lg border border-border/60 bg-muted/30 p-3">
+							<p className="text-muted-foreground text-xs uppercase tracking-wide">
+								Explanation
+							</p>
+							<p className="mt-1.5 text-sm leading-relaxed">
+								{game.currentQuestion.explanation}
+							</p>
+						</div>
+					) : null}
 				</div>
 			) : (
 				<div className="flex flex-col items-center gap-2 rounded-xl border border-border border-dashed bg-background p-6 text-center">

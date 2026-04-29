@@ -12,11 +12,13 @@ export const GAME_EVENTS = {
 	CLICK_NEW: "click:new",
 	CLICK_RESOLVE_INTENT: "click:resolve:intent",
 	CLICK_RESOLVED: "click:resolved",
+	CLICK_REMOVED: "click:removed",
 
 	QUESTION_REVEAL_INTENT: "question:reveal:intent",
 	QUESTION_REVEALED: "question:revealed",
 	QUESTION_ADVANCE_INTENT: "question:advance:intent",
 	QUESTION_ADVANCED: "question:advanced",
+	QUESTION_SKIPPED: "question:skipped",
 
 	GAME_STARTED: "game:start",
 	GAME_COMPLETE_INTENT: "game:complete:intent",

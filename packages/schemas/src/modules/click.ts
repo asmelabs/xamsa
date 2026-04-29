@@ -39,3 +39,32 @@ export const ClickResolveOutputSchema = ClickSchema.pick({
 
 export type ClickResolveInputType = z.infer<typeof ClickResolveInputSchema>;
 export type ClickResolveOutputType = z.infer<typeof ClickResolveOutputSchema>;
+
+const ClickRemovePlayerScoreSchema = z.object({
+	playerId: z.string(),
+	score: z.number().int(),
+	correctAnswers: z.number().int(),
+	incorrectAnswers: z.number().int(),
+	expiredClicks: z.number().int(),
+	currentCorrectStreak: z.number().int(),
+	currentWrongStreak: z.number().int(),
+	longestCorrectStreak: z.number().int(),
+	longestWrongStreak: z.number().int(),
+	peakScore: z.number().int(),
+	lowestScore: z.number().int(),
+});
+
+/**
+ * REMOVE — host fully erases a click
+ */
+export const ClickRemoveInputSchema = z.object({
+	code: GameSchema.shape.code,
+	clickId: ClickSchema.shape.id,
+});
+
+export const ClickRemoveOutputSchema = z.object({
+	playerScores: z.array(ClickRemovePlayerScoreSchema),
+});
+
+export type ClickRemoveInputType = z.infer<typeof ClickRemoveInputSchema>;
+export type ClickRemoveOutputType = z.infer<typeof ClickRemoveOutputSchema>;

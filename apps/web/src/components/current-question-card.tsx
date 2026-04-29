@@ -47,6 +47,8 @@ export function CurrentQuestionCard({
 			order: hostQuestion.order,
 			text: hostQuestion.text,
 			answer: hostQuestion.answer,
+			explanation: hostQuestion.explanation ?? null,
+			acceptableAnswers: hostQuestion.acceptableAnswers,
 			isAuthoritative: false,
 		};
 
