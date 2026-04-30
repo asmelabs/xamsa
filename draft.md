@@ -362,6 +362,15 @@ You can see some of them requires autneticated users, some of them requries mode
 - Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
 - Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
 
+## v26.04.25
+
+- Implement email system with Mailjet.
+
+- Send verification email on register.
+- Send password reset email on forgot password.
+- Send email when user follows another user.
+- Send email when user wins a game.
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
