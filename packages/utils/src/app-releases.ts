@@ -14,20 +14,28 @@ export const appReleasesManifest: AppReleasesManifest = {
 	current,
 	releases: [
 		{
-			releasedAt: "2026-04-29",
+			releasedAt: "2026-04-30",
 			year: 2026,
 			month: 4,
 			patch: 22,
 			title:
-				"Start implementing categories and tags, identify users for web analytics",
+				"Alternate answers on topic forms, compact editors, leaderboard ties, staff dashboard polish",
 			highlights: [
 				{
 					kind: "text",
-					text: "Start implementing categories and tags, identify users for web analytics",
+					text: "Single-topic and bulk topic editors include chip inputs for up to five alternate acceptable answers per question (Enter or blur to add), alongside tighter spacing on topic and question fields.",
 				},
 				{
 					kind: "text",
-					text: "For web analytics, we are identifying users by their names and usernames.",
+					text: "Global leaderboard ranks use competition scoring: players tied on the board’s primary metric share the same rank, and the next rank skips accordingly (for example 1, 1, 3, …).",
+				},
+				{
+					kind: "text",
+					text: "Staff dashboard Users adds follower and following totals with sorting by each count.",
+				},
+				{
+					kind: "text",
+					text: "Staff Clicks and Questions tables wrap question text in a bounded width with multiple lines so columns stay readable.",
 				},
 			],
 		},

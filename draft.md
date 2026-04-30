@@ -328,6 +328,14 @@ UI:
 
 - on /packs/$packSlug/topics/new or /packs/$packSlug/topics/bulk page, there is already a [Import with 3sual] button. Now, convert that to [Import] button, which should open a dialog. On the dialog, there will be 4 tabs at the top: [URL], [FILE], [3Sual] and [COPY/PASTE]. (note: copy/paste is just a file, but instead of uploading a file, users can just copy json/xml/yaml/csv/txt text and paste it) if they don't want to copy/paste but they have the file, they can just upload with file, if they do not have the file, but have a url they can paste the url, or they have found the topics on 3sual.az, they can use 3sual.
 
+## v26.04.22
+
+- Add acceptableAnswers array input to questions on topic create forms. Use chips for the answers.
+- Make topic form and question form more compact
+- On leaderboard, when two (or more) users have the same score, they should have the same rank, and the next rank should skip the count of the users with the same score. (e.g. 1/1/3/4/5/5/5/8...)
+- On dashboard, add total followers and following counts to user table. Also add sorting by followers and following counts.
+- On dashboard, on clicks and questions tables, there is question field, which renders the question text in a single line, which makes it really wide column, make it multiline, so it takes up less width.
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).

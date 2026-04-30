@@ -40,6 +40,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useFieldArray, useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AcceptableAnswersChips } from "@/components/acceptable-answers-chips";
 import { FormInput } from "@/components/form-input";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
@@ -101,7 +102,7 @@ function BulkTopicQuestionsCarousel({ topicIndex }: { topicIndex: number }) {
 	}, [api]);
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-3">
 			<div className="flex items-center justify-between">
 				<p className="font-semibold text-sm">
 					Questions{" "}
@@ -139,7 +140,7 @@ function BulkTopicQuestionsCarousel({ topicIndex }: { topicIndex: number }) {
 				<CarouselContent>
 					{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, index) => (
 						<CarouselItem key={index}>
-							<div className="space-y-5 px-1">
+							<div className="space-y-3 px-1">
 								<FormInput
 									control={control}
 									name={`topics.${topicIndex}.questions.${index}.text`}
@@ -150,7 +151,7 @@ function BulkTopicQuestionsCarousel({ topicIndex }: { topicIndex: number }) {
 											{...f}
 											placeholder="Clue / question"
 											maxLength={1000}
-											rows={3}
+											rows={2}
 										/>
 									)}
 								</FormInput>
@@ -165,6 +166,24 @@ function BulkTopicQuestionsCarousel({ topicIndex }: { topicIndex: number }) {
 											{...f}
 											placeholder="Primary answer"
 											maxLength={250}
+										/>
+									)}
+								</FormInput>
+
+								<FormInput
+									control={control}
+									name={`topics.${topicIndex}.questions.${index}.acceptableAnswers`}
+									label="Alternate acceptable answers (optional)"
+									description="Other spellings or forms that count as correct."
+								>
+									{(f) => (
+										<AcceptableAnswersChips
+											ref={f.ref}
+											name={f.name}
+											disabled={f.disabled}
+											onBlur={f.onBlur}
+											onChange={f.onChange}
+											value={f.value}
 										/>
 									)}
 								</FormInput>
@@ -303,7 +322,7 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 			replace: true,
 			state: {},
 		});
-	}, [locationState, navigate, packSlug]);
+	}, [locationState, navigate, packSlug, form.reset]);
 
 	const onTopicsImported = (payload: {
 		topics: z.infer<typeof CreateTopicPayloadSchema>[];
@@ -397,9 +416,9 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 				)}
 			</FrameHeader>
 			<FormProvider {...formProviderState}>
-				<form className="space-y-6" onSubmit={onSubmit}>
+				<form className="space-y-4" onSubmit={onSubmit}>
 					{fields.map((field, topicIndex) => (
-						<FramePanel key={field.id} className="space-y-4">
+						<FramePanel key={field.id} className="space-y-3">
 							<div className="flex items-center justify-between gap-2">
 								<p className="font-medium text-sm">Topic {topicIndex + 1}</p>
 								{fields.length > 1 && (

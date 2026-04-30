@@ -45,6 +45,7 @@ import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import type { SubmitErrorHandler } from "react-hook-form";
 import { toast } from "sonner";
+import { AcceptableAnswersChips } from "@/components/acceptable-answers-chips";
 import { LoadingButton } from "@/components/loading-button";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
@@ -245,8 +246,8 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 					.
 				</p>
 			</FrameHeader>
-			<form onSubmit={onSubmit} className="space-y-4">
-				<FramePanel className="space-y-4">
+			<form onSubmit={onSubmit} className="space-y-3">
+				<FramePanel className="space-y-3">
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 						<p className="font-semibold text-sm">Topic</p>
 						<Button
@@ -280,6 +281,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 								value={field.value || ""}
 								placeholder="Enter your topic description"
 								maxLength={1000}
+								rows={2}
 							/>
 						)}
 					</form.Input>
@@ -457,7 +459,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 					</Dialog>
 				</FramePanel>
 
-				<FramePanel className="space-y-4">
+				<FramePanel className="space-y-3">
 					<div className="flex items-center justify-between">
 						<p className="font-semibold text-sm">
 							Questions{" "}
@@ -496,7 +498,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 						<CarouselContent>
 							{Array.from({ length: QUESTIONS_PER_TOPIC }, (_, index) => (
 								<CarouselItem key={index}>
-									<div className="space-y-5 px-1">
+									<div className="space-y-3 px-1">
 										<form.Input
 											name={`questions.${index}.text`}
 											label={`Question ${index + 1}`}
@@ -506,7 +508,7 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 													{...f}
 													placeholder="Enter question text"
 													maxLength={1000}
-													rows={3}
+													rows={2}
 												/>
 											)}
 										</form.Input>
@@ -520,6 +522,23 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 													{...f}
 													placeholder="Enter the correct answer"
 													maxLength={250}
+												/>
+											)}
+										</form.Input>
+
+										<form.Input
+											name={`questions.${index}.acceptableAnswers`}
+											label="Alternate acceptable answers (optional)"
+											description="Other spellings or forms that count as correct."
+										>
+											{(f) => (
+												<AcceptableAnswersChips
+													ref={f.ref}
+													name={f.name}
+													disabled={f.disabled}
+													onBlur={f.onBlur}
+													onChange={f.onChange}
+													value={f.value}
 												/>
 											)}
 										</form.Input>

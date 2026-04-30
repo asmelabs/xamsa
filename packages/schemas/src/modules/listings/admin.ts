@@ -41,6 +41,8 @@ export const adminUserSort =
 			xp: { xp: "desc" },
 			elo: { elo: "desc" },
 			packs: { totalPacksPublished: "desc" },
+			followers: { totalFollowers: "desc" },
+			following: { totalFollowing: "desc" },
 		},
 		default: "newest",
 	});

@@ -117,9 +117,17 @@ function RouteComponent() {
 				cell: (c) => {
 					const q = c.getValue();
 					return (
-						<span className="line-clamp-2 text-sm">
-							{q.order}. {q.slug}
-						</span>
+						<div className="max-w-xs whitespace-normal break-words sm:max-w-sm">
+							<p className="line-clamp-4 text-sm">
+								<span className="text-muted-foreground tabular-nums">
+									{q.order}.
+								</span>{" "}
+								{q.text}
+							</p>
+							<p className="mt-0.5 font-mono text-muted-foreground text-xs">
+								{q.slug}
+							</p>
+						</div>
 					);
 				},
 			}),

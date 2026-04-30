@@ -126,6 +126,8 @@ export const ListAdminUsersItemSchema = UserSchema.pick({
 	totalGamesHosted: true,
 	totalGamesPlayed: true,
 	totalPacksPublished: true,
+	totalFollowers: true,
+	totalFollowing: true,
 });
 
 export const ListAdminUsersOutputSchema = PaginationOutputSchema(
@@ -335,6 +337,7 @@ export const ListAdminClicksItemSchema = z.object({
 		id: z.string(),
 		slug: z.string(),
 		order: z.number().int(),
+		text: z.string(),
 	}),
 	topic: z.object({
 		slug: z.string(),
