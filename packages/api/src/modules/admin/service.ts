@@ -106,6 +106,8 @@ export async function listAdminUsers(
 				totalGamesHosted: true,
 				totalGamesPlayed: true,
 				totalPacksPublished: true,
+				totalFollowers: true,
+				totalFollowing: true,
 			},
 		}),
 		prisma.user.count({ where }),
@@ -288,7 +290,7 @@ export async function listAdminClicks(
 					},
 				},
 				question: {
-					select: { id: true, slug: true, order: true },
+					select: { id: true, slug: true, order: true, text: true },
 				},
 				topic: {
 					select: { slug: true, name: true, order: true },

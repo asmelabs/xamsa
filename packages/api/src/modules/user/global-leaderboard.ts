@@ -260,140 +260,6 @@ function rowToCursor(
 	}
 }
 
-function strictlyBetterWhere(cursor: LeaderboardCursor): Prisma.UserWhereInput {
-	switch (cursor.b) {
-		case "elo":
-			return {
-				OR: [
-					{ elo: { gt: cursor.elo } },
-					{
-						AND: [{ elo: cursor.elo }, { peakElo: { gt: cursor.peakElo } }],
-					},
-					{
-						AND: [
-							{ elo: cursor.elo },
-							{ peakElo: cursor.peakElo },
-							{ totalWins: { gt: cursor.totalWins } },
-						],
-					},
-					{
-						AND: [
-							{ elo: cursor.elo },
-							{ peakElo: cursor.peakElo },
-							{ totalWins: cursor.totalWins },
-							{ username: { lt: cursor.username } },
-						],
-					},
-				],
-			};
-		case "xp":
-			return {
-				OR: [
-					{ xp: { gt: cursor.xp } },
-					{
-						AND: [{ xp: cursor.xp }, { level: { gt: cursor.level } }],
-					},
-					{
-						AND: [
-							{ xp: cursor.xp },
-							{ level: cursor.level },
-							{ totalWins: { gt: cursor.totalWins } },
-						],
-					},
-					{
-						AND: [
-							{ xp: cursor.xp },
-							{ level: cursor.level },
-							{ totalWins: cursor.totalWins },
-							{ username: { lt: cursor.username } },
-						],
-					},
-				],
-			};
-		case "wins":
-			return {
-				OR: [
-					{ totalWins: { gt: cursor.totalWins } },
-					{
-						AND: [
-							{ totalWins: cursor.totalWins },
-							{ totalGamesPlayed: { gt: cursor.totalGamesPlayed } },
-						],
-					},
-					{
-						AND: [
-							{ totalWins: cursor.totalWins },
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ elo: { gt: cursor.elo } },
-						],
-					},
-					{
-						AND: [
-							{ totalWins: cursor.totalWins },
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ elo: cursor.elo },
-							{ username: { lt: cursor.username } },
-						],
-					},
-				],
-			};
-		case "hosts":
-			return {
-				OR: [
-					{ totalGamesHosted: { gt: cursor.totalGamesHosted } },
-					{
-						AND: [
-							{ totalGamesHosted: cursor.totalGamesHosted },
-							{ totalGamesPlayed: { gt: cursor.totalGamesPlayed } },
-						],
-					},
-					{
-						AND: [
-							{ totalGamesHosted: cursor.totalGamesHosted },
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ elo: { gt: cursor.elo } },
-						],
-					},
-					{
-						AND: [
-							{ totalGamesHosted: cursor.totalGamesHosted },
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ elo: cursor.elo },
-							{ username: { lt: cursor.username } },
-						],
-					},
-				],
-			};
-		case "plays":
-			return {
-				OR: [
-					{ totalGamesPlayed: { gt: cursor.totalGamesPlayed } },
-					{
-						AND: [
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ totalWins: { gt: cursor.totalWins } },
-						],
-					},
-					{
-						AND: [
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ totalWins: cursor.totalWins },
-							{ elo: { gt: cursor.elo } },
-						],
-					},
-					{
-						AND: [
-							{ totalGamesPlayed: cursor.totalGamesPlayed },
-							{ totalWins: cursor.totalWins },
-							{ elo: cursor.elo },
-							{ username: { lt: cursor.username } },
-						],
-					},
-				],
-			};
-	}
-}
-
 function strictlyAfterWhere(cursor: LeaderboardCursor): Prisma.UserWhereInput {
 	switch (cursor.b) {
 		case "elo":
@@ -545,6 +411,49 @@ function baseWhereForBoard(
 	};
 }
 
+/** Serialized primary metric for competition rank (ties share rank). */
+function rankPrimaryKey(
+	board: GlobalLeaderboardBoardType,
+	row: RowCursorFields,
+): string {
+	switch (board) {
+		case "elo":
+			return `elo:${row.elo}`;
+		case "xp":
+			return `xp:${row.xp}:${row.level}`;
+		case "wins":
+			return `wins:${row.totalWins}`;
+		case "hosts":
+			return `hosts:${row.totalGamesHosted}`;
+		case "plays":
+			return `plays:${row.totalGamesPlayed}`;
+	}
+}
+
+/** Users strictly ahead on the board's displayed primary metric only. */
+function primaryStrictlyBetterWhere(
+	board: GlobalLeaderboardBoardType,
+	row: RowCursorFields,
+): Prisma.UserWhereInput {
+	switch (board) {
+		case "elo":
+			return { elo: { gt: row.elo } };
+		case "xp":
+			return {
+				OR: [
+					{ xp: { gt: row.xp } },
+					{ AND: [{ xp: row.xp }, { level: { gt: row.level } }] },
+				],
+			};
+		case "wins":
+			return { totalWins: { gt: row.totalWins } };
+		case "hosts":
+			return { totalGamesHosted: { gt: row.totalGamesHosted } };
+		case "plays":
+			return { totalGamesPlayed: { gt: row.totalGamesPlayed } };
+	}
+}
+
 function orderByForBoard(
 	board: GlobalLeaderboardBoardType,
 ): Prisma.UserOrderByWithRelationInput[] {
@@ -615,13 +524,6 @@ export async function getGlobalLeaderboard(
 		? { AND: [baseWhere, strictlyAfterWhere(cursorDecoded)] }
 		: baseWhere;
 
-	const startRank =
-		cursorDecoded === null
-			? 1
-			: (await prisma.user.count({
-					where: { AND: [baseWhere, strictlyBetterWhere(cursorDecoded)] },
-				})) + 1;
-
 	const rows = await prisma.user.findMany({
 		where,
 		orderBy: orderByForBoard(board),
@@ -644,19 +546,46 @@ export async function getGlobalLeaderboard(
 	const hasNext = rows.length > limit;
 	const pageRows = hasNext ? rows.slice(0, limit) : rows;
 
-	const items: GlobalLeaderboardRowType[] = pageRows.map((row, i) => ({
-		rank: startRank + i,
-		username: row.username,
-		name: row.name,
-		image: row.image,
-		elo: row.elo,
-		level: row.level,
-		xp: row.xp,
-		totalWins: row.totalWins,
-		totalGamesHosted: row.totalGamesHosted,
-		totalGamesPlayed: row.totalGamesPlayed,
-		totalPointsEarned: row.totalPointsEarned,
-	}));
+	const rankCache = new Map<string, number>();
+	const items: GlobalLeaderboardRowType[] = [];
+
+	for (const row of pageRows) {
+		const fields: RowCursorFields = {
+			username: row.username,
+			elo: row.elo,
+			peakElo: row.peakElo,
+			xp: row.xp,
+			level: row.level,
+			totalWins: row.totalWins,
+			totalGamesHosted: row.totalGamesHosted,
+			totalGamesPlayed: row.totalGamesPlayed,
+			totalPointsEarned: row.totalPointsEarned,
+		};
+		const key = rankPrimaryKey(board, fields);
+		let rank = rankCache.get(key);
+		if (rank === undefined) {
+			const ahead = await prisma.user.count({
+				where: {
+					AND: [baseWhere, primaryStrictlyBetterWhere(board, fields)],
+				},
+			});
+			rank = ahead + 1;
+			rankCache.set(key, rank);
+		}
+		items.push({
+			rank,
+			username: row.username,
+			name: row.name,
+			image: row.image,
+			elo: row.elo,
+			level: row.level,
+			xp: row.xp,
+			totalWins: row.totalWins,
+			totalGamesHosted: row.totalGamesHosted,
+			totalGamesPlayed: row.totalGamesPlayed,
+			totalPointsEarned: row.totalPointsEarned,
+		});
+	}
 
 	const last = pageRows[pageRows.length - 1];
 	const nextCursor =

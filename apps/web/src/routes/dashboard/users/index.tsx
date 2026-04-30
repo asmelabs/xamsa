@@ -32,6 +32,8 @@ const SORT_OPTIONS: AdminSortOption[] = (
 			xp: "XP",
 			elo: "Elo",
 			packs: "Packs published",
+			followers: "Followers",
+			following: "Following",
 		}[value] ?? value,
 }));
 
@@ -84,6 +86,8 @@ function RouteComponent() {
 			col.accessor("totalGamesHosted", { header: "Hosted" }),
 			col.accessor("totalGamesPlayed", { header: "Played" }),
 			col.accessor("totalPacksPublished", { header: "Packs" }),
+			col.accessor("totalFollowers", { header: "Followers" }),
+			col.accessor("totalFollowing", { header: "Following" }),
 			col.accessor("createdAt", {
 				header: "Created",
 				cell: (c) => format(c.getValue(), "yyyy-MM-dd HH:mm"),

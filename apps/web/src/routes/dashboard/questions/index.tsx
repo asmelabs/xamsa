@@ -74,7 +74,7 @@ function RouteComponent() {
 								topicSlug: row.topic.slug,
 								questionSlug: row.slug,
 							}}
-							className="line-clamp-2 font-medium text-primary underline-offset-4 hover:underline"
+							className="line-clamp-4 max-w-xs whitespace-normal break-words font-medium text-primary underline-offset-4 hover:underline sm:max-w-sm"
 						>
 							{text}
 						</Link>
