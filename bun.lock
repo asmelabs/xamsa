@@ -140,6 +140,7 @@
         "@xamsa/db": "workspace:*",
         "@xamsa/env": "workspace:*",
         "@xamsa/mail": "workspace:*",
+        "@xamsa/upload": "workspace:*",
         "@xamsa/utils": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",

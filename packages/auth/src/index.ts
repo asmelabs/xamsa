@@ -16,6 +16,13 @@ import {
 	twoFactor,
 } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { fixSetPasswordRoute } from "./fix-set-password-route";
+import {
+	allocateUniqueOAuthUsername,
+	ensureDisplayName,
+	mirrorGoogleAvatarIfNeeded,
+	needsAutoUsername,
+} from "./oauth-google";
 
 const trustedOrigins =
 	env.NODE_ENV === "production"
@@ -112,18 +119,72 @@ export function createAuth() {
 			},
 		},
 
+		account: {
+			accountLinking: {
+				enabled: true,
+				trustedProviders: ["google"],
+			},
+		},
+
+		socialProviders: {
+			google: {
+				clientId: env.GOOGLE_CLIENT_ID,
+				clientSecret: env.GOOGLE_CLIENT_SECRET,
+				mapProfileToUser: (profile) => {
+					const rawName =
+						`${profile.given_name ?? ""} ${profile.family_name ?? ""}`.trim() ||
+						(typeof profile.name === "string" ? profile.name : "");
+					return {
+						name: ensureDisplayName(rawName, profile.email),
+						image: profile.picture ?? undefined,
+					};
+				},
+			},
+		},
+
+		databaseHooks: {
+			user: {
+				create: {
+					before: async (userRecord) => {
+						const row = userRecord as Record<string, unknown>;
+						const email = String(row.email ?? "");
+						const name = ensureDisplayName(row.name, email);
+
+						let username = row.username;
+						if (needsAutoUsername(username)) {
+							username = await allocateUniqueOAuthUsername(prisma, name, email);
+						}
+
+						return {
+							data: {
+								...row,
+								name,
+								username,
+							},
+						};
+					},
+					after: async (created) => {
+						if (!created?.id || typeof created.username !== "string") return;
+						await mirrorGoogleAvatarIfNeeded({
+							prisma,
+							userId: created.id,
+							username: created.username,
+							imageUrl: created.image,
+						});
+					},
+				},
+			},
+		},
+
 		plugins: [
 			tanstackStartCookies(),
 			dash(),
 			twoFactor({
 				issuer: "Xamsa",
 			}),
+			fixSetPasswordRoute(),
 			haveIBeenPwned({
-				paths: [
-					"/auth/register",
-					"/auth/reset-password",
-					"/account/settings/security",
-				],
+				paths: ["/auth/register", "/auth/reset-password", "/settings/security"],
 			}),
 			openAPI(),
 			lastLoginMethod(),

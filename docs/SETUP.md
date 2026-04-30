@@ -87,7 +87,7 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | -------- | ----- |
 | `DATABASE_URL` | PostgreSQL connection string |
 | `BETTER_AUTH_SECRET` | At least 32 characters |
-| `BETTER_AUTH_URL` | Base URL of the app (e.g. `http://localhost:3001`) |
+| `BETTER_AUTH_URL` | Base URL **of the deployment that serves `/api/auth`** — same origin clients use (scheme + host + port). If the app loads at `http://localhost:3001`, use that, not `:3000` |
 | `BETTER_AUTH_API_KEY` | API key expected by Better Auth |
 | `BCRYPT_SALT_ROUNDS` | Integer ≥ 1 |
 | `ABLY_API_KEY` | Ably realtime |
@@ -97,6 +97,10 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name (profile images) |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `GOOGLE_CLIENT_ID` | OAuth 2.0 Web client ID (Google Cloud Console) |
+| `GOOGLE_CLIENT_SECRET` | OAuth 2.0 client secret for the same client |
+
+**Google sign-in:** In Google Cloud Console, add authorized redirect URIs that match your app’s auth base URL plus `/api/auth/callback/google` (for example `http://localhost:3001/api/auth/callback/google` when `BETTER_AUTH_URL` is `http://localhost:3001`). The URI must match exactly.
 
 **Transactional email:** `RESEND_API_KEY` and `EMAIL_FROM` power password reset messages from Better Auth. In **production**, users receive the reset link by email. In **development**, the link is printed to the server console instead.
 
@@ -108,8 +112,16 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | `SEND_NOTIFICATION_EMAIL_IN_DEV` | Optional. Set to `true` to send follower / game-winner emails via Resend when `NODE_ENV` is not `production`. Production sends these regardless. |
 | `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN` | Client PostHog token |
 | `VITE_PUBLIC_POSTHOG_HOST` | PostHog host |
+| `VITE_PUBLIC_SITE_URL` | Canonical public origin used for metadata and absolute URLs |
+| `VITE_PUBLIC_BETTER_AUTH_URL` | Optional origin for Better Auth browser calls (`/api/auth`); must equal `BETTER_AUTH_URL` (same scheme, host, and port). Use when marketing site and API origins differ |
 
 Never commit `.env` or secrets. `.gitignore` already excludes `.env` and `.env*.local`.
+
+**OAuth / CSRF (“state_mismatch”)**
+
+Better Auth verifies Google (and other) OAuth callbacks with short-lived verification state. Seeing a second request to `/api/auth/callback/google` (prefetch, double navigation, or automation) consume the same `state` can log an error **after** the first request already succeeded. In DevTools, confirm whether there are duplicate callback requests.
+
+Keep **`BETTER_AUTH_URL`** equal to the exact origin browsers use when loading the site and `/api/auth` (including port). Optionally set **`VITE_PUBLIC_BETTER_AUTH_URL`** to the same value so the SPA client doesn’t derive a mismatched origin. Misaligned origins can cause lost state cookies.
 
 ---
 
@@ -216,6 +228,10 @@ Do not hand-merge `bun.lock`. Regenerate:
 rm bun.lock
 bun install
 ```
+
+### OAuth logged `state_mismatch` after login still works
+
+This is often a **duplicate** GET to `/api/auth/callback/google` after the flow already succeeded. Inspect the Network panel for duplicate callbacks. Align `BETTER_AUTH_URL`, Google’s authorized redirect URIs (`{BETTER_AUTH_URL}/api/auth/callback/google`), and optional `VITE_PUBLIC_BETTER_AUTH_URL` per [Configuration](#configuration).
 
 ### Port already in use
 
