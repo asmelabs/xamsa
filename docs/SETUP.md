@@ -113,7 +113,7 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN` | Client PostHog token |
 | `VITE_PUBLIC_POSTHOG_HOST` | PostHog host |
 | `VITE_PUBLIC_SITE_URL` | Canonical public origin used for metadata and absolute URLs |
-| `VITE_PUBLIC_BETTER_AUTH_URL` | Optional origin for Better Auth browser calls (`/api/auth`); must equal `BETTER_AUTH_URL` (same scheme, host, and port). Use when marketing site and API origins differ |
+| `VITE_PUBLIC_BETTER_AUTH_URL` | Only if the SPA origin ≠ auth API origin (e.g. dev :3000 vs :3001). Omit when app and `/api/auth` share the same host — **do not** reuse `VITE_PUBLIC_SITE_URL` here (`www` vs apex causes CORS). Must match `BETTER_AUTH_URL` when set |
 
 Never commit `.env` or secrets. `.gitignore` already excludes `.env` and `.env*.local`.
 
@@ -121,7 +121,7 @@ Never commit `.env` or secrets. `.gitignore` already excludes `.env` and `.env*.
 
 Better Auth verifies Google (and other) OAuth callbacks with short-lived verification state. Seeing a second request to `/api/auth/callback/google` (prefetch, double navigation, or automation) consume the same `state` can log an error **after** the first request already succeeded. In DevTools, confirm whether there are duplicate callback requests.
 
-Keep **`BETTER_AUTH_URL`** equal to the exact origin browsers use when loading the site and `/api/auth` (including port). Optionally set **`VITE_PUBLIC_BETTER_AUTH_URL`** to the same value so the SPA client doesn’t derive a mismatched origin. Misaligned origins can cause lost state cookies.
+Keep **`BETTER_AUTH_URL`** equal to the exact origin that serves `/api/auth` for each deployment host (including `www` vs apex). **Do not** copy your canonical `VITE_PUBLIC_SITE_URL` into the auth client unless that is literally the host in the user’s address bar — otherwise API calls become cross-origin and browsers block them (CORS), e.g. on **sign out**. Set **`VITE_PUBLIC_BETTER_AUTH_URL`** only when the SPA runs on a different origin than the auth API (common in local dev); when the app and `/api/auth` share the same origin, leave it unset so the client uses `window.location.origin`.
 
 ---
 
