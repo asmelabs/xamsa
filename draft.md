@@ -412,11 +412,22 @@ Note:
 
 ## v26.04.27
 
-- Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
-- Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
+- Fix, CORS error on auth API calls.
+
+## v26.04.28
+
 - When clicking on someone's profile photo, it should open a popup/modal with bigger image of the profile photo.
 - On followers/following dialogs on profile page, each user must have a "Follow"/"Unfollow" button justified right (if current user is authenticated and not on self). So that users can easily follow/unfollow someone from there without opening the profile page or leaving the dialog.
+- On home search, when typing "whats-new" it navigates to /whats-new page. When typing "whats-new:version" it navigates to /whats-new/$version page. There should also be "whats-new:latest" that automatically finds the latest version and navigates to it. It should also work on route level. Going to /whats-new/latest should automatically redirects user to /whats-new/$version (with the latest version).
+- On home search, if user is authenticated typing "logout" and clicking on it, it should sign out the user and navigate to / page.
+- On home search, if user is authenticated typing "settings" and clicking on it, it should navigate to /settings page. (i guess it is already there), but addition to that "settings:security" should navigate to /settings/security page.
+- On home search, "privacy" and "terms" should navigate to /legal/privacy-policy and /legal/terms-of-service pages respectively.
+- On profile page, when followers or following dialogs are open, respective query param should be set to "followers" or "following" respectively using nuqs. might be "?tab=followers" or "?tab=following".
 
+## Later versions
+
+- Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
+- Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
 - Add comments system on packs and topics pages.
 - Add posts. Posts will be like facebook posts, where authenticated users can create posts with content, image, etc. Posts will have a comprehensive attachement system, where you can attach game, pack, user, topic, question, click, etc. simply every type of resource that exists in the app. In the first phase though, you will just be able to write text, images, and attach games and packs.
 
