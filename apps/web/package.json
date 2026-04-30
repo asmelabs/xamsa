@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "cd ../../packages/db && bunx prisma migrate deploy && cd ../../apps/web && vite build",
+		"build": "cd ../../packages/db && bun run db:deploy:ci && cd ../../apps/web && vite build",
 		"serve": "vite preview",
 		"dev": "vite dev"
 	},

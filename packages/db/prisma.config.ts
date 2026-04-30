@@ -12,11 +12,25 @@ dotenv.config({
  * advisory locks. Neon’s pooled URL (`-pooler` host) can time out with P1002 on
  * `pg_advisory_lock`. Use DIRECT_URL (non-pooler) when available; fall back to
  * DATABASE_URL for local/dev single URLs.
+ *
+ * `connect_timeout` helps when Neon compute is suspended (wake can exceed defaults).
  */
 function prismaCliDatabaseUrl(): string {
 	const direct = process.env.DIRECT_URL?.trim();
-	if (direct) return direct;
-	return env("DATABASE_URL");
+	const raw = direct || env("DATABASE_URL");
+	return withMigrateConnectionParams(raw);
+}
+
+function withMigrateConnectionParams(url: string): string {
+	try {
+		const u = new URL(url);
+		if (!u.searchParams.has("connect_timeout")) {
+			u.searchParams.set("connect_timeout", "60");
+		}
+		return u.href;
+	} catch {
+		return url;
+	}
 }
 
 export default defineConfig({

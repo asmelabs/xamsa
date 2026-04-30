@@ -16,6 +16,7 @@
 		"postinstall": "prisma generate",
 		"db:studio": "prisma studio",
 		"db:deploy": "prisma migrate deploy",
+		"db:deploy:ci": "bun run ./scripts/migrate-deploy-retry.ts",
 		"db:seed": "bun run src/seeds/seed-users.ts && bun run src/seeds/seed-packs.ts",
 		"db:seed:users": "bun run src/seeds/seed-users.ts",
 		"db:seed:packs": "bun run src/seeds/seed-packs.ts"
