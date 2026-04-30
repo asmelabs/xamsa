@@ -1,7 +1,11 @@
 import { dash } from "@better-auth/infra";
 import { createPrismaClient } from "@xamsa/db";
 import { env } from "@xamsa/env/server";
-import { sendPasswordResetEmail } from "@xamsa/mail/auth";
+import {
+	sendEmailChangeConfirmationEmail,
+	sendEmailVerificationEmail,
+	sendPasswordResetEmail,
+} from "@xamsa/mail/auth";
 import { hash, verify } from "@xamsa/utils/bcrypt";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -12,7 +16,6 @@ import {
 	twoFactor,
 } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { emailPasswordAuthConfig } from "./email-password-config";
 
 const trustedOrigins =
 	env.NODE_ENV === "production"
@@ -36,18 +39,11 @@ export function createAuth() {
 		trustedOrigins,
 		emailAndPassword: {
 			enabled: true,
-			requireEmailVerification:
-				emailPasswordAuthConfig.requireEmailVerification,
+			requireEmailVerification: true,
 			revokeSessionsOnPasswordReset: true,
 
 			async sendResetPassword({ url, user }) {
-				if (env.NODE_ENV === "production") {
-					await sendPasswordResetEmail(user.email, user.name, url);
-				} else {
-					console.log("=== password reset (dev) ===");
-					console.log("To:", user.email);
-					console.log("URL:", url);
-				}
+				await sendPasswordResetEmail(user.email, user.name, url);
 			},
 
 			password: {
@@ -56,20 +52,16 @@ export function createAuth() {
 			},
 		},
 
-		// emailVerification: {
-		// 	sendOnSignUp: true,
+		emailVerification: {
+			sendOnSignUp: true,
+			/** Issue session cookie after the user confirms via the emailed link (new signups never had a logged-in cookie). */
+			autoSignInAfterVerification: true,
 
-		// 	async sendVerificationEmail({ url, user }) {
-		// 		if (env.NODE_ENV === "production") {
-		// 			await sendEmailVerificationEmail(user.email, user.name, url);
-		// 		} else {
-		// 			console.log("=== === === === ===");
-		// 			console.log("Sending verification email to", user.email);
-		// 			console.log("URL:", url);
-		// 			console.log("=== === === === ===");
-		// 		}
-		// 	},
-		// },
+			async sendVerificationEmail({ url, user }) {
+				// Better Auth does not surface send failures to the client; check @xamsa/mail logs.
+				await sendEmailVerificationEmail(user.email, user.name, url);
+			},
+		},
 
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,
@@ -88,7 +80,17 @@ export function createAuth() {
 				enabled: false,
 			},
 			changeEmail: {
-				enabled: false,
+				enabled: true,
+				/** Existing unverified addresses can be corrected before verifying the new inbox. */
+				updateEmailWithoutVerification: true,
+				sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+					await sendEmailChangeConfirmationEmail({
+						newEmail,
+						name: user.name,
+						url,
+						previousEmail: user.email,
+					});
+				},
 			},
 			additionalFields: {
 				username: {

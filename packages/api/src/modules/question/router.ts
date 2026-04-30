@@ -9,7 +9,7 @@ import {
 	UpdateQuestionsOrderInputSchema,
 	UpdateQuestionsOrderOutputSchema,
 } from "@xamsa/schemas/modules/question";
-import { protectedProcedure } from "../../procedures";
+import { verifiedProcedure } from "../../procedures";
 import {
 	findOneQuestion,
 	getQuestionAnalytics,
@@ -19,35 +19,35 @@ import {
 } from "./service";
 
 export const questionRouter = {
-	update: protectedProcedure
+	update: verifiedProcedure
 		.input(UpdateQuestionInputSchema)
 		.output(UpdateQuestionOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await updateQuestion(input, context.session.user.id),
 		),
-	updateOrder: protectedProcedure
+	updateOrder: verifiedProcedure
 		.input(UpdateQuestionsOrderInputSchema)
 		.output(UpdateQuestionsOrderOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await updateQuestionsOrder(input, context.session.user.id),
 		),
-	listTopicQuestions: protectedProcedure
+	listTopicQuestions: verifiedProcedure
 		.input(ListTopicQuestionsInputSchema)
 		.output(ListTopicQuestionsOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await listTopicQuestions(input, context.session.user.id),
 		),
-	findOne: protectedProcedure
+	findOne: verifiedProcedure
 		.input(FindOneQuestionInputSchema)
 		.output(FindOneQuestionOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await findOneQuestion(input, context.session.user.id),
 		),
-	getAnalytics: protectedProcedure
+	getAnalytics: verifiedProcedure
 		.input(FindOneQuestionInputSchema)
 		.output(QuestionAnalyticsOutputSchema)
 		.handler(

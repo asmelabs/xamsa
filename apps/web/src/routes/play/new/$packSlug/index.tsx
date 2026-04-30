@@ -22,6 +22,7 @@ import {
 import { ArrowLeftIcon, LayersIcon, PlayIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -95,7 +96,10 @@ function RouteComponent() {
 			});
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to create game. Please try again.");
+			toastOrpcMutationFailure(
+				error,
+				"Failed to create game. Please try again.",
+			);
 		},
 	});
 

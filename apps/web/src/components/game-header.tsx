@@ -23,6 +23,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { GameData } from "@/lib/game-types";
 import { getJoinInviteAbsoluteUrl } from "@/lib/join-invite-url";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { formatLiveTopicProgressLine } from "@/lib/session-topic-progress";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
@@ -64,7 +65,7 @@ export function GameHeader({ game }: GameHeaderProps) {
 			queryClient.invalidateQueries({ queryKey });
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to end the game");
+			toastOrpcMutationFailure(error, "Failed to end the game");
 		},
 	});
 

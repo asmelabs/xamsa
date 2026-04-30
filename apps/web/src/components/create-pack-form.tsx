@@ -44,6 +44,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { TopicBulkJobDialog } from "./topic-bulk-job-dialog";
 
@@ -128,7 +129,7 @@ export function CreatePackForm() {
 				);
 			},
 			onError: (error) => {
-				toast.error(error.message || "3sual import failed.");
+				toastOrpcMutationFailure(error, "3sual import failed.");
 			},
 		},
 	);
@@ -166,9 +167,9 @@ export function CreatePackForm() {
 				navigate({ to: `/packs/${slug}/topics/new`, replace: true });
 			}
 		} catch (error) {
-			const err = error as { message?: string };
-			toast.error(
-				err.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		} finally {
 			setIsSubmitting(false);

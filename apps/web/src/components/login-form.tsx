@@ -42,7 +42,40 @@ export function LoginForm() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || result.error.statusText);
+				form.resetField("password");
+				const err = result.error;
+				const unverifiedHint =
+					err.status === 403 ||
+					String(err.code ?? "") === "EMAIL_NOT_VERIFIED" ||
+					/email.+not.+verified/i.test(err.message ?? "");
+				if (unverifiedHint) {
+					toast.error(err.message || "Verify your email before signing in.", {
+						duration: 15_000,
+						action: {
+							label: "Resend email",
+							onClick: () => {
+								void (async () => {
+									try {
+										const r = await authClient.sendVerificationEmail({
+											email: values.email,
+											callbackURL:
+												callbackURL || `${window.location.origin}/settings`,
+										});
+										if (r.error) {
+											throw new Error(r.error.message || r.error.statusText);
+										}
+										toast.success("Verification email sent");
+									} catch (e) {
+										toast.error((e as Error).message || "Could not send");
+									}
+								})();
+							},
+						},
+					});
+				} else {
+					toast.error(err.message || "An unknown error occurred");
+				}
+				return;
 			}
 
 			const {

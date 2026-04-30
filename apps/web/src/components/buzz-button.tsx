@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { channels, GAME_EVENTS } from "@xamsa/ably/channels";
 import { CheckIcon, ClockIcon, PauseIcon, XIcon } from "lucide-react";
-import { toast } from "sonner";
 import { applyBuzzIntentToGame } from "@/hooks/use-game-channel";
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 interface BuzzButtonProps {
@@ -54,7 +54,7 @@ export function BuzzButton({ game }: BuzzButtonProps) {
 	const { mutate: buzz, isPending } = useMutation({
 		...orpc.click.buzz.mutationOptions(),
 		onError(error, variables) {
-			toast.error(error.message || "Failed to buzz");
+			toastOrpcMutationFailure(error, "Failed to buzz");
 			removeTentative(variables.code, variables.intentId);
 		},
 	});

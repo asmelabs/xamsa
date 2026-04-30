@@ -25,6 +25,7 @@ import { Textarea } from "@xamsa/ui/components/textarea";
 import { formatCase, formattedEnum } from "@xamsa/utils/case-formatters";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 interface EditPackFormProps {
@@ -57,8 +58,9 @@ export function EditPackForm({ packData }: EditPackFormProps) {
 			});
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});

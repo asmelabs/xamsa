@@ -6,26 +6,26 @@ import {
 	ClickResolveInputSchema,
 	ClickResolveOutputSchema,
 } from "@xamsa/schemas/modules/click";
-import { protectedProcedure } from "../../procedures";
+import { verifiedProcedure } from "../../procedures";
 import { removeClick } from "./remove-click";
 import { buzzClick, resolveClick } from "./service";
 
 export const clickRouter = {
-	buzz: protectedProcedure
+	buzz: verifiedProcedure
 		.input(ClickBuzzInputSchema)
 		.output(ClickBuzzOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await buzzClick(input, context.session.user.id),
 		),
-	resolve: protectedProcedure
+	resolve: verifiedProcedure
 		.input(ClickResolveInputSchema)
 		.output(ClickResolveOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await resolveClick(input, context.session.user.id),
 		),
-	remove: protectedProcedure
+	remove: verifiedProcedure
 		.input(ClickRemoveInputSchema)
 		.output(ClickRemoveOutputSchema)
 		.handler(

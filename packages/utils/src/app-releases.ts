@@ -7,12 +7,38 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 23 } as const;
+const current = { year: 2026, month: 4, patch: 24 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 24,
+			title:
+				"Verified email, account mail change, and gated play with lighter mail",
+			highlights: [
+				{
+					kind: "text",
+					text: "Email and password accounts must verify the address before sign-in. After sign-up we show a calm “check your inbox” screen with spam and resend guidance; login and Settings can resend verification too, and unverified sign-in attempts steer you the same way.",
+				},
+				{
+					kind: "text",
+					text: "Settings shows verification status and lets you start an email change that confirms the new inbox. Completing the link in your mail can sign you back in automatically afterward.",
+				},
+				{
+					kind: "text",
+					text: "Hosting, joining, buzzing, and authoring packs, topics, or questions require a verified email; the UI shows a consistent toast with a path to fix it when something is blocked. Leaving a game you are already in stays available even if you are not verified yet.",
+				},
+				{
+					kind: "text",
+					text: "You may get short messages when you win a hosted game or someone new follows you—same mail styling as auth mail, with text-first layout and no large inline image so messages stay small.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,
@@ -27,7 +53,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.23, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
+					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.24, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
 				},
 				{
 					kind: "text",

@@ -359,17 +359,42 @@ You can see some of them requires autneticated users, some of them requries mode
 
 ## v26.04.24
 
-- Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
-- Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
+- Implement email system with Mailjet. @xamsa/mail package already has the functionality, so we can use it. It has correct env variables, and everything has been set on mailsend side.
+- Until this point, we did not check email verification of the users, so now we need to do two things:
+  > For new users registration, we need to send verification email to the user. I have added sendVerficationEmail on better-auth auth instance already.
+  > For existing users, we will put a button on settings page, right after the email address, if not verified, it will show "Verify email" and that will send a verification email to the user.
+
+Users that have not verified emails, will not be able to:
+
+- Login
+- Create new packs/topics/questions
+- Host/Join games
+
+So everytime a user without verified email tries to do any of the above actions, it should show a popup/toast with a button "Verify email" and that will send a verification email to the user.
+
+Email changing:
+
+- User can change their email address, but they will need to verify the new email address as well. They can also change unverified email addresses, so that if an existing user has entered a wrong email (since there was no verification system before), they can change it to a real email address of theirs.
+
+When email sends to user:
+
+> On registration
+> On password reset (authenticated users, from profile settings)
+> On password reset (non-authenticated users, from forgot password page)
+> On email change
+> Non verified emails users, when they click Verify Email button
+> When a user wins a game, a congratulatory email will be sent to the user
+> When a user follows another user, a notification email will be sent to the user
+
+Note:
+
+- Handle every email sending functions on @xamsa/mail package, and use it in anywhere needed.
+- Try to create a template html text, on that package, and use it in all emails. It should have a nice footer (with links maybe) and nice header (with app name, logo, etc.) you can take the logo from apps/web/public/logo.svg, and paste to @xamsa/mail package, and use it in all emails. Look at css file on ui package, to see the colors of our app as well.
 
 ## v26.04.25
 
-- Implement email system with Mailjet.
-
-- Send verification email on register.
-- Send password reset email on forgot password.
-- Send email when user follows another user.
-- Send email when user wins a game.
+- Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
+- Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
 
 ### UNKNOWN VERSIONS:
 

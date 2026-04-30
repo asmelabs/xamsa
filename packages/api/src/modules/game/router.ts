@@ -28,7 +28,7 @@ import {
 	UpdateGameStatusInputSchema,
 	UpdateGameStatusOutputSchema,
 } from "@xamsa/schemas/modules/game";
-import { protectedProcedure, publicProcedure } from "../../procedures";
+import { publicProcedure, verifiedProcedure } from "../../procedures";
 import { listJoinableWaitingLobbies } from "./joinable-lobbies";
 import { listPublicGameHistory } from "./public-history";
 import { getCompletedGameRecap } from "./recap";
@@ -47,14 +47,14 @@ import {
 } from "./service";
 
 export const gameRouter = {
-	create: protectedProcedure
+	create: verifiedProcedure
 		.input(CreateGameInputSchema)
 		.output(CreateGameOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await createGame(input, context.session.user.id),
 		),
-	delete: protectedProcedure
+	delete: verifiedProcedure
 		.input(DeleteGameInputSchema)
 		.output(DeleteGameOutputSchema)
 		.handler(
@@ -76,63 +76,63 @@ export const gameRouter = {
 		.input(ListPublicGameHistoryInputSchema)
 		.output(ListPublicGameHistoryOutputSchema)
 		.handler(async ({ input }) => await listPublicGameHistory(input)),
-	listJoinableWaitingLobbies: protectedProcedure
+	listJoinableWaitingLobbies: verifiedProcedure
 		.input(ListJoinableWaitingLobbiesInputSchema)
 		.output(ListJoinableWaitingLobbiesOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await listJoinableWaitingLobbies(input, context.session.user.id),
 		),
-	updateStatus: protectedProcedure
+	updateStatus: verifiedProcedure
 		.input(UpdateGameStatusInputSchema)
 		.output(UpdateGameStatusOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await updateGameStatus(input, context.session.user.id),
 		),
-	start: protectedProcedure
+	start: verifiedProcedure
 		.input(GameStartInputSchema)
 		.output(GameStartOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await startGame(input, context.session.user.id),
 		),
-	revealQuestion: protectedProcedure
+	revealQuestion: verifiedProcedure
 		.input(RevealQuestionInputSchema)
 		.output(RevealQuestionOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await revealQuestion(input, context.session.user.id),
 		),
-	advanceQuestion: protectedProcedure
+	advanceQuestion: verifiedProcedure
 		.input(AdvanceQuestionInputSchema)
 		.output(AdvanceQuestionOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await advanceQuestion(input, context.session.user.id),
 		),
-	skipQuestion: protectedProcedure
+	skipQuestion: verifiedProcedure
 		.input(SkipQuestionInputSchema)
 		.output(SkipQuestionOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await skipQuestion(input, context.session.user.id),
 		),
-	completeGame: protectedProcedure
+	completeGame: verifiedProcedure
 		.input(CompleteGameInputSchema)
 		.output(CompleteGameOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await completeGame(input, context.session.user.id),
 		),
-	leaveAsHost: protectedProcedure
+	leaveAsHost: verifiedProcedure
 		.input(LeaveAsHostInputSchema)
 		.output(LeaveAsHostOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await leaveAsHost(input, context.session.user.id),
 		),
-	handleHostDisconnect: protectedProcedure
+	handleHostDisconnect: verifiedProcedure
 		.input(HandleHostDisconnectInputSchema)
 		.output(HandleHostDisconnectOutputSchema)
 		.handler(

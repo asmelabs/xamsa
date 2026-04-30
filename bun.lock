@@ -118,6 +118,7 @@
         "@xamsa/auth": "workspace:*",
         "@xamsa/db": "workspace:*",
         "@xamsa/env": "workspace:*",
+        "@xamsa/mail": "workspace:*",
         "@xamsa/schemas": "workspace:*",
         "@xamsa/utils": "workspace:*",
         "dotenv": "catalog:",

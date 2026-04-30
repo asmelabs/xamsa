@@ -9,13 +9,13 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { toast } from "sonner";
 import {
 	applyQuestionRevealToGame,
 	type QuestionRevealedData,
 } from "@/hooks/use-game-channel";
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 interface CurrentQuestionCardProps {
@@ -35,7 +35,7 @@ export function CurrentQuestionCard({
 	const { mutate: reveal, isPending: isRevealing } = useMutation({
 		...orpc.game.revealQuestion.mutationOptions(),
 		onError(error) {
-			toast.error(error.message || "Failed to reveal question");
+			toastOrpcMutationFailure(error, "Failed to reveal question");
 			queryClient.invalidateQueries({ queryKey });
 		},
 	});

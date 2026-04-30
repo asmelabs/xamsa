@@ -10,6 +10,7 @@ import { EllipsisIcon, UserMinusIcon } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { toast } from "sonner";
 import type { GamePlayer } from "@/lib/game-types";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
@@ -49,7 +50,7 @@ export function PlayerRow({
 			}
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to kick player");
+			toastOrpcMutationFailure(error, "Failed to kick player");
 		},
 	});
 

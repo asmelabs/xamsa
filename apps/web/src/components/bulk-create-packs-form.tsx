@@ -26,6 +26,7 @@ import { useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useAppForm } from "@/hooks/use-app-form";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 const FormSchema = z.object({
@@ -78,8 +79,9 @@ export function BulkCreatePacksForm() {
 			navigate({ to: "/packs", replace: true });
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});

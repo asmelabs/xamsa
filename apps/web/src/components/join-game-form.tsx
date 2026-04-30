@@ -5,6 +5,7 @@ import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 interface JoinGameFormProps {
@@ -58,7 +59,7 @@ export function JoinGameForm({
 			});
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to join game");
+			toastOrpcMutationFailure(error, "Failed to join game");
 		},
 	});
 

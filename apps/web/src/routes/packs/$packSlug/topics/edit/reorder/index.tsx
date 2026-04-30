@@ -51,6 +51,7 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -175,8 +176,9 @@ function RouteComponent() {
 			});
 		},
 		onError(error) {
-			toast.error(
-				error.message || "Failed to update topic order. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"Failed to update topic order. Please try again.",
 			);
 		},
 	});

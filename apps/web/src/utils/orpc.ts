@@ -9,10 +9,14 @@ import { getRequest } from "@tanstack/react-start/server";
 import { createContext } from "@xamsa/api/context";
 import { appRouter } from "@xamsa/api/router";
 import { toast } from "sonner";
+import { tryToastOrpcEmailVerificationError } from "@/lib/orpc-email-verification-error";
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error, query) => {
+			if (tryToastOrpcEmailVerificationError(error)) {
+				return;
+			}
 			toast.error(`Error: ${error.message}`, {
 				action: {
 					label: "retry",

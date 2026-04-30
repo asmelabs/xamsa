@@ -4,6 +4,7 @@ import { Button } from "@xamsa/ui/components/button";
 import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
@@ -60,7 +61,10 @@ export function DeleteTopicDialog({
 			onDeleted?.();
 		},
 		onError(error) {
-			toast.error(error.message || "Could not delete this topic. Try again.");
+			toastOrpcMutationFailure(
+				error,
+				"Could not delete this topic. Try again.",
+			);
 		},
 	});
 

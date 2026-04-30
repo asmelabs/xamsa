@@ -132,8 +132,14 @@ export function RegisterForm() {
 							<span className="font-medium text-foreground">{email}</span>
 						</p>
 						<p className="text-muted-foreground text-sm">
-							Click the link in the email to activate your account. If you don't
-							see it, check your spam folder.
+							Open the link in that message to finish signing up. Check spam and
+							wait a minute or two.
+						</p>
+						<p className="text-muted-foreground text-sm">
+							If nothing arrives, tap{" "}
+							<span className="font-medium text-foreground">Resend email</span>.
+							If it still doesn't show up, we couldn't deliver mail right
+							now—try again later or use a different address.
 						</p>
 					</FramePanel>
 					<FrameFooter>

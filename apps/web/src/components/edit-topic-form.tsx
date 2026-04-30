@@ -16,6 +16,7 @@ import { Input } from "@xamsa/ui/components/input";
 import { Textarea } from "@xamsa/ui/components/textarea";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 interface EditTopicFormProps {
@@ -47,8 +48,9 @@ export function EditTopicForm({ topicData }: EditTopicFormProps) {
 			});
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});

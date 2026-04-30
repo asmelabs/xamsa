@@ -4,6 +4,7 @@ import { Input } from "@xamsa/ui/components/input";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
@@ -37,8 +38,9 @@ export function DeletePackDialog({
 			setDeletePackOpen(null);
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});
