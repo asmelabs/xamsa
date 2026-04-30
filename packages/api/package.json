@@ -22,6 +22,7 @@
 		"@orpc/zod": "catalog:",
 		"@xamsa/auth": "workspace:*",
 		"@xamsa/mail": "workspace:*",
+		"@xamsa/upload": "workspace:*",
 		"@xamsa/db": "workspace:*",
 		"@xamsa/env": "workspace:*",
 		"dotenv": "catalog:",

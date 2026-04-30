@@ -39,6 +39,79 @@ export const UpdateProfileOutputSchema = UserSchema.pick({
 export type UpdateProfileInputType = z.infer<typeof UpdateProfileInputSchema>;
 export type UpdateProfileOutputType = z.infer<typeof UpdateProfileOutputSchema>;
 
+/** ~1.75MB raw → base64; keep headroom for padding / data-URL prefix stripped client-side. */
+const AVATAR_IMAGE_BASE64_MAX_CHARS = 2_500_000;
+
+export const AvatarImageMimeTypeSchema = z.enum([
+	"image/jpeg",
+	"image/png",
+	"image/webp",
+]);
+
+export const SetUserAvatarInputSchema = z
+	.object({
+		imageBase64: z.string().min(1).max(AVATAR_IMAGE_BASE64_MAX_CHARS),
+		mimeType: AvatarImageMimeTypeSchema,
+	})
+	.transform(({ imageBase64, mimeType }) => {
+		const t = imageBase64.trim();
+		const asDataUrl = t.match(
+			/^data:(image\/(?:jpeg|png|webp));base64,([\s\S]+)$/i,
+		);
+		if (asDataUrl) {
+			const mimeFromDataUrl = asDataUrl[1];
+			const payload = asDataUrl[2];
+			if (!mimeFromDataUrl || payload === undefined) {
+				throw new z.ZodError([
+					{
+						code: "custom",
+						path: ["imageBase64"],
+						message: "Malformed data URL",
+					},
+				]);
+			}
+			const fromUrl = mimeFromDataUrl.toLowerCase() as z.infer<
+				typeof AvatarImageMimeTypeSchema
+			>;
+			if (fromUrl !== mimeType) {
+				throw new z.ZodError([
+					{
+						code: "custom",
+						path: ["mimeType"],
+						message: "MIME type does not match the data URL image type",
+					},
+				]);
+			}
+			return {
+				imageBase64: payload.replace(/\s/g, ""),
+				mimeType,
+			};
+		}
+		return {
+			imageBase64: t.replace(/\s/g, ""),
+			mimeType,
+		};
+	});
+
+export const SetUserAvatarOutputSchema = z.object({
+	image: z.url(),
+});
+
+export const RemoveUserAvatarOutputSchema = z.object({
+	image: z.null(),
+});
+
+export const RemoveUserAvatarInputSchema = z.object({});
+
+export type SetUserAvatarInputType = z.infer<typeof SetUserAvatarInputSchema>;
+export type SetUserAvatarOutputType = z.infer<typeof SetUserAvatarOutputSchema>;
+export type RemoveUserAvatarOutputType = z.infer<
+	typeof RemoveUserAvatarOutputSchema
+>;
+export type RemoveUserAvatarInputType = z.infer<
+	typeof RemoveUserAvatarInputSchema
+>;
+
 /**
  * GET ACTIVE GAME
  */

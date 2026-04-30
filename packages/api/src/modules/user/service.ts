@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import prisma from "@xamsa/db";
+import { env } from "@xamsa/env/server";
 import { sendNewFollowerEmail } from "@xamsa/mail/notifications";
 import type {
 	FindOneProfileInputType,
@@ -23,11 +24,21 @@ import type {
 	ListFollowingInputType,
 	ListFollowingOutputType,
 	RecentGameRow,
+	RemoveUserAvatarOutputType,
+	SetUserAvatarInputType,
+	SetUserAvatarOutputType,
 	UnfollowUserInputType,
 	UnfollowUserOutputType,
 	UpdateProfileInputType,
 	UpdateProfileOutputType,
 } from "@xamsa/schemas/modules/user";
+import {
+	destroyImageByPublicId,
+	extractPublicIdFromDeliveryUrl,
+	getUserAvatarPublicId,
+	isManagedProfileImageUrl,
+	uploadProfileImage,
+} from "@xamsa/upload";
 
 export async function findOneProfile(
 	input: FindOneProfileInputType,
@@ -85,6 +96,118 @@ export async function updateProfile(
 	});
 
 	return updatedUser;
+}
+
+export async function setUserAvatar(
+	input: SetUserAvatarInputType,
+	userId: string,
+): Promise<SetUserAvatarOutputType> {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { id: true, image: true, username: true },
+	});
+
+	if (!user) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "You are not authorized to update this profile",
+		});
+	}
+
+	const publicId = getUserAvatarPublicId(user.username);
+	let buffer: Buffer;
+	try {
+		buffer = Buffer.from(input.imageBase64, "base64");
+	} catch {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Invalid image data",
+		});
+	}
+
+	if (buffer.byteLength === 0) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Invalid image data",
+		});
+	}
+
+	const oldUrl = user.image ?? null;
+
+	let secureUrl: string;
+	try {
+		({ secureUrl } = await uploadProfileImage({
+			buffer,
+			mimeType: input.mimeType,
+			publicId,
+		}));
+	} catch (e) {
+		const message =
+			e instanceof Error ? e.message : "Could not upload profile image";
+		throw new ORPCError("BAD_REQUEST", { message });
+	}
+
+	await prisma.user.update({
+		where: { id: userId },
+		data: { image: secureUrl },
+	});
+
+	if (oldUrl && isManagedProfileImageUrl(oldUrl)) {
+		const oldPid = extractPublicIdFromDeliveryUrl(
+			oldUrl,
+			env.CLOUDINARY_CLOUD_NAME,
+		);
+		if (oldPid && oldPid !== publicId) {
+			try {
+				await destroyImageByPublicId(oldPid);
+			} catch (cleanupErr) {
+				console.error("[setUserAvatar] cloudinary cleanup:", cleanupErr);
+			}
+		}
+	}
+
+	return { image: secureUrl };
+}
+
+export async function removeUserAvatar(
+	userId: string,
+): Promise<RemoveUserAvatarOutputType> {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { id: true, image: true, username: true },
+	});
+
+	if (!user) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "You are not authorized to update this profile",
+		});
+	}
+
+	const avatarPublicId = getUserAvatarPublicId(user.username);
+
+	try {
+		await destroyImageByPublicId(avatarPublicId);
+	} catch (e) {
+		console.error("[removeUserAvatar] cloudinary destroy:", e);
+	}
+
+	if (user.image && isManagedProfileImageUrl(user.image)) {
+		const storedPid = extractPublicIdFromDeliveryUrl(
+			user.image,
+			env.CLOUDINARY_CLOUD_NAME,
+		);
+		if (storedPid && storedPid !== avatarPublicId) {
+			try {
+				await destroyImageByPublicId(storedPid);
+			} catch (cleanupErr) {
+				console.error("[removeUserAvatar] extra cleanup:", cleanupErr);
+			}
+		}
+	}
+
+	await prisma.user.update({
+		where: { id: userId },
+		data: { image: null },
+	});
+
+	return { image: null };
 }
 
 export async function getActiveGame(

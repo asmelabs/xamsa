@@ -26,6 +26,10 @@ import {
 	ListFollowersOutputSchema,
 	ListFollowingInputSchema,
 	ListFollowingOutputSchema,
+	RemoveUserAvatarInputSchema,
+	RemoveUserAvatarOutputSchema,
+	SetUserAvatarInputSchema,
+	SetUserAvatarOutputSchema,
 	UnfollowUserInputSchema,
 	UnfollowUserOutputSchema,
 	UpdateProfileInputSchema,
@@ -46,6 +50,8 @@ import {
 	getRecentGames,
 	listFollowers,
 	listFollowing,
+	removeUserAvatar,
+	setUserAvatar,
 	unfollowUser,
 	updateProfile,
 } from "./service";
@@ -90,6 +96,19 @@ export const userRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await updateProfile(input, context.session.user.id),
+		),
+	setAvatar: protectedProcedure
+		.input(SetUserAvatarInputSchema)
+		.output(SetUserAvatarOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await setUserAvatar(input, context.session.user.id),
+		),
+	removeAvatar: protectedProcedure
+		.input(RemoveUserAvatarInputSchema)
+		.output(RemoveUserAvatarOutputSchema)
+		.handler(
+			async ({ context }) => await removeUserAvatar(context.session.user.id),
 		),
 	getActiveGame: protectedProcedure
 		.output(GetActiveGameOutputSchema)

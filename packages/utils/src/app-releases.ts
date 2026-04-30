@@ -7,12 +7,37 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 24 } as const;
+const current = { year: 2026, month: 4, patch: 25 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 25,
+			title: "Profile photos on Cloudinary: square crop in Settings",
+			highlights: [
+				{
+					kind: "text",
+					text: "New @xamsa/upload package talks to Cloudinary with a shared uploadImage-style API. Avatars live under xamsa/[environment]/images/users/<username>/avatar (immutable handle) so they are easy to find in Cloudinary’s Media Library; uploads use explicit folder + asset id so they aren’t stranded under Home.",
+				},
+				{
+					kind: "text",
+					text: "Settings includes a profile photo flow: pick an image (JPEG, PNG, or WebP), adjust a square crop with zoom, and save. Cropped uploads are resized to 512² and optimized for delivery (auto format/quality where Cloudinary applies).",
+				},
+				{
+					kind: "text",
+					text: "You can replace or remove your avatar. Updating clears a previous Cloudinary asset when it was ours (OAuth/third-party URLs are left alone); removal deletes the Cloudinary copy and clears the stored profile image.",
+				},
+				{
+					kind: "text",
+					text: "Server env now requires CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (documented alongside other secrets in the setup guide).",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,
@@ -53,7 +78,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.24, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
+					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.25, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
 				},
 				{
 					kind: "text",

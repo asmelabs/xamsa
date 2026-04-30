@@ -393,8 +393,30 @@ Note:
 
 ## v26.04.25
 
+- Create @xamsa/upload package for image/file/video/audio etc. uploading.
+- We will use Cloudinary for that, so we will install necessary cloudinary dependecies.
+- We will create a base uploadImage function, and that will be used in everywhere.
+- The root folder of images on cloudinary will be xamsa/[env]/images
+- For 1st phase we will just have upload avatar functionality for users/profiles.
+- It will have xamsa/[env]/images/users/user_id/avatar path.
+- It will be optimized, and be square format. User will be able to crop the image to a square format on frontend before sending.
+- User will be able to update and delete their avatar. When updating and deleting, beside deletion the previous avatar from db, it should also being deleted from cloudinary.
+
+## v26.04.26
+
+- Introduce loggin/registering with Google using better-auth social providers.
+- Also support account linking, for example i have registered with xxx@gmail.com, then i login with google with same email, they should get linked.
+- On login and register page, there should be continue with Google button.
+- Mapping google user to our user:
+  -- Google provides email, first/last name, and profile picture. We have mandatory username field, so we need to generate a username from first/last name and be sure it is unique (if not try again with incremented suffix etc.). Also google's profile picture located on their own servers, so we need to download it and save it to our cloudinary storage.
+  -- Option B for username could be, when signin up using google, there will be a input field after registration, to set username, but i don't know how hard that would be to do, i guess auto generation is much clearer and better.
+
+## v26.04.xx
+
 - Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
 - Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
+- Add comments system on packs and topics pages.
+- Add posts. Posts will be like facebook posts, where authenticated users can create posts with content, image, etc. Posts will have a comprehensive attachement system, where you can attach game, pack, user, topic, question, click, etc. simply every type of resource that exists in the app. In the first phase though, you will just be able to write text, images, and attach games and packs.
 
 ### UNKNOWN VERSIONS:
 
