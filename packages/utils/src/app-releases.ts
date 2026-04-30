@@ -18,23 +18,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 25,
-			title: "Profile photos on Cloudinary: square crop in Settings",
+			title: "You can now add a profile photo to your account!",
 			highlights: [
 				{
 					kind: "text",
-					text: "New @xamsa/upload package talks to Cloudinary with a shared uploadImage-style API. Avatars live under xamsa/[environment]/images/users/<username>/avatar (immutable handle) so they are easy to find in Cloudinary’s Media Library; uploads use explicit folder + asset id so they aren’t stranded under Home.",
+					text: "Add a profile photo from Settings so friends recognize you on your profile, leaderboards, and anywhere your picture appears in the app.",
 				},
 				{
 					kind: "text",
-					text: "Settings includes a profile photo flow: pick an image (JPEG, PNG, or WebP), adjust a square crop with zoom, and save. Cropped uploads are resized to 512² and optimized for delivery (auto format/quality where Cloudinary applies).",
+					text: "Choose a photo, drag to frame it, zoom in or out, then save. We keep it in a neat square so it always looks consistent wherever it shows up.",
 				},
 				{
 					kind: "text",
-					text: "You can replace or remove your avatar. Updating clears a previous Cloudinary asset when it was ours (OAuth/third-party URLs are left alone); removal deletes the Cloudinary copy and clears the stored profile image.",
-				},
-				{
-					kind: "text",
-					text: "Server env now requires CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (documented alongside other secrets in the setup guide).",
+					text: "Swap your photo any time or clear it completely if you’d rather use your initials. What you see in Settings stays in sync without needing to refresh the page.",
 				},
 			],
 		},
