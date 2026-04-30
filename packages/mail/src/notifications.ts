@@ -1,4 +1,4 @@
-import { shouldSendMail } from "./mail-env";
+import { shouldSendNotificationMail } from "./mail-env";
 import { sendEmail } from "./send";
 import { buildTransactionalHtml, escapeHtml } from "./templates/email-layout";
 
@@ -32,7 +32,7 @@ export async function sendGameWinnerEmail(params: {
 		primaryButton: { href: profileUrl, label: "View your profile" },
 		footerLinks: notifyFooter(),
 	});
-	if (!shouldSendMail()) {
+	if (!shouldSendNotificationMail()) {
 		console.log("=== game winner email (dev) ===");
 		console.log("To:", email);
 		return;
@@ -61,7 +61,7 @@ export async function sendNewFollowerEmail(params: {
 		primaryButton: { href: followerUrl, label: "View their profile" },
 		footerLinks: notifyFooter(),
 	});
-	if (!shouldSendMail()) {
+	if (!shouldSendNotificationMail()) {
 		console.log("=== new follower email (dev) ===");
 		console.log("To:", email);
 		return;

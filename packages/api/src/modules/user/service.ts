@@ -390,6 +390,7 @@ export async function followUser(
 		where: { username: input.username },
 		select: { id: true },
 	});
+
 	if (!target) {
 		throw new ORPCError("NOT_FOUND", {
 			message: "Profile not found",
@@ -433,29 +434,28 @@ export async function followUser(
 	}
 
 	if (createdNewFollow) {
-		void (async () => {
-			try {
-				const [follower, followee] = await Promise.all([
-					prisma.user.findUnique({
-						where: { id: followerId },
-						select: { name: true, username: true },
-					}),
-					prisma.user.findUnique({
-						where: { id: target.id },
-						select: { email: true, name: true },
-					}),
-				]);
-				if (!follower || !followee?.email) return;
+		try {
+			const [follower, followee] = await Promise.all([
+				prisma.user.findUnique({
+					where: { id: followerId },
+					select: { name: true, username: true },
+				}),
+				prisma.user.findUnique({
+					where: { id: target.id },
+					select: { email: true, name: true },
+				}),
+			]);
+			if (follower && followee?.email) {
 				await sendNewFollowerEmail({
 					email: followee.email,
 					name: followee.name,
 					followerName: follower.name,
 					followerUsername: follower.username,
 				});
-			} catch (e) {
-				console.error("[followUser email]", e);
 			}
-		})();
+		} catch (e) {
+			console.error("[followUser email]", e);
+		}
 	}
 
 	return { ok: true as const };

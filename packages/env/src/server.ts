@@ -33,6 +33,11 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),
+		/**
+		 * When `"true"`, follower / game-winner notification emails still go through Resend in non-production.
+		 * Production always sends (same as before). Auth emails are unchanged — see `shouldSendMail` in `@xamsa/mail`.
+		 */
+		SEND_NOTIFICATION_EMAIL_IN_DEV: z.enum(["true", "false"]).optional(),
 		/** Optional. Used for server-side “Generate with AI” on topic questions (Google Gemini API / AI Studio). */
 		GEMINI_API_KEY: z
 			.string()

@@ -102,6 +102,7 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | Variable | Notes |
 | -------- | ----- |
 | `NODE_ENV` | `development` (default), `production`, or `test` |
+| `SEND_NOTIFICATION_EMAIL_IN_DEV` | Optional. Set to `true` to send follower / game-winner emails via Resend when `NODE_ENV` is not `production`. Production sends these regardless. |
 | `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN` | Client PostHog token |
 | `VITE_PUBLIC_POSTHOG_HOST` | PostHog host |
 
