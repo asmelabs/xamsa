@@ -14,7 +14,7 @@ export const env = createEnv({
 		BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(1),
 		ABLY_API_KEY: z.string().min(1),
 		BETTER_AUTH_API_KEY: z.string().min(1),
-		MAILERSEND_API_KEY: z.string().min(1),
+		RESEND_API_KEY: z.string().min(1),
 		EMAIL_FROM: z.email(),
 		// Comma-separated list of origins allowed to hit the auth/API. Single
 		// value still works (e.g. `https://www.xamsa.site`); multiple values

@@ -1,12 +1,9 @@
 /**
- * Parses MailerSend (and loose) rejection payloads so failures are actionable in logs —
+ * Normalizes Resend/API rejection payloads so failures are actionable in logs —
  * Better Auth intentionally does not surface `sendVerificationEmail` errors to HTTP clients.
  */
 export function summarizeMailDeliveryError(error: unknown): string {
 	const apiMessage = extractApiBodyMessage(error);
-	if (apiMessage && /MS42225|unique recipients/i.test(apiMessage)) {
-		return `${apiMessage} — Note: this is a separate cap on how many distinct addresses you can send to on a trial sender domain; dashboard “emails left” is usually total sends, not unique recipients.`;
-	}
 	const fromError =
 		error instanceof Error && error.message.trim() !== ""
 			? error.message

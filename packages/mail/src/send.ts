@@ -1,5 +1,4 @@
-import { EmailParams, Recipient } from "mailersend";
-import { mailer, sentFrom } from "./client";
+import { mailFrom, resend } from "./client";
 import { summarizeMailDeliveryError, truncateForLog } from "./mail-send-errors";
 
 type EmailTo =
@@ -8,37 +7,113 @@ type EmailTo =
 			name: string;
 			email: string;
 	  };
-interface SendEmailOptions {
+
+/** Matches Resend dashboard templates — `variables` are substituted into the template. */
+export type ResendEmailTemplate = {
+	id: string;
+	variables?: Record<string, string | number>;
+};
+
+type SendEmailOptionsHtml = {
 	to: EmailTo | EmailTo[];
 	subject: string;
 	html: string;
-}
-
-const getRecipient = (to: EmailTo) => {
-	if (typeof to === "string") {
-		return new Recipient(to);
-	}
-
-	return new Recipient(to.email, to.name);
+	template?: undefined;
 };
 
+type SendEmailOptionsTemplate = {
+	to: EmailTo | EmailTo[];
+	template: ResendEmailTemplate;
+	subject?: string;
+	html?: undefined;
+};
+
+export type SendEmailOptions = SendEmailOptionsHtml | SendEmailOptionsTemplate;
+
+const formatToHeader = (to: EmailTo): string => {
+	if (typeof to === "string") return to;
+	const name = to.name.trim();
+	if (!name) return to.email;
+	if (/[",;<>]/.test(name)) {
+		return `"${name.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}" <${to.email}>`;
+	}
+	return `${name} <${to.email}>`;
+};
+
+const recipientEmails = (to: EmailTo | EmailTo[]): string[] => {
+	const list = Array.isArray(to) ? to : [to];
+	return list.map((t) => (typeof t === "string" ? t : t.email));
+};
+
+function isTemplateSend(
+	options: SendEmailOptions,
+): options is SendEmailOptionsTemplate {
+	return "template" in options && options.template !== undefined;
+}
+
+function contentPreview(options: SendEmailOptions): string {
+	if (isTemplateSend(options)) {
+		const v = options.template.variables;
+		const keys =
+			v && Object.keys(v).length > 0 ? ` (${Object.keys(v).join(", ")})` : "";
+		return `template:${options.template.id}${keys}`;
+	}
+	return truncateForLog(options.html);
+}
+
 export async function sendEmail(options: SendEmailOptions) {
-	const { to, subject, html } = options;
+	const { to } = options;
 
-	const recipients = Array.isArray(to)
-		? to.map(getRecipient)
-		: [getRecipient(to)];
-
-	const emailParams = new EmailParams()
-		.setFrom(sentFrom)
-		.setTo(recipients)
-		.setSubject(subject)
-		.setHtml(html);
+	const toHeaders = Array.isArray(to)
+		? to.map(formatToHeader)
+		: [formatToHeader(to)];
+	const toAddresses = recipientEmails(to);
 
 	try {
-		return await mailer.email.send(emailParams);
+		const toField: string | string[] =
+			toHeaders.length === 1 ? (toHeaders[0] ?? "") : toHeaders;
+
+		const { data, error } = await resend.emails.send(
+			isTemplateSend(options)
+				? {
+						from: mailFrom,
+						to: toField,
+						...(options.subject !== undefined
+							? { subject: options.subject }
+							: {}),
+						template: options.template,
+					}
+				: {
+						from: mailFrom,
+						to: toField,
+						subject: options.subject,
+						html: options.html,
+					},
+		);
+
+		if (error) {
+			const readable = summarizeMailDeliveryError(error);
+			console.error("[@xamsa/mail] Email send rejected:", readable, {
+				to: toAddresses,
+				subject: options.subject,
+				contentPreview: contentPreview(options),
+				statusCode: error.statusCode ?? undefined,
+			});
+			throw Object.assign(new Error(readable), { cause: error });
+		}
+
+		return data;
 	} catch (error) {
-		const toAddresses = recipients.map((r) => r.email);
+		const cause = error instanceof Error ? error.cause : undefined;
+		if (
+			cause &&
+			typeof cause === "object" &&
+			"name" in cause &&
+			"message" in cause
+		) {
+			throw error;
+		}
+
 		const readable = summarizeMailDeliveryError(error);
 		const status =
 			error && typeof error === "object" && "statusCode" in error
@@ -47,8 +122,8 @@ export async function sendEmail(options: SendEmailOptions) {
 
 		console.error("[@xamsa/mail] Email send rejected:", readable, {
 			to: toAddresses,
-			subject,
-			htmlPreview: truncateForLog(html),
+			subject: options.subject,
+			contentPreview: contentPreview(options),
 			statusCode: status,
 		});
 		throw Object.assign(new Error(readable), { cause: error });

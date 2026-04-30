@@ -36,12 +36,14 @@ export async function sendEmailVerificationEmail(
 			primaryButton: { href: url, label: "Verify email" },
 		}),
 	);
-	if (!shouldSendMail()) {
-		console.log("=== verify email (dev) ===");
-		console.log("To:", email);
-		console.log("URL:", url);
-		return;
-	}
+
+	// if (!shouldSendMail()) {
+	// 	console.log("=== verify email (dev) ===");
+	// 	console.log("To:", email);
+	// 	console.log("URL:", url);
+	// 	return;
+	// }
+
 	await sendEmail({
 		to: { email, name },
 		subject: "Verify your email",

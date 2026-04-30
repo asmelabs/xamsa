@@ -73,7 +73,7 @@ packages/
 ├── config/     → Shared TS/Biome/tsconfig presets
 ├── db/         → Prisma schema, client, migrations, seeds
 ├── env/        → Type-safe env (t3-env + Zod) for server and Vite
-├── mail/       → Transactional email (MailerSend)
+├── mail/       → Transactional email (Resend)
 ├── schemas/    → Shared Zod schemas (API, DB-derived, etc.)
 ├── ui/         → Shared UI (shadcn-style components, Tailwind)
 └── utils/      → Shared utilities
@@ -117,7 +117,7 @@ Validated environment variables for server (`@xamsa/env/server`) and the Vite cl
 
 ### `mail`
 
-Email sending via MailerSend.
+Email sending via Resend.
 
 - **Scope:** `@xamsa/mail`
 

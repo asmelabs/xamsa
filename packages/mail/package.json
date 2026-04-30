@@ -13,7 +13,7 @@
 	"dependencies": {
 		"@xamsa/env": "workspace:*",
 		"dotenv": "catalog:",
-		"mailersend": "^2.8.0",
+		"resend": "^6.12.2",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
