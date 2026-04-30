@@ -94,6 +94,9 @@ Use `@xamsa/env` as the source of truth: server variables are validated in `pack
 | `RESEND_API_KEY` | Transactional email (Resend) |
 | `EMAIL_FROM` | Sender address (valid email) |
 | `CORS_ORIGIN` | Allowed origins; comma-separated URLs if more than one |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name (profile images) |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
 
 **Transactional email:** `RESEND_API_KEY` and `EMAIL_FROM` power password reset messages from Better Auth. In **production**, users receive the reset link by email. In **development**, the link is printed to the server console instead.
 

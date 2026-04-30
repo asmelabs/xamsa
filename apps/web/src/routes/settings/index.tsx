@@ -6,6 +6,11 @@ import {
 	useRouter,
 } from "@tanstack/react-router";
 import { UpdateProfileInputSchema } from "@xamsa/schemas/modules/user";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@xamsa/ui/components/avatar";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
 import {
@@ -16,13 +21,16 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
-import { useEffect, useState } from "react";
+import type { ChangeEventHandler } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/loading-button";
+import { ProfileAvatarCropDialog } from "@/components/profile-avatar-crop-dialog";
 import { getUser } from "@/functions/get-user";
 import { useAppForm } from "@/hooks/use-app-form";
 import { getCurrentProductVersionLabel } from "@/lib/app-release";
 import { authClient } from "@/lib/auth-client";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -68,7 +76,7 @@ function RouteComponent() {
 	const router = useRouter();
 	const { user } = Route.useLoaderData();
 	const appVersionLabel = getCurrentProductVersionLabel();
-	const { data: session } = authClient.useSession();
+	const { data: session, refetch: refetchSession } = authClient.useSession();
 
 	const liveUser = session?.user ?? user;
 
@@ -98,6 +106,77 @@ function RouteComponent() {
 	const onSubmit = form.handleSubmit(async (values) => {
 		updateProfile(values);
 	});
+
+	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [avatarCropOpen, setAvatarCropOpen] = useState(false);
+	const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null);
+
+	const avatarInitials = useMemo(() => {
+		const n = (liveUser.name ?? "").trim();
+		const email = liveUser.email ?? "?";
+		const parts = n.split(/\s+/u).filter(Boolean);
+		if (parts.length >= 2) {
+			const a = parts[0]?.[0];
+			const b = parts[1]?.[0];
+			if (a && b) return `${a}${b}`.toUpperCase();
+		}
+		if (n.length >= 1) return n.slice(0, 2).toUpperCase();
+		return email.slice(0, 1).toUpperCase() || "?";
+	}, [liveUser.email, liveUser.name]);
+
+	const { mutateAsync: setAvatarAsync, isPending: setAvatarBusy } = useMutation(
+		{
+			...orpc.user.setAvatar.mutationOptions(),
+			async onSuccess() {
+				toast.success("Profile photo updated");
+				await refetchSession();
+				await router.invalidate();
+			},
+			onError(err) {
+				toastOrpcMutationFailure(err, "Could not upload profile photo.");
+			},
+		},
+	);
+
+	const removeAvatarMutation = useMutation({
+		...orpc.user.removeAvatar.mutationOptions(),
+		async onSuccess() {
+			toast.success("Profile photo removed");
+			await refetchSession();
+			await router.invalidate();
+		},
+		onError(err) {
+			toastOrpcMutationFailure(err, "Could not remove profile photo.");
+		},
+	});
+
+	const closeAvatarCrop = () => {
+		setAvatarCropOpen(false);
+		setAvatarCropSrc((prev) => {
+			if (prev) URL.revokeObjectURL(prev);
+			return null;
+		});
+	};
+
+	const onAvatarFile: ChangeEventHandler<HTMLInputElement> = (e) => {
+		const file = e.target.files?.[0];
+		e.target.value = "";
+		if (!file) return;
+		const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
+		if (!allowed.has(file.type)) {
+			toast.error("Use a JPEG, PNG, or WebP image.");
+			return;
+		}
+		if (file.size > 8 * 1024 * 1024) {
+			toast.error("Image is too large (max 8MB).");
+			return;
+		}
+		setAvatarCropSrc((prev) => {
+			if (prev) URL.revokeObjectURL(prev);
+			return URL.createObjectURL(file);
+		});
+		setAvatarCropOpen(true);
+	};
 
 	const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -177,6 +256,52 @@ function RouteComponent() {
 				</FrameHeader>
 				<form onSubmit={onSubmit}>
 					<FramePanel className="space-y-4">
+						<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+							<Avatar className="size-20 text-lg">
+								{liveUser.image ? (
+									<AvatarImage alt="" src={liveUser.image} />
+								) : null}
+								<AvatarFallback className="text-lg">
+									{avatarInitials}
+								</AvatarFallback>
+							</Avatar>
+							<div className="flex flex-col gap-2">
+								<p className="font-medium text-sm">Profile photo</p>
+								<p className="text-muted-foreground text-xs">
+									Square crop, optimized for delivery. Your photo appears on
+									your profile and anywhere we show your avatar.
+								</p>
+								<div className="flex flex-wrap gap-2">
+									<input
+										accept="image/jpeg,image/png,image/webp"
+										className="sr-only"
+										onChange={onAvatarFile}
+										ref={fileInputRef}
+										type="file"
+									/>
+									<Button
+										disabled={setAvatarBusy}
+										onClick={() => fileInputRef.current?.click()}
+										size="sm"
+										type="button"
+										variant="outline"
+									>
+										Change photo
+									</Button>
+									{liveUser.image ? (
+										<Button
+											disabled={removeAvatarMutation.isPending || setAvatarBusy}
+											onClick={() => removeAvatarMutation.mutate({})}
+											size="sm"
+											type="button"
+											variant="ghost"
+										>
+											Remove
+										</Button>
+									) : null}
+								</div>
+							</div>
+						</div>
 						<form.Input
 							name="name"
 							label="Name"
@@ -201,6 +326,19 @@ function RouteComponent() {
 					</FrameFooter>
 				</form>
 			</Frame>
+
+			<ProfileAvatarCropDialog
+				imageSrc={avatarCropSrc}
+				onConfirm={async (payload) => {
+					await setAvatarAsync(payload);
+				}}
+				onOpenChange={(next) => {
+					if (!next) {
+						closeAvatarCrop();
+					}
+				}}
+				open={avatarCropOpen}
+			/>
 
 			<Frame>
 				<FrameHeader>

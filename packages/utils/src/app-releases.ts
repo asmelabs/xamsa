@@ -7,12 +7,33 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 24 } as const;
+const current = { year: 2026, month: 4, patch: 25 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 25,
+			title: "You can now add a profile photo to your account!",
+			highlights: [
+				{
+					kind: "text",
+					text: "Add a profile photo from Settings so friends recognize you on your profile, leaderboards, and anywhere your picture appears in the app.",
+				},
+				{
+					kind: "text",
+					text: "Choose a photo, drag to frame it, zoom in or out, then save. We keep it in a neat square so it always looks consistent wherever it shows up.",
+				},
+				{
+					kind: "text",
+					text: "Swap your photo any time or clear it completely if you’d rather use your initials. What you see in Settings stays in sync without needing to refresh the page.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,
@@ -53,7 +74,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.24, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
+					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.25, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
 				},
 				{
 					kind: "text",

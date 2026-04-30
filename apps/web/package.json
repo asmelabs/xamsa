@@ -51,6 +51,7 @@
 		"nitro": "^3.0.260311-beta",
 		"nuqs": "^2.8.9",
 		"posthog-js": "^1.368.2",
+		"react-easy-crop": "^5.5.6",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"react-hook-form": "^7.72.1",

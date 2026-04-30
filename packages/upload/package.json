@@ -1,0 +1,22 @@
+{
+	"name": "@xamsa/upload",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@xamsa/env": "workspace:*",
+		"cloudinary": "^2.5.6",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@xamsa/config": "workspace:*",
+		"typescript": "^5"
+	}
+}
