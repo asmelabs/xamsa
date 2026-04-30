@@ -528,3 +528,27 @@ export type ListPublicGameHistoryInputType = z.infer<
 export type ListPublicGameHistoryOutputType = z.infer<
 	typeof ListPublicGameHistoryOutputSchema
 >;
+
+/** Joinable waiting lobbies (public pack) for global search `join:game`. */
+export const ListJoinableWaitingLobbiesInputSchema = z.object({
+	limit: z.number().int().min(1).max(30).default(15),
+});
+
+export const JoinableWaitingLobbySchema = z.object({
+	code: z.string(),
+	packName: z.string(),
+	hostUsername: z.string(),
+	hostName: z.string(),
+	playerCount: z.number().int(),
+});
+
+export const ListJoinableWaitingLobbiesOutputSchema = z.object({
+	items: z.array(JoinableWaitingLobbySchema),
+});
+
+export type ListJoinableWaitingLobbiesInputType = z.infer<
+	typeof ListJoinableWaitingLobbiesInputSchema
+>;
+export type ListJoinableWaitingLobbiesOutputType = z.infer<
+	typeof ListJoinableWaitingLobbiesOutputSchema
+>;

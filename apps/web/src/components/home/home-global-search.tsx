@@ -16,7 +16,9 @@ export function HomeGlobalSearch() {
 			onClick={() => openSearch()}
 		>
 			<SearchIcon className="size-4 shrink-0 opacity-72" strokeWidth={1.75} />
-			<span className="truncate">Search users, packs, topics, games…</span>
+			<span className="truncate">
+				Search users, packs, topics… Try leaderboard, play, or dashboard/…
+			</span>
 			<kbd className="pointer-events-none ml-auto hidden items-center gap-0.5 border bg-muted/72 px-1.5 py-0.5 font-medium font-sans text-[10px] text-muted-foreground md:inline-flex">
 				⌘K
 			</kbd>
