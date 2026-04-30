@@ -17,6 +17,8 @@ import {
 	HandleHostDisconnectOutputSchema,
 	LeaveAsHostInputSchema,
 	LeaveAsHostOutputSchema,
+	ListJoinableWaitingLobbiesInputSchema,
+	ListJoinableWaitingLobbiesOutputSchema,
 	ListPublicGameHistoryInputSchema,
 	ListPublicGameHistoryOutputSchema,
 	RevealQuestionInputSchema,
@@ -27,6 +29,7 @@ import {
 	UpdateGameStatusOutputSchema,
 } from "@xamsa/schemas/modules/game";
 import { protectedProcedure, publicProcedure } from "../../procedures";
+import { listJoinableWaitingLobbies } from "./joinable-lobbies";
 import { listPublicGameHistory } from "./public-history";
 import { getCompletedGameRecap } from "./recap";
 import {
@@ -73,6 +76,13 @@ export const gameRouter = {
 		.input(ListPublicGameHistoryInputSchema)
 		.output(ListPublicGameHistoryOutputSchema)
 		.handler(async ({ input }) => await listPublicGameHistory(input)),
+	listJoinableWaitingLobbies: protectedProcedure
+		.input(ListJoinableWaitingLobbiesInputSchema)
+		.output(ListJoinableWaitingLobbiesOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await listJoinableWaitingLobbies(input, context.session.user.id),
+		),
 	updateStatus: protectedProcedure
 		.input(UpdateGameStatusInputSchema)
 		.output(UpdateGameStatusOutputSchema)

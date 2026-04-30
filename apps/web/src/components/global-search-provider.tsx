@@ -4,6 +4,7 @@ import { useDebouncedValue } from "@tanstack/react-pacer";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { HomeSearchItemType } from "@xamsa/schemas/modules/search";
+import { HOME_SEARCH_MAX } from "@xamsa/schemas/modules/search";
 import {
 	CommandDialog,
 	CommandDialogPopup,
@@ -19,6 +20,7 @@ import { Spinner } from "@xamsa/ui/components/spinner";
 import { cn } from "@xamsa/ui/lib/utils";
 import {
 	Gamepad2Icon,
+	LayoutDashboardIcon,
 	ListTreeIcon,
 	PackageIcon,
 	SearchIcon,
@@ -36,6 +38,9 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { authClient } from "@/lib/auth-client";
+import { analyzeHomeSearchQuery, pageItem } from "@/lib/home-search-commands";
+import { isStaffRole } from "@/lib/staff";
 import { orpc } from "@/utils/orpc";
 
 const SEARCH_WAIT_MS = 250;
@@ -72,6 +77,8 @@ function itemIconAndLabel(kind: HomeSearchItemType["kind"]): {
 			return { icon: ListTreeIcon, label: "Topic" };
 		case "game":
 			return { icon: Gamepad2Icon, label: "Game" };
+		case "page":
+			return { icon: LayoutDashboardIcon, label: "Page" };
 	}
 }
 
@@ -155,6 +162,19 @@ function HomeSearchRow({
 			</Link>
 		);
 	}
+	if (item.kind === "page") {
+		return (
+			<Link
+				to={item.to}
+				{...(item.search ? { search: item.search } : {})}
+				className={rowClass}
+				aria-selected={isActive}
+				onClick={onPick}
+			>
+				{inner}
+			</Link>
+		);
+	}
 	return (
 		<Link
 			to="/g/$code"
@@ -194,6 +214,12 @@ function openItemRoute(
 		case "game":
 			void navigate({ to: "/g/$code", params: { code: item.code } });
 			break;
+		case "page":
+			void navigate({
+				to: item.to,
+				...(item.search ? { search: item.search } : {}),
+			});
+			break;
 	}
 }
 
@@ -208,15 +234,171 @@ function GlobalSearchDialog() {
 	});
 	const inputId = useId();
 
-	const q = debouncedQuery.trim();
-	const enabled = open && q.length >= MIN_CHARS;
+	const { data: sessionData } = authClient.useSession();
+	const user = sessionData?.user;
 
-	const { data, isFetching, isError } = useQuery(
+	const { data: activeGame } = useQuery({
+		...orpc.user.getActiveGame.queryOptions({ input: {} }),
+		enabled: open && !!user,
+	});
+
+	const commandCtx = useMemo(
+		() => ({
+			isSignedIn: !!user,
+			isStaff: isStaffRole(user?.role),
+			hasActiveGame: !!activeGame,
+			activeGameCode: activeGame?.code ?? null,
+		}),
+		[user, activeGame],
+	);
+
+	const rawTrimmed = rawQuery.trim();
+	const debouncedTrimmed = debouncedQuery.trim();
+	const hasQuery = open && rawTrimmed.length >= MIN_CHARS;
+
+	const analysis = useMemo(
+		() => analyzeHomeSearchQuery(rawTrimmed, commandCtx),
+		[rawTrimmed, commandCtx],
+	);
+
+	const { data: draftPacks, isFetching: draftsFetching } = useQuery({
+		...orpc.pack.list.queryOptions({
+			input: {
+				limit: HOME_SEARCH_MAX,
+				onlyMyPacks: true,
+				statuses: ["draft"],
+				sort: "newest",
+				dir: "desc",
+			},
+		}),
+		enabled: open && analysis.fetchDraftPacks,
+	});
+
+	const { data: hostPacks, isFetching: hostsFetching } = useQuery({
+		...orpc.pack.list.queryOptions({
+			input: {
+				limit: HOME_SEARCH_MAX,
+				canHost: true,
+				statuses: ["published"],
+				sort: "newest",
+				dir: "desc",
+			},
+		}),
+		enabled: open && analysis.fetchHostPacks && !!user,
+	});
+
+	const { data: lobbies, isFetching: lobbiesFetching } = useQuery({
+		...orpc.game.listJoinableWaitingLobbies.queryOptions({
+			input: { limit: 15 },
+		}),
+		enabled: open && analysis.fetchJoinLobbies && !!user,
+	});
+
+	const commandDataPending =
+		(analysis.fetchDraftPacks && draftsFetching) ||
+		(analysis.fetchHostPacks && hostsFetching) ||
+		(analysis.fetchJoinLobbies && lobbiesFetching);
+
+	const mergedWithoutApi = useMemo(() => {
+		const max = HOME_SEARCH_MAX;
+		const out: HomeSearchItemType[] = [...analysis.staticItems];
+
+		const pushCap = (rows: HomeSearchItemType[]) => {
+			for (const row of rows) {
+				if (out.length >= max) break;
+				out.push(row);
+			}
+		};
+
+		if (analysis.fetchDraftPacks && !draftsFetching) {
+			const rows = draftPacks?.items ?? [];
+			if (rows.length === 0) {
+				pushCap([
+					pageItem(
+						"Create a draft pack first",
+						"No draft packs yet",
+						"/packs/new/",
+					),
+				]);
+			} else {
+				pushCap(
+					rows.map((p) =>
+						pageItem(
+							`New topic · ${p.name}`,
+							`Draft pack · ${p.slug}`,
+							`/packs/${p.slug}/topics/new/`,
+						),
+					),
+				);
+			}
+		}
+
+		if (analysis.fetchHostPacks && !hostsFetching) {
+			const rows = hostPacks?.items ?? [];
+			pushCap(
+				rows.map((p) =>
+					pageItem(
+						`Host · ${p.name}`,
+						"Start a game from this pack",
+						`/play/new/${p.slug}/`,
+					),
+				),
+			);
+		}
+
+		if (analysis.fetchJoinLobbies && !lobbiesFetching) {
+			const rows = lobbies?.items ?? [];
+			pushCap(
+				rows.map((g) =>
+					pageItem(
+						`Join · ${g.code}`,
+						`${g.packName} · ${g.hostName}`,
+						`/join/${g.code}/`,
+					),
+				),
+			);
+		}
+
+		return out.slice(0, max);
+	}, [
+		analysis,
+		draftPacks,
+		hostPacks,
+		lobbies,
+		draftsFetching,
+		hostsFetching,
+		lobbiesFetching,
+	]);
+
+	const apiLimit = HOME_SEARCH_MAX - mergedWithoutApi.length;
+
+	const apiEnabled =
+		hasQuery &&
+		!commandDataPending &&
+		apiLimit > 0 &&
+		debouncedTrimmed.length >= MIN_CHARS;
+
+	const {
+		data: apiData,
+		isFetching: apiFetching,
+		isError,
+	} = useQuery(
 		orpc.user.homeSearch.queryOptions({
-			input: { query: q, limit: 8 },
-			enabled,
+			input: { query: debouncedTrimmed, limit: apiLimit },
+			enabled: apiEnabled,
 		}),
 	);
+
+	const items = useMemo(() => {
+		const slice = (apiData?.items ?? []).slice(0, apiLimit);
+		return [...mergedWithoutApi, ...slice];
+	}, [mergedWithoutApi, apiData, apiLimit]);
+
+	const anyFetching =
+		apiFetching ||
+		(analysis.fetchDraftPacks && draftsFetching) ||
+		(analysis.fetchHostPacks && hostsFetching) ||
+		(analysis.fetchJoinLobbies && lobbiesFetching);
 
 	useEffect(() => {
 		if (!open) {
@@ -224,12 +406,6 @@ function GlobalSearchDialog() {
 			setHighlightedIndex(0);
 		}
 	}, [open]);
-
-	useEffect(() => {
-		setHighlightedIndex(0);
-	}, [q]);
-
-	const items = data?.items ?? [];
 
 	useEffect(() => {
 		setHighlightedIndex((i) => {
@@ -253,9 +429,11 @@ function GlobalSearchDialog() {
 		setOpen(false);
 	}, [items, highlightedIndex, navigate, setOpen]);
 
+	const listInteractive = hasQuery && items.length > 0;
+
 	const onResultsKeyDownCapture = useCallback(
 		(e: ReactKeyboardEvent) => {
-			if (!enabled || items.length === 0) return;
+			if (!listInteractive) return;
 			if (e.key === "ArrowDown") {
 				e.preventDefault();
 				setHighlightedIndex((i) => Math.min(i + 1, items.length - 1));
@@ -271,8 +449,16 @@ function GlobalSearchDialog() {
 				pickHighlighted();
 			}
 		},
-		[enabled, items.length, pickHighlighted],
+		[listInteractive, items.length, pickHighlighted],
 	);
+
+	const showLoading =
+		hasQuery &&
+		items.length === 0 &&
+		(anyFetching || (apiEnabled && apiFetching));
+
+	const showError =
+		hasQuery && items.length === 0 && isError && !anyFetching && apiEnabled;
 
 	return (
 		<CommandDialog open={open} onOpenChange={setOpen}>
@@ -289,7 +475,10 @@ function GlobalSearchDialog() {
 								autoComplete="off"
 								placeholder="Search…"
 								value={rawQuery}
-								onChange={(e) => setRawQuery(e.target.value)}
+								onChange={(e) => {
+									setRawQuery(e.target.value);
+									setHighlightedIndex(0);
+								}}
 								className="h-10 flex-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
 							/>
 							<InputGroupAddon>
@@ -298,7 +487,7 @@ function GlobalSearchDialog() {
 									strokeWidth={1.75}
 								/>
 							</InputGroupAddon>
-							{isFetching ? (
+							{anyFetching ? (
 								<InputGroupAddon align="inline-end">
 									<Spinner className="size-4 shrink-0 text-muted-foreground" />
 								</InputGroupAddon>
@@ -308,19 +497,19 @@ function GlobalSearchDialog() {
 					<ScrollArea
 						className={cn(
 							"max-h-[min(60vh,22rem)]",
-							items.length === 0 && !enabled && "min-h-18",
+							items.length === 0 && !hasQuery && "min-h-18",
 						)}
 					>
 						<div className="p-2">
-							{!enabled ? (
+							{!hasQuery ? (
 								<p className="px-2 py-6 text-center text-muted-foreground text-sm">
 									Type at least one character to search.
 								</p>
-							) : isError ? (
+							) : showError ? (
 								<p className="px-2 py-6 text-center text-destructive text-sm">
 									Something went wrong. Try again.
 								</p>
-							) : isFetching && items.length === 0 ? (
+							) : showLoading ? (
 								<p className="px-2 py-6 text-center text-muted-foreground text-sm">
 									Searching…
 								</p>
@@ -339,7 +528,9 @@ function GlobalSearchDialog() {
 														? `p-${item.slug}`
 														: item.kind === "topic"
 															? `t-${item.packSlug}-${item.topicSlug}`
-															: `g-${item.code}-${i}`
+															: item.kind === "game"
+																? `g-${item.code}-${i}`
+																: `page-${item.to}-${JSON.stringify(item.search ?? {})}-${i}`
 											}
 											data-search-index={i}
 											role="presentation"

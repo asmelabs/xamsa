@@ -40,11 +40,21 @@ export const HomeSearchGameItemSchema = z.object({
 	description: z.string().nullable(),
 });
 
+/** Client-side shortcuts (dashboard, typed commands); not returned by `homeSearch` API. */
+export const HomeSearchPageItemSchema = z.object({
+	kind: z.literal("page"),
+	title: z.string(),
+	description: z.string().nullable(),
+	to: z.string(),
+	search: z.record(z.string(), z.string()).optional(),
+});
+
 export const HomeSearchItemSchema = z.discriminatedUnion("kind", [
 	HomeSearchUserItemSchema,
 	HomeSearchPackItemSchema,
 	HomeSearchTopicItemSchema,
 	HomeSearchGameItemSchema,
+	HomeSearchPageItemSchema,
 ]);
 
 export const HomeSearchOutputSchema = z.object({

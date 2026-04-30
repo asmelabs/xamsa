@@ -7,12 +7,34 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 22 } as const;
+const current = { year: 2026, month: 4, patch: 23 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 23,
+			title:
+				"Smart global search: dashboard shortcuts, typed commands, joinable lobbies",
+			highlights: [
+				{
+					kind: "text",
+					text: "⌘K search adds Page results: moderators and admins can type dashboard paths (for example dashboard/users) to jump straight to staff tools without hitting the API.",
+				},
+				{
+					kind: "text",
+					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.23, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
+				},
+				{
+					kind: "text",
+					text: "Command rows are merged ahead of the usual user, pack, topic, and game search hits, still capped at eight visible rows.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,

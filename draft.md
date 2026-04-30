@@ -336,6 +336,41 @@ UI:
 - On dashboard, add total followers and following counts to user table. Also add sorting by followers and following counts.
 - On dashboard, on clicks and questions tables, there is question field, which renders the question text in a single line, which makes it really wide column, make it multiline, so it takes up less width.
 
+## v26.04.23
+
+- On home search add this feature. When the user is authenticated AND he/she is moderator/admin, he/she can type "dashboard/\*" keys. If he types just dashboard, dashboard page (/dashboard) should appear on result. He can also type individual dashboard pages like "dashboard/packs", "dashboard/users", "dashboard/games", "dashboard/topics", "dashboard/questions", "dashboard/clicks", "dashboard/jobs", these all should navigate to the respective pages. This data is not coming from the api, so it is client only, and only for admin/moderators. We are just creating a new search result type "page".
+- Let's make home search more smart. Not just dashboard pages, but we can also search for other pages as well.
+
+  > "create:pack" -> shows a result for this page - /packs/new
+  > "create:topic" -> shows the current user's draft packs, and when clicking one of them, navigates to - /packs/$packSlug/topics/new
+  > "create:game" -> only works if the current user is not in a game, and shows list of packs that user can host a game with, clicking one of them navigates to - /play/new/$packSlug
+  > "join:game" -> only works if the current user is not in a game, and shows list of games that user can join, clicking one of them navigates to - /join/$code, or user can directly type "join:$code" then it directly goes to /join/$code
+  > "leaderboard" -> shows the leaderboard page - /leaderboard (or even more specific with tabs "leaderboard:elo", "leaderboard:xp", "leaderboard:wins", "leaderboard:hosts", "leaderboard:plays")
+  > "play" -> /play
+  > "history" -> /history
+  > "settings" -> /settings
+  > "badges" -> /badges (specific "badges:id" -> /badges/$badgeId)
+  > "whats-new" -> /whats-new (specific "whats-new:version" -> /whats-new/$version)
+  > for non authenticated users
+  > "login" -> /auth/login
+  > "register" -> /auth/register
+
+You can see some of them requires autneticated users, some of them requries moderator/admin, some of them requires an api call and some of them are just client only, so handle those logics, validations, etc.
+
+## v26.04.24
+
+- Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
+- Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
+
+## v26.04.25
+
+- Implement email system with Mailjet.
+
+- Send verification email on register.
+- Send password reset email on forgot password.
+- Send email when user follows another user.
+- Send email when user wins a game.
+
 ### UNKNOWN VERSIONS:
 
 - Add non-host games where host is computer-controlled (AI). It will be able to, control the game flow, and validate the answers (answers will be inputted by AI, and it will be validated by AI).
