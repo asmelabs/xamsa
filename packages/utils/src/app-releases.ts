@@ -7,12 +7,25 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 26 } as const;
+const current = { year: 2026, month: 4, patch: 27 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 27,
+			title: "Fix, CORS error on auth API calls.",
+			highlights: [
+				{
+					kind: "text",
+					text: "Fix, CORS error on auth API calls.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,
