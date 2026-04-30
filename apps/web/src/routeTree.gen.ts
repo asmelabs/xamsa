@@ -25,6 +25,9 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as BadgesIndexRouteImport } from './routes/badges/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
+import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
+import { Route as LegalTermsOfServiceRouteImport } from './routes/legal/terms-of-service'
+import { Route as LegalPrivacyPolicyRouteImport } from './routes/legal/privacy-policy'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
@@ -149,6 +152,21 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
+  id: '/settings/security',
+  path: '/settings/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalTermsOfServiceRoute = LegalTermsOfServiceRouteImport.update({
+  id: '/legal/terms-of-service',
+  path: '/legal/terms-of-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyPolicyRoute = LegalPrivacyPolicyRouteImport.update({
+  id: '/legal/privacy-policy',
+  path: '/legal/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -400,6 +418,9 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
+  '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
+  '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
   '/badges/': typeof BadgesIndexRoute
@@ -461,6 +482,9 @@ export interface FileRoutesByTo {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
+  '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
+  '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRoute
   '/auth': typeof AuthIndexRoute
   '/badges': typeof BadgesIndexRoute
@@ -525,6 +549,9 @@ export interface FileRoutesById {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
+  '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
+  '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRoute
   '/auth/': typeof AuthIndexRoute
   '/badges/': typeof BadgesIndexRoute
@@ -590,6 +617,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
+    | '/legal/privacy-policy'
+    | '/legal/terms-of-service'
+    | '/settings/security'
     | '/u/$username'
     | '/auth/'
     | '/badges/'
@@ -651,6 +681,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
+    | '/legal/privacy-policy'
+    | '/legal/terms-of-service'
+    | '/settings/security'
     | '/u/$username'
     | '/auth'
     | '/badges'
@@ -714,6 +747,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
+    | '/legal/privacy-policy'
+    | '/legal/terms-of-service'
+    | '/settings/security'
     | '/u/$username'
     | '/auth/'
     | '/badges/'
@@ -775,6 +811,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  LegalPrivacyPolicyRoute: typeof LegalPrivacyPolicyRoute
+  LegalTermsOfServiceRoute: typeof LegalTermsOfServiceRoute
+  SettingsSecurityRoute: typeof SettingsSecurityRoute
   UUsernameRoute: typeof UUsernameRoute
   BadgesIndexRoute: typeof BadgesIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
@@ -931,6 +970,27 @@ declare module '@tanstack/react-router' {
       path: '/u/$username'
       fullPath: '/u/$username'
       preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/security': {
+      id: '/settings/security'
+      path: '/settings/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof SettingsSecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/terms-of-service': {
+      id: '/legal/terms-of-service'
+      path: '/legal/terms-of-service'
+      fullPath: '/legal/terms-of-service'
+      preLoaderRoute: typeof LegalTermsOfServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy-policy': {
+      id: '/legal/privacy-policy'
+      path: '/legal/privacy-policy'
+      fullPath: '/legal/privacy-policy'
+      preLoaderRoute: typeof LegalPrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/register': {
@@ -1303,6 +1363,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  LegalPrivacyPolicyRoute: LegalPrivacyPolicyRoute,
+  LegalTermsOfServiceRoute: LegalTermsOfServiceRoute,
+  SettingsSecurityRoute: SettingsSecurityRoute,
   UUsernameRoute: UUsernameRoute,
   BadgesIndexRoute: BadgesIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,

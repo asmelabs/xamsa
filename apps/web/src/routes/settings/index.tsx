@@ -22,10 +22,10 @@ import {
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
 import type { ChangeEventHandler } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { LoadingButton } from "@/components/loading-button";
 import { ProfileAvatarCropDialog } from "@/components/profile-avatar-crop-dialog";
+import { SettingsNav } from "@/components/settings-nav";
 import { getUser } from "@/functions/get-user";
 import { useAppForm } from "@/hooks/use-app-form";
 import { getCurrentProductVersionLabel } from "@/lib/app-release";
@@ -33,13 +33,6 @@ import { authClient } from "@/lib/auth-client";
 import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
-
-/** Better Auth exposes `POST /change-email` on the client instance (dynamic proxy — not in minimal TS defs). */
-type ChangeEmailClient = {
-	changeEmail: (args: { newEmail: string; callbackURL?: string }) => Promise<{
-		error?: { message?: string; statusText?: string; code?: string } | null;
-	}>;
-};
 
 export const Route = createFileRoute("/settings/")({
 	component: RouteComponent,
@@ -65,7 +58,7 @@ export const Route = createFileRoute("/settings/")({
 		pageSeo({
 			title: "Settings",
 			description:
-				"Update your Xamsa profile, email, and account details. See the current app version and release notes from here.",
+				"Update your Xamsa profile and account overview. Manage sign-in methods, password, sessions, and email under Security.",
 			path: "/settings/",
 			noIndex: true,
 			keywords: "Xamsa settings, account, profile, app version",
@@ -178,69 +171,6 @@ function RouteComponent() {
 		setAvatarCropOpen(true);
 	};
 
-	const [resendCooldown, setResendCooldown] = useState(0);
-
-	useEffect(() => {
-		if (resendCooldown <= 0) return;
-		const id = window.setInterval(() => {
-			setResendCooldown((c) => c - 1);
-		}, 1000);
-		return () => window.clearInterval(id);
-	}, [resendCooldown]);
-
-	const [newEmailDraft, setNewEmailDraft] = useState("");
-	const [changeEmailBusy, setChangeEmailBusy] = useState(false);
-
-	const sendVerifyEmail = async () => {
-		if (resendCooldown > 0) return;
-
-		try {
-			const result = await authClient.sendVerificationEmail({
-				email: liveUser.email,
-				callbackURL: `${window.location.origin}/settings`,
-			});
-			if (result.error) {
-				throw new Error(result.error.message || result.error.statusText);
-			}
-			toast.success("Verification email sent");
-			setResendCooldown(60);
-		} catch (error) {
-			toast.error((error as Error).message || "Could not send email");
-		}
-	};
-
-	const submitChangeEmail = async () => {
-		const trimmed = newEmailDraft.trim().toLowerCase();
-		if (!trimmed || trimmed === liveUser.email.toLowerCase()) {
-			toast.error("Enter a new email address");
-			return;
-		}
-		setChangeEmailBusy(true);
-		try {
-			const api = authClient as unknown as ChangeEmailClient;
-			const result = await api.changeEmail({
-				newEmail: trimmed,
-				callbackURL: `${window.location.origin}/settings`,
-			});
-			if (result.error) {
-				throw new Error(
-					result.error.message ||
-						result.error.statusText ||
-						"Could not update email",
-				);
-			}
-			toast.success(
-				"We sent instructions to your inbox. Confirm your new email to finish the change.",
-			);
-			setNewEmailDraft("");
-			void router.invalidate();
-		} catch (error) {
-			toast.error((error as Error).message || "Could not update email");
-		} finally {
-			setChangeEmailBusy(false);
-		}
-	};
-
 	return (
 		<div className="container mx-auto max-w-2xl space-y-6 py-10">
 			<div>
@@ -248,6 +178,9 @@ function RouteComponent() {
 				<p className="mt-1 text-muted-foreground text-sm">
 					Manage your account information and preferences.
 				</p>
+				<div className="mt-5">
+					<SettingsNav active="profile" />
+				</div>
 			</div>
 
 			<Frame>
@@ -303,15 +236,15 @@ function RouteComponent() {
 							</div>
 						</div>
 						<form.Input
-							name="name"
-							label="Name"
 							description="This is the name displayed to other users."
+							label="Name"
+							name="name"
 						>
 							{(field) => (
 								<Input
 									{...field}
-									placeholder="Enter your name"
 									maxLength={100}
+									placeholder="Enter your name"
 								/>
 							)}
 						</form.Input>
@@ -344,7 +277,7 @@ function RouteComponent() {
 				<FrameHeader>
 					<FrameTitle>Account</FrameTitle>
 				</FrameHeader>
-				<FramePanel className="space-y-6">
+				<FramePanel className="space-y-4">
 					<dl className="space-y-3 text-sm">
 						<div className="flex flex-wrap items-center justify-between gap-2">
 							<dt className="text-muted-foreground">Username</dt>
@@ -363,58 +296,19 @@ function RouteComponent() {
 								) : (
 									<Badge variant="warning">Unverified</Badge>
 								)}
-								{!emailVerified && (
-									<Button
-										type="button"
-										size="sm"
-										variant="outline"
-										disabled={resendCooldown > 0}
-										onClick={() => void sendVerifyEmail()}
-									>
-										{resendCooldown > 0
-											? `Resend (${String(resendCooldown)}s)`
-											: "Verify email"}
-									</Button>
-								)}
 							</div>
 						</div>
 					</dl>
-
-					<div className="space-y-3 border-border border-t pt-4">
-						<p className="font-medium text-sm">Change email</p>
-						<p className="text-muted-foreground text-xs">
-							You will receive a confirmation link at the new address. Until you
-							confirm, your sign-in email stays the same.
-						</p>
-						<div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-							<div className="min-w-0 flex-1">
-								<Input
-									type="email"
-									autoComplete="email"
-									placeholder="you@example.com"
-									value={newEmailDraft}
-									onChange={(e) => setNewEmailDraft(e.target.value)}
-								/>
-							</div>
-							<LoadingButton
-								type="button"
-								variant="secondary"
-								size="sm"
-								className="w-full shrink-0 sm:w-auto"
-								onClick={() => void submitChangeEmail()}
-								disabled={
-									changeEmailBusy ||
-									!newEmailDraft.trim() ||
-									newEmailDraft.trim().toLowerCase() ===
-										liveUser.email.toLowerCase()
-								}
-								isLoading={changeEmailBusy}
-								loadingText="Sending..."
-							>
-								Update email
-							</LoadingButton>
-						</div>
-					</div>
+					<p className="border-border border-t pt-4 text-muted-foreground text-sm">
+						Email, password, connected accounts, and active sessions are in{" "}
+						<Link
+							className="font-medium text-foreground underline decoration-muted-foreground/50 underline-offset-4 hover:decoration-foreground"
+							to="/settings/security"
+						>
+							Security
+						</Link>
+						.
+					</p>
 				</FramePanel>
 			</Frame>
 
@@ -429,8 +323,8 @@ function RouteComponent() {
 					</div>
 					<p className="text-muted-foreground text-xs">
 						<Link
-							to="/whats-new"
 							className="font-medium text-foreground underline decoration-muted-foreground/50 underline-offset-4 hover:decoration-foreground"
+							to="/whats-new"
 						>
 							See what’s new
 						</Link>{" "}

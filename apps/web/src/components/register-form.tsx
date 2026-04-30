@@ -9,12 +9,14 @@ import {
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
 import { Input } from "@xamsa/ui/components/input";
+import { Separator } from "@xamsa/ui/components/separator";
 import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
 import { assignPostAuthRedirect } from "@/lib/auth-redirect";
+import { ContinueWithGoogleButton } from "./continue-with-google-button";
 import { LoadingButton } from "./loading-button";
 import { PasswordInput } from "./password-input";
 
@@ -176,6 +178,20 @@ export function RegisterForm() {
 				</FrameHeader>
 				<form onSubmit={onSubmit}>
 					<FramePanel className="space-y-4">
+						<div className="flex flex-col gap-3">
+							<ContinueWithGoogleButton
+								redirectUrl={callbackURL}
+								disabled={isLoading}
+							/>
+							<div className="relative py-1">
+								<div className="absolute inset-x-0 top-1/2">
+									<Separator />
+								</div>
+								<span className="relative mx-auto flex w-fit bg-popover px-3 text-muted-foreground text-xs">
+									Or continue with email
+								</span>
+							</div>
+						</div>
 						<form.Input name="name" label="Name">
 							{(field) => (
 								<Input
@@ -229,6 +245,23 @@ export function RegisterForm() {
 					</FrameFooter>
 				</form>
 			</Frame>
+			<p className="max-w-lg px-2 text-center text-muted-foreground text-xs leading-snug">
+				By continuing you agree to the{" "}
+				<Link
+					className="text-foreground underline underline-offset-2"
+					to="/legal/terms-of-service"
+				>
+					Terms of Service
+				</Link>{" "}
+				and{" "}
+				<Link
+					className="text-foreground underline underline-offset-2"
+					to="/legal/privacy-policy"
+				>
+					Privacy Policy
+				</Link>
+				.
+			</p>
 			<Link
 				to="/auth/login"
 				search={{ redirect_url: callbackURL || undefined }}

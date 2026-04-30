@@ -409,7 +409,6 @@ Note:
 - On login and register page, there should be continue with Google button.
 - Mapping google user to our user:
   -- Google provides email, first/last name, and profile picture. We have mandatory username field, so we need to generate a username from first/last name and be sure it is unique (if not try again with incremented suffix etc.). Also google's profile picture located on their own servers, so we need to download it and save it to our cloudinary storage.
-  -- Option B for username could be, when signin up using google, there will be a input field after registration, to set username, but i don't know how hard that would be to do, i guess auto generation is much clearer and better.
 
 ## v26.04.xx
 

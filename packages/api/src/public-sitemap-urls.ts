@@ -13,6 +13,8 @@ export const PUBLIC_SITEMAP_STATIC_PATHS = [
 	"/games/history/",
 	"/play/",
 	"/badges/",
+	"/legal/privacy-policy",
+	"/legal/terms-of-service",
 ] as const;
 
 export type PublicSitemapEntry = {

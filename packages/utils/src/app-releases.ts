@@ -7,12 +7,51 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 25 } as const;
+const current = { year: 2026, month: 4, patch: 26 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-04-30",
+			year: 2026,
+			month: 4,
+			patch: 26,
+			title:
+				"Sign in with Google, link accounts, and store your Google photo on Xamsa",
+			highlights: [
+				{
+					kind: "text",
+					text: "Log in or create an account using Google from the login and register pages. If you already registered with the same email address, your Google sign-in links to that account so you keep one profile and history.",
+				},
+				{
+					kind: "text",
+					text: "Google users get a unique username generated from their name (with a numeric suffix if needed to match our rules), and your Google profile picture is copied to our image storage so links stay on Xamsa-hosted URLs.",
+				},
+				{
+					kind: "routerLink",
+					to: "/settings/security",
+					label: "Security Settings",
+					before: "Go to ",
+					after: " to manage your accounts, email, and password settings.",
+				},
+				{
+					kind: "routerLink",
+					to: "/legal/privacy-policy",
+					label: "Privacy Policy",
+					before: "Read our ",
+					after: " to learn more about how we handle your data.",
+				},
+				{
+					kind: "routerLink",
+					to: "/legal/terms-of-service",
+					label: "Terms of Service",
+					before: "Read our ",
+					after: " to learn more about how we handle your data.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,
@@ -74,7 +113,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.25, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
+					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.26, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
 				},
 				{
 					kind: "text",
