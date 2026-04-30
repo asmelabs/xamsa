@@ -410,10 +410,13 @@ Note:
 - Mapping google user to our user:
   -- Google provides email, first/last name, and profile picture. We have mandatory username field, so we need to generate a username from first/last name and be sure it is unique (if not try again with incremented suffix etc.). Also google's profile picture located on their own servers, so we need to download it and save it to our cloudinary storage.
 
-## v26.04.xx
+## v26.04.27
 
 - Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.
 - Add new badge: "Survivor" - When a user wins the game, with less than 500 points difference with the runner-up.
+- When clicking on someone's profile photo, it should open a popup/modal with bigger image of the profile photo.
+- On followers/following dialogs on profile page, each user must have a "Follow"/"Unfollow" button justified right (if current user is authenticated and not on self). So that users can easily follow/unfollow someone from there without opening the profile page or leaving the dialog.
+
 - Add comments system on packs and topics pages.
 - Add posts. Posts will be like facebook posts, where authenticated users can create posts with content, image, etc. Posts will have a comprehensive attachement system, where you can attach game, pack, user, topic, question, click, etc. simply every type of resource that exists in the app. In the first phase though, you will just be able to write text, images, and attach games and packs.
 
