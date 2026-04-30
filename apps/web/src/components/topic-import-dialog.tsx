@@ -27,6 +27,7 @@ import { BookOpen, CircleHelp, Upload } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 export type TopicImportMeta = {
@@ -689,7 +690,7 @@ export function TopicImportDialog({
 			{
 				onSuccess: (data) => applyTopics(data.topics),
 				onError: (err) =>
-					toast.error(err.message || "Could not load from URL."),
+					toastOrpcMutationFailure(err, "Could not load from URL."),
 			},
 		);
 	};
@@ -711,7 +712,7 @@ export function TopicImportDialog({
 			{
 				onSuccess: (data) => applyTopics(data.topics),
 				onError: (err) =>
-					toast.error(err.message || "Could not parse that content."),
+					toastOrpcMutationFailure(err, "Could not parse that content."),
 			},
 		);
 	};
@@ -734,7 +735,7 @@ export function TopicImportDialog({
 				{
 					onSuccess: (data) => applyTopics(data.topics),
 					onError: (err) =>
-						toast.error(err.message || "Could not parse that file."),
+						toastOrpcMutationFailure(err, "Could not parse that file."),
 				},
 			);
 		};
@@ -762,7 +763,7 @@ export function TopicImportDialog({
 						sourceLabel: data.sourceName,
 					});
 				},
-				onError: (err) => toast.error(err.message || "3sual import failed."),
+				onError: (err) => toastOrpcMutationFailure(err, "3sual import failed."),
 			},
 		);
 	};

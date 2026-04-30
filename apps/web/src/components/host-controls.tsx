@@ -9,7 +9,6 @@ import {
 	SkipForwardIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 import {
 	applyGameCompletedToGame,
 	applyGamePausedToGame,
@@ -20,6 +19,7 @@ import {
 } from "@/hooks/use-game-channel";
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 
@@ -56,7 +56,7 @@ export function HostControls({ game }: HostControlsProps) {
 			void queryClient.invalidateQueries({ queryKey });
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to advance question");
+			toastOrpcMutationFailure(error, "Failed to advance question");
 			queryClient.invalidateQueries({ queryKey });
 		},
 	});
@@ -64,7 +64,7 @@ export function HostControls({ game }: HostControlsProps) {
 	const { mutate: complete, isPending: isCompleting } = useMutation({
 		...orpc.game.completeGame.mutationOptions(),
 		onError(error) {
-			toast.error(error.message || "Failed to finish game");
+			toastOrpcMutationFailure(error, "Failed to finish game");
 			queryClient.invalidateQueries({ queryKey });
 		},
 	});
@@ -74,7 +74,7 @@ export function HostControls({ game }: HostControlsProps) {
 	const { mutate: updateStatus, isPending: isTogglingPause } = useMutation({
 		...orpc.game.updateStatus.mutationOptions(),
 		onError(error) {
-			toast.error(error.message || "Failed to update game status");
+			toastOrpcMutationFailure(error, "Failed to update game status");
 			queryClient.invalidateQueries({ queryKey });
 		},
 	});
@@ -92,7 +92,7 @@ export function HostControls({ game }: HostControlsProps) {
 			setSkipOpen(false);
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to skip question");
+			toastOrpcMutationFailure(error, "Failed to skip question");
 			queryClient.invalidateQueries({ queryKey });
 		},
 	});

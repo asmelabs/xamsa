@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { JoinGameForm } from "@/components/join-game-form";
 import { getUser } from "@/functions/get-user";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -70,7 +71,7 @@ function RouteComponent() {
 			});
 		},
 		onError(error) {
-			toast.error(error.message || "Could not join this game");
+			toastOrpcMutationFailure(error, "Could not join this game");
 			setPhase("fallback");
 		},
 	});

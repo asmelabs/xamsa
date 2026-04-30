@@ -4,6 +4,7 @@ import type { PackVisibility } from "@xamsa/schemas/db/schemas/enums/PackVisibil
 import { Alert, AlertDescription } from "@xamsa/ui/components/alert";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
@@ -41,8 +42,9 @@ export function ChangePackVisibilityDialog({
 			onOpenChange(false);
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});

@@ -13,6 +13,7 @@ import type {
 import { MAX_PLAYERS_PER_GAME } from "@xamsa/utils/constants";
 import { publishBadgeEarnedMany } from "../badge/publish";
 import { finalizeGame } from "../game/finalize-game";
+import { scheduleGameWinnerEmailIfNeeded } from "../game/notify-game-winner-email";
 
 export async function joinPlayer(
 	input: PlayerJoinInputType,
@@ -382,6 +383,7 @@ export async function leavePlayer(
 			playerRanks: triggeredFinalize.playerRanks,
 			isAuthoritative: true,
 		});
+		scheduleGameWinnerEmailIfNeeded(game.id, triggeredFinalize);
 	}
 
 	return updated;

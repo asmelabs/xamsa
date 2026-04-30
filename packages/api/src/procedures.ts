@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import type { Role } from "@xamsa/schemas/db/schemas/enums/Role.schema";
+import { ORPC_ERROR_EMAIL_NOT_VERIFIED } from "@xamsa/schemas/orpc/errors";
 import { o } from "./o";
 
 const withAuth = o.middleware(async ({ context, next }) => {
@@ -14,6 +15,21 @@ const withAuth = o.middleware(async ({ context, next }) => {
 			session,
 		},
 	});
+});
+
+const withVerifiedEmail = o.middleware(async ({ context, next }) => {
+	const rawUser = context.session?.user;
+	if (!rawUser) {
+		throw new ORPCError("UNAUTHORIZED");
+	}
+	const user = rawUser as { emailVerified?: boolean };
+	if (user.emailVerified !== true) {
+		throw new ORPCError("FORBIDDEN", {
+			message: "Verify your email to use this feature.",
+			data: { code: ORPC_ERROR_EMAIL_NOT_VERIFIED },
+		});
+	}
+	return next();
 });
 
 const withRoles = (...roles: Role[]) =>
@@ -36,7 +52,9 @@ const withRoles = (...roles: Role[]) =>
 
 export const publicProcedure = o;
 export const protectedProcedure = publicProcedure.use(withAuth);
-export const moderatorProcedure = protectedProcedure.use(
+export const verifiedProcedure = protectedProcedure.use(withVerifiedEmail);
+/** Moderation / dashboard — authenticated, email verified, eligible role */
+export const moderatorProcedure = verifiedProcedure.use(
 	withRoles("moderator", "admin"),
 );
-export const adminProcedure = protectedProcedure.use(withRoles("admin"));
+export const adminProcedure = verifiedProcedure.use(withRoles("admin"));

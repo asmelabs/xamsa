@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import prisma from "@xamsa/db";
+import { sendNewFollowerEmail } from "@xamsa/mail/notifications";
 import type {
 	FindOneProfileInputType,
 	FindOneProfileOutputType,
@@ -395,6 +396,7 @@ export async function followUser(
 		});
 	}
 
+	let createdNewFollow = false;
 	try {
 		await prisma.$transaction(async (tx) => {
 			const existing = await tx.userFollow.findUnique({
@@ -407,6 +409,8 @@ export async function followUser(
 				select: { id: true },
 			});
 			if (existing) return;
+
+			createdNewFollow = true;
 
 			await tx.userFollow.create({
 				data: {
@@ -426,6 +430,32 @@ export async function followUser(
 		});
 	} catch (err) {
 		if (!isPrismaUniqueViolation(err)) throw err;
+	}
+
+	if (createdNewFollow) {
+		void (async () => {
+			try {
+				const [follower, followee] = await Promise.all([
+					prisma.user.findUnique({
+						where: { id: followerId },
+						select: { name: true, username: true },
+					}),
+					prisma.user.findUnique({
+						where: { id: target.id },
+						select: { email: true, name: true },
+					}),
+				]);
+				if (!follower || !followee?.email) return;
+				await sendNewFollowerEmail({
+					email: followee.email,
+					name: followee.name,
+					followerName: follower.name,
+					followerUsername: follower.username,
+				});
+			} catch (e) {
+				console.error("[followUser email]", e);
+			}
+		})();
 	}
 
 	return { ok: true as const };

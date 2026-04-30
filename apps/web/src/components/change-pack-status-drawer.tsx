@@ -9,6 +9,7 @@ import {
 import { useQueryState } from "nuqs";
 import type React from "react";
 import { toast } from "sonner";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
@@ -62,8 +63,9 @@ export function ChangePackStatusDrawer({
 			setOpened(null);
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});

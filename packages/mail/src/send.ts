@@ -1,5 +1,6 @@
 import { EmailParams, Recipient } from "mailersend";
 import { mailer, sentFrom } from "./client";
+import { summarizeMailDeliveryError, truncateForLog } from "./mail-send-errors";
 
 type EmailTo =
 	| string
@@ -37,7 +38,19 @@ export async function sendEmail(options: SendEmailOptions) {
 	try {
 		return await mailer.email.send(emailParams);
 	} catch (error) {
-		console.error("Failed to send email", emailParams, error);
-		throw error;
+		const toAddresses = recipients.map((r) => r.email);
+		const readable = summarizeMailDeliveryError(error);
+		const status =
+			error && typeof error === "object" && "statusCode" in error
+				? (error as { statusCode?: number }).statusCode
+				: undefined;
+
+		console.error("[@xamsa/mail] Email send rejected:", readable, {
+			to: toAddresses,
+			subject,
+			htmlPreview: truncateForLog(html),
+			statusCode: status,
+		});
+		throw Object.assign(new Error(readable), { cause: error });
 	}
 }

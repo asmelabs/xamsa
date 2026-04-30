@@ -15,7 +15,7 @@ import {
 	UpdatePackStatusOutputSchema,
 } from "@xamsa/schemas/modules/pack";
 import { PackAnalyticsOutputSchema } from "@xamsa/schemas/modules/public-analytics";
-import { protectedProcedure, publicProcedure } from "../../procedures";
+import { publicProcedure, verifiedProcedure } from "../../procedures";
 import {
 	bulkCreatePacks,
 	createPack,
@@ -28,28 +28,28 @@ import {
 } from "./service";
 
 export const packRouter = {
-	create: protectedProcedure
+	create: verifiedProcedure
 		.input(CreatePackInputSchema)
 		.output(CreatePackOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await createPack(input, context.session.user.id),
 		),
-	bulkCreate: protectedProcedure
+	bulkCreate: verifiedProcedure
 		.input(BulkCreatePacksInputSchema)
 		.output(BulkCreatePacksOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await bulkCreatePacks(input, context.session.user.id),
 		),
-	update: protectedProcedure
+	update: verifiedProcedure
 		.input(UpdatePackInputSchema)
 		.output(UpdatePackOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await updatePack(input, context.session.user.id),
 		),
-	updateStatus: protectedProcedure
+	updateStatus: verifiedProcedure
 		.input(UpdatePackStatusInputSchema)
 		.output(UpdatePackStatusOutputSchema)
 		.handler(
@@ -77,7 +77,7 @@ export const packRouter = {
 			async ({ input, context }) =>
 				await listPacks(input, context.session?.user.id),
 		),
-	delete: protectedProcedure
+	delete: verifiedProcedure
 		.input(DeletePackInputSchema)
 		.output(DeletePackOutputSchema)
 		.handler(

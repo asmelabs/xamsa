@@ -39,6 +39,7 @@ import {
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
 import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
 import { resolveSessionTopicPackOrders } from "./included-topics";
+import { scheduleGameWinnerEmailIfNeeded } from "./notify-game-winner-email";
 import { generateUniqueGameCode } from "./utils";
 
 function mapGameCompletionDeltas(raw: Prisma.JsonValue | null): {
@@ -1553,6 +1554,8 @@ export async function completeGame(
 		isAuthoritative: true,
 	});
 
+	scheduleGameWinnerEmailIfNeeded(game.id, finalResult);
+
 	return {
 		status: "completed",
 		finishedAt: finalResult.finishedAt,
@@ -1660,6 +1663,7 @@ export async function handleHostDisconnect(
 			playerRanks: finalResult.playerRanks,
 			isAuthoritative: true,
 		});
+		scheduleGameWinnerEmailIfNeeded(game.id, finalResult);
 	}
 
 	return {
@@ -1715,6 +1719,10 @@ export async function leaveAsHost(
 		playerRanks: finalResult.playerRanks,
 		isAuthoritative: true,
 	});
+
+	if (game.startedAt) {
+		scheduleGameWinnerEmailIfNeeded(game.id, finalResult);
+	}
 
 	return {
 		status: "completed",

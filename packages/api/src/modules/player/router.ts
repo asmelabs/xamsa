@@ -6,11 +6,11 @@ import {
 	PlayerLeaveInputSchema,
 	PlayerLeaveOutputSchema,
 } from "@xamsa/schemas/modules/player";
-import { protectedProcedure } from "../../procedures";
+import { protectedProcedure, verifiedProcedure } from "../../procedures";
 import { joinPlayer, kickPlayer, leavePlayer } from "./service";
 
 export const playerRouter = {
-	join: protectedProcedure
+	join: verifiedProcedure
 		.input(PlayerJoinInputSchema)
 		.output(PlayerJoinOutputSchema)
 		.handler(
@@ -24,7 +24,7 @@ export const playerRouter = {
 			async ({ input, context }) =>
 				await leavePlayer(input, context.session.user.id),
 		),
-	kick: protectedProcedure
+	kick: verifiedProcedure
 		.input(PlayerKickInputSchema)
 		.output(PlayerKickOutputSchema)
 		.handler(

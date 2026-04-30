@@ -27,7 +27,11 @@ import {
 	UpdateTopicsOrderOutputSchema,
 } from "@xamsa/schemas/modules/topic";
 import z from "zod";
-import { protectedProcedure, publicProcedure } from "../../procedures";
+import {
+	protectedProcedure,
+	publicProcedure,
+	verifiedProcedure,
+} from "../../procedures";
 import {
 	generateTopicQuestionsWithAI,
 	generateTopicWithAI,
@@ -48,42 +52,42 @@ import {
 import { previewStructuredImportFromBody } from "./structured-import";
 
 export const topicRouter = {
-	create: protectedProcedure
+	create: verifiedProcedure
 		.input(CreateTopicInputSchema)
 		.output(CreateTopicOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await createTopic(input, context.session.user.id),
 		),
-	bulkCreate: protectedProcedure
+	bulkCreate: verifiedProcedure
 		.input(BulkCreateTopicsInputSchema)
 		.output(BulkCreateTopicsOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await bulkCreateTopics(input, context.session.user.id),
 		),
-	startBulkCreateJob: protectedProcedure
+	startBulkCreateJob: verifiedProcedure
 		.input(BulkCreateTopicsInputSchema)
 		.output(StartBulkCreateJobOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await startBulkCreateJob(input, context.session.user.id),
 		),
-	getBulkCreateJob: protectedProcedure
+	getBulkCreateJob: verifiedProcedure
 		.input(GetBulkCreateJobInputSchema)
 		.output(GetBulkCreateJobOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await getBulkCreateJob(input.jobId, context.session.user.id),
 		),
-	generateQuestions: protectedProcedure
+	generateQuestions: verifiedProcedure
 		.input(GenerateTopicQuestionsInputSchema)
 		.output(GenerateTopicQuestionsOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await generateTopicQuestionsWithAI(input, context.session.user.id),
 		),
-	generateTopic: protectedProcedure
+	generateTopic: verifiedProcedure
 		.input(GenerateTopicInputSchema)
 		.output(GenerateTopicOutputSchema)
 		.handler(
@@ -94,11 +98,11 @@ export const topicRouter = {
 		.input(z.object({}))
 		.output(GetAiTopicQuotaOutputSchema)
 		.handler(async ({ context }) => getAiTopicQuota(context.session.user.id)),
-	previewStructuredImport: protectedProcedure
+	previewStructuredImport: verifiedProcedure
 		.input(PreviewStructuredImportInputSchema)
 		.output(PreviewStructuredImportOutputSchema)
 		.handler(({ input }) => previewStructuredImportFromBody(input)),
-	previewStructuredImportFromUrl: protectedProcedure
+	previewStructuredImportFromUrl: verifiedProcedure
 		.input(PreviewStructuredImportFromUrlInputSchema)
 		.output(PreviewStructuredImportOutputSchema)
 		.handler(async ({ input }) => previewStructuredImportFromRemoteUrl(input)),
@@ -109,14 +113,14 @@ export const topicRouter = {
 			async ({ input, context }) =>
 				await listTopics(input, context.session?.user.id),
 		),
-	update: protectedProcedure
+	update: verifiedProcedure
 		.input(UpdateTopicInputSchema)
 		.output(UpdateTopicOutputSchema)
 		.handler(
 			async ({ input, context }) =>
 				await updateTopic(input, context.session.user.id),
 		),
-	updateOrder: protectedProcedure
+	updateOrder: verifiedProcedure
 		.input(UpdateTopicsOrderInputSchema)
 		.output(UpdateTopicsOrderOutputSchema)
 		.handler(
@@ -137,7 +141,7 @@ export const topicRouter = {
 			async ({ input, context }) =>
 				await getTopicAnalytics(input, context.session?.user.id),
 		),
-	delete: protectedProcedure
+	delete: verifiedProcedure
 		.input(DeleteTopicInputSchema)
 		.output(DeleteTopicOutputSchema)
 		.handler(

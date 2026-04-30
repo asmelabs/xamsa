@@ -9,13 +9,13 @@ import {
 } from "@xamsa/ui/components/frame";
 import { CheckIcon, CircleIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 import {
 	applyClickResolvedToGame,
 	type ClickResolvedData,
 } from "@/hooks/use-game-channel";
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 
@@ -97,7 +97,7 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 	const { mutate: resolve, isPending: isResolving } = useMutation({
 		...orpc.click.resolve.mutationOptions(),
 		onError(error) {
-			toast.error(error.message || "Failed to resolve click");
+			toastOrpcMutationFailure(error, "Failed to resolve click");
 			// server remains source of truth; invalidate to reconcile
 			queryClient.invalidateQueries({
 				queryKey: orpc.game.findOne.queryKey({ input: { code: game.code } }),
@@ -108,7 +108,7 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 	const { mutate: removeClickMut, isPending: isRemoving } = useMutation({
 		...orpc.click.remove.mutationOptions(),
 		onError(error) {
-			toast.error(error.message || "Failed to remove click");
+			toastOrpcMutationFailure(error, "Failed to remove click");
 			queryClient.invalidateQueries({
 				queryKey: orpc.game.findOne.queryKey({ input: { code: game.code } }),
 			});

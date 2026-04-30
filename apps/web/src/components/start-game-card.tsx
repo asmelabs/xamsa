@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { formatDifficultyDr } from "@/lib/difficulty-display";
 import type { GameData, GamePlayer } from "@/lib/game-types";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { LoadingButton } from "./loading-button";
 
@@ -105,7 +106,7 @@ export function StartGameCard({ game, activePlayers }: StartGameCardProps) {
 			setPickerOpen(false);
 		},
 		onError(error) {
-			toast.error(error.message || "Failed to start game");
+			toastOrpcMutationFailure(error, "Failed to start game");
 		},
 	});
 

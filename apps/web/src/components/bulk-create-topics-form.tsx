@@ -44,6 +44,7 @@ import { AcceptableAnswersChips } from "@/components/acceptable-answers-chips";
 import { FormInput } from "@/components/form-input";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { TopicBulkJobDialog } from "./topic-bulk-job-dialog";
 import { TopicImportDialog } from "./topic-import-dialog";
@@ -365,9 +366,9 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 			setActiveJobId(jobId);
 			setJobDialogOpen(true);
 		} catch (e) {
-			const err = e as { message?: string };
-			toast.error(
-				err.message || "Could not start topic import. Please try again.",
+			toastOrpcMutationFailure(
+				e,
+				"Could not start topic import. Please try again.",
 			);
 		}
 	});
@@ -647,9 +648,9 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 											);
 										},
 										onError: (err) => {
-											toast.error(
-												err.message ||
-													"AI generation failed. Check GEMINI_API_KEY on the server.",
+											toastOrpcMutationFailure(
+												err,
+												"AI generation failed. Check GEMINI_API_KEY on the server.",
 											);
 										},
 									},
@@ -761,9 +762,9 @@ export function BulkCreateTopicsForm({ packSlug }: BulkCreateTopicsFormProps) {
 											);
 										},
 										onError: (err) => {
-											toast.error(
-												err.message ||
-													"AI topic generation failed. Please try again.",
+											toastOrpcMutationFailure(
+												err,
+												"AI topic generation failed. Please try again.",
 											);
 										},
 									},

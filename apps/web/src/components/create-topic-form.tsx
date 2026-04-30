@@ -49,6 +49,7 @@ import { AcceptableAnswersChips } from "@/components/acceptable-answers-chips";
 import { LoadingButton } from "@/components/loading-button";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
+import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 
 const emptyQuestion = {
@@ -124,8 +125,9 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 			}
 		},
 		onError(error) {
-			toast.error(
-				error.message || "An unknown error occurred. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"An unknown error occurred. Please try again.",
 			);
 		},
 	});
@@ -149,7 +151,10 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 			toast.success("AI draft added — review facts before saving.");
 		},
 		onError(error) {
-			toast.error(error.message || "AI generation failed. Please try again.");
+			toastOrpcMutationFailure(
+				error,
+				"AI generation failed. Please try again.",
+			);
 		},
 	});
 
@@ -164,8 +169,9 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 			toast.success("AI topic added — review before saving.");
 		},
 		onError(error) {
-			toast.error(
-				error.message || "AI topic generation failed. Please try again.",
+			toastOrpcMutationFailure(
+				error,
+				"AI topic generation failed. Please try again.",
 			);
 		},
 	});
