@@ -2,39 +2,44 @@ import z from "zod";
 import { CursorPaginationInputSchema } from "../common/pagination";
 import { CommentSchema, UserSchema } from "../db/schemas/models";
 
-const OptionalTargetTripleSchema = z.object({
+const OptionalTargetSchema = z.object({
 	packId: z.string().min(1).optional(),
 	topicId: z.string().min(1).optional(),
 	questionId: z.string().min(1).optional(),
+	postId: z.string().min(1).optional(),
 });
 
-function targetCount(o: z.infer<typeof OptionalTargetTripleSchema>) {
-	return (o.packId ? 1 : 0) + (o.topicId ? 1 : 0) + (o.questionId ? 1 : 0);
+function targetCount(o: z.infer<typeof OptionalTargetSchema>) {
+	return (
+		(o.packId ? 1 : 0) +
+		(o.topicId ? 1 : 0) +
+		(o.questionId ? 1 : 0) +
+		(o.postId ? 1 : 0)
+	);
 }
 
 /** Public list scoped to one target entity. */
-export const ListCommentsByTargetInputSchema =
-	OptionalTargetTripleSchema.extend(
-		CursorPaginationInputSchema.shape,
-	).superRefine((data, ctx) => {
-		const n = targetCount(data);
-		if (n !== 1) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message:
-					n === 0
-						? "Provide exactly one of packId, topicId, questionId."
-						: "Only one of packId, topicId, questionId may be set.",
-				path: ["packId"],
-			});
-		}
-	});
+export const ListCommentsByTargetInputSchema = OptionalTargetSchema.extend(
+	CursorPaginationInputSchema.shape,
+).superRefine((data, ctx) => {
+	const n = targetCount(data);
+	if (n !== 1) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			message:
+				n === 0
+					? "Provide exactly one of packId, topicId, questionId, postId."
+					: "Only one of packId, topicId, questionId, postId may be set.",
+			path: ["packId"],
+		});
+	}
+});
 
 export type ListCommentsByTargetInputType = z.infer<
 	typeof ListCommentsByTargetInputSchema
 >;
 
-export const CreateCommentInputSchema = OptionalTargetTripleSchema.extend({
+export const CreateCommentInputSchema = OptionalTargetSchema.extend({
 	body: CommentSchema.shape.body,
 	parentId: z.string().min(1).optional(),
 }).superRefine((data, ctx) => {
@@ -43,7 +48,8 @@ export const CreateCommentInputSchema = OptionalTargetTripleSchema.extend({
 		if (n > 1) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
-				message: "Replies may set at most one of packId, topicId, questionId.",
+				message:
+					"Replies may set at most one of packId, topicId, questionId, postId.",
 				path: ["packId"],
 			});
 		}
@@ -55,8 +61,8 @@ export const CreateCommentInputSchema = OptionalTargetTripleSchema.extend({
 			code: z.ZodIssueCode.custom,
 			message:
 				n === 0
-					? "Provide exactly one of packId, topicId, questionId."
-					: "Only one of packId, topicId, questionId may be set.",
+					? "Provide exactly one of packId, topicId, questionId, postId."
+					: "Only one of packId, topicId, questionId, postId may be set.",
 			path: ["packId"],
 		});
 	}
@@ -87,6 +93,8 @@ export const CommentRowSchema = CommentSchema.pick({
 	packId: true,
 	topicId: true,
 	questionId: true,
+	postId: true,
+	totalReactions: true,
 }).extend({
 	user: CommentAuthorSchema,
 });

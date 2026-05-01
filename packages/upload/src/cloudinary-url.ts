@@ -64,3 +64,14 @@ export function isManagedProfileImageUrl(imageUrl: string): boolean {
 	const root = getImageRootPrefix();
 	return publicId.startsWith(`${root}/users/`);
 }
+
+export function isManagedPostImageUrl(imageUrl: string): boolean {
+	const cloudName = env.CLOUDINARY_CLOUD_NAME;
+	const publicId = extractPublicIdFromDeliveryUrl(imageUrl, cloudName);
+	if (!publicId) {
+		return false;
+	}
+
+	const root = getImageRootPrefix();
+	return publicId.startsWith(`${root}/posts/`);
+}

@@ -7,7 +7,13 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 5, patch: 0 } as const;
+/**
+ * What’s-new copy is **for players and hosts**, not changelogs. Lead with outcomes and
+ * delight; use plain language. Avoid jargon (API/CORS/events/tables/deploy details) unless a
+ * non-technical reader would recognise why it matters.
+ */
+
+const current = { year: 2026, month: 5, patch: 1 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
@@ -17,40 +23,79 @@ export const appReleasesManifest: AppReleasesManifest = {
 			releasedAt: "2026-05-01",
 			year: 2026,
 			month: 5,
-			patch: 0,
-			title: "Profiles, search, and groundwork for comments",
+			patch: 1,
+			title:
+				"The home hub comes alive—posts, replies, reactions, all in one flow",
 			highlights: [
 				{
 					kind: "text",
-					text: "Tap profile photos (including in the lobby, leaderboard, and badge lists) to open a larger view in an accessible dialog.",
+					text: "The home screen now feels like the heart of Xamsa: your welcome line, trending packs to explore, snapshots of how you’ve been playing, and posts from everyone else—woven together so newcomers can browse freely and logged-in hosts see both their momentum and the room’s energy.",
 				},
 				{
 					kind: "text",
-					text: "Follow and unfollow people directly from followers and following lists; the profile URL can open those tabs (e.g. ?tab=followers or ?tab=following).",
+					text: "Share a thought, drop a selfie from game night, or mix both—composer keeps it simple while photos land right beside your words on the timeline.",
 				},
 				{
 					kind: "text",
-					text: "Home search understands more shortcuts: whats-new:latest, logout (signed in), privacy and terms, settings:security, plus a help dialog on ⌘ or Ctrl+I alongside ⌘K.",
+					text: "React how you’d react in chat—heart something funny, widen your eyes at a clutch play, sympathise after a brutal round. Toggle off just as naturally if your finger slipped.",
 				},
 				{
 					kind: "text",
-					text: "What’s new: /whats-new/latest redirects to the current release, and each release card can copy its shareable link.",
+					text: "Conversations spill into comments beneath each post: expand the thread when you’re curious, skim when you’re in a hurry, and drop your take without juggling extra screens.",
 				},
 				{
 					kind: "text",
-					text: "Transactional emails share the same footer links (home, what’s new, packs, leaderboard, play, badges, legal).",
+					text: "Posting about a favourite pack, a killer topic, or a legendary room? Attach those cards so followers can leap straight into the same energy you’re buzzing about.",
 				},
 				{
 					kind: "text",
-					text: "Host buzz queue rows stack actions cleanly; host toolbar uses clearer Next / Skip labeling and an icon-only pause control.",
+					text: "Scroll past the big composer card and a floating shortcut slides in from the corner—perfect for jotting mid-feed without jumping back up the page.",
 				},
 				{
 					kind: "text",
-					text: "Pack, topic, and question slugs can’t collide with reserved app routes (consistent validation everywhere slugs are generated).",
+					text: "We didn’t sneak @-mentions into this wave; they deserve their own sparkle and stay on our near-term roadmap.",
+				},
+			],
+		},
+		{
+			releasedAt: "2026-05-01",
+			year: 2026,
+			month: 5,
+			patch: 0,
+			title:
+				"Sharper profiles, clever search shortcuts, quieter polish backstage",
+			highlights: [
+				{
+					kind: "text",
+					text: "Tap any profile avatar in the lobby, leaderboard, badges, or rosters—we pop up a roomy preview so icons feel less like postage stamps.",
 				},
 				{
 					kind: "text",
-					text: "Backend support for threaded comments on packs, topics, and questions (depth-limited threading and user totals); in-app UI for comments is planned for a follow-up release.",
+					text: "Follow and unfollow from follower or following lists straight away, and revisit the tab you cared about whenever you reopen the profile link.",
+				},
+				{
+					kind: "text",
+					text: "The command palette remembers more everyday jumps—privacy, legal, security controls, freshest What’s New, logout when you want a clean session—plus ⌘ / Ctrl +I help tips alongside ⌘ / Ctrl + K.",
+				},
+				{
+					kind: "text",
+					text: "What’s New doubles as clip-and-share announcements: every story has a cosy link so friends can tap straight into what changed.",
+				},
+				{
+					kind: "text",
+					text: "Transactional emails tidy up navigation at the footer—always a friendly path home, packs, leaderboard, badges, Play, updates, or legal FAQs.",
+				},
+				{
+					kind: "text",
+					text: "Hosts see calmer queues and clearer cues for skipping forward versus pausing, so frantic nights still feel anchored.",
+				},
+				{
+					kind: "text",
+					text: "We tightened how pack, topic, and question names resolve so clashes with favourite routes become far rarer—you keep your creative naming without slamming mysterious dead ends.",
+				},
+				{
+					kind: "text",
+					text: "Foundations landed for threaded comments across packs & topics—you’ll spot the payoff in-player soon.",
 				},
 			],
 		},
@@ -59,11 +104,11 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 27,
-			title: "Fix, CORS error on auth API calls.",
+			title: "Sign-in you can rely on in more setups",
 			highlights: [
 				{
 					kind: "text",
-					text: "Fix, CORS error on auth API calls.",
+					text: "If logging in flickered weirdly strict browsers, privacy extensions, or certain password workflows, give this patch a whirl—we tuned the seams so credential screens stay responsive without surprise dead ends.",
 				},
 			],
 		},
@@ -81,7 +126,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Google users get a unique username generated from their name (with a numeric suffix if needed to match our rules), and your Google profile picture is copied to our image storage so links stay on Xamsa-hosted URLs.",
+					text: "Google sign-in chooses a cosy handle from your name (we’ll tuck a polite number on the end if yours is taken), and keeps your avatar looking sharp wherever you appear.",
 				},
 				{
 					kind: "routerLink",
@@ -145,7 +190,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Hosting, joining, buzzing, and authoring packs, topics, or questions require a verified email; the UI shows a consistent toast with a path to fix it when something is blocked. Leaving a game you are already in stays available even if you are not verified yet.",
+					text: "Hosting, joining, buzzing, and authoring packs, topics, or questions need a verified inbox; we’ll nudge you with a shortcut to finish when something’s gated. Leaving a session you’ve already entered stays kind even mid-verification.",
 				},
 				{
 					kind: "text",
@@ -158,20 +203,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 23,
-			title:
-				"Smart global search: dashboard shortcuts, typed commands, joinable lobbies",
+			title: "Search shortcuts that feel like magic words",
 			highlights: [
 				{
 					kind: "text",
-					text: "⌘K search adds Page results: moderators and admins can type dashboard paths (for example dashboard/users) to jump straight to staff tools without hitting the API.",
+					text: "Staff and moderators: start typing everyday dashboard phrases in ⌘ K / Ctrl + K and we’ll hoist the right backstage door—fewer breadcrumbs, quicker rescues.",
 				},
 				{
 					kind: "text",
-					text: "Everyone can use shortcuts such as leaderboard or leaderboard:xp, play, history, settings, badges or badges:id, what’s new or whats-new:26.04.26, create:pack, and join:CODE; signed-in users get create:topic (draft packs), create:game (hostable packs when not already in a session), and join:game (recent public waiting lobbies). Guests see login and register.",
+					text: "Anyone can bark quick wishes—jump to leaderboard, fire up Play, peek at badges, rewind history, skim What’s New, spin up drafts, leap into rooms by code—or land soft login prompts when a shortcut needs an account.",
 				},
 				{
 					kind: "text",
-					text: "Command rows are merged ahead of the usual user, pack, topic, and game search hits, still capped at eight visible rows.",
+					text: "Those nifty commands float above ordinary search picks so speedy habits stay effortless while we still capped the surface to eight neat rows.",
 				},
 			],
 		},
@@ -181,23 +225,23 @@ export const appReleasesManifest: AppReleasesManifest = {
 			month: 4,
 			patch: 22,
 			title:
-				"Alternate answers on topic forms, compact editors, leaderboard ties, staff dashboard polish",
+				"Flexible right answers on questions, tighter leaderboards for ties, backstage polish",
 			highlights: [
 				{
 					kind: "text",
-					text: "Single-topic and bulk topic editors include chip inputs for up to five alternate acceptable answers per question (Enter or blur to add), alongside tighter spacing on topic and question fields.",
+					text: "Authoring packs or bulk topics gets friendly chips—stack up alternative answers teammates might shout aloud without repeating yourself in prose.",
 				},
 				{
 					kind: "text",
-					text: "Global leaderboard ranks use competition scoring: players tied on the board’s primary metric share the same rank, and the next rank skips accordingly (for example 1, 1, 3, …).",
+					text: "Global leaderboards now celebrate genuine ties instead of artificially bumping rivals down the ladder—you’ll recognise “shared podium” numbering from sports finals.",
 				},
 				{
 					kind: "text",
-					text: "Staff dashboard Users adds follower and following totals with sorting by each count.",
+					text: "Our staff snapshot of creators adds follower mojo at a glance, sortable if you’re hunting ambassadors.",
 				},
 				{
 					kind: "text",
-					text: "Staff Clicks and Questions tables wrap question text in a bounded width with multiple lines so columns stay readable.",
+					text: "Hefty question cells across staff analytics wrap kindly so nobody scrolls sideways through novels.",
 				},
 			],
 		},
@@ -207,19 +251,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 			month: 4,
 			patch: 21,
 			title:
-				"Structured topic import: TXT, CSV, JSON, XML, YAML, HTTPS URL, and Import dialog",
+				"Bring the outside world into your packs—richer imports, calmer drafting",
 			highlights: [
 				{
 					kind: "text",
-					text: "Bulk topic creation uses one Import dialog with tabs for copy/paste, local file, HTTPS URL (server fetch with SSRF and size limits), and 3sual (moderators/admins). Parsed drafts fill the bulk editor for review before you start the background job.",
+					text: "A single Import studio now welcomes spreadsheets, pasted walls of text, power-user snippets, trusty structured files, moderated remote pulls, plus the moderator-friendly 3sual bridge—everything lands in tidy preview rows before you approve the sprint.",
 				},
 				{
 					kind: "text",
-					text: "Up to 200 topics apply when topics are loaded via structured import or 3sual; manual entry without import stays capped at 20 per submission, matching server validation.",
+					text: "Huge hauls unlocked: drag in piles of structured topics knowing we keep pacing sensible for smaller hand-made batches.",
 				},
 				{
 					kind: "text",
-					text: "On bulk topic creation, each row’s five questions use the same carousel and step dots as the single-topic editor, so you can see progress (text + answer filled) without scrolling a long stack.",
+					text: "Every bulk row echoes the carousel hints you adore on single-topic mode—step dots, filled answers, glanceable completeness without endless scrolling.",
 				},
 			],
 		},
@@ -229,15 +273,15 @@ export const appReleasesManifest: AppReleasesManifest = {
 			month: 4,
 			patch: 20,
 			title:
-				"Home global search and leaderboard: hosts, plays, following filter",
+				"Search the lobby from anywhere on home; boards that spotlight your rivals",
 			highlights: [
 				{
 					kind: "text",
-					text: "The home page opens a glass-style search dialog (⌘K) where you can find users, your or published packs, topics, and games by code—up to eight mixed results with type badges and deep links, with debounced queries.",
+					text: "Kick off ⌘ K / Ctrl + K from home and skim people, packs, topics, rooms by code—all in one glassy spotlight with airy spacing and unmistakable badges.",
 				},
 				{
 					kind: "text",
-					text: "The leaderboard uses a left-hand board picker (Elo, XP, wins, games hosted, games played), one metric column per board, URL state via tab and only-followers, and an “Only following” switch when signed in.",
+					text: "Leaderboards reorganise around moods (Elo, XP, crowns, hustle). Flip to “friends only,” keep your tab in sync with the URL you share—great for rivalry bragging clips.",
 				},
 			],
 		},
@@ -246,16 +290,15 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 19,
-			title:
-				"User follow system: profile counts, follow/unfollow, follower and following lists",
+			title: "Follow voices you love—counts, lists, and cosy social proof",
 			highlights: [
 				{
 					kind: "text",
-					text: "Public profiles show follower and following counts; signed-in visitors can follow or unfollow other players (not themselves). Denormalized totals stay in sync with the new user_follow table.",
+					text: "Profiles trumpet how many champions cheer you on—and how many halls you’re cheering in return—while one tap follows or unfollows (no self-stalking, promise).",
 				},
 				{
 					kind: "text",
-					text: "Tapping followers or following opens a paginated list of people with avatars and links to their profiles—ready for future feed, notification, and follower-only pack features.",
+					text: "Peek either fan club with roomy rows, glossy avatars, and instant jumps into their arenas—foundation for louder social moments still cooking.",
 				},
 			],
 		},
@@ -265,19 +308,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 			month: 4,
 			patch: 18,
 			title:
-				"Revealed answers show explanation and acceptable answers; host click removal; host skip question",
+				"Hosts gain surgical buzz control; players see fuller answers once the veil lifts",
 			highlights: [
 				{
 					kind: "text",
-					text: "When a question is revealed (manually or after a resolution), players see the explanation and acceptable alternate answers when the pack defines them—same Ably payloads and API shapes as the primary answer.",
+					text: "When the curtain drops on an answer you’ll savour the witty explanation writers tucked in—as well as any clever alternate wording that deserves credit.",
 				},
 				{
 					kind: "text",
-					text: "Hosts can remove any buzz on the current question with confirmation; score, streaks, and aggregates rewind, QDR deltas reverse for scored attempts, and clients get a CLICK_REMOVED event. Removing a correct buzz that expired others is blocked in favor of skip question.",
+					text: "Need to undo an accidental adjudication mid-question? Hosts can rewind a wrongly scored buzz—with guardrails where undoing might unfairly rewind someone else—and everyone’s scoreboard snaps back politely.",
 				},
 				{
 					kind: "text",
-					text: "Hosts can skip the current question entirely: all buzzes are cleared without difficulty updates, the session advances without counting the question as played, and QUESTION_SKIPPED syncs the room. Recap totals split unresolved (no winner) vs host-skipped counts.",
+					text: "Whole questions can be politely skipped during chaos: pulses reset, recap tallies whisper “skipped by host,” and you march forward without blaming the trivia gods.",
 				},
 			],
 		},
@@ -287,19 +330,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 			month: 4,
 			patch: 17,
 			title:
-				"Staff DR filters and sorts, public analytics on pack pages, host topic picks at game start",
+				"Clearer staff lenses on difficulty, public analytics where it helps, curated topic lineups",
 			highlights: [
 				{
 					kind: "text",
-					text: "Staff dashboard tables list pack PDR, topic TDR, and question QDR with optional min/max filters and sorting alongside existing columns.",
+					text: "Behind the curtain, staff can sort and filter every pack, topic, and question by how the crowd actually rated the challenge—so editorial calls start from lived play, not hunches.",
 				},
 				{
 					kind: "text",
-					text: "Published pack, topic, and author-visible question pages include an Analytics section: completed-game counts, buzz outcome charts, hosts and top buzzers, and first/last played timestamps—matching who can already view each entity.",
+					text: "Published pack and topic pages (and question pages you’re meant to see) grow an Analytics nook: finishes, buzz outcomes, cheer-worthy hosts and players, and the first and last nights the community showed up.",
 				},
 				{
 					kind: "text",
-					text: "Hosts starting a live game choose which topics to include (defaults to all topics; explicit subsets require at least five). Sessions advance and finish against that subset while legacy games without stored picks behave like full-pack runs.",
+					text: "Spinning up a live game? Hand-pick which topics fire this session—default is the full pack, or narrow the set when you still have enough runway for a proper night. Older rooms without saved picks behave like they always did.",
 				},
 			],
 		},
@@ -309,23 +352,23 @@ export const appReleasesManifest: AppReleasesManifest = {
 			month: 4,
 			patch: 16,
 			title:
-				"Badges catalog, profile density, and staff badge stats, share sheet for live games",
+				"Badge wall tightens up, staff sees what’s hot, live rooms get one glorious Share button",
 			highlights: [
 				{
 					kind: "text",
-					text: "Profile badges use a denser grid so the list stays scannable as new awards are added.",
+					text: "Your profile badge mosaic packs tighter so the trophy shelf still scans when we keep adding sparkle.",
 				},
 				{
 					kind: "text",
-					text: "Staff dashboard adds a Badges table: total awards and distinct earners per catalog entry, with search, period/type/category filters, and min/max thresholds for awards and earners.",
+					text: "Staff gains a badges command center—how often each accolade fires, how many distinct champs earned it, and filters by time, type, or category so balance tweaks have receipts.",
 				},
 				{
 					kind: "text",
-					text: "New Abomination (5/5 wrong in a topic), Genius (positive net in every topic of a finished game), and Dunce (non-positive net in every topic) badges—metadata in the catalog; server awards at topic end or game finalize like other badges.",
+					text: "Three new stories to chase: Abomination (five wrongs in one topic—ouch), Genius (green across every topic in a finished brawl), and Dunce (a humbling sweep). They live in the catalog and unlock mid-game like your other favourites.",
 				},
 				{
 					kind: "text",
-					text: "The live game header replaces separate copy-code and copy-invite controls with one Share button that opens a sheet: native Share when available (mobile-first), tap targets for WhatsApp, Telegram, X/Twitter, and Facebook, copy-friendly Discord (paste anywhere), plus quick copy for room code and invite URL.",
+					text: "Live headers merge “copy code” chaos into one Share sheet—your phone’s native share when it can, friendly buttons for WhatsApp, Telegram, X, and Facebook, Discord-friendly paste text, plus instant grabs for room code and invite link.",
 				},
 			],
 		},
@@ -334,39 +377,40 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 15,
-			title: "Pack language and replay-safe duplicate questions",
+			title:
+				"Your packs lane, shareable stat stories, spoiler-smart nights, multilingual packs",
 			highlights: [
 				{
 					kind: "text",
-					text: "On your profile, a “My packs” shortcut opens the packs directory filtered to drafts and packs you published—the same directory page with your packs only.",
+					text: "Profiles add a cosy “My packs” hop that opens the directory already scoped to your drafts and published gems—same browse experience, just your corner of the universe.",
 				},
 				{
 					kind: "text",
-					text: "Game stats (`/g/.../stats`) sync the active tab and filters to the URL: Overview, By round, By player, and Flow—plus round search, buzz counts, TDR and average-QDR bounds, and player search plus score/correct/wrong/buzz ranges so links are shareable and back/forward behave as expected.",
+					text: "Game deep-dives now bake the tab, filters, and searches into the link you share—Overview, By round, By player, or Flow—so “look at this chaos” opens exactly where you left it, and the back button plays fair.",
 				},
 				{
 					kind: "text",
-					text: "The new Magnificent badge is awarded when the game’s winner finishes with no incorrect answers; it appears in the catalog, recap, and badge flow like other awards.",
+					text: "Magnificent arrives: crown a winner who never missed. It shows up in the catalog, recap, and your badge journey like the rest of the pantheon.",
 				},
 				{
 					kind: "text",
-					text: "On the By player tab, badge awards use compact chips per topic with links to the catalog. Each player’s buzz table adds a multi-select status filter (correct, wrong, expired) with counts per row.",
+					text: "By-player views badge moments as neat chips per topic with links to learn more, and buzz timelines get a friendly filter so you relive only the heartbreakers or the clutch hits.",
 				},
 				{
 					kind: "text",
-					text: "When you create or edit a pack, you can set the pack language (English, Azerbaijani, Russian, or Turkish) from the form—no more AZ-only flows for single-pack create; URL query defaults for `/packs/new` still work.",
+					text: "Pick each pack’s language (English, Azerbaijani, Russian, or Turkish) right in the builder—no more awkward defaults when you’re aiming global.",
 				},
 				{
 					kind: "text",
-					text: "Hosts pick a replay policy when starting a game: normal play; block only players who already saw each question in a past finished game with that pack; or block the whole room for a question if anyone in the room saw it before. The server enforces this on buzz; the buzz area shows why you’re blocked when it applies.",
+					text: "Hosts set how spoiler-aware the room is: classic play; quiet only the players who’ve seen a prompt before; or hush everyone if anyone’s been spoiled. Buzzers speak plainly when you’re sidelined—and we enforce it fairly for the whole table.",
 				},
 				{
 					kind: "text",
-					text: "Hosts can open Share on the live game header to copy the invite URL or send it via common apps—players still land on `/join/YOUR-CODE` with the same validations as typing the room code manually.",
+					text: "Share from the live header still drops friends on the familiar join door with the same safety dance as typing the code by hand.",
 				},
 				{
 					kind: "text",
-					text: "When a replay policy blocks buzzing (room-wide or per-player), the host now sees the same context players get at the buzzer: room lock explains why everyone is muted, and individual blocks list which players cannot buzz on this question.",
+					text: "When replay rules mute the room—or just a few players—hosts see the same plain-English reasons players do, so you’re never guessing who’s ghosted and why.",
 				},
 			],
 		},
@@ -375,19 +419,20 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 14,
-			title: "Chart readability and community hosting",
+			title:
+				"Charts you can read at a glance, community tables for public packs",
 			highlights: [
 				{
 					kind: "text",
-					text: "Score charts on game stats, detailed recap, and profile pages use a clearer multi-series palette with distinct hues in light and dark mode; buzz outcome pies align with success, destructive, and warning tokens.",
+					text: "Score lines and outcome pies across stats, recap, and profiles borrow colours that actually separate in light and dark mode—wins glow, misses read clearly, no squinting required.",
 				},
 				{
 					kind: "text",
-					text: "Published packs can opt in to “allow others to host” when visibility is public: non-authors may start live games from that pack. Authors control this when creating or editing pack settings.",
+					text: "Love a public pack you didn’t write? Authors can welcome the neighbourhood to run their show; you flip the switch when creating or editing settings.",
 				},
 				{
 					kind: "text",
-					text: "The packs directory gains a “Can host” filter (signed-in users): published packs you authored or published packs that allow community hosting.",
+					text: "The packs directory adds “Can host” when you’re signed in—your own published work plus public packs that invited the crowd to host.",
 				},
 			],
 		},
@@ -396,27 +441,27 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 13,
-			title: "Live difficulty ratings for questions, topics, and packs",
+			title: "Living difficulty vibes for every question, topic, and pack",
 			highlights: [
 				{
 					kind: "text",
-					text: "Each question, topic, and published pack now carries difficulty ratings (QDR, TDR, PDR on a 1–10 scale) that update when ranked games finish and the host marks buzzes correct or wrong. Ratings use players’ Elo at game start so stronger opponents raising or lowering difficulty means something.",
+					text: "Questions, themes, and full packs wear a restless “how spicy is this?” score that learns from ranked nights once hosts settle right and wrong. Tougher tables nudge the needle more than casual lounges, so the number tells an honest story.",
 				},
 				{
 					kind: "text",
-					text: "Draft and published packs both contribute—only archived packs are skipped—so playtests while you iterate move the numbers before go-live.",
+					text: "Drafts and published decks both train the vibe—only shelved archives sit out—meaning playtests while you edit reshape the curve before launch confetti.",
 				},
 				{
 					kind: "text",
-					text: "Ratings store two decimal places so gradual shifts stay visible instead of rounding away small moves.",
+					text: "We keep the math gentle on the eyes so slow trends never vanish in rounding fuzz.",
 				},
 				{
 					kind: "text",
-					text: "Pack and topic pages, question detail, lists and cards, and live-game host tooling surface these values where helpful (including host-only live question difficulty).",
+					text: "You’ll spot those hints on pack and topic pages, question detail, cards, lists, and in host tooling mid-match when you need a heads-up on what’s landing.",
 				},
 				{
 					kind: "text",
-					text: "On Open Graph images, now the font is monospace, to match the rest of the app.",
+					text: "Link previews pick up the same monospace voice as the app—tiny alignment, big brand calm.",
 				},
 			],
 		},
@@ -425,23 +470,24 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 12,
-			title: "Dynamic OG images and AI topic seeding",
+			title:
+				"Shareable previews that feel on-brand, AI nudges for empty topic rows",
 			highlights: [
 				{
 					kind: "text",
-					text: "Pack, topic, user, game, badge, and release pages now serve a dedicated Open Graph image generated from live data. The leaderboard, Play, and Join pages also have their own preview images, including the current top three Elo players for the leaderboard.",
+					text: "Drop a link to a pack, topic, profile, night, badge, or What’s New entry and chats render a bespoke preview card fed by live facts. Leaderboard, Play, and Join carry their own art—complete with the current Elo podium snapshot.",
 				},
 				{
 					kind: "text",
-					text: "Each preview is rendered on top of the new Xamsa template (orange bars, bow-tie logo) with the entity name, author, key stats, and avatar where applicable. Images are cached for a day with a week of stale-while-revalidate so social platforms always have something to show.",
+					text: "Every card wears the Xamsa frame—orange rails, bow-tie mark—with the real title, author, stats, and faces where it helps. Smart caching keeps social apps snappy without leaving you with yesterday’s thumbnail.",
 				},
 				{
 					kind: "text",
-					text: "Topic creation gains a second AI button: “Generate topic with AI” drafts a name and one-sentence description for an empty row. It uses the same daily AI quota as question generation (one credit per click) and is told the pack’s existing topic names so it never duplicates.",
+					text: "Topic rows get a co-pilot button that dreams up a name and one-line pitch when you’re staring at blank space. It shares the same daily creative allowance as AI question help and peeks at names you already picked so ideas don’t twin.",
 				},
 				{
 					kind: "text",
-					text: "The bulk topic creator gets a per-row “AI topic” shortcut that fills only that row’s name and description, leaving the five question rows untouched. Both flows accept an optional seed/hint and optional author instructions.",
+					text: "Bulk topic mode gets the same per-row sparkle—names and blurbs only, your five questions stay yours. Optional hints steer the vibe in both flows.",
 				},
 			],
 		},
@@ -450,23 +496,24 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 11,
-			title: "Badges: live room toasts, catalog, profile, and recap",
+			title:
+				"Badges pop live in the room, settle beautifully after the final buzz",
 			highlights: [
 				{
 					kind: "text",
-					text: "Earning a badge in a live game (topic awards like Ace or Jackpot, question awards like Scavenger, and more) is written to the database and broadcast to everyone in the room, so the celebration appears at the right time for host and players—not only after a refresh.",
+					text: "Snag an Ace, Jackpot, Scavenger, or any other mid-game flex and the whole table sees the cheer the moment it happens—no refresh roulette.",
 				},
 				{
 					kind: "text",
-					text: "When several badges are earned together, the room shows a single bottom strip: each winner and their badge names, with a close control and a few seconds to read, without blocking play.",
+					text: "Stack several wins and one elegant strip rolls up from the bottom: who earned what, a breath to read, tap to dismiss—play never stops.",
 				},
 				{
 					kind: "text",
-					text: "The completed game screen and “Full stats” (By player) list each person’s badges inside their own player card, grouped by pack topic, with links to the badge catalog. The old standalone block of every badge in one list is removed.",
+					text: "Post-game screens tuck each player’s badges inside their own card by topic, with links to learn the lore. The old mega-list is retired for calmer storytelling.",
 				},
 				{
 					kind: "text",
-					text: "New public pages browse all badges and who earned a badge; your profile has a Badges section with counts and a detail view per achievement. Sitemap and SEO cover the new routes.",
+					text: "A public badge gallery invites browsing and bragging rights; profiles gain shelves with counts and deep dives per achievement—and search-friendly paths so newcomers find the mythos.",
 				},
 				{
 					kind: "routerLink",
@@ -483,15 +530,16 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 10,
-			title: "AI topic generation: Google Gemini 2.5",
+			title:
+				"Sharper AI suggestions for budding topics—now powered by Google Gemini",
 			highlights: [
 				{
 					kind: "text",
-					text: "“Generate with AI” for pack topics now uses Google Gemini 2.5 Pro via the Gemini API (Google AI Studio), instead of Groq. Configure the server with GEMINI_API_KEY; Groq is no longer used.",
+					text: "The “dream up topics with AI” flow now runs through Google’s Gemini models, tuned for multilingual flair (Azerbaijani included!) and tighter listening to pack context.",
 				},
 				{
 					kind: "text",
-					text: "The primary model is gemini-2.5-pro for stronger multilingual (including Azerbaijani) phrasing, instruction-following, and general knowledge. If the service returns a rate or quota error (for example 429), the same request is retried once with gemini-2.5-flash.",
+					text: "We lean on Gemini’s flagship brain first, yet automatically fall back to a lighter cousin if the heavens throw a throttle tantrum—so your creative bursts rarely stall.",
 				},
 			],
 		},
@@ -500,27 +548,28 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 9,
-			title: "Host-only game XP, Elo for play, advanced recap",
+			title:
+				"Hosting levels you up in XP; clashes move Elo; Flow tells richer stories",
 			highlights: [
 				{
 					kind: "text",
-					text: "XP and levels from live games are for the host only (hosting a session). Player progression uses Elo and your existing stats, not play XP. Every completed game still awards the host the usual hosting bonus, including when the host ends the game early.",
+					text: "The person running the night earns XP and levels from live play—guests sharpen their reputations through Elo and stats you already know. Wrap early or see it through; generous hosting bonuses still land either way.",
 				},
 				{
 					kind: "text",
-					text: "The game stats Flow tab has a player multiselect (default all) that filters the score-over-time chart, plus a Q1–Q5 × rounds score matrix with row and column totals. Streaks stay on Overview; recent games and public history still exclude lobby-only cancels.",
+					text: "Flow view now highlights whichever players you care about across the score journey and lays out how each wave of prompts treated the pack—dip back to Overview when you crave the saga of streaks.",
 				},
 				{
 					kind: "text",
-					text: "When a game finishes, the end screen can show hosting XP and your ranked Elo change (when two or more players played). Host header and current-question reveal UI are tightened for small screens.",
+					text: "After the confetti settles, endings tout how hosting XP shifted and—in ranked scraps with real head-to-head—how Elo bounced. Busy host ribbons and cramped reveal screens loosen up on small phones.",
 				},
 				{
 					kind: "text",
-					text: "On game stats Flow, the Q1–Q5 matrix has a “Show” menu: pick points, total clicks, correct / wrong / expired counts, or first-buzz counts. Cells show one value at a time and row, column, and grand totals follow the same metric.",
+					text: "The round-by-round grid adds a storytelling lens: total points, how often folks lunged for the buzzer, splits of right and wrong tales, or who pounced first—one stat at a time with matching row, column, and grand totals.",
 				},
 				{
 					kind: "text",
-					text: "Public profiles list more lifetime numbers (wrong and expired buzzes, first buzzes, topics and questions played, time playing and hosting, published packs). There is a buzz-outcome pie chart and a last-12-months bar of completed games you played or hosted.",
+					text: "Public profiles flaunt more lifetime lore—near-miss buzzes, first grabs, arenas played and hosted, clocks in seat and spotlight, published packs—with pies and yearly bars so your comeback arc is undeniable.",
 				},
 			],
 		},
@@ -529,19 +578,20 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 8,
-			title: "Lobby cancel, buzz UX, and end-game polish",
+			title:
+				"Cleaner nights when plans change; buzz ribbons that behave; sweeter endings",
 			highlights: [
 				{
 					kind: "text",
-					text: "If the host ends the game from the lobby before it starts, everyone returns to Play and that session no longer appears in recent games or the public history feed; detailed stats for that code are unavailable.",
+					text: "Call off a night straight from the lobby and everyone sails back to Play—no phantom scorecards, no public replay reel—because nothing really started.",
 				},
 				{
 					kind: "text",
-					text: "The host sees a compact buzz queue under the controls on smaller screens, and “who buzzed” notifications line up with the real-time queue. Your own wrong buzz in the player queue now uses the same struck-through style as other players.",
+					text: "Hosts running tight decks get a slimmer buzz queue under the knobs, pings line up with who actually raised a hand, and your own regrets strike through exactly like anyone else’s—no favourites.",
 				},
 				{
 					kind: "text",
-					text: "After a real game, if you have already rated the pack, the end screen shows your score instead of asking you to rate again. Broader per-round charts and heatmaps can build on the existing recap over time.",
+					text: "Already left stars on a pack? The wrap-up screen celebrates your own score instead of nagging twice. We’re itching to layer bolder round-by-round murals on top of today’s recap—stay tuned.",
 				},
 			],
 		},
@@ -550,11 +600,11 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 7,
-			title: "Topic deletion",
+			title: "Retire stray topics without leaving ghosts behind",
 			highlights: [
 				{
 					kind: "text",
-					text: "You can now delete topics from your packs. This is useful if you want to remove a topic from your pack.",
+					text: "Built the wrong theme or testing a gag? Delete topics you own cleanly so your masterpiece stays focussed—no orphaned rows haunting the carousel.",
 				},
 			],
 		},
@@ -563,19 +613,20 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 6,
-			title: "Fair play, Elo, leaderboard, and public game history",
+			title:
+				"Fairer buzz etiquette, sharper rankings, a public reel of legends",
 			highlights: [
 				{
 					kind: "text",
-					text: "Ending a game from the lobby (before it starts) no longer awards XP, stats, or pack plays; only completed sessions after go-live count.",
+					text: "Shut a night down from the lobby before the first whistle and nobody banks XP, stats, or deck mileage—glory waits until you actually play.",
 				},
 				{
 					kind: "text",
-					text: "Buzzers close after the question is revealed; manual reveal expires pending buzzes. Server records buzz time for a fair queue; host resolves in true position order with a clearer next-player row.",
+					text: "Once an answer flashes, buzzing locks—revealing manually rings out lingering attempts. Everyone’s timestamps line up honestly, hosts clear the queue true to arrival order, and “who’s next” reads cleaner.",
 				},
 				{
 					kind: "text",
-					text: "Elo updates when a ranked game finishes even if the host uses End game; leaderboard shows Elo after one game as a player and includes hosts on XP (and related boards) when they have hosted but not yet played.",
+					text: "Ranked Elo settles the moment games finish—even when hosts call curtain early—and boards spotlight you after a single showdown. Pure hosts snag their XP leaderboard moment even before jumping in as contestants.",
 				},
 				{
 					kind: "routerLink",
@@ -624,7 +675,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 4,
-			title: "3sual import and async bulk topic jobs",
+			title: "3sual import and smooth bulk-topic marathons",
 			highlights: [
 				{
 					kind: "text",
@@ -632,7 +683,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "Large topic imports run as a background job: you get a job id, a modal with progress, and the client polls until creation finishes—no long blocking request (uses extended runtime on Vercel where available).",
+					text: "Huge hauls chug politely in the background: follow the progress ticker until every topic lands—no staring at a frozen tab when the spreadsheet is chunky.",
 				},
 				{
 					kind: "text",
@@ -649,7 +700,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 			highlights: [
 				{
 					kind: "text",
-					text: "The Leaderboard page is live: global rankings by Elo (default), XP and level, wins, or career points, with load-more pagination.",
+					text: "The Leaderboard arrives in full voice: global ladders for how you duel, how you climb, how you win, or lifetime shine—keep pulling for the next chunk of rivals whenever curiosity strikes.",
 				},
 				{
 					kind: "text",
@@ -669,19 +720,19 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 2,
-			title: "Auth redirect and session refresh",
+			title: "Softer landing after signup, fresher shells after login",
 			highlights: [
 				{
 					kind: "text",
-					text: "After sign up with email verification off, you go straight to your redirect URL or home instead of the “check your inbox” screen.",
+					text: "When email verification isn’t between you and the party, signup drops you straight on the doorstep you chose—or cosy home—without the phantom inbox nag.",
 				},
 				{
 					kind: "text",
-					text: "After login or register, the app reloads in place so the signed-in home and tabs show your account without a manual refresh.",
+					text: "After login or signup the app politely refreshes in place so your tabs wake up recognised—skip the mash-reload ritual.",
 				},
 				{
 					kind: "text",
-					text: "Redirect URLs after auth are limited to same-origin paths for safety.",
+					text: "We only whisk you toward addresses inside Xamsa after auth—fewer accidental detours, more peace of mind.",
 				},
 			],
 		},
@@ -690,23 +741,24 @@ export const appReleasesManifest: AppReleasesManifest = {
 			year: 2026,
 			month: 4,
 			patch: 1,
-			title: "SEO and social sharing",
+			title:
+				"Pages that whisper the right intro to Google and group chats alike",
 			highlights: [
 				{
 					kind: "text",
-					text: "Every route now sets clearer titles, descriptions, and keywords for search and previews.",
+					text: "Across the map, smarter titles and blurbs greet search bots and clipboard sharers alike—each door signs its personality clearly.",
 				},
 				{
 					kind: "text",
-					text: "Open Graph and Twitter cards use a shared default image; favicon and touch icon use the app logo.",
+					text: "Social previews inherit a cohesive default collage; homescreen icons breathe the refreshed bow-tie mark.",
 				},
 				{
 					kind: "text",
-					text: "Pack, topic, question, profile, play, and game pages include context-specific copy; private flows use noindex where appropriate.",
+					text: "Pack, topic, question, profile, Play, and game stories carry bespoke elevator pitches—while intimate flows stay politely out of strangers’ indexes.",
 				},
 				{
 					kind: "text",
-					text: "Optional VITE_PUBLIC_SITE_URL produces absolute og:image and og:url in production.",
+					text: "Production deploys honour your canonical public URL automatically so pasted links preview with the right absolute artwork—nothing for players to fiddle with.",
 				},
 			],
 		},
@@ -735,7 +787,7 @@ export const appReleasesManifest: AppReleasesManifest = {
 				},
 				{
 					kind: "text",
-					text: "You will gain XP and ELO for hosting and playing respectively.",
+					text: "Hosting feeds your XP story; hopping in sharpens Elo when the table gets serious.",
 				},
 			],
 		},

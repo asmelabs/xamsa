@@ -48,8 +48,18 @@ async function assertTargetReferencesExist(
 		packId: string | null;
 		topicId: string | null;
 		questionId: string | null;
+		postId: string | null;
 	},
 ) {
+	if (where.postId != null) {
+		const exists = await tx.post.findUnique({
+			where: { id: where.postId },
+			select: { id: true },
+		});
+		if (!exists)
+			throw new ORPCError("BAD_REQUEST", { message: "Post not found." });
+		return;
+	}
 	if (where.packId != null) {
 		const exists = await tx.pack.findUnique({
 			where: { id: where.packId },
@@ -94,6 +104,14 @@ function applyCountersForDelete(
 	return deltas;
 }
 
+function aggregateReactionDeltas(rows: Array<{ userId: string }>) {
+	const deltas = new Map<string, number>();
+	for (const r of rows) {
+		deltas.set(r.userId, (deltas.get(r.userId) ?? 0) + 1);
+	}
+	return deltas;
+}
+
 export async function createComment(
 	input: CreateCommentInputType,
 	userId: string,
@@ -107,6 +125,7 @@ export async function createComment(
 					packId: true,
 					topicId: true,
 					questionId: true,
+					postId: true,
 					depth: true,
 					rootId: true,
 				},
@@ -127,17 +146,20 @@ export async function createComment(
 				packId: parent.packId,
 				topicId: parent.topicId,
 				questionId: parent.questionId,
+				postId: parent.postId,
 			};
 
 			const n =
 				(input.packId ? 1 : 0) +
 				(input.topicId ? 1 : 0) +
-				(input.questionId ? 1 : 0);
+				(input.questionId ? 1 : 0) +
+				(input.postId ? 1 : 0);
 			if (n > 0) {
 				const match =
 					(input.packId ?? null) === parent.packId &&
 					(input.topicId ?? null) === parent.topicId &&
-					(input.questionId ?? null) === parent.questionId;
+					(input.questionId ?? null) === parent.questionId &&
+					(input.postId ?? null) === parent.postId;
 				if (!match) {
 					throw new ORPCError("BAD_REQUEST", {
 						message: "Reply target does not match the parent comment.",
@@ -155,6 +177,7 @@ export async function createComment(
 					packId: inferred.packId,
 					topicId: inferred.topicId,
 					questionId: inferred.questionId,
+					postId: inferred.postId,
 				},
 				include: COMMENT_ROW_INCLUDE,
 			});
@@ -164,13 +187,26 @@ export async function createComment(
 				data: { totalReplies: { increment: 1 } },
 			});
 
+			if (inferred.postId) {
+				await tx.post.update({
+					where: { id: inferred.postId },
+					data: { totalComments: { increment: 1 } },
+				});
+			}
+
 			return created;
 		}
 
 		const packId = input.packId ?? null;
 		const topicId = input.topicId ?? null;
 		const questionId = input.questionId ?? null;
-		await assertTargetReferencesExist(tx, { packId, topicId, questionId });
+		const postId = input.postId ?? null;
+		await assertTargetReferencesExist(tx, {
+			packId,
+			topicId,
+			questionId,
+			postId,
+		});
 
 		const id = randomUUID();
 		const created = await tx.comment.create({
@@ -184,6 +220,7 @@ export async function createComment(
 				packId,
 				topicId,
 				questionId,
+				postId,
 			},
 			include: COMMENT_ROW_INCLUDE,
 		});
@@ -192,6 +229,13 @@ export async function createComment(
 			where: { id: userId },
 			data: { totalComments: { increment: 1 } },
 		});
+
+		if (postId) {
+			await tx.post.update({
+				where: { id: postId },
+				data: { totalComments: { increment: 1 } },
+			});
+		}
 
 		return created;
 	});
@@ -217,12 +261,43 @@ export async function deleteComment(
 		const ids = await subtreeIdsIncludingRoot(tx, input.id);
 		const rows = await tx.comment.findMany({
 			where: { id: { in: ids } },
-			select: { userId: true, depth: true },
+			select: { userId: true, depth: true, postId: true },
 		});
 
 		const deltas = applyCountersForDelete(rows);
 
+		const reactors = await tx.reaction.findMany({
+			where: { commentId: { in: ids } },
+			select: { userId: true },
+		});
+		const reactionDeltas = aggregateReactionDeltas(reactors);
+
+		await tx.reaction.deleteMany({
+			where: { commentId: { in: ids } },
+		});
+
+		for (const [uid, c] of reactionDeltas) {
+			if (c > 0) {
+				await tx.user.update({
+					where: { id: uid },
+					data: { totalReactions: { decrement: c } },
+				});
+			}
+		}
+
+		const postAffected = rows.find((r) => r.postId != null)?.postId;
+		const postDed = postAffected
+			? rows.filter((r) => r.postId === postAffected).length
+			: 0;
+
 		await tx.comment.deleteMany({ where: { id: { in: ids } } });
+
+		if (postAffected && postDed > 0) {
+			await tx.post.update({
+				where: { id: postAffected },
+				data: { totalComments: { decrement: postDed } },
+			});
+		}
 
 		for (const [uid, { roots, replies }] of deltas) {
 			if (roots === 0 && replies === 0) continue;
@@ -242,7 +317,11 @@ export async function deleteComment(
 export async function listCommentsByTarget(
 	input: ListCommentsByTargetInputType,
 ): Promise<ListCommentsByTargetOutputType> {
-	let where: { packId: string } | { topicId: string } | { questionId: string };
+	let where:
+		| { packId: string }
+		| { topicId: string }
+		| { questionId: string }
+		| { postId: string };
 
 	if (input.packId != null) {
 		where = { packId: input.packId };
@@ -250,9 +329,11 @@ export async function listCommentsByTarget(
 		where = { topicId: input.topicId };
 	} else if (input.questionId != null) {
 		where = { questionId: input.questionId };
+	} else if (input.postId != null) {
+		where = { postId: input.postId };
 	} else {
 		throw new ORPCError("BAD_REQUEST", {
-			message: "Provide exactly one of packId, topicId, questionId.",
+			message: "Provide exactly one of packId, topicId, questionId, postId.",
 		});
 	}
 

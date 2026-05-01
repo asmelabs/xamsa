@@ -12,6 +12,8 @@ export const CommentSchema = z.object({
   packId: z.string().nullish(),
   topicId: z.string().nullish(),
   questionId: z.string().nullish(),
+  postId: z.string().nullish(),
+  totalReactions: z.number().int(),
 });
 
 export type CommentType = z.infer<typeof CommentSchema>;

@@ -7,7 +7,9 @@ import { gameRouter } from "./modules/game/router";
 import { packRouter } from "./modules/pack/router";
 import { packRatingRouter } from "./modules/pack-rating/router";
 import { playerRouter } from "./modules/player/router";
+import { postRouter } from "./modules/post/router";
 import { questionRouter } from "./modules/question/router";
+import { reactionRouter } from "./modules/reaction/router";
 import { topicRouter } from "./modules/topic/router";
 import { tsualRouter } from "./modules/tsual/router";
 import { userRouter } from "./modules/user/router";
@@ -24,6 +26,8 @@ export const appRouter = {
 	player: playerRouter,
 	click: clickRouter,
 	comment: commentRouter,
+	post: postRouter,
+	reaction: reactionRouter,
 	tsual: tsualRouter,
 };
 

@@ -1,0 +1,86 @@
+enum ReactionType {
+  heart
+  dislike
+  laugh
+  sad
+  angry
+  wow
+}
+
+enum PostAttachmentResource {
+  game
+  pack
+  topic
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  slug String @unique /// @zod.string().min(1).max(180).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format")
+
+  body          String? /// @zod.string().min(1, "Body is required when present").max(10000, "Body must be 10000 characters or less").optional()
+  image         String? /// @zod.string().url("Invalid image URL").optional()
+  imagePublicId String? @map("image_public_id")
+
+  userId String @map("user_id")
+  author User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalComments  Int @default(0) @map("total_comments")
+  totalReactions Int @default(0) @map("total_reactions")
+
+  attachment PostAttachment?
+  comments   Comment[]
+  reactions  Reaction[]
+
+  @@index([userId])
+  @@index([createdAt, id])
+  @@map("post")
+}
+
+model PostAttachment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  resource PostAttachmentResource
+
+  postId String @unique @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  gameId String? @map("game_id")
+  game   Game?   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  packId String? @map("pack_id")
+  pack   Pack?   @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  topicId String? @map("topic_id")
+  topic   Topic?  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@index([packId])
+  @@index([topicId])
+  @@map("post_attachment")
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  type ReactionType
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String? @map("post_id")
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  commentId String?  @map("comment_id")
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+  @@map("reaction")
+}
