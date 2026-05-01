@@ -305,10 +305,21 @@ export const UnfollowUserOutputSchema = z.object({
 export type UnfollowUserInputType = z.infer<typeof UnfollowUserInputSchema>;
 export type UnfollowUserOutputType = z.infer<typeof UnfollowUserOutputSchema>;
 
-const FollowListUserRowSchema = UserSchema.pick({
-	username: true,
-	name: true,
-	image: true,
+/** Display-only: tolerate empty / invalid avatar strings stored in DB. */
+const FollowListAvatarImageSchema = z
+	.union([z.string(), z.null(), z.undefined()])
+	.transform((v) => {
+		if (v == null || v === "") return null;
+		const t = typeof v === "string" ? v.trim() : "";
+		if (!t) return null;
+		return z.string().url().safeParse(t).success ? t : null;
+	});
+
+const FollowListUserRowSchema = z.object({
+	username: UserSchema.shape.username,
+	name: z.string().min(1).max(100),
+	image: FollowListAvatarImageSchema,
+	viewerFollows: z.boolean(),
 });
 
 export const ListFollowersInputSchema = z.object({

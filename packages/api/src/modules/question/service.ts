@@ -13,6 +13,7 @@ import type {
 } from "@xamsa/schemas/modules/question";
 import { QUESTIONS_PER_TOPIC } from "@xamsa/utils/constants";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { assertNonReservedContentSlug } from "../../lib/content-slug";
 import { computeQuestionAnalytics } from "../analytics/public-stats";
 
 export async function updateQuestion(
@@ -56,6 +57,7 @@ export async function updateQuestion(
 					where: { topicId_slug: { topicId: question.topicId, slug } },
 				})),
 		);
+		assertNonReservedContentSlug(newSlug);
 	}
 
 	const updatedQuestion = await prisma.question.update({

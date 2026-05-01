@@ -2,10 +2,13 @@ import { BadgeIdSchema } from "@xamsa/schemas/modules/badge";
 import type { HomeSearchItemType } from "@xamsa/schemas/modules/search";
 import type { GlobalLeaderboardBoardType } from "@xamsa/schemas/modules/user";
 import { parseCalverParam } from "@xamsa/utils/app-release-calver";
+import { getCurrentCalverString } from "@/lib/app-release";
 
 export type HomeSearchCommandContext = {
 	isSignedIn: boolean;
 	isStaff: boolean;
+	/** Signed-in user's username (`null` when guest). Used for shortcuts like profile. */
+	viewerUsername: string | null;
 	hasActiveGame: boolean;
 	activeGameCode: string | null;
 };
@@ -252,7 +255,36 @@ export function analyzeHomeSearchQuery(
 		};
 	}
 
-	if (n === "settings") {
+	if (ctx.isSignedIn && ctx.viewerUsername && n === "profile") {
+		const u = ctx.viewerUsername;
+		return {
+			...empty,
+			staticItems: [pageItem("My profile", `Open @${u}`, `/u/${u}/`)],
+		};
+	}
+
+	if (n === "settings" || n.startsWith("settings:")) {
+		if (n === "settings") {
+			return {
+				...empty,
+				staticItems: [
+					pageItem("Settings", "Profile and account", "/settings/"),
+				],
+			};
+		}
+		const seg = n.slice("settings:".length).trim().toLowerCase();
+		if (seg === "security") {
+			return {
+				...empty,
+				staticItems: [
+					pageItem(
+						"Security settings",
+						"Password, email, and linked accounts",
+						"/settings/security/",
+					),
+				],
+			};
+		}
 		return {
 			...empty,
 			staticItems: [pageItem("Settings", "Profile and account", "/settings/")],
@@ -292,6 +324,36 @@ export function analyzeHomeSearchQuery(
 		};
 	}
 
+	if (ctx.isSignedIn && n === "logout") {
+		return {
+			...empty,
+			staticItems: [
+				{
+					kind: "action",
+					action: "logout",
+					title: "Log out",
+					description: "Sign out and return to home",
+				},
+			],
+		};
+	}
+
+	if (n === "privacy" || n === "privacy-policy") {
+		return {
+			...empty,
+			staticItems: [pageItem("Privacy policy", null, "/legal/privacy-policy/")],
+		};
+	}
+
+	if (n === "terms" || n === "terms-of-service") {
+		return {
+			...empty,
+			staticItems: [
+				pageItem("Terms of service", null, "/legal/terms-of-service/"),
+			],
+		};
+	}
+
 	if (n === "whats-new" || n.startsWith("whats-new:")) {
 		if (n === "whats-new") {
 			return {
@@ -304,6 +366,19 @@ export function analyzeHomeSearchQuery(
 			return {
 				...empty,
 				staticItems: [pageItem("What's new", "Release notes", "/whats-new/")],
+			};
+		}
+		if (verPart.toLowerCase() === "latest") {
+			const pathVer = getCurrentCalverString();
+			return {
+				...empty,
+				staticItems: [
+					pageItem(
+						`What's new · v${pathVer} (latest)`,
+						"Release notes",
+						`/whats-new/${pathVer}/`,
+					),
+				],
 			};
 		}
 		const cal = parseCalverParam(verPart);

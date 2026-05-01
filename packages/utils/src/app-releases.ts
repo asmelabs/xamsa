@@ -7,12 +7,53 @@ import type {
 
 export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
 
-const current = { year: 2026, month: 4, patch: 27 } as const;
+const current = { year: 2026, month: 5, patch: 0 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-01",
+			year: 2026,
+			month: 5,
+			patch: 0,
+			title: "Profiles, search, and groundwork for comments",
+			highlights: [
+				{
+					kind: "text",
+					text: "Tap profile photos (including in the lobby, leaderboard, and badge lists) to open a larger view in an accessible dialog.",
+				},
+				{
+					kind: "text",
+					text: "Follow and unfollow people directly from followers and following lists; the profile URL can open those tabs (e.g. ?tab=followers or ?tab=following).",
+				},
+				{
+					kind: "text",
+					text: "Home search understands more shortcuts: whats-new:latest, logout (signed in), privacy and terms, settings:security, plus a help dialog on ⌘ or Ctrl+I alongside ⌘K.",
+				},
+				{
+					kind: "text",
+					text: "What’s new: /whats-new/latest redirects to the current release, and each release card can copy its shareable link.",
+				},
+				{
+					kind: "text",
+					text: "Transactional emails share the same footer links (home, what’s new, packs, leaderboard, play, badges, legal).",
+				},
+				{
+					kind: "text",
+					text: "Host buzz queue rows stack actions cleanly; host toolbar uses clearer Next / Skip labeling and an icon-only pause control.",
+				},
+				{
+					kind: "text",
+					text: "Pack, topic, and question slugs can’t collide with reserved app routes (consistent validation everywhere slugs are generated).",
+				},
+				{
+					kind: "text",
+					text: "Backend support for threaded comments on packs, topics, and questions (depth-limited threading and user totals); in-app UI for comments is planned for a follow-up release.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-04-30",
 			year: 2026,

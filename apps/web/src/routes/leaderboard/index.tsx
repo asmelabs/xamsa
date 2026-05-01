@@ -26,6 +26,7 @@ import { cn } from "@xamsa/ui/lib/utils";
 import { CrownIcon, MedalIcon, TrendingUpIcon } from "lucide-react";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useRef } from "react";
+import { ProfileImageLightbox } from "@/components/profile-image-lightbox";
 import { getUser } from "@/functions/get-user";
 import { collectionPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
@@ -293,24 +294,33 @@ function LeaderboardBoard({
 								{rankDisplay(row.rank)}
 							</TableCell>
 							<TableCell>
-								<Link
-									to="/u/$username"
-									params={{ username: row.username }}
-									className="flex min-w-0 items-center gap-2 hover:underline"
-								>
-									<Avatar className="size-8">
-										{row.image ? <AvatarImage src={row.image} alt="" /> : null}
-										<AvatarFallback className="text-[10px]">
-											{row.name.slice(0, 2).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
-									<div className="min-w-0">
+								<div className="flex min-w-0 items-center gap-2">
+									<ProfileImageLightbox
+										name={row.name}
+										image={row.image}
+										initials={row.name.slice(0, 2).toUpperCase()}
+										triggerClassName="shrink-0 rounded-full [&_[data-slot=avatar]]:size-8"
+									>
+										<Avatar className="size-8">
+											{row.image ? (
+												<AvatarImage src={row.image} alt="" />
+											) : null}
+											<AvatarFallback className="text-[10px]">
+												{row.name.slice(0, 2).toUpperCase()}
+											</AvatarFallback>
+										</Avatar>
+									</ProfileImageLightbox>
+									<Link
+										to="/u/$username"
+										params={{ username: row.username }}
+										className="min-w-0 flex-1 hover:underline"
+									>
 										<p className="truncate font-medium text-sm">{row.name}</p>
 										<p className="truncate text-muted-foreground text-xs">
 											@{row.username}
 										</p>
-									</div>
-								</Link>
+									</Link>
+								</div>
 							</TableCell>
 							<TableCell className="tabular-nums">
 								{board === "elo" ? (

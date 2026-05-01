@@ -10,6 +10,7 @@ import { Button } from "@xamsa/ui/components/button";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import { getBadge } from "@xamsa/utils/badges";
 import { useEffect } from "react";
+import { ProfileImageLightbox } from "@/components/profile-image-lightbox";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
 
@@ -121,21 +122,30 @@ function RouteComponent() {
 								key={row.id}
 								className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-card px-3 py-2 text-sm"
 							>
-								<Link
-									className="flex min-w-0 items-center gap-2 font-medium hover:underline"
-									params={{ username: row.user.username }}
-									to="/u/$username"
-								>
-									<Avatar className="size-8">
-										<AvatarImage src={row.user.image ?? undefined} />
-										<AvatarFallback>
-											{(row.user.name || row.user.username).slice(0, 1)}
-										</AvatarFallback>
-									</Avatar>
-									<span className="truncate">
+								<div className="flex min-w-0 flex-1 items-center gap-2">
+									<ProfileImageLightbox
+										name={row.user.name || row.user.username}
+										image={row.user.image}
+										initials={(row.user.name || row.user.username)
+											.slice(0, 2)
+											.toUpperCase()}
+										triggerClassName="shrink-0 rounded-full [&_[data-slot=avatar]]:size-8"
+									>
+										<Avatar className="size-8">
+											<AvatarImage src={row.user.image ?? undefined} />
+											<AvatarFallback>
+												{(row.user.name || row.user.username).slice(0, 1)}
+											</AvatarFallback>
+										</Avatar>
+									</ProfileImageLightbox>
+									<Link
+										className="min-w-0 truncate font-medium hover:underline"
+										params={{ username: row.user.username }}
+										to="/u/$username"
+									>
 										{row.user.name || row.user.username}
-									</span>
-								</Link>
+									</Link>
+								</div>
 								<div className="text-right text-muted-foreground text-xs sm:text-sm">
 									<Link
 										className="hover:underline"

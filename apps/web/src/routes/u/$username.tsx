@@ -46,6 +46,7 @@ import {
 	XCircleIcon,
 	ZapIcon,
 } from "lucide-react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -66,6 +67,7 @@ import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { LoadingButton } from "@/components/loading-button";
 import { ProfileBadgesSection } from "@/components/profile-badges-section";
+import { ProfileImageLightbox } from "@/components/profile-image-lightbox";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import { profilePageJsonLd } from "@/lib/json-ld";
@@ -151,9 +153,10 @@ function RouteComponent() {
 	const qc = useQueryClient();
 	const showStaffDashboard = isOwner && isStaffRole(user?.role);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
-	const [followDialog, setFollowDialog] = useState<
-		null | "followers" | "following"
-	>(null);
+	const [followTab, setFollowTab] = useQueryState(
+		"tab",
+		parseAsStringLiteral(["followers", "following"] as const),
+	);
 
 	const { data: profile } = useQuery({
 		...orpc.user.findOne.queryOptions({ input: { username } }),
@@ -218,7 +221,7 @@ function RouteComponent() {
 			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
 		}),
-		enabled: followDialog === "followers",
+		enabled: followTab === "followers",
 	});
 
 	const {
@@ -237,7 +240,7 @@ function RouteComponent() {
 			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
 		}),
-		enabled: followDialog === "following",
+		enabled: followTab === "following",
 	});
 
 	const invalidateFollowRelated = () => {
@@ -248,18 +251,28 @@ function RouteComponent() {
 			queryKey: orpc.user.getFollowState.queryKey({ input: { username } }),
 		});
 		void qc.invalidateQueries({
-			queryKey: orpc.user.listFollowers.queryKey({
-				input: { username, limit: FOLLOW_LIST_PAGE },
-			}),
+			predicate: ({ queryKey }) => {
+				const s = JSON.stringify(queryKey);
+				return (
+					s.includes("listFollowers") && s.includes(`"username":"${username}"`)
+				);
+			},
 		});
 		void qc.invalidateQueries({
-			queryKey: orpc.user.listFollowing.queryKey({
-				input: { username, limit: FOLLOW_LIST_PAGE },
-			}),
+			predicate: ({ queryKey }) => {
+				const s = JSON.stringify(queryKey);
+				return (
+					s.includes("listFollowing") && s.includes(`"username":"${username}"`)
+				);
+			},
 		});
 	};
 
-	const { mutate: followMut, isPending: isFollowPending } = useMutation({
+	const {
+		mutate: followMut,
+		isPending: isFollowPending,
+		variables: followVariables,
+	} = useMutation({
 		...orpc.user.follow.mutationOptions(),
 		onSuccess() {
 			invalidateFollowRelated();
@@ -270,7 +283,11 @@ function RouteComponent() {
 		},
 	});
 
-	const { mutate: unfollowMut, isPending: isUnfollowPending } = useMutation({
+	const {
+		mutate: unfollowMut,
+		isPending: isUnfollowPending,
+		variables: unfollowVariables,
+	} = useMutation({
 		...orpc.user.unfollow.mutationOptions(),
 		onSuccess() {
 			invalidateFollowRelated();
@@ -280,6 +297,11 @@ function RouteComponent() {
 			toast.error(error.message || "Could not unfollow");
 		},
 	});
+
+	const rowFollowBusy = (uname: string) =>
+		isFollowPending && followVariables?.username === uname;
+	const rowUnfollowBusy = (uname: string) =>
+		isUnfollowPending && unfollowVariables?.username === uname;
 
 	const gameRows = gamesData?.pages.flatMap((p) => p.items) ?? [];
 	const packRows = packsData?.items ?? [];
@@ -305,17 +327,17 @@ function RouteComponent() {
 	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	useEffect(() => {
-		if (followDialog === null) return;
+		if (followTab !== "followers" && followTab !== "following") return;
 		const el = followSentinelRef.current;
 		if (!el) return;
 		const hasNext =
-			followDialog === "followers" ? hasNextFollowers : hasNextFollowing;
+			followTab === "followers" ? hasNextFollowers : hasNextFollowing;
 		const isFetching =
-			followDialog === "followers"
+			followTab === "followers"
 				? isFetchingNextFollowers
 				: isFetchingNextFollowing;
 		const fetchNext =
-			followDialog === "followers" ? fetchNextFollowers : fetchNextFollowing;
+			followTab === "followers" ? fetchNextFollowers : fetchNextFollowing;
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting && hasNext && !isFetching) {
@@ -327,7 +349,7 @@ function RouteComponent() {
 		observer.observe(el);
 		return () => observer.disconnect();
 	}, [
-		followDialog,
+		followTab,
 		hasNextFollowers,
 		hasNextFollowing,
 		isFetchingNextFollowers,
@@ -367,11 +389,16 @@ function RouteComponent() {
 		<div className="container mx-auto max-w-3xl space-y-8 py-10">
 			{/* Profile header */}
 			<div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-				<div className="relative size-24 shrink-0 overflow-hidden rounded-2xl border border-border bg-muted">
+				<ProfileImageLightbox
+					name={profile.name}
+					image={profile.image}
+					initials={initials}
+					triggerClassName="size-24 shrink-0 overflow-hidden rounded-2xl border border-border bg-muted"
+				>
 					{profile.image ? (
 						<img
 							src={profile.image}
-							alt={profile.name}
+							alt=""
 							className="size-full object-cover"
 						/>
 					) : (
@@ -379,7 +406,7 @@ function RouteComponent() {
 							{initials}
 						</div>
 					)}
-				</div>
+				</ProfileImageLightbox>
 
 				<div className="flex-1 space-y-2">
 					<div className="flex flex-wrap items-center gap-2">
@@ -398,7 +425,7 @@ function RouteComponent() {
 						<button
 							type="button"
 							className="text-left text-muted-foreground transition-colors hover:text-foreground"
-							onClick={() => setFollowDialog("followers")}
+							onClick={() => void setFollowTab("followers")}
 						>
 							<span className="font-semibold text-foreground tabular-nums">
 								{profile.totalFollowers.toLocaleString()}
@@ -408,7 +435,7 @@ function RouteComponent() {
 						<button
 							type="button"
 							className="text-left text-muted-foreground transition-colors hover:text-foreground"
-							onClick={() => setFollowDialog("following")}
+							onClick={() => void setFollowTab("following")}
 						>
 							<span className="font-semibold text-foreground tabular-nums">
 								{profile.totalFollowing.toLocaleString()}
@@ -826,32 +853,32 @@ function RouteComponent() {
 			)}
 
 			<Dialog
-				open={followDialog !== null}
+				open={followTab === "followers" || followTab === "following"}
 				onOpenChange={(open) => {
-					if (!open) setFollowDialog(null);
+					if (!open) void setFollowTab(null);
 				}}
 			>
 				<DialogPopup className="max-w-md" showCloseButton>
 					<DialogHeader>
 						<DialogTitle>
-							{followDialog === "followers"
+							{followTab === "followers"
 								? "Followers"
-								: followDialog === "following"
+								: followTab === "following"
 									? "Following"
 									: ""}
 						</DialogTitle>
 					</DialogHeader>
 					<DialogPanel className="max-h-[min(60vh,440px)] space-y-2 overflow-y-auto px-6 in-[[data-slot=dialog-popup]:has([data-slot=dialog-header])]:pt-1 pb-6">
-						{followDialog
+						{followTab === "followers" || followTab === "following"
 							? (() => {
 									const rows =
-										followDialog === "followers" ? followerRows : followingRows;
+										followTab === "followers" ? followerRows : followingRows;
 									const loading =
-										followDialog === "followers"
+										followTab === "followers"
 											? followersLoading
 											: followingLoading;
 									const fetchingNext =
-										followDialog === "followers"
+										followTab === "followers"
 											? isFetchingNextFollowers
 											: isFetchingNextFollowing;
 
@@ -866,7 +893,7 @@ function RouteComponent() {
 									if (rows.length === 0) {
 										return (
 											<p className="text-muted-foreground text-sm">
-												{followDialog === "followers"
+												{followTab === "followers"
 													? "No followers yet."
 													: "Not following anyone yet."}
 											</p>
@@ -883,36 +910,75 @@ function RouteComponent() {
 														.slice(0, 2)
 														.join("")
 														.toUpperCase();
+													const showRowFollow =
+														Boolean(user) && row.username !== user?.username;
+
 													return (
-														<li key={row.username}>
+														<li
+															key={row.username}
+															className="flex items-center gap-2 rounded-lg px-1 py-1"
+														>
+															<ProfileImageLightbox
+																name={row.name}
+																image={row.image}
+																initials={rowInitials}
+																triggerClassName="size-10 shrink-0 overflow-hidden rounded-lg border border-border bg-muted"
+															>
+																{row.image ? (
+																	<img
+																		src={row.image}
+																		alt=""
+																		className="size-full object-cover"
+																	/>
+																) : (
+																	<div className="flex size-full items-center justify-center font-semibold text-primary text-xs">
+																		{rowInitials}
+																	</div>
+																)}
+															</ProfileImageLightbox>
 															<Link
 																to="/u/$username"
 																params={{ username: row.username }}
-																className="flex items-center gap-3 rounded-lg border border-transparent px-1 py-1.5 transition-colors hover:border-border hover:bg-muted/50"
-																onClick={() => setFollowDialog(null)}
+																search={{}}
+																className="min-w-0 flex-1 rounded-lg px-2 py-1 transition-colors hover:bg-muted/60"
 															>
-																<div className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-																	{row.image ? (
-																		<img
-																			src={row.image}
-																			alt={row.name}
-																			className="size-full object-cover"
-																		/>
-																	) : (
-																		<div className="flex size-full items-center justify-center font-semibold text-primary text-xs">
-																			{rowInitials}
-																		</div>
-																	)}
-																</div>
-																<div className="min-w-0">
-																	<p className="truncate font-medium text-sm">
-																		{row.name}
-																	</p>
-																	<p className="truncate text-muted-foreground text-xs">
-																		@{row.username}
-																	</p>
-																</div>
+																<p className="truncate font-medium text-sm">
+																	{row.name}
+																</p>
+																<p className="truncate text-muted-foreground text-xs">
+																	@{row.username}
+																</p>
 															</Link>
+															{showRowFollow ? (
+																row.viewerFollows ? (
+																	<LoadingButton
+																		variant="outline"
+																		size="sm"
+																		className="shrink-0"
+																		isLoading={rowUnfollowBusy(row.username)}
+																		loadingText="…"
+																		onClick={() =>
+																			unfollowMut({ username: row.username })
+																		}
+																	>
+																		<UserMinusIcon className="size-3.5" />
+																		Unfollow
+																	</LoadingButton>
+																) : (
+																	<LoadingButton
+																		size="sm"
+																		className="shrink-0"
+																		isLoading={rowFollowBusy(row.username)}
+																		loadingText="…"
+																		onClick={() =>
+																			followMut({ username: row.username })
+																		}
+																	>
+																		<UserPlusIcon className="size-3.5" />
+																		Follow
+																	</LoadingButton>
+																)
+															) : null}
 														</li>
 													);
 												})}

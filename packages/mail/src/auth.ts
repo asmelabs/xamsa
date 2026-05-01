@@ -1,3 +1,4 @@
+import { transactionalFooterLinks } from "./footer-links";
 import { shouldSendMail } from "./mail-env";
 import { sendEmail } from "./send";
 import {
@@ -6,17 +7,12 @@ import {
 	escapeHtml,
 } from "./templates/email-layout";
 
-const SITE_URL = "https://xamsa.site";
-
 function layoutBase(
 	partial: Pick<EmailLayoutOptions, "title" | "introHtml" | "primaryButton">,
 ): EmailLayoutOptions {
 	return {
 		...partial,
-		footerLinks: [
-			{ href: SITE_URL, label: "Home" },
-			{ href: `${SITE_URL}/whats-new`, label: "What’s new" },
-		],
+		footerLinks: transactionalFooterLinks(),
 	};
 }
 

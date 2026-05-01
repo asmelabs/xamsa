@@ -63,16 +63,19 @@ model User {
   totalFollowers Int @default(0) @map("total_followers")
   totalFollowing Int @default(0) @map("total_following")
 
+  totalComments Int @default(0) @map("total_comments")
+  totalReplies  Int @default(0) @map("total_replies")
+
   /// Users this user is following (this user is the follower)
   following UserFollow[] @relation("UserFollows")
   /// Users following this user (this user is being followed)
   followers UserFollow[] @relation("UserFollowers")
 
   /// AI topic generation (daily quota, UTC day window) ///
-  lastAiUsedAt     DateTime? @map("last_ai_used_at")
-  aiUseCount       Int       @default(0) @map("ai_use_count")
+  lastAiUsedAt    DateTime? @map("last_ai_used_at")
+  aiUseCount      Int       @default(0) @map("ai_use_count")
   /// Start of the UTC day for which `aiUseCount` applies (midnight UTC)
-  aiUseWindowDate  DateTime? @map("ai_use_window_date")
+  aiUseWindowDate DateTime? @map("ai_use_window_date")
 
   sessions   Session[]
   accounts   Account[]
@@ -86,6 +89,8 @@ model User {
   tsualPackageImports UserTsualPackageImport[]
 
   topicBulkJobs TopicBulkJob[]
+
+  comments Comment[]
 
   @@index([elo])
   @@index([xp])

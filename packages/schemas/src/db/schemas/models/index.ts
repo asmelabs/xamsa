@@ -20,5 +20,6 @@ export { PackSchema } from './Pack.schema';
 export { PackRatingSchema } from './PackRating.schema';
 export { TopicSchema } from './Topic.schema';
 export { QuestionSchema } from './Question.schema';
+export { CommentSchema } from './Comment.schema';
 export { TopicBulkJobSchema } from './TopicBulkJob.schema';
 export { UserTsualPackageImportSchema } from './UserTsualPackageImport.schema';

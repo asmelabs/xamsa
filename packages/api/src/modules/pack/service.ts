@@ -27,8 +27,8 @@ import type { PackAnalyticsOutputType } from "@xamsa/schemas/modules/public-anal
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 import { computeLevelFromXp } from "@xamsa/utils/progression";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { assertNonReservedContentSlug } from "../../lib/content-slug";
 import { computePackAnalytics } from "../analytics/public-stats";
-import { COMMON_PACK_SLUGS } from "./utils";
 
 export async function createPack(
 	input: CreatePackInputType,
@@ -42,12 +42,7 @@ export async function createPack(
 			})),
 	);
 
-	if (COMMON_PACK_SLUGS.includes(slug)) {
-		throw new ORPCError("BAD_REQUEST", {
-			message: "Name is too common. Please use a different name.",
-		});
-	}
-
+	assertNonReservedContentSlug(slug);
 	const pack = await prisma.pack.create({
 		data: {
 			authorId,
@@ -78,12 +73,7 @@ export async function bulkCreatePacks(
 					})),
 			);
 
-			if (COMMON_PACK_SLUGS.includes(slug)) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "Name is too common. Please use a different name.",
-				});
-			}
-
+			assertNonReservedContentSlug(slug);
 			const p = await tx.pack.create({
 				data: {
 					authorId,
