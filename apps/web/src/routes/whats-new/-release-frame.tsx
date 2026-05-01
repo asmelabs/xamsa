@@ -1,14 +1,19 @@
+"use client";
+
 import { Link } from "@tanstack/react-router";
+import { Button } from "@xamsa/ui/components/button";
 import {
 	Frame,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
 } from "@xamsa/ui/components/frame";
-import { SparklesIcon } from "lucide-react";
+import { Link2Icon, SparklesIcon } from "lucide-react";
+import { toast } from "sonner";
 import type { AppRelease } from "@/data/app-releases-data";
 import { releaseMatchesCurrent } from "@/data/app-releases-data";
 import { formatCalver, formatProductVersionLabel } from "@/lib/app-release";
+import { absoluteUrl } from "@/lib/seo";
 import { ReleaseHighlightItem } from "./-release-highlight";
 
 type ReleaseFrameProps = {
@@ -23,6 +28,18 @@ export function ReleaseFrame({
 }: ReleaseFrameProps) {
 	const label = formatProductVersionLabel(release);
 	const calver = formatCalver(release);
+	const shareUrl = absoluteUrl(`/whats-new/${calver}/`);
+
+	const handleCopyShare = () => {
+		void navigator.clipboard.writeText(shareUrl).then(
+			() => {
+				toast.success(`Copied · whats-new:${calver}`);
+			},
+			() => {
+				toast.error("Could not copy");
+			},
+		);
+	};
 	const isCurrent = releaseMatchesCurrent(release);
 	const versionTitle = linkVersionToDetail ? (
 		<Link
@@ -39,7 +56,7 @@ export function ReleaseFrame({
 	return (
 		<Frame>
 			<FrameHeader className="flex flex-row items-start justify-between gap-3">
-				<div className="space-y-1">
+				<div className="min-w-0 space-y-1">
 					<FrameTitle className="flex flex-wrap items-center gap-2">
 						{versionTitle}
 						{isCurrent ? (
@@ -57,6 +74,18 @@ export function ReleaseFrame({
 							<p className="text-foreground text-sm">• {release.title}</p>
 						) : null}
 					</div>
+				</div>
+				<div className="flex shrink-0 flex-col items-end gap-1">
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="gap-1.5"
+						onClick={handleCopyShare}
+					>
+						<Link2Icon className="size-3.5" aria-hidden />
+						Copy link
+					</Button>
 				</div>
 			</FrameHeader>
 			<FramePanel>

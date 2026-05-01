@@ -86,7 +86,7 @@ export async function listAdminUsers(
 	const orderBy = adminUserSort.resolve(sort, dir);
 	const where = buildAdminUsersWhere(input);
 
-	const [rows, total] = await prisma.$transaction([
+	const [rawRows, total] = await prisma.$transaction([
 		prisma.user.findMany({
 			where,
 			orderBy,
@@ -106,12 +106,22 @@ export async function listAdminUsers(
 				totalGamesHosted: true,
 				totalGamesPlayed: true,
 				totalPacksPublished: true,
-				totalFollowers: true,
-				totalFollowing: true,
+				_count: {
+					select: {
+						followers: true,
+						following: true,
+					},
+				},
 			},
 		}),
 		prisma.user.count({ where }),
 	]);
+
+	const rows = rawRows.map(({ _count, ...rest }) => ({
+		...rest,
+		totalFollowers: _count.followers,
+		totalFollowing: _count.following,
+	}));
 
 	return p.output(rows, total);
 }

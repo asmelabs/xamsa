@@ -161,9 +161,15 @@ export const userRouter = {
 	listFollowers: publicProcedure
 		.input(ListFollowersInputSchema)
 		.output(ListFollowersOutputSchema)
-		.handler(async ({ input }) => await listFollowers(input)),
+		.handler(
+			async ({ input, context }) =>
+				await listFollowers(input, context.session?.user?.id ?? null),
+		),
 	listFollowing: publicProcedure
 		.input(ListFollowingInputSchema)
 		.output(ListFollowingOutputSchema)
-		.handler(async ({ input }) => await listFollowing(input)),
+		.handler(
+			async ({ input, context }) =>
+				await listFollowing(input, context.session?.user?.id ?? null),
+		),
 };

@@ -1,4 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@xamsa/ui/components/avatar";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Menu,
@@ -14,6 +19,7 @@ import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
+import { ProfileImageLightbox } from "./profile-image-lightbox";
 
 interface PlayerRowProps {
 	player: GamePlayer;
@@ -63,6 +69,14 @@ export function PlayerRow({
 					? "bg-orange-700/10 text-orange-700 dark:text-orange-500"
 					: "bg-muted text-muted-foreground";
 
+	const initials =
+		player.user.name
+			.split(/\s+/u)
+			.filter(Boolean)
+			.slice(0, 2)
+			.map((p) => p[0]?.toUpperCase() ?? "")
+			.join("") || "?";
+
 	return (
 		<div className="flex items-center gap-3 rounded-xl border border-border p-2.5">
 			<div
@@ -70,6 +84,22 @@ export function PlayerRow({
 			>
 				{rank}
 			</div>
+
+			<ProfileImageLightbox
+				name={player.user.name}
+				image={player.user.image}
+				initials={initials}
+				triggerClassName="size-9 shrink-0 rounded-lg [&_[data-slot=avatar]]:size-9 [&_[data-slot=avatar]]:rounded-lg"
+			>
+				<Avatar className="size-9 rounded-lg">
+					{player.user.image ? (
+						<AvatarImage src={player.user.image} alt="" />
+					) : null}
+					<AvatarFallback className="rounded-lg text-[10px]">
+						{initials.slice(0, 2)}
+					</AvatarFallback>
+				</Avatar>
+			</ProfileImageLightbox>
 
 			<div className="min-w-0 flex-1">
 				<p className="truncate font-medium text-sm">{player.user.name}</p>

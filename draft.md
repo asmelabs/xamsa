@@ -414,15 +414,27 @@ Note:
 
 - Fix, CORS error on auth API calls.
 
-## v26.04.28
+## v26.05.00
 
-- When clicking on someone's profile photo, it should open a popup/modal with bigger image of the profile photo.
+- When clicking on someone's profile photo, it should open a popup/modal with bigger image of the profile photo. Profile avatar everywhere: apply the same “tap to enlarge” pattern to avatars in leaderboards, game lobby, follow lists, and comments (if any), with a single shared component so the release note is one clear story: “larger profile photos on tap.”
 - On followers/following dialogs on profile page, each user must have a "Follow"/"Unfollow" button justified right (if current user is authenticated and not on self). So that users can easily follow/unfollow someone from there without opening the profile page or leaving the dialog.
 - On home search, when typing "whats-new" it navigates to /whats-new page. When typing "whats-new:version" it navigates to /whats-new/$version page. There should also be "whats-new:latest" that automatically finds the latest version and navigates to it. It should also work on route level. Going to /whats-new/latest should automatically redirects user to /whats-new/$version (with the latest version).
 - On home search, if user is authenticated typing "logout" and clicking on it, it should sign out the user and navigate to / page.
 - On home search, if user is authenticated typing "settings" and clicking on it, it should navigate to /settings page. (i guess it is already there), but addition to that "settings:security" should navigate to /settings/security page.
 - On home search, "privacy" and "terms" should navigate to /legal/privacy-policy and /legal/terms-of-service pages respectively.
+- On home search, if user clicks "mod+I" and informative dialog should show up, and show what users can do with home search, since we have a lot of features (shortcut keys, page navigations, searching users/games/packs etc.)
 - On profile page, when followers or following dialogs are open, respective query param should be set to "followers" or "following" respectively using nuqs. might be "?tab=followers" or "?tab=following".
+- Deep links from whats-new: in each release card, optional “Copy link” or share URL to whats-new:26.05.00 (or whatever calver string you use) so power users and hosts can point people to a specific note.
+- On email template, currently in the footer, there are Home and What's New links, add there "Packs" (text: Explore Packs), "Leaderboard" (text: "Global Leaderboard"), "Play" (text: "Play a Game"), "Badges" (text: "See Badges"), "Privacy Policy" (text: "Privacy Policy"), "Terms of Service" (text: "Terms of Service").
+- On host screen on game page, on buzzer list (where host clicks Correct/Wrong/Delete) just because of buttons are wide, host cannot see the player's name. So move those buttons to bottom (make them stacked) so host can see the player's name and buttons better.
+- Rename "Next Question" button on host screen to "Next" and "Skip Question" button to "Skip" and make them smaller. Also remove word "Pause" and just keep Pause icon.
+- When users create packs/topics/questions, add an blocklist of slugs that users cannot create those resources with names that resolves to those blocklisted slugs. These slugs are: "new", "top", "all", "create", "update", "delete", "search", "auth", "login", "register", "packs", "pack", "jobs", "job", "topics", "topic", "questions", "question", "buzz", "buzzes", "click", "clicks", "ai", "import", "imports", "export", "exports", "dashboard", "users", "user", "profile", "settings", "security", "legal", "privacy-policy", "terms-of-service", "whats-new", "latest", "join", "play", "plays", "game", "history", "api", "rpc", "badges", "badge", "dev", "leaderboard", "sitemap", "robots", "index", "edit", "bulk", "bulk-new", "3sual", "og", "code"
+- Comment system:
+  -- Add comment model. generate and migrate the db. (db:generate && db:migrate)
+  -- Comments can be added to packs, topics, questions - So on each respective page, there will be discussion section, where users can add comments.
+  -- In this version, do not implement clientside, just db/schema/api/server side we are handling, and on next version we will implement clientside.
+  -- Each comment will have "depth" integer (default to 0 - 0 means root comment), and depth can be max 3. Every comment will have parent comment id reference, and root comment reference.
+  -- Add users 'totalComments' (only root comments), 'totalReplies' (non-root comments) that computes everytime user adds/deletes a comment/reply.
 
 ## Later versions
 

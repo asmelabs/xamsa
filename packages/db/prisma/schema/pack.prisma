@@ -41,8 +41,8 @@ model Pack {
   showTopicsInfo  Boolean @default(true) @map("show_topics_info") // will show list of topics in the pack page
 
   /// difficulty (see DIFFICULTY_RATE_IMPLEMENTATION_SPEC) ///
-  pdr           Float     @default(4.5) @map("pdr")
-  pdrUpdatedAt  DateTime? @map("pdr_updated_at")
+  pdr          Float     @default(4.5) @map("pdr")
+  pdrUpdatedAt DateTime? @map("pdr_updated_at")
 
   authorId String @map("author_id")
   author   User   @relation(fields: [authorId], references: [id])
@@ -52,6 +52,8 @@ model Pack {
   games   Game[]
 
   tsualPackageImports UserTsualPackageImport[]
+
+  comments Comment[]
 
   @@index([slug])
   @@index([authorId])
@@ -101,6 +103,7 @@ model Topic {
   questions Question[]
   clicks    Click[]
   games     GameTopic[]
+  comments  Comment[]
 
   @@unique([packId, order])
   @@unique([packId, slug])
@@ -123,15 +126,16 @@ model Question {
   acceptableAnswers String[] @map("acceptable_answers") /// @zod.max(5, "Acceptable answers must be less than or equal to 5")
   explanation       String? /// @zod.string().max(1000, "Explanation must be less than 1000 characters")
 
-  topicId       String         @map("topic_id")
-  topic         Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topicId           String         @map("topic_id")
+  topic             Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
   /// difficulty (see DIFFICULTY_RATE_IMPLEMENTATION_SPEC) ///
-  qdr               Float     @default(4.5) @map("qdr")
-  qdrEloEquiv       Float     @default(1000) @map("qdr_elo_equiv")
-  qdrScoredAttempts Int       @default(0) @map("qdr_scored_attempts")
-  qdrUpdatedAt      DateTime? @map("qdr_updated_at")
-  clicks        Click[]
-  gameQuestions GameQuestion[]
+  qdr               Float          @default(4.5) @map("qdr")
+  qdrEloEquiv       Float          @default(1000) @map("qdr_elo_equiv")
+  qdrScoredAttempts Int            @default(0) @map("qdr_scored_attempts")
+  qdrUpdatedAt      DateTime?      @map("qdr_updated_at")
+  clicks            Click[]
+  gameQuestions     GameQuestion[]
+  comments          Comment[]
 
   @@unique([topicId, order])
   @@unique([topicId, slug])
@@ -139,4 +143,40 @@ model Question {
   @@index([slug])
   @@index([order])
   @@map("question")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  body  String /// @zod.string().min(1, "Comment is required").max(5000, "Comment must be 5000 characters or less")
+  depth Int    @default(0)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  parentId String? @map("parent_id")
+  parent   Comment?  @relation("CommentHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Comment[] @relation("CommentHierarchy")
+
+  /// Threads share one `rootId` (the root row’s id). Root rows use `rootId = id`.
+  rootId String @map("root_id")
+  root   Comment   @relation("CommentRootThread", fields: [rootId], references: [id], onDelete: Cascade)
+  threadMembers Comment[] @relation("CommentRootThread")
+
+  packId String? @map("pack_id")
+  pack   Pack?   @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  topicId String? @map("topic_id")
+  topic   Topic?  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  questionId String?   @map("question_id")
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([packId, createdAt])
+  @@index([topicId, createdAt])
+  @@index([questionId, createdAt])
+  @@index([rootId, createdAt])
+  @@map("comment")
 }

@@ -49,12 +49,21 @@ export const HomeSearchPageItemSchema = z.object({
 	search: z.record(z.string(), z.string()).optional(),
 });
 
+/** Client-only shortcut (e.g. logout); not returned by `homeSearch` API. */
+export const HomeSearchActionItemSchema = z.object({
+	kind: z.literal("action"),
+	action: z.enum(["logout"]),
+	title: z.string(),
+	description: z.string().nullable(),
+});
+
 export const HomeSearchItemSchema = z.discriminatedUnion("kind", [
 	HomeSearchUserItemSchema,
 	HomeSearchPackItemSchema,
 	HomeSearchTopicItemSchema,
 	HomeSearchGameItemSchema,
 	HomeSearchPageItemSchema,
+	HomeSearchActionItemSchema,
 ]);
 
 export const HomeSearchOutputSchema = z.object({

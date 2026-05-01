@@ -34,6 +34,8 @@ export const UserSchema = z.object({
   totalPacksPublished: z.number().int(),
   totalFollowers: z.number().int(),
   totalFollowing: z.number().int(),
+  totalComments: z.number().int(),
+  totalReplies: z.number().int(),
   lastAiUsedAt: z.coerce.date().nullish(),
   aiUseCount: z.number().int(),
   aiUseWindowDate: z.coerce.date().nullish(),

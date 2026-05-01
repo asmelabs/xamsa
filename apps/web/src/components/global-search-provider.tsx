@@ -11,6 +11,13 @@ import {
 	CommandPanel,
 } from "@xamsa/ui/components/command";
 import {
+	Dialog,
+	DialogHeader,
+	DialogPanel,
+	DialogPopup,
+	DialogTitle,
+} from "@xamsa/ui/components/dialog";
+import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
@@ -18,14 +25,17 @@ import {
 import { ScrollArea } from "@xamsa/ui/components/scroll-area";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import { cn } from "@xamsa/ui/lib/utils";
+import type { LucideIcon } from "lucide-react";
 import {
 	Gamepad2Icon,
 	LayoutDashboardIcon,
 	ListTreeIcon,
+	LogOutIcon,
 	PackageIcon,
 	SearchIcon,
 	UserIcon,
 } from "lucide-react";
+import posthog from "posthog-js";
 import {
 	createContext,
 	type KeyboardEvent as ReactKeyboardEvent,
@@ -38,6 +48,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { analyzeHomeSearchQuery, pageItem } from "@/lib/home-search-commands";
 import { isStaffRole } from "@/lib/staff";
@@ -65,7 +76,7 @@ export function useGlobalSearch(): GlobalSearchContextValue {
 }
 
 function itemIconAndLabel(kind: HomeSearchItemType["kind"]): {
-	icon: typeof UserIcon;
+	icon: LucideIcon;
 	label: string;
 } {
 	switch (kind) {
@@ -79,6 +90,8 @@ function itemIconAndLabel(kind: HomeSearchItemType["kind"]): {
 			return { icon: Gamepad2Icon, label: "Game" };
 		case "page":
 			return { icon: LayoutDashboardIcon, label: "Page" };
+		case "action":
+			return { icon: LogOutIcon, label: "Action" };
 	}
 }
 
@@ -88,7 +101,7 @@ function HomeSearchRow({
 	isActive,
 }: {
 	item: HomeSearchItemType;
-	onPick: () => void;
+	onPick: (picked: HomeSearchItemType) => void;
 	isActive: boolean;
 }) {
 	const { icon: Icon, label } = itemIconAndLabel(item.kind);
@@ -123,6 +136,19 @@ function HomeSearchRow({
 		isActive && "bg-accent text-accent-foreground",
 	);
 
+	if (item.kind === "action") {
+		return (
+			<button
+				type="button"
+				className={rowClass}
+				aria-selected={isActive}
+				onClick={() => onPick(item)}
+			>
+				{inner}
+			</button>
+		);
+	}
+
 	if (item.kind === "user") {
 		return (
 			<Link
@@ -130,7 +156,10 @@ function HomeSearchRow({
 				params={{ username: item.username }}
 				className={rowClass}
 				aria-selected={isActive}
-				onClick={onPick}
+				onClick={(e) => {
+					e.preventDefault();
+					onPick(item);
+				}}
 			>
 				{inner}
 			</Link>
@@ -143,7 +172,10 @@ function HomeSearchRow({
 				params={{ packSlug: item.slug }}
 				className={rowClass}
 				aria-selected={isActive}
-				onClick={onPick}
+				onClick={(e) => {
+					e.preventDefault();
+					onPick(item);
+				}}
 			>
 				{inner}
 			</Link>
@@ -156,7 +188,10 @@ function HomeSearchRow({
 				params={{ packSlug: item.packSlug, topicSlug: item.topicSlug }}
 				className={rowClass}
 				aria-selected={isActive}
-				onClick={onPick}
+				onClick={(e) => {
+					e.preventDefault();
+					onPick(item);
+				}}
 			>
 				{inner}
 			</Link>
@@ -169,7 +204,10 @@ function HomeSearchRow({
 				{...(item.search ? { search: item.search } : {})}
 				className={rowClass}
 				aria-selected={isActive}
-				onClick={onPick}
+				onClick={(e) => {
+					e.preventDefault();
+					onPick(item);
+				}}
 			>
 				{inner}
 			</Link>
@@ -181,7 +219,10 @@ function HomeSearchRow({
 			params={{ code: item.code }}
 			className={rowClass}
 			aria-selected={isActive}
-			onClick={onPick}
+			onClick={(e) => {
+				e.preventDefault();
+				onPick(item);
+			}}
 		>
 			{inner}
 		</Link>
@@ -220,6 +261,8 @@ function openItemRoute(
 				...(item.search ? { search: item.search } : {}),
 			});
 			break;
+		case "action":
+			break;
 	}
 }
 
@@ -246,6 +289,7 @@ function GlobalSearchDialog() {
 		() => ({
 			isSignedIn: !!user,
 			isStaff: isStaffRole(user?.role),
+			viewerUsername: user?.username ?? null,
 			hasActiveGame: !!activeGame,
 			activeGameCode: activeGame?.code ?? null,
 		}),
@@ -422,12 +466,30 @@ function GlobalSearchDialog() {
 		row?.scrollIntoView({ block: "nearest" });
 	}, [highlightedIndex, items.length]);
 
+	const handlePick = useCallback(
+		async (item: HomeSearchItemType) => {
+			setOpen(false);
+			if (item.kind === "action" && item.action === "logout") {
+				try {
+					await authClient.signOut();
+					posthog.reset();
+					toast.success("Signed out");
+					void navigate({ to: "/" });
+				} catch {
+					toast.error("Failed to sign out. Try again.");
+				}
+				return;
+			}
+			openItemRoute(navigate, item);
+		},
+		[navigate, setOpen],
+	);
+
 	const pickHighlighted = useCallback(() => {
 		const item = items[highlightedIndex];
 		if (!item) return;
-		openItemRoute(navigate, item);
-		setOpen(false);
-	}, [items, highlightedIndex, navigate, setOpen]);
+		void handlePick(item);
+	}, [items, highlightedIndex, handlePick]);
 
 	const listInteractive = hasQuery && items.length > 0;
 
@@ -530,7 +592,9 @@ function GlobalSearchDialog() {
 															? `t-${item.packSlug}-${item.topicSlug}`
 															: item.kind === "game"
 																? `g-${item.code}-${i}`
-																: `page-${item.to}-${JSON.stringify(item.search ?? {})}-${i}`
+																: item.kind === "page"
+																	? `page-${item.to}-${JSON.stringify(item.search ?? {})}-${i}`
+																	: `action-${item.action}-${i}`
 											}
 											data-search-index={i}
 											role="presentation"
@@ -538,7 +602,7 @@ function GlobalSearchDialog() {
 											<HomeSearchRow
 												item={item}
 												isActive={i === highlightedIndex}
-												onPick={() => setOpen(false)}
+												onPick={handlePick}
 											/>
 										</li>
 									))}
@@ -552,8 +616,62 @@ function GlobalSearchDialog() {
 	);
 }
 
+function SearchHelpDialog({
+	open,
+	onOpenChange,
+}: {
+	open: boolean;
+	onOpenChange: (next: boolean) => void;
+}) {
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogPopup className="max-w-lg">
+				<DialogHeader>
+					<DialogTitle>About search</DialogTitle>
+				</DialogHeader>
+				<DialogPanel
+					scrollFade={false}
+					className="space-y-4 pb-6 text-muted-foreground text-sm"
+				>
+					<section className="space-y-2">
+						<p className="font-medium text-foreground">Keyboard</p>
+						<ul className="list-inside list-disc space-y-1">
+							<li>Open or close search — ⌘K (Mac) or Ctrl+K (Windows/Linux)</li>
+							<li>Show this dialog — ⌘I or Ctrl+I</li>
+							<li>Move highlight — ↑ and ↓ arrows</li>
+							<li>Go to selection — Enter</li>
+						</ul>
+					</section>
+					<section className="space-y-2">
+						<p className="font-medium text-foreground">Typed shortcuts</p>
+						<ul className="list-inside list-disc space-y-1">
+							<li>
+								Pages like leaderboard, play, badges, history, whats-new,
+								settings, privacy, terms
+							</li>
+							<li>
+								Prefix syntax: leaderboard:elo, whats-new:latest,
+								whats-new:26.05.00, settings:security, badges:id
+							</li>
+							<li>
+								Games: join:CODE — or type any query to match users, packs,
+								topics, and codes
+							</li>
+							<li>
+								Signed in: profile, logout, create:pack, create:topic,
+								join:game, …
+							</li>
+						</ul>
+					</section>
+				</DialogPanel>
+			</DialogPopup>
+		</Dialog>
+	);
+}
+
 export function GlobalSearchProvider({ children }: { children: ReactNode }) {
 	const [open, setOpen] = useState(false);
+	const [helpOpen, setHelpOpen] = useState(false);
 	const openSearch = useCallback(() => setOpen(true), []);
 
 	const value = useMemo(
@@ -572,10 +690,22 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
 		return () => window.removeEventListener("keydown", onKey);
 	}, []);
 
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key.toLowerCase() !== "i") return;
+			if (!e.metaKey && !e.ctrlKey) return;
+			e.preventDefault();
+			setHelpOpen(true);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, []);
+
 	return (
 		<GlobalSearchContext.Provider value={value}>
 			{children}
 			<GlobalSearchDialog />
+			<SearchHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
 		</GlobalSearchContext.Provider>
 	);
 }

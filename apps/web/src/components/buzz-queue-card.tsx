@@ -336,71 +336,77 @@ export function BuzzQueueCard({ game, isHostView }: BuzzQueueCardProps) {
 						return (
 							<div
 								key={click.id}
-								className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+								className={`flex flex-col gap-2 rounded-xl border p-3 transition-colors ${
 									isHostView && isCurrentlyActive ? "min-h-14" : "min-h-12"
 								} ${rowClass} ${isTentative ? "animate-pulse" : ""}`}
 							>
-								<div
-									className={`flex size-9 shrink-0 items-center justify-center rounded-lg font-bold text-sm ${badgeClass}`}
-								>
-									{click.position}
-								</div>
-
-								<div className="min-w-0 flex-1">
-									<p
-										className={`truncate text-sm ${
-											isCurrentlyActive && isHostView
-												? "font-semibold text-base"
-												: "font-medium"
-										}`}
+								<div className="flex items-start gap-3">
+									<div
+										className={`flex size-9 shrink-0 items-center justify-center rounded-lg font-bold text-sm ${badgeClass}`}
 									>
-										{player.user.name}
-									</p>
-									<p className="text-muted-foreground text-xs">
-										{reactionMs !== null && `${reactionMs}ms`}
-										{statusText}
-									</p>
-								</div>
-
-								{canResolve && (
-									<div className="flex gap-1.5">
-										<Button
-											size="sm"
-											variant="outline"
-											className="gap-1"
-											disabled={isResolving}
-											onClick={() =>
-												handleResolve(click.id, "wrong", click.playerId)
-											}
-										>
-											<XIcon className="size-3.5 text-red-500" />
-											Wrong
-										</Button>
-										<Button
-											size="sm"
-											className="gap-1"
-											disabled={isResolving}
-											onClick={() =>
-												handleResolve(click.id, "correct", click.playerId)
-											}
-										>
-											<CheckIcon className="size-3.5" />
-											Correct
-										</Button>
+										{click.position}
 									</div>
-								)}
-								{canModerateClicks && (
-									<Button
-										size="sm"
-										variant="ghost"
-										className="text-muted-foreground hover:text-destructive"
-										disabled={isRemoving}
-										onClick={() => setRemoveClickId(click.id)}
-										aria-label="Remove click"
-									>
-										<Trash2Icon className="size-3.5" />
-									</Button>
-								)}
+
+									<div className="min-w-0 flex-1">
+										<p
+											className={`truncate text-sm ${
+												isCurrentlyActive && isHostView
+													? "font-semibold text-base"
+													: "font-medium"
+											}`}
+										>
+											{player.user.name}
+										</p>
+										<p className="text-muted-foreground text-xs">
+											{reactionMs !== null && `${reactionMs}ms`}
+											{statusText}
+										</p>
+									</div>
+								</div>
+
+								{canModerateClicks ? (
+									<div className="flex flex-col gap-2 border-border/70 border-t pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+										{canResolve ? (
+											<div className="flex w-full min-w-0 flex-col gap-1.5 sm:max-w-md sm:flex-1 sm:flex-row">
+												<Button
+													size="sm"
+													variant="outline"
+													className="w-full shrink-0 gap-1 sm:flex-1"
+													disabled={isResolving}
+													onClick={() =>
+														handleResolve(click.id, "wrong", click.playerId)
+													}
+												>
+													<XIcon className="size-3.5 text-red-500" />
+													Wrong
+												</Button>
+												<Button
+													size="sm"
+													className="w-full shrink-0 gap-1 sm:flex-1"
+													disabled={isResolving}
+													onClick={() =>
+														handleResolve(click.id, "correct", click.playerId)
+													}
+												>
+													<CheckIcon className="size-3.5" />
+													Correct
+												</Button>
+											</div>
+										) : null}
+										<div className="flex justify-end">
+											<Button
+												size="sm"
+												variant="ghost"
+												className="text-muted-foreground hover:text-destructive"
+												disabled={isRemoving}
+												onClick={() => setRemoveClickId(click.id)}
+												aria-label="Remove click"
+											>
+												<Trash2Icon className="size-3.5" />
+											</Button>
+										</div>
+									</div>
+								) : null}
 							</div>
 						);
 					})}

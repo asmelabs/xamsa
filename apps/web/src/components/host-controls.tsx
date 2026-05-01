@@ -219,10 +219,10 @@ export function HostControls({ game }: HostControlsProps) {
 	};
 
 	return (
-		<div className="flex items-center justify-end gap-2 border border-border bg-background p-2.5">
+		<div className="flex items-center justify-end gap-1.5 border border-border bg-background p-2">
 			{(isActive || isPaused) && (
 				<Button
-					size="sm"
+					size={isPaused ? "sm" : "icon-xs"}
 					variant="outline"
 					disabled={!canTogglePause}
 					onClick={handleTogglePause}
@@ -234,8 +234,8 @@ export function HostControls({ game }: HostControlsProps) {
 						</>
 					) : (
 						<>
-							<PauseIcon className="size-4" />
-							Pause
+							<PauseIcon className="size-4" aria-hidden />
+							<span className="sr-only">Pause</span>
 						</>
 					)}
 				</Button>
@@ -264,7 +264,7 @@ export function HostControls({ game }: HostControlsProps) {
 								disabled={!canSkipQuestion || isSkipping}
 								onClick={handleSkip}
 							>
-								Skip question
+								Skip
 							</Button>
 						}
 					>
@@ -287,8 +287,8 @@ export function HostControls({ game }: HostControlsProps) {
 						Skip
 					</Button>
 					<Button size="sm" disabled={!canAct} onClick={handleNext}>
-						Next question
-						<ArrowRightIcon />
+						Next
+						<ArrowRightIcon className="size-4" />
 					</Button>
 				</>
 			)}

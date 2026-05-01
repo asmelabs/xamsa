@@ -1,16 +1,7 @@
+import { SITE_URL, transactionalFooterLinks } from "./footer-links";
 import { shouldSendNotificationMail } from "./mail-env";
 import { sendEmail } from "./send";
 import { buildTransactionalHtml, escapeHtml } from "./templates/email-layout";
-
-const SITE_URL = "https://xamsa.site";
-
-function notifyFooter(): { href: string; label: string }[] {
-	return [
-		{ href: SITE_URL, label: "Home" },
-		{ href: `${SITE_URL}/whats-new`, label: "What’s new" },
-	];
-}
-
 export async function sendGameWinnerEmail(params: {
 	email: string;
 	name: string;
@@ -30,7 +21,7 @@ export async function sendGameWinnerEmail(params: {
 <p style="margin:0;font-size:13px;color:#545454;">Keep playing to climb the leaderboard and earn more badges.</p>
 `,
 		primaryButton: { href: profileUrl, label: "View your profile" },
-		footerLinks: notifyFooter(),
+		footerLinks: transactionalFooterLinks(),
 	});
 	if (!shouldSendNotificationMail()) {
 		console.log("=== game winner email (dev) ===");
@@ -59,7 +50,7 @@ export async function sendNewFollowerEmail(params: {
 <p style="margin:0 0 12px;"><strong>${escapeHtml(followerName)}</strong> (@${escapeHtml(followerUsername)}) started following you.</p>
 `,
 		primaryButton: { href: followerUrl, label: "View their profile" },
-		footerLinks: notifyFooter(),
+		footerLinks: transactionalFooterLinks(),
 	});
 	if (!shouldSendNotificationMail()) {
 		console.log("=== new follower email (dev) ===");

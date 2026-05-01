@@ -43,7 +43,8 @@ import {
 export async function findOneProfile(
 	input: FindOneProfileInputType,
 ): Promise<FindOneProfileOutputType> {
-	const profile = await prisma.user.findUnique({
+	/** Prefer live counts: `total_*` columns can drift when `user_follow` rows are CASCADE-deleted with a related user — those deletes do not decrement denormalized totals. */
+	const row = await prisma.user.findUnique({
 		where: {
 			username: input.username,
 		},
@@ -57,18 +58,27 @@ export async function findOneProfile(
 			elo: true,
 			peakElo: true,
 			lowestElo: true,
-			totalFollowers: true,
-			totalFollowing: true,
+			_count: {
+				select: {
+					followers: true,
+					following: true,
+				},
+			},
 		},
 	});
 
-	if (!profile) {
+	if (!row) {
 		throw new ORPCError("NOT_FOUND", {
 			message: "Profile not found",
 		});
 	}
 
-	return profile;
+	const { _count, ...rest } = row;
+	return {
+		...rest,
+		totalFollowers: _count.followers,
+		totalFollowing: _count.following,
+	};
 }
 
 export async function updateProfile(
@@ -522,38 +532,40 @@ export async function followUser(
 
 	let createdNewFollow = false;
 	try {
-		await prisma.$transaction(async (tx) => {
-			const existing = await tx.userFollow.findUnique({
-				where: {
-					followerId_followingId: {
+		createdNewFollow = await prisma.$transaction(
+			async (tx): Promise<boolean> => {
+				const existing = await tx.userFollow.findUnique({
+					where: {
+						followerId_followingId: {
+							followerId,
+							followingId: target.id,
+						},
+					},
+					select: { id: true },
+				});
+				if (existing) return false;
+
+				await tx.userFollow.create({
+					data: {
 						followerId,
 						followingId: target.id,
+						status: "accepted",
 					},
-				},
-				select: { id: true },
-			});
-			if (existing) return;
-
-			createdNewFollow = true;
-
-			await tx.userFollow.create({
-				data: {
-					followerId,
-					followingId: target.id,
-					status: "accepted",
-				},
-			});
-			await tx.user.update({
-				where: { id: followerId },
-				data: { totalFollowing: { increment: 1 } },
-			});
-			await tx.user.update({
-				where: { id: target.id },
-				data: { totalFollowers: { increment: 1 } },
-			});
-		});
+				});
+				await tx.user.update({
+					where: { id: followerId },
+					data: { totalFollowing: { increment: 1 } },
+				});
+				await tx.user.update({
+					where: { id: target.id },
+					data: { totalFollowers: { increment: 1 } },
+				});
+				return true;
+			},
+		);
 	} catch (err) {
 		if (!isPrismaUniqueViolation(err)) throw err;
+		createdNewFollow = false;
 	}
 
 	if (createdNewFollow) {
@@ -628,8 +640,14 @@ export async function unfollowUser(
 	return { ok: true as const };
 }
 
+function displayNameOrUsername(name: string, username: string) {
+	const t = name.trim();
+	return t.length > 0 ? t : username;
+}
+
 export async function listFollowers(
 	input: ListFollowersInputType,
+	viewerId?: string | null,
 ): Promise<ListFollowersOutputType> {
 	const limit = input.limit;
 	const profileId = await requireUserIdByUsername(input.username);
@@ -645,7 +663,7 @@ export async function listFollowers(
 		select: {
 			id: true,
 			follower: {
-				select: { username: true, name: true, image: true },
+				select: { id: true, username: true, name: true, image: true },
 			},
 		},
 	});
@@ -653,10 +671,28 @@ export async function listFollowers(
 	const hasNext = rows.length > limit;
 	const pageRows = hasNext ? rows.slice(0, limit) : rows;
 
+	const followedIdSet = viewerId
+		? new Set(
+				(
+					await prisma.userFollow.findMany({
+						where: {
+							followerId: viewerId,
+							followingId: {
+								in: pageRows.map((r) => r.follower.id),
+							},
+							status: "accepted",
+						},
+						select: { followingId: true },
+					})
+				).map((f) => f.followingId),
+			)
+		: null;
+
 	const items = pageRows.map((r) => ({
 		username: r.follower.username,
-		name: r.follower.name,
+		name: displayNameOrUsername(r.follower.name, r.follower.username),
 		image: r.follower.image,
+		viewerFollows: followedIdSet?.has(r.follower.id) ?? false,
 	}));
 
 	const nextCursor =
@@ -669,6 +705,7 @@ export async function listFollowers(
 
 export async function listFollowing(
 	input: ListFollowingInputType,
+	viewerId?: string | null,
 ): Promise<ListFollowingOutputType> {
 	const limit = input.limit;
 	const profileId = await requireUserIdByUsername(input.username);
@@ -684,7 +721,7 @@ export async function listFollowing(
 		select: {
 			id: true,
 			following: {
-				select: { username: true, name: true, image: true },
+				select: { id: true, username: true, name: true, image: true },
 			},
 		},
 	});
@@ -692,10 +729,28 @@ export async function listFollowing(
 	const hasNext = rows.length > limit;
 	const pageRows = hasNext ? rows.slice(0, limit) : rows;
 
+	const followedIdSet = viewerId
+		? new Set(
+				(
+					await prisma.userFollow.findMany({
+						where: {
+							followerId: viewerId,
+							followingId: {
+								in: pageRows.map((r) => r.following.id),
+							},
+							status: "accepted",
+						},
+						select: { followingId: true },
+					})
+				).map((f) => f.followingId),
+			)
+		: null;
+
 	const items = pageRows.map((r) => ({
 		username: r.following.username,
-		name: r.following.name,
+		name: displayNameOrUsername(r.following.name, r.following.username),
 		image: r.following.image,
+		viewerFollows: followedIdSet?.has(r.following.id) ?? false,
 	}));
 
 	const nextCursor =

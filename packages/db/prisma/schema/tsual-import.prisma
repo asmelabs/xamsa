@@ -1,6 +1,6 @@
 /// One row per user per 3sual package they successfully imported (topic.bulkCreate with import id).
 model UserTsualPackageImport {
-  id String @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
 
   userId         String @map("user_id")

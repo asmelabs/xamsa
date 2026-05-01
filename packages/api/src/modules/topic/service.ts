@@ -25,6 +25,7 @@ import type {
 } from "@xamsa/schemas/modules/topic";
 import { definePagination } from "@xamsa/utils/pagination";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { assertNonReservedContentSlug } from "../../lib/content-slug";
 import { computeTopicAnalytics } from "../analytics/public-stats";
 import { assertUserCanCommitTsualImport } from "../tsual/service";
 
@@ -62,6 +63,8 @@ async function insertTopicWithQuestionsInTx(
 			})),
 	);
 
+	assertNonReservedContentSlug(slug);
+
 	const topic = await tx.topic.create({
 		data: {
 			packId,
@@ -77,11 +80,8 @@ async function insertTopicWithQuestionsInTx(
 	});
 
 	const questionsData = await Promise.all(
-		input.questions.map(async (q, i) => ({
-			topicId: topic.id,
-			order: i + 1,
-			...q,
-			slug: await generateUniqueSlug(
+		input.questions.map(async (q, i) => {
+			const qSlug = await generateUniqueSlug(
 				q.text,
 				async (candidate) =>
 					!!(await tx.question.findUnique({
@@ -92,8 +92,15 @@ async function insertTopicWithQuestionsInTx(
 							},
 						},
 					})),
-			),
-		})),
+			);
+			assertNonReservedContentSlug(qSlug);
+			return {
+				topicId: topic.id,
+				order: i + 1,
+				...q,
+				slug: qSlug,
+			};
+		}),
 	);
 
 	await tx.question.createMany({
@@ -503,6 +510,7 @@ export async function updateTopic(
 					},
 				})),
 		);
+		assertNonReservedContentSlug(newSlug);
 	}
 
 	const updatedTopic = await prisma.topic.update({

@@ -24,6 +24,7 @@ import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as BadgesIndexRouteImport } from './routes/badges/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as WhatsNewLatestRouteImport } from './routes/whats-new/latest'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
 import { Route as LegalTermsOfServiceRouteImport } from './routes/legal/terms-of-service'
@@ -148,6 +149,11 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthRoute,
+} as any)
+const WhatsNewLatestRoute = WhatsNewLatestRouteImport.update({
+  id: '/whats-new/latest',
+  path: '/whats-new/latest',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
@@ -422,6 +428,7 @@ export interface FileRoutesByFullPath {
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRoute
+  '/whats-new/latest': typeof WhatsNewLatestRoute
   '/auth/': typeof AuthIndexRoute
   '/badges/': typeof BadgesIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -486,6 +493,7 @@ export interface FileRoutesByTo {
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRoute
+  '/whats-new/latest': typeof WhatsNewLatestRoute
   '/auth': typeof AuthIndexRoute
   '/badges': typeof BadgesIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -553,6 +561,7 @@ export interface FileRoutesById {
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRoute
+  '/whats-new/latest': typeof WhatsNewLatestRoute
   '/auth/': typeof AuthIndexRoute
   '/badges/': typeof BadgesIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -621,6 +630,7 @@ export interface FileRouteTypes {
     | '/legal/terms-of-service'
     | '/settings/security'
     | '/u/$username'
+    | '/whats-new/latest'
     | '/auth/'
     | '/badges/'
     | '/dashboard/'
@@ -685,6 +695,7 @@ export interface FileRouteTypes {
     | '/legal/terms-of-service'
     | '/settings/security'
     | '/u/$username'
+    | '/whats-new/latest'
     | '/auth'
     | '/badges'
     | '/dashboard'
@@ -751,6 +762,7 @@ export interface FileRouteTypes {
     | '/legal/terms-of-service'
     | '/settings/security'
     | '/u/$username'
+    | '/whats-new/latest'
     | '/auth/'
     | '/badges/'
     | '/dashboard/'
@@ -815,6 +827,7 @@ export interface RootRouteChildren {
   LegalTermsOfServiceRoute: typeof LegalTermsOfServiceRoute
   SettingsSecurityRoute: typeof SettingsSecurityRoute
   UUsernameRoute: typeof UUsernameRoute
+  WhatsNewLatestRoute: typeof WhatsNewLatestRoute
   BadgesIndexRoute: typeof BadgesIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   JoinIndexRoute: typeof JoinIndexRoute
@@ -964,6 +977,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/whats-new/latest': {
+      id: '/whats-new/latest'
+      path: '/whats-new/latest'
+      fullPath: '/whats-new/latest'
+      preLoaderRoute: typeof WhatsNewLatestRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/u/$username': {
       id: '/u/$username'
@@ -1367,6 +1387,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalTermsOfServiceRoute: LegalTermsOfServiceRoute,
   SettingsSecurityRoute: SettingsSecurityRoute,
   UUsernameRoute: UUsernameRoute,
+  WhatsNewLatestRoute: WhatsNewLatestRoute,
   BadgesIndexRoute: BadgesIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   JoinIndexRoute: JoinIndexRoute,
