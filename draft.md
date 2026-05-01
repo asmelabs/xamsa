@@ -436,6 +436,80 @@ Note:
   -- Each comment will have "depth" integer (default to 0 - 0 means root comment), and depth can be max 3. Every comment will have parent comment id reference, and root comment reference.
   -- Add users 'totalComments' (only root comments), 'totalReplies' (non-root comments) that computes everytime user adds/deletes a comment/reply.
 
+## v26.05.01
+
+Now, let’s handle Post, Comment (already handled server-side i guess), Reaction, ReactionEnum, Mention, and PostAttachment.
+
+Post will have:
+body (optional)
+image (optional)
+// note: either body or image must be provided
+userId
+attachement? (one-to-one relation to PostAttachement)
+totalComments (default 0)
+totalReactions (default 0)
+
+Comment already has:
+body
+userId
+add totalReactions (default 0)
+
+ReactionEnum {
+heart // by default, occurs when just clicking
+dislike
+laugh
+sad
+angry
+wow // surprised
+}
+
+Reaction:
+type: ReactionEnum
+userId
+commentId?
+postId?
+
+- Either commentId or postId must be present
+
+User model:
+add totalPosts
+add totalReactions
+
+PostAttachement:
+// note: each post will have one-to-one optional attachement, and PostAttachement type can be:
+Game (only completed or waiting games can be attached)
+Pack (only published packs can be attached)
+Topic (only topics of published packs can be attached)
+
+PostAttachementResource {
+game
+pack
+topic
+}
+
+PostAttachement:
+postId (@unique)
+resource: PostAttachementResource
+
+// note: handle unique constraints and indexes as well.
+
+note: on client side, reactions and adding comments must be optimisticly updated. as soon as user writes and adds comment, or react to something, it must immediately appear on his screen, you can do the real action on background, and check the status.
+
+Where will you use posts?
+Currently on home page there are:
+Search bar
+Welcome message
+Play (or login for unauthenticated users) button
+Some user stats
+Recent games of user
+Trending packs
+And explore cards
+
+Remove the explore cards, no need for them now. Keep search bar and welcome message and play button at the top. Then show create post section, then some posts, after some posts (let’s say 5 posts) show user stats section, then again some posts then recent games of user, then 5 posts again then trending packs, and then posts. So you are like spreading those sections inside posts.
+
+Posts should be cursor paginated list.
+Note: When user scrolls down (where he no longer see the create post section) a fixed create post button must appear on the top of the screen, and should open post creation dialog. Of course post creation section and dialog must open only for authenticated users, but posts themselves can be seen by publicly. (for now)
+
 ## Later versions
 
 - Add new badge: "Dominator" - When a user wins the game, with 2x more score with the runner-up.

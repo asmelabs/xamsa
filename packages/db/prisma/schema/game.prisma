@@ -71,6 +71,7 @@ model Game {
   players  Player[]
   clicks   Click[]
   topics   GameTopic[]
+  postAttachments PostAttachment[]
 
   @@index([code])
   @@index([status])

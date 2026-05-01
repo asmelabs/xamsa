@@ -66,6 +66,10 @@ model User {
   totalComments Int @default(0) @map("total_comments")
   totalReplies  Int @default(0) @map("total_replies")
 
+  /// social (posts + reactions given) ///
+  totalPosts     Int @default(0) @map("total_posts")
+  totalReactions Int @default(0) @map("total_reactions")
+
   /// Users this user is following (this user is the follower)
   following UserFollow[] @relation("UserFollows")
   /// Users following this user (this user is being followed)
@@ -91,6 +95,8 @@ model User {
   topicBulkJobs TopicBulkJob[]
 
   comments Comment[]
+  posts Post[]
+  reactions Reaction[]
 
   @@index([elo])
   @@index([xp])

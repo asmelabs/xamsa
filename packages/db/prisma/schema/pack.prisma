@@ -54,6 +54,7 @@ model Pack {
   tsualPackageImports UserTsualPackageImport[]
 
   comments Comment[]
+  postAttachments PostAttachment[]
 
   @@index([slug])
   @@index([authorId])
@@ -104,6 +105,7 @@ model Topic {
   clicks    Click[]
   games     GameTopic[]
   comments  Comment[]
+  postAttachments PostAttachment[]
 
   @@unique([packId, order])
   @@unique([packId, slug])
@@ -174,9 +176,17 @@ model Comment {
   questionId String?   @map("question_id")
   question   Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
+  postId String? @map("post_id")
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  totalReactions Int @default(0) @map("total_reactions")
+
+  reactions Reaction[]
+
   @@index([packId, createdAt])
   @@index([topicId, createdAt])
   @@index([questionId, createdAt])
+  @@index([postId, createdAt])
   @@index([rootId, createdAt])
   @@map("comment")
 }
