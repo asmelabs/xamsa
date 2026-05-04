@@ -3,7 +3,7 @@ import { z } from "zod";
 const HOME_SEARCH_MAX = 8 as const;
 
 /**
- * Unified home search across users, packs, topics, and games.
+ * Unified home search across users, packs, topics, games, and posts.
  * `onlyFollowing` on leaderboard is separate; this is public with optional viewer for visibility.
  */
 export const HomeSearchInputSchema = z.object({
@@ -40,6 +40,13 @@ export const HomeSearchGameItemSchema = z.object({
 	description: z.string().nullable(),
 });
 
+export const HomeSearchPostItemSchema = z.object({
+	kind: z.literal("post"),
+	slug: z.string(),
+	title: z.string(),
+	description: z.string().nullable(),
+});
+
 /** Client-side shortcuts (dashboard, typed commands); not returned by `homeSearch` API. */
 export const HomeSearchPageItemSchema = z.object({
 	kind: z.literal("page"),
@@ -62,6 +69,7 @@ export const HomeSearchItemSchema = z.discriminatedUnion("kind", [
 	HomeSearchPackItemSchema,
 	HomeSearchTopicItemSchema,
 	HomeSearchGameItemSchema,
+	HomeSearchPostItemSchema,
 	HomeSearchPageItemSchema,
 	HomeSearchActionItemSchema,
 ]);

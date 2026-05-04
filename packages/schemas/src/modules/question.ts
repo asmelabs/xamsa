@@ -95,6 +95,7 @@ export const FindOneQuestionInputSchema = z.object({
 });
 
 export const FindOneQuestionOutputSchema = QuestionSchema.pick({
+	id: true,
 	slug: true,
 	acceptableAnswers: true,
 	answer: true,

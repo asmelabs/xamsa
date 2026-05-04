@@ -52,7 +52,7 @@ import {
 	XCircleIcon,
 	ZapIcon,
 } from "lucide-react";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsStringEnum, parseAsStringLiteral, useQueryState } from "nuqs";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -68,6 +68,7 @@ import {
 	YAxis,
 } from "recharts";
 import { toast } from "sonner";
+import { PostCard } from "@/components/home/home-feed";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
@@ -76,6 +77,10 @@ import { ProfileBadgesSection } from "@/components/profile-badges-section";
 import { ProfileImageLightbox } from "@/components/profile-image-lightbox";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
+import {
+	bookmarkedPostsInfiniteOptions,
+	profilePostsInfiniteOptions,
+} from "@/lib/home-post-feed-query";
 import { profilePageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { isStaffRole } from "@/lib/staff";
@@ -168,21 +173,37 @@ function RouteComponent() {
 	const showStaffDashboard = isOwner && isStaffRole(user?.role);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
 	const [followTab, setFollowTab] = useQueryState(
-		"tab",
+		"follow",
 		parseAsStringLiteral(["followers", "following"] as const),
 	);
+	const [profileTab, setProfileTab] = useQueryState(
+		"tab",
+		parseAsStringEnum([
+			"feed",
+			"saved",
+			"badges",
+			"stats",
+			"packs",
+			"games",
+		] as const).withDefault("feed"),
+	);
+
+	const activeProfileTab =
+		!isOwner && profileTab === "saved" ? "feed" : profileTab;
 
 	const { data: profile } = useQuery({
 		...orpc.user.findOne.queryOptions({ input: { username } }),
 		initialData: loaderProfile,
 	});
 
-	const { data: publicStats } = useQuery(
-		orpc.user.getPublicStats.queryOptions({ input: { username } }),
-	);
-	const { data: gameActivity } = useQuery(
-		orpc.user.getPublicGameActivity.queryOptions({ input: { username } }),
-	);
+	const { data: publicStats, isPending: publicStatsPending } = useQuery({
+		...orpc.user.getPublicStats.queryOptions({ input: { username } }),
+		enabled: activeProfileTab === "stats",
+	});
+	const { data: gameActivity } = useQuery({
+		...orpc.user.getPublicGameActivity.queryOptions({ input: { username } }),
+		enabled: activeProfileTab === "stats",
+	});
 
 	const {
 		data: gamesData,
@@ -200,6 +221,7 @@ function RouteComponent() {
 			getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
 		}),
+		enabled: activeProfileTab === "games",
 	});
 
 	const { data: packsData, isLoading: packsLoading } = useQuery({
@@ -212,7 +234,77 @@ function RouteComponent() {
 				dir: "desc",
 			},
 		}),
+		enabled: activeProfileTab === "packs",
 	});
+
+	const profileFeedQuery = useInfiniteQuery({
+		...profilePostsInfiniteOptions(username),
+		enabled: activeProfileTab === "feed",
+	});
+
+	const savedPostsQuery = useInfiniteQuery({
+		...bookmarkedPostsInfiniteOptions(),
+		enabled: Boolean(isOwner && user && activeProfileTab === "saved"),
+	});
+
+	const profilePosts =
+		profileFeedQuery.data?.pages.flatMap((p) => p.items) ?? [];
+	const savedPostRows =
+		savedPostsQuery.data?.pages.flatMap((p) => p.items) ?? [];
+
+	const profileFeedSentinelRef = useRef<HTMLDivElement>(null);
+	const savedFeedSentinelRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (activeProfileTab !== "feed") return;
+		const el = profileFeedSentinelRef.current;
+		if (!el) return;
+		const obs = new IntersectionObserver(
+			([e]) => {
+				if (
+					e?.isIntersecting &&
+					profileFeedQuery.hasNextPage &&
+					!profileFeedQuery.isFetchingNextPage
+				) {
+					void profileFeedQuery.fetchNextPage();
+				}
+			},
+			{ threshold: 0 },
+		);
+		obs.observe(el);
+		return () => obs.disconnect();
+	}, [
+		activeProfileTab,
+		profileFeedQuery.hasNextPage,
+		profileFeedQuery.isFetchingNextPage,
+		profileFeedQuery.fetchNextPage,
+	]);
+
+	useEffect(() => {
+		if (!(isOwner && activeProfileTab === "saved")) return;
+		const el = savedFeedSentinelRef.current;
+		if (!el) return;
+		const obs = new IntersectionObserver(
+			([e]) => {
+				if (
+					e?.isIntersecting &&
+					savedPostsQuery.hasNextPage &&
+					!savedPostsQuery.isFetchingNextPage
+				) {
+					void savedPostsQuery.fetchNextPage();
+				}
+			},
+			{ threshold: 0 },
+		);
+		obs.observe(el);
+		return () => obs.disconnect();
+	}, [
+		isOwner,
+		activeProfileTab,
+		savedPostsQuery.hasNextPage,
+		savedPostsQuery.isFetchingNextPage,
+		savedPostsQuery.fetchNextPage,
+	]);
 
 	const { data: followState } = useQuery({
 		...orpc.user.getFollowState.queryOptions({ input: { username } }),
@@ -326,6 +418,7 @@ function RouteComponent() {
 	const followingRows = followingPages?.pages.flatMap((p) => p.items) ?? [];
 
 	useEffect(() => {
+		if (activeProfileTab !== "games") return;
 		if (!sentinelRef.current) return;
 		const el = sentinelRef.current;
 		const observer = new IntersectionObserver(
@@ -338,7 +431,7 @@ function RouteComponent() {
 		);
 		observer.observe(el);
 		return () => observer.disconnect();
-	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+	}, [activeProfileTab, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	useEffect(() => {
 		if (followTab !== "followers" && followTab !== "following") return;
@@ -510,8 +603,6 @@ function RouteComponent() {
 				) : null}
 			</div>
 
-			<ProfileBadgesSection username={username} />
-
 			<section className="space-y-4">
 				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
 					Progress
@@ -560,295 +651,420 @@ function RouteComponent() {
 				</div>
 			</section>
 
-			{isOwner && (
-				<section className="space-y-3">
-					<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
-						My packs
-					</h2>
-					<Link
-						to="/packs"
-						search={{ only_my_packs: true }}
-						className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-xs/5 transition-colors hover:border-primary/30 hover:bg-primary/5"
+			<div className="flex flex-wrap gap-1.5 border-border border-b pb-2">
+				<Button
+					type="button"
+					size="sm"
+					variant={activeProfileTab === "feed" ? "secondary" : "ghost"}
+					onClick={() => void setProfileTab("feed")}
+				>
+					Feed
+				</Button>
+				{isOwner ? (
+					<Button
+						type="button"
+						size="sm"
+						variant={activeProfileTab === "saved" ? "secondary" : "ghost"}
+						onClick={() => void setProfileTab("saved")}
 					>
-						<div className="flex min-w-0 items-center gap-3">
-							<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-								<Package className="size-5 text-muted-foreground" />
-							</div>
-							<div className="min-w-0">
-								<p className="font-medium text-sm">Open your packs</p>
-								<p className="text-muted-foreground text-xs">
-									Drafts and published packs you created — same filters as on
-									the packs directory.
-								</p>
-							</div>
-						</div>
-						<ChevronRightIcon className="size-5 shrink-0 text-muted-foreground" />
-					</Link>
-				</section>
-			)}
+						Saved
+					</Button>
+				) : null}
+				<Button
+					type="button"
+					size="sm"
+					variant={activeProfileTab === "badges" ? "secondary" : "ghost"}
+					onClick={() => void setProfileTab("badges")}
+				>
+					Badges
+				</Button>
+				<Button
+					type="button"
+					size="sm"
+					variant={activeProfileTab === "stats" ? "secondary" : "ghost"}
+					onClick={() => void setProfileTab("stats")}
+				>
+					Stats
+				</Button>
+				<Button
+					type="button"
+					size="sm"
+					variant={activeProfileTab === "packs" ? "secondary" : "ghost"}
+					onClick={() => void setProfileTab("packs")}
+				>
+					Packs
+				</Button>
+				<Button
+					type="button"
+					size="sm"
+					variant={activeProfileTab === "games" ? "secondary" : "ghost"}
+					onClick={() => void setProfileTab("games")}
+				>
+					Games
+				</Button>
+			</div>
 
-			{publicStats && (
-				<section className="space-y-4">
-					<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
-						Stats
-					</h2>
-					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-						<StatTile
-							icon={GamepadIcon}
-							label="Played"
-							value={publicStats.totalGamesPlayed}
-						/>
-						<StatTile
-							icon={TrophyIcon}
-							label="Wins"
-							value={publicStats.totalWins}
-						/>
-						<StatTile
-							icon={CrownIcon}
-							label="Podiums"
-							value={publicStats.totalPodiums}
-						/>
-						<StatTile
-							icon={FlameIcon}
-							label="Hosted"
-							value={publicStats.totalGamesHosted}
-						/>
-						<StatTile
-							icon={TargetIcon}
-							label="Correct"
-							value={publicStats.totalCorrectAnswers}
-						/>
-						<StatTile
-							icon={ZapIcon}
-							label="Points"
-							value={publicStats.totalPointsEarned.toLocaleString()}
-						/>
+			<div className="space-y-10 pt-4">
+				{activeProfileTab === "feed" ? (
+					<section className="space-y-4">
+						{profileFeedQuery.isLoading ? (
+							<div className="flex justify-center py-12">
+								<Spinner />
+							</div>
+						) : profilePosts.length === 0 ? (
+							<p className="text-muted-foreground text-sm">No posts yet.</p>
+						) : (
+							<div className="space-y-6">
+								{profilePosts.map((p) => (
+									<PostCard key={p.id} post={p} sessionUserId={user?.id} />
+								))}
+							</div>
+						)}
+						<div ref={profileFeedSentinelRef} className="h-2 w-full" />
+						{profileFeedQuery.isFetchingNextPage ? (
+							<p className="text-center text-muted-foreground text-xs">
+								Loading…
+							</p>
+						) : null}
+					</section>
+				) : null}
+
+				{activeProfileTab === "saved" && isOwner ? (
+					<section className="space-y-4">
+						{!user ? (
+							<p className="text-muted-foreground text-sm">
+								Sign in to see saved posts.
+							</p>
+						) : savedPostsQuery.isLoading ? (
+							<div className="flex justify-center py-12">
+								<Spinner />
+							</div>
+						) : savedPostRows.length === 0 ? (
+							<p className="text-muted-foreground text-sm">
+								Nothing saved yet.
+							</p>
+						) : (
+							<div className="space-y-6">
+								{savedPostRows.map((p) => (
+									<PostCard key={p.id} post={p} sessionUserId={user?.id} />
+								))}
+							</div>
+						)}
+						<div ref={savedFeedSentinelRef} className="h-2 w-full" />
+						{savedPostsQuery.isFetchingNextPage ? (
+							<p className="text-center text-muted-foreground text-xs">
+								Loading…
+							</p>
+						) : null}
+					</section>
+				) : null}
+
+				{activeProfileTab === "badges" ? (
+					<ProfileBadgesSection username={username} />
+				) : null}
+
+				{activeProfileTab === "packs" && isOwner ? (
+					<section className="space-y-3">
+						<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+							My packs
+						</h2>
+						<Link
+							to="/packs"
+							search={{ only_my_packs: true }}
+							className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-xs/5 transition-colors hover:border-primary/30 hover:bg-primary/5"
+						>
+							<div className="flex min-w-0 items-center gap-3">
+								<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+									<Package className="size-5 text-muted-foreground" />
+								</div>
+								<div className="min-w-0">
+									<p className="font-medium text-sm">Open your packs</p>
+									<p className="text-muted-foreground text-xs">
+										Drafts and published packs you created — same filters as on
+										the packs directory.
+									</p>
+								</div>
+							</div>
+							<ChevronRightIcon className="size-5 shrink-0 text-muted-foreground" />
+						</Link>
+					</section>
+				) : null}
+
+				{activeProfileTab === "stats" && !publicStats && publicStatsPending ? (
+					<div className="flex justify-center py-12">
+						<Spinner />
 					</div>
-					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-						<StatTile
-							icon={XCircleIcon}
-							label="Wrong"
-							value={publicStats.totalIncorrectAnswers}
-						/>
-						<StatTile
-							icon={TimerOffIcon}
-							label="Expired"
-							value={publicStats.totalExpiredAnswers}
-						/>
-						<StatTile
-							icon={ZapIcon}
-							label="1st buzz"
-							value={publicStats.totalFirstClicks}
-						/>
-						<StatTile
-							icon={ChartNoAxesColumnIcon}
-							label="Last place"
-							value={publicStats.totalLastPlaces}
-						/>
-						<StatTile
-							icon={BookOpenIcon}
-							label="Topics seen"
-							value={publicStats.totalTopicsPlayed}
-						/>
-					</div>
-					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-						<StatTile
-							icon={TargetIcon}
-							label="Questions"
-							value={publicStats.totalQuestionsPlayed}
-						/>
-						<StatTile
-							icon={ClockIcon}
-							label="Time playing"
-							value={formatPlayTimeSeconds(publicStats.totalTimeSpentPlaying)}
-						/>
-						<StatTile
-							icon={ClockIcon}
-							label="Time hosting"
-							value={formatPlayTimeSeconds(publicStats.totalTimeSpentHosting)}
-						/>
-					</div>
-					{publicStats.totalPacksPublished > 0 ? (
-						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+				) : null}
+
+				{activeProfileTab === "stats" && publicStats && (
+					<section className="space-y-4">
+						<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+							Stats
+						</h2>
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
 							<StatTile
-								icon={Package}
-								label="Packs published"
-								value={publicStats.totalPacksPublished}
+								icon={GamepadIcon}
+								label="Played"
+								value={publicStats.totalGamesPlayed}
+							/>
+							<StatTile
+								icon={TrophyIcon}
+								label="Wins"
+								value={publicStats.totalWins}
+							/>
+							<StatTile
+								icon={CrownIcon}
+								label="Podiums"
+								value={publicStats.totalPodiums}
+							/>
+							<StatTile
+								icon={FlameIcon}
+								label="Hosted"
+								value={publicStats.totalGamesHosted}
+							/>
+							<StatTile
+								icon={TargetIcon}
+								label="Correct"
+								value={publicStats.totalCorrectAnswers}
+							/>
+							<StatTile
+								icon={ZapIcon}
+								label="Points"
+								value={publicStats.totalPointsEarned.toLocaleString()}
 							/>
 						</div>
-					) : null}
-
-					{(() => {
-						const c = publicStats.totalCorrectAnswers;
-						const w = publicStats.totalIncorrectAnswers;
-						const e = publicStats.totalExpiredAnswers;
-						const totalBuzz = c + w + e;
-						const pieData = [
-							{
-								name: "Correct",
-								value: c,
-								fill: OUTCOME_PIE_COLORS.correct,
-							},
-							{ name: "Wrong", value: w, fill: OUTCOME_PIE_COLORS.wrong },
-							{
-								name: "Expired",
-								value: e,
-								fill: OUTCOME_PIE_COLORS.expired,
-							},
-						].filter((d) => d.value > 0);
-						return (
-							<div className="grid gap-4 min-[900px]:grid-cols-2">
-								<Card>
-									<CardHeader>
-										<CardTitle className="text-base">Buzz outcomes</CardTitle>
-										<CardDescription>
-											Share of resolved buzzes (career)
-										</CardDescription>
-									</CardHeader>
-									<CardPanel>
-										{totalBuzz === 0 ? (
-											<p className="text-muted-foreground text-sm">
-												No buzz outcomes recorded yet.
-											</p>
-										) : (
-											<div className="mx-auto h-[220px] w-full min-w-0 max-w-[280px]">
-												<ResponsiveContainer width="100%" height="100%">
-													<PieChart>
-														<Pie
-															data={pieData}
-															dataKey="value"
-															nameKey="name"
-															innerRadius={50}
-															outerRadius={80}
-															paddingAngle={2}
-														>
-															{pieData.map((d) => (
-																<Cell key={d.name} fill={d.fill} />
-															))}
-														</Pie>
-														<Tooltip
-															formatter={(value) => {
-																const v = Number(value);
-																const safe = Number.isFinite(v) ? v : 0;
-																return [
-																	`${safe.toLocaleString()} (${totalBuzz > 0 ? Math.round((safe / totalBuzz) * 100) : 0}%)`,
-																	"Count",
-																];
-															}}
-														/>
-														<Legend />
-													</PieChart>
-												</ResponsiveContainer>
-											</div>
-										)}
-									</CardPanel>
-								</Card>
-								<Card>
-									<CardHeader>
-										<CardTitle className="text-base">Games by month</CardTitle>
-										<CardDescription>
-											Completed games you played or hosted (last 12 months)
-										</CardDescription>
-									</CardHeader>
-									<CardPanel>
-										{!gameActivity ? (
-											<div className="flex justify-center py-8">
-												<Spinner className="size-6" />
-											</div>
-										) : (
-											<div className="h-[220px] w-full min-w-0">
-												<ResponsiveContainer width="100%" height="100%">
-													<BarChart
-														data={gameActivity.months.map((m) => ({
-															...m,
-															label: format(
-																parse(m.month, "yyyy-MM", new Date()),
-																"MMM ''yy",
-															),
-														}))}
-														margin={{ left: 0, right: 4, top: 8, bottom: 4 }}
-													>
-														<XAxis
-															dataKey="label"
-															tick={{ fontSize: 10 }}
-															interval="preserveStartEnd"
-														/>
-														<YAxis
-															allowDecimals={false}
-															width={28}
-															tick={{ fontSize: 10 }}
-														/>
-														<Tooltip
-															formatter={(value) => {
-																const v = Number(value);
-																return [Number.isFinite(v) ? v : 0, "Games"];
-															}}
-														/>
-														<Bar
-															dataKey="games"
-															fill="var(--chart-2)"
-															radius={[3, 3, 0, 0]}
-														/>
-													</BarChart>
-												</ResponsiveContainer>
-											</div>
-										)}
-									</CardPanel>
-								</Card>
-							</div>
-						);
-					})()}
-				</section>
-			)}
-
-			<section className="space-y-4">
-				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
-					Published packs
-				</h2>
-				{packsLoading ? (
-					<div className="flex justify-center py-8">
-						<Spinner />
-					</div>
-				) : packRows.length === 0 ? (
-					<div className="rounded-xl border border-border border-dashed p-8 text-center text-muted-foreground text-sm">
-						<Package className="mx-auto mb-2 size-6 opacity-50" />
-						No published packs yet.
-					</div>
-				) : (
-					<div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-						{packRows.map((pack) => (
-							<TrendingPackTile key={pack.slug} pack={pack} />
-						))}
-					</div>
-				)}
-			</section>
-
-			<section className="space-y-4">
-				<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
-					Recent games
-				</h2>
-				{gamesLoading ? (
-					<div className="flex justify-center py-8">
-						<Spinner />
-					</div>
-				) : gameRows.length === 0 ? (
-					<div className="rounded-xl border border-border border-dashed p-8 text-center text-muted-foreground text-sm">
-						No completed games to show yet.
-					</div>
-				) : (
-					<div className="grid gap-2">
-						{gameRows.map((row) => (
-							<RecentGameRowItem key={row.code} row={row} />
-						))}
-						<div ref={sentinelRef} className="h-2" />
-						{isFetchingNextPage ? (
-							<div className="flex justify-center py-2">
-								<Spinner className="size-5" />
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+							<StatTile
+								icon={XCircleIcon}
+								label="Wrong"
+								value={publicStats.totalIncorrectAnswers}
+							/>
+							<StatTile
+								icon={TimerOffIcon}
+								label="Expired"
+								value={publicStats.totalExpiredAnswers}
+							/>
+							<StatTile
+								icon={ZapIcon}
+								label="1st buzz"
+								value={publicStats.totalFirstClicks}
+							/>
+							<StatTile
+								icon={ChartNoAxesColumnIcon}
+								label="Last place"
+								value={publicStats.totalLastPlaces}
+							/>
+							<StatTile
+								icon={BookOpenIcon}
+								label="Topics seen"
+								value={publicStats.totalTopicsPlayed}
+							/>
+						</div>
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+							<StatTile
+								icon={TargetIcon}
+								label="Questions"
+								value={publicStats.totalQuestionsPlayed}
+							/>
+							<StatTile
+								icon={ClockIcon}
+								label="Time playing"
+								value={formatPlayTimeSeconds(publicStats.totalTimeSpentPlaying)}
+							/>
+							<StatTile
+								icon={ClockIcon}
+								label="Time hosting"
+								value={formatPlayTimeSeconds(publicStats.totalTimeSpentHosting)}
+							/>
+						</div>
+						{publicStats.totalPacksPublished > 0 ? (
+							<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+								<StatTile
+									icon={Package}
+									label="Packs published"
+									value={publicStats.totalPacksPublished}
+								/>
 							</div>
 						) : null}
-					</div>
+
+						{(() => {
+							const c = publicStats.totalCorrectAnswers;
+							const w = publicStats.totalIncorrectAnswers;
+							const e = publicStats.totalExpiredAnswers;
+							const totalBuzz = c + w + e;
+							const pieData = [
+								{
+									name: "Correct",
+									value: c,
+									fill: OUTCOME_PIE_COLORS.correct,
+								},
+								{ name: "Wrong", value: w, fill: OUTCOME_PIE_COLORS.wrong },
+								{
+									name: "Expired",
+									value: e,
+									fill: OUTCOME_PIE_COLORS.expired,
+								},
+							].filter((d) => d.value > 0);
+							return (
+								<div className="grid gap-4 min-[900px]:grid-cols-2">
+									<Card>
+										<CardHeader>
+											<CardTitle className="text-base">Buzz outcomes</CardTitle>
+											<CardDescription>
+												Share of resolved buzzes (career)
+											</CardDescription>
+										</CardHeader>
+										<CardPanel>
+											{totalBuzz === 0 ? (
+												<p className="text-muted-foreground text-sm">
+													No buzz outcomes recorded yet.
+												</p>
+											) : (
+												<div className="mx-auto h-[220px] w-full min-w-0 max-w-[280px]">
+													<ResponsiveContainer width="100%" height="100%">
+														<PieChart>
+															<Pie
+																data={pieData}
+																dataKey="value"
+																nameKey="name"
+																innerRadius={50}
+																outerRadius={80}
+																paddingAngle={2}
+															>
+																{pieData.map((d) => (
+																	<Cell key={d.name} fill={d.fill} />
+																))}
+															</Pie>
+															<Tooltip
+																formatter={(value) => {
+																	const v = Number(value);
+																	const safe = Number.isFinite(v) ? v : 0;
+																	return [
+																		`${safe.toLocaleString()} (${totalBuzz > 0 ? Math.round((safe / totalBuzz) * 100) : 0}%)`,
+																		"Count",
+																	];
+																}}
+															/>
+															<Legend />
+														</PieChart>
+													</ResponsiveContainer>
+												</div>
+											)}
+										</CardPanel>
+									</Card>
+									<Card>
+										<CardHeader>
+											<CardTitle className="text-base">
+												Games by month
+											</CardTitle>
+											<CardDescription>
+												Completed games you played or hosted (last 12 months)
+											</CardDescription>
+										</CardHeader>
+										<CardPanel>
+											{!gameActivity ? (
+												<div className="flex justify-center py-8">
+													<Spinner className="size-6" />
+												</div>
+											) : (
+												<div className="h-[220px] w-full min-w-0">
+													<ResponsiveContainer width="100%" height="100%">
+														<BarChart
+															data={gameActivity.months.map((m) => ({
+																...m,
+																label: format(
+																	parse(m.month, "yyyy-MM", new Date()),
+																	"MMM ''yy",
+																),
+															}))}
+															margin={{ left: 0, right: 4, top: 8, bottom: 4 }}
+														>
+															<XAxis
+																dataKey="label"
+																tick={{ fontSize: 10 }}
+																interval="preserveStartEnd"
+															/>
+															<YAxis
+																allowDecimals={false}
+																width={28}
+																tick={{ fontSize: 10 }}
+															/>
+															<Tooltip
+																formatter={(value) => {
+																	const v = Number(value);
+																	return [Number.isFinite(v) ? v : 0, "Games"];
+																}}
+															/>
+															<Bar
+																dataKey="games"
+																fill="var(--chart-2)"
+																radius={[3, 3, 0, 0]}
+															/>
+														</BarChart>
+													</ResponsiveContainer>
+												</div>
+											)}
+										</CardPanel>
+									</Card>
+								</div>
+							);
+						})()}
+					</section>
 				)}
-			</section>
+
+				{activeProfileTab === "packs" ? (
+					<section className="space-y-4">
+						<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+							Published packs
+						</h2>
+						{packsLoading ? (
+							<div className="flex justify-center py-8">
+								<Spinner />
+							</div>
+						) : packRows.length === 0 ? (
+							<div className="rounded-xl border border-border border-dashed p-8 text-center text-muted-foreground text-sm">
+								<Package className="mx-auto mb-2 size-6 opacity-50" />
+								No published packs yet.
+							</div>
+						) : (
+							<div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+								{packRows.map((pack) => (
+									<TrendingPackTile key={pack.slug} pack={pack} />
+								))}
+							</div>
+						)}
+					</section>
+				) : null}
+
+				{activeProfileTab === "games" ? (
+					<section className="space-y-4">
+						<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+							Recent games
+						</h2>
+						{gamesLoading ? (
+							<div className="flex justify-center py-8">
+								<Spinner />
+							</div>
+						) : gameRows.length === 0 ? (
+							<div className="rounded-xl border border-border border-dashed p-8 text-center text-muted-foreground text-sm">
+								No completed games to show yet.
+							</div>
+						) : (
+							<div className="grid gap-2">
+								{gameRows.map((row) => (
+									<RecentGameRowItem key={row.code} row={row} />
+								))}
+								<div ref={sentinelRef} className="h-2" />
+								{isFetchingNextPage ? (
+									<div className="flex justify-center py-2">
+										<Spinner className="size-5" />
+									</div>
+								) : null}
+							</div>
+						)}
+					</section>
+				) : null}
+			</div>
 
 			{/* Owner-only logout */}
 			{isOwner && (

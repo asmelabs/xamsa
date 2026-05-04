@@ -22,6 +22,7 @@ export { TopicSchema } from './Topic.schema';
 export { QuestionSchema } from './Question.schema';
 export { CommentSchema } from './Comment.schema';
 export { PostSchema } from './Post.schema';
+export { PostBookmarkSchema } from './PostBookmark.schema';
 export { PostAttachmentSchema } from './PostAttachment.schema';
 export { ReactionSchema } from './Reaction.schema';
 export { MentionSchema } from './Mention.schema';

@@ -157,6 +157,7 @@ export const PostRowSchema = PostSchema.pick({
 	myReactionType: ReactionTypeSchema.nullish(),
 	reactionsByType: z.array(PostReactionByTypeSchema),
 	mentions: z.array(MentionUsernameSchema),
+	myBookmarked: z.boolean().optional(),
 });
 
 export type PostRowType = z.infer<typeof PostRowSchema>;
@@ -169,8 +170,15 @@ export const DeletePostOutputSchema = z.object({
 });
 export type DeletePostOutputType = z.infer<typeof DeletePostOutputSchema>;
 
-export const ListPostsInputSchema = CursorPaginationInputSchema;
+export const ListPostsFeedSchema = z.enum(["everyone", "following"]);
 
+export const ListPostsInputSchema = CursorPaginationInputSchema.extend({
+	feed: ListPostsFeedSchema.default("everyone"),
+	/** When set (e.g. profile feed), returns posts by this author. Ignores home `feed=following`. */
+	authorUsername: z.string().min(1).max(30).optional(),
+});
+
+export type ListPostsFeedType = z.infer<typeof ListPostsFeedSchema>;
 export type ListPostsInputType = z.infer<typeof ListPostsInputSchema>;
 
 export const ListPostsOutputSchema = z.object({
@@ -190,3 +198,28 @@ export const FindOnePostInputSchema = z.object({
 });
 
 export type FindOnePostInputType = z.infer<typeof FindOnePostInputSchema>;
+
+export const SetPostBookmarkInputSchema = z.object({
+	postId: z.string().min(1),
+	/** True to bookmark, false to remove. */
+	bookmarked: z.boolean(),
+});
+
+export type SetPostBookmarkInputType = z.infer<
+	typeof SetPostBookmarkInputSchema
+>;
+
+export const SetPostBookmarkOutputSchema = z.object({
+	ok: z.literal(true),
+	bookmarked: z.boolean(),
+});
+
+export type SetPostBookmarkOutputType = z.infer<
+	typeof SetPostBookmarkOutputSchema
+>;
+
+export const ListBookmarkedPostsInputSchema = CursorPaginationInputSchema;
+
+export type ListBookmarkedPostsInputType = z.infer<
+	typeof ListBookmarkedPostsInputSchema
+>;

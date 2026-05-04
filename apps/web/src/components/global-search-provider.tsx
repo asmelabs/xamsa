@@ -31,6 +31,7 @@ import {
 	LayoutDashboardIcon,
 	ListTreeIcon,
 	LogOutIcon,
+	MessageSquareQuoteIcon,
 	PackageIcon,
 	SearchIcon,
 	UserIcon,
@@ -88,6 +89,8 @@ function itemIconAndLabel(kind: HomeSearchItemType["kind"]): {
 			return { icon: ListTreeIcon, label: "Topic" };
 		case "game":
 			return { icon: Gamepad2Icon, label: "Game" };
+		case "post":
+			return { icon: MessageSquareQuoteIcon, label: "Post" };
 		case "page":
 			return { icon: LayoutDashboardIcon, label: "Page" };
 		case "action":
@@ -213,6 +216,22 @@ function HomeSearchRow({
 			</Link>
 		);
 	}
+	if (item.kind === "post") {
+		return (
+			<Link
+				to="/p/$postSlug"
+				params={{ postSlug: item.slug }}
+				className={rowClass}
+				aria-selected={isActive}
+				onClick={(e) => {
+					e.preventDefault();
+					onPick(item);
+				}}
+			>
+				{inner}
+			</Link>
+		);
+	}
 	return (
 		<Link
 			to="/g/$code"
@@ -254,6 +273,12 @@ function openItemRoute(
 			break;
 		case "game":
 			void navigate({ to: "/g/$code", params: { code: item.code } });
+			break;
+		case "post":
+			void navigate({
+				to: "/p/$postSlug",
+				params: { postSlug: item.slug },
+			});
 			break;
 		case "page":
 			void navigate({
@@ -592,9 +617,13 @@ function GlobalSearchDialog() {
 															? `t-${item.packSlug}-${item.topicSlug}`
 															: item.kind === "game"
 																? `g-${item.code}-${i}`
-																: item.kind === "page"
-																	? `page-${item.to}-${JSON.stringify(item.search ?? {})}-${i}`
-																	: `action-${item.action}-${i}`
+																: item.kind === "post"
+																	? `post-${item.slug}-${i}`
+																	: item.kind === "page"
+																		? `page-${item.to}-${JSON.stringify(item.search ?? {})}-${i}`
+																		: item.kind === "action"
+																			? `action-${item.action}-${i}`
+																			: `item-${i}`
 											}
 											data-search-index={i}
 											role="presentation"

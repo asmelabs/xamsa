@@ -111,6 +111,7 @@ export const FindOnePackInputSchema = PackSchema.pick({
 });
 
 export const FindOnePackOutputSchema = PackSchema.pick({
+	id: true,
 	name: true,
 	slug: true,
 	description: true,

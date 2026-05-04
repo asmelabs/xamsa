@@ -13,12 +13,38 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 2 } as const;
+const current = { year: 2026, month: 5, patch: 3 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-04",
+			year: 2026,
+			month: 5,
+			patch: 3,
+			title:
+				"Your feed, your profile, and every pack page—now easier to read, follow, and discuss",
+			highlights: [
+				{
+					kind: "text",
+					text: "Home has a Friends-style lane: flip between the whole neighbourhood and posts from people you follow, save the good ones for later, and skim reactions without the toolbar fighting your thumb.",
+				},
+				{
+					kind: "text",
+					text: "Profiles grew tabs—feed first, badges, stats, packs, games, plus a Saved shelf for your own bookmarks—while progress stays up top and sign-out stays put.",
+				},
+				{
+					kind: "text",
+					text: "Glass search surfaces posts alongside packs and shortcuts, packs and topics pick up Discussion tabs that mirror post threads, and the dedicated post page breathes wider.",
+				},
+				{
+					kind: "text",
+					text: "Smaller reactions, tighter breakdowns, and less accidental text-selection make cheering (or facepalming) a post feel closer to tapping a sticker than editing a doc.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-02",
 			year: 2026,

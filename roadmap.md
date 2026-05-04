@@ -30,13 +30,17 @@ Full thread UX: replies under comments, collapsible branches, and inline Reply�
 
 ## v26.05.03
 
+### Better post card, comment section and post page
+
+Wider standalone post layout, tighter feed cards, and a calmer reaction bar (less accidental text selection, smaller targets, trimmed breakdown sheet).
+
 ### “Following” home feed tab
 
 Add a filter on the home timeline so logged-in users can choose “Everyone” vs “People I follow,” reusing follow relationships already in the product.
 
-### Pack and topic discussion sections
+### Pack, topic, and question discussion sections
 
-Surface the same comment system used for posts on **published** pack and topic pages so communities can discuss sets outside the home feed.
+Surface the same comment system used for posts on **published** pack, topic, and question pages so communities can discuss sets outside the home feed—with tabs for analytics, primary content, and discussion.
 
 ### Search posts from home search
 
@@ -44,7 +48,15 @@ Extend the glass search with a dedicated post result type: recent public posts w
 
 ### Bookmark posts
 
-Let logged-in users save posts from the feed to revisit later via a simple list (e.g. profile or settings)—no moderation pipeline required.
+Let logged-in users save posts from the feed and reopen them later from profile **Saved**, with optimistic updates in the UI.
+
+### Better profile page
+
+Tabs under the header (Feed, Saved for you, Badges, Stats, Packs, Games) synced with query state; follower/following sheets use **`follow=`** so **`tab=`** stays free for profile browsing. Progress stays visible under the header; sign-out stays at the foot.
+
+### Better pack/topic/question pages
+
+Tabbed pack, topic, and question layouts: analytics, content (topics or questions listing), and discussion where comments apply.
 
 ---
 

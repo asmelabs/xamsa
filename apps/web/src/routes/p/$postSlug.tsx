@@ -1,4 +1,5 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { ChevronLeft } from "lucide-react";
 import { PostCard } from "@/components/home/home-feed";
 import { pageSeo, truncateMeta } from "@/lib/seo";
 import { Route as RootRoute } from "@/routes/__root";
@@ -45,12 +46,28 @@ function PostPage() {
 	const { session } = RootRoute.useRouteContext();
 
 	return (
-		<div className="mx-auto w-full max-w-xl px-4 py-8">
-			<PostCard
-				post={post}
-				sessionUserId={session?.user?.id}
-				commentsInitiallyOpen
-			/>
+		<div className="relative min-h-svh overflow-x-hidden">
+			<div className="pointer-events-none fixed inset-0 -z-10">
+				<div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-background to-background" />
+				<div className="absolute top-[-5rem] left-[8%] h-80 w-80 rounded-full bg-primary/[0.11] blur-[110px]" />
+				<div className="absolute top-[42%] right-[2%] h-72 w-72 rounded-full bg-chart-3/22 blur-[100px]" />
+			</div>
+			<div className="relative mx-auto w-full max-w-[52rem] px-4 pt-6 pb-20 sm:px-6 sm:pt-10 sm:pb-28">
+				<nav className="mb-8 font-medium">
+					<Link
+						to="/"
+						className="inline-flex items-center gap-2 text-muted-foreground text-sm tracking-tight transition-colors hover:text-foreground"
+					>
+						<ChevronLeft aria-hidden className="size-4 shrink-0" />
+						Back to feed
+					</Link>
+				</nav>
+				<PostCard
+					post={post}
+					sessionUserId={session?.user?.id}
+					commentsInitiallyOpen
+				/>
+			</div>
 		</div>
 	);
 }

@@ -9,8 +9,11 @@ import type {
 	DeleteCommentOutputType,
 	ListCommentsByTargetInputType,
 	ListCommentsByTargetOutputType,
+	ListPackCommentThreadsInputType,
 	ListPostCommentThreadsInputType,
 	ListPostCommentThreadsOutputType,
+	ListQuestionCommentThreadsInputType,
+	ListTopicCommentThreadsInputType,
 } from "@xamsa/schemas/modules/comment";
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 import { notifyMentionedUsersForContent } from "../../lib/mention-notifications";
@@ -134,6 +137,7 @@ async function assertTargetReferencesExist(
 		questionId: string | null;
 		postId: string | null;
 	},
+	commentingUserId: string,
 ) {
 	if (where.postId != null) {
 		const exists = await tx.post.findUnique({
@@ -144,31 +148,68 @@ async function assertTargetReferencesExist(
 			throw new ORPCError("BAD_REQUEST", { message: "Post not found." });
 		return;
 	}
+
+	const assertPackDiscussable = (pack: {
+		status: string;
+		visibility: string;
+		authorId: string;
+	}) => {
+		if (pack.status !== "published") {
+			throw new ORPCError("BAD_REQUEST", {
+				message: "Discussion is only open on published packs.",
+			});
+		}
+		if (pack.visibility === "private" && pack.authorId !== commentingUserId) {
+			throw new ORPCError("FORBIDDEN", {
+				message: "This pack is private.",
+			});
+		}
+	};
+
 	if (where.packId != null) {
-		const exists = await tx.pack.findUnique({
+		const pack = await tx.pack.findUnique({
 			where: { id: where.packId },
-			select: { id: true },
+			select: { id: true, status: true, visibility: true, authorId: true },
 		});
-		if (!exists)
+		if (!pack)
 			throw new ORPCError("BAD_REQUEST", { message: "Pack not found." });
+		assertPackDiscussable(pack);
 		return;
 	}
 	if (where.topicId != null) {
-		const exists = await tx.topic.findUnique({
+		const topic = await tx.topic.findUnique({
 			where: { id: where.topicId },
-			select: { id: true },
+			select: {
+				id: true,
+				pack: {
+					select: { status: true, visibility: true, authorId: true },
+				},
+			},
 		});
-		if (!exists)
+		if (!topic)
 			throw new ORPCError("BAD_REQUEST", { message: "Topic not found." });
+		assertPackDiscussable(topic.pack);
 		return;
 	}
 	if (where.questionId != null) {
-		const exists = await tx.question.findUnique({
+		const question = await tx.question.findUnique({
 			where: { id: where.questionId },
-			select: { id: true },
+			select: {
+				id: true,
+				topic: {
+					select: {
+						pack: {
+							select: { status: true, visibility: true, authorId: true },
+						},
+					},
+				},
+			},
 		});
-		if (!exists)
-			throw new ORPCError("BAD_REQUEST", { message: "Question not found." });
+		if (!question)
+			throw new ORPCError("BAD_REQUEST", {
+				message: "Question not found.",
+			});
+		assertPackDiscussable(question.topic.pack);
 	}
 }
 
@@ -300,12 +341,16 @@ export async function createComment(
 			const topicId = input.topicId ?? null;
 			const questionId = input.questionId ?? null;
 			const postId = input.postId ?? null;
-			await assertTargetReferencesExist(tx, {
-				packId,
-				topicId,
-				questionId,
-				postId,
-			});
+			await assertTargetReferencesExist(
+				tx,
+				{
+					packId,
+					topicId,
+					questionId,
+					postId,
+				},
+				userId,
+			);
 
 			const id = randomUUID();
 			const created = await tx.comment.create({
@@ -469,8 +514,81 @@ export async function deleteComment(
 	return { ok: true as const };
 }
 
-export async function listPostCommentThreads(
-	input: ListPostCommentThreadsInputType,
+type CommentThreadTarget =
+	| { kind: "post"; postId: string }
+	| { kind: "pack"; packId: string }
+	| { kind: "topic"; topicId: string }
+	| { kind: "question"; questionId: string };
+
+function rootsWhereForTarget(target: CommentThreadTarget) {
+	switch (target.kind) {
+		case "post":
+			return {
+				postId: target.postId,
+				packId: null,
+				topicId: null,
+				questionId: null,
+				parentId: null,
+			} satisfies Prisma.CommentWhereInput;
+		case "pack":
+			return {
+				packId: target.packId,
+				topicId: null,
+				postId: null,
+				questionId: null,
+				parentId: null,
+			} satisfies Prisma.CommentWhereInput;
+		case "topic":
+			return {
+				topicId: target.topicId,
+				postId: null,
+				questionId: null,
+				parentId: null,
+			} satisfies Prisma.CommentWhereInput;
+		case "question":
+			return {
+				questionId: target.questionId,
+				postId: null,
+				parentId: null,
+			} satisfies Prisma.CommentWhereInput;
+	}
+}
+
+function threadsMemberWhereForTarget(
+	target: CommentThreadTarget,
+	rootIds: string[],
+): Prisma.CommentWhereInput {
+	let scoped: Prisma.CommentWhereInput;
+	if (target.kind === "post") {
+		scoped = { postId: target.postId };
+	} else if (target.kind === "pack") {
+		scoped = {
+			packId: target.packId,
+			topicId: null,
+			postId: null,
+			questionId: null,
+		};
+	} else if (target.kind === "topic") {
+		scoped = {
+			topicId: target.topicId,
+			postId: null,
+			questionId: null,
+		};
+	} else {
+		scoped = {
+			questionId: target.questionId,
+			postId: null,
+			topicId: null,
+		};
+	}
+	return {
+		AND: [scoped, { rootId: { in: rootIds } }],
+	};
+}
+
+async function listCommentThreadsForTarget(
+	target: CommentThreadTarget,
+	input: { limit: number; cursor?: string },
 ): Promise<ListPostCommentThreadsOutputType> {
 	const limit = input.limit ?? 8;
 	const decoded = input.cursor
@@ -497,8 +615,7 @@ export async function listPostCommentThreads(
 
 	const roots = await prisma.comment.findMany({
 		where: {
-			postId: input.postId,
-			parentId: null,
+			...rootsWhereForTarget(target),
 			...cursorArgs,
 		},
 		orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -518,7 +635,7 @@ export async function listPostCommentThreads(
 	}
 
 	const threadRows = await prisma.comment.findMany({
-		where: { postId: input.postId, rootId: { in: rootIds } },
+		where: threadsMemberWhereForTarget(target, rootIds),
 		orderBy: [{ depth: "asc" }, { createdAt: "asc" }, { id: "asc" }],
 		include: COMMENT_ROW_INCLUDE,
 	});
@@ -558,6 +675,42 @@ export async function listPostCommentThreads(
 		roots: forest,
 		metadata: { nextCursor, hasMore },
 	};
+}
+
+export async function listPostCommentThreads(
+	input: ListPostCommentThreadsInputType,
+): Promise<ListPostCommentThreadsOutputType> {
+	return listCommentThreadsForTarget(
+		{ kind: "post", postId: input.postId },
+		{ limit: input.limit ?? 8, cursor: input.cursor },
+	);
+}
+
+export async function listPackCommentThreads(
+	input: ListPackCommentThreadsInputType,
+): Promise<ListPostCommentThreadsOutputType> {
+	return listCommentThreadsForTarget(
+		{ kind: "pack", packId: input.packId },
+		{ limit: input.limit ?? 8, cursor: input.cursor },
+	);
+}
+
+export async function listTopicCommentThreads(
+	input: ListTopicCommentThreadsInputType,
+): Promise<ListPostCommentThreadsOutputType> {
+	return listCommentThreadsForTarget(
+		{ kind: "topic", topicId: input.topicId },
+		{ limit: input.limit ?? 8, cursor: input.cursor },
+	);
+}
+
+export async function listQuestionCommentThreads(
+	input: ListQuestionCommentThreadsInputType,
+): Promise<ListPostCommentThreadsOutputType> {
+	return listCommentThreadsForTarget(
+		{ kind: "question", questionId: input.questionId },
+		{ limit: input.limit ?? 8, cursor: input.cursor },
+	);
 }
 
 export async function listCommentsByTarget(

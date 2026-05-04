@@ -25,6 +25,7 @@ import {
 	TrophyIcon,
 	ZapIcon,
 } from "lucide-react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { CreatePostComposer, HomeMixedFeed } from "@/components/home/home-feed";
 import { HomeGlobalSearch } from "@/components/home/home-global-search";
@@ -151,6 +152,7 @@ function SignedOutHome() {
 
 			<HomeMixedFeed
 				mode="signedOut"
+				homeFeed="everyone"
 				composerSlot={
 					<p className="text-muted-foreground text-sm">
 						<Link
@@ -236,6 +238,12 @@ interface SignedInHomeProps {
 
 function SignedInHome({ userId, userName }: SignedInHomeProps) {
 	const qc = useQueryClient();
+	const [feed, setFeed] = useQueryState(
+		"feed",
+		parseAsStringLiteral(["everyone", "following"] as const).withDefault(
+			"everyone",
+		),
+	);
 	const composerDockRef = useRef<HTMLDivElement>(null);
 	const [composerInView, setComposerInView] = useState(true);
 	const [composeOpen, setComposeOpen] = useState(false);
@@ -399,8 +407,33 @@ function SignedInHome({ userId, userName }: SignedInHomeProps) {
 				Start Playing
 			</Button>
 
+			<div className="flex flex-wrap items-center gap-2">
+				<span className="text-muted-foreground text-sm">Timeline</span>
+				<div className="inline-flex rounded-lg border border-border p-0.5">
+					<Button
+						type="button"
+						size="sm"
+						variant={feed === "everyone" ? "secondary" : "ghost"}
+						className="h-8 rounded-md px-3"
+						onClick={() => void setFeed("everyone")}
+					>
+						Everyone
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant={feed === "following" ? "secondary" : "ghost"}
+						className="h-8 rounded-md px-3"
+						onClick={() => void setFeed("following")}
+					>
+						Following
+					</Button>
+				</div>
+			</div>
+
 			<HomeMixedFeed
 				mode="signedIn"
+				homeFeed={feed}
 				sessionUserId={userId}
 				composerSlot={
 					<div ref={composerDockRef}>

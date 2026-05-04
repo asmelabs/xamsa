@@ -1,4 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@xamsa/ui/components/avatar";
 import { Button } from "@xamsa/ui/components/button";
 import { Card } from "@xamsa/ui/components/card";
 import { cn } from "@xamsa/ui/lib/utils";
@@ -6,8 +11,11 @@ import { ImageIcon, Loader2Icon, SendIcon, XIcon } from "lucide-react";
 import { forwardRef, useEffect, useState } from "react";
 
 import { MentionTextarea } from "@/components/home/mention-textarea";
+import { authClient } from "@/lib/auth-client";
 import { invalidateHomePostFeed } from "@/lib/home-post-feed-query";
 import { orpc } from "@/utils/orpc";
+
+const MAX_BODY = 1000;
 
 export type CreatePostComposerProps = {
 	onPosted?: () => void;
@@ -20,11 +28,18 @@ export const CreatePostComposer = forwardRef<
 	CreatePostComposerProps
 >(function CreatePostComposerInner({ onPosted, variant = "embedded" }, ref) {
 	const qc = useQueryClient();
+	const { data: session } = authClient.useSession();
 	const [body, setBody] = useState("");
 	const [file, setFile] = useState<File | null>(null);
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
 	const isDialog = variant === "dialog";
+	const user = session?.user;
+	const initials = user?.name
+		? user.name.slice(0, 2).toUpperCase()
+		: user?.email
+			? user.email.slice(0, 2).toUpperCase()
+			: "U";
 
 	useEffect(() => {
 		if (file == null) {
@@ -47,11 +62,13 @@ export const CreatePostComposer = forwardRef<
 		}),
 	);
 
+	const trimmed = body.trim();
+	const overLimit = trimmed.length > MAX_BODY;
 	const canSubmit =
-		(body.trim().length > 0 || file != null) && !create.isPending;
+		(trimmed.length > 0 || file != null) && !overLimit && !create.isPending;
 
 	const onSubmit = async () => {
-		const trimmed = body.trim();
+		if (!canSubmit) return;
 		let imageBase64: string | undefined;
 		let imageMimeType: "image/jpeg" | "image/png" | "image/webp" | undefined;
 
@@ -84,42 +101,50 @@ export const CreatePostComposer = forwardRef<
 		});
 	};
 
+	const remaining = MAX_BODY - trimmed.length;
+	const showCount = trimmed.length > MAX_BODY * 0.7;
+
 	const inner = (
 		<>
-			{!isDialog ? (
-				<div className="flex items-start justify-between gap-2">
-					<p className="font-medium text-sm">Create a post</p>
+			<div className="flex items-start gap-3">
+				<Avatar className="size-10 shrink-0">
+					<AvatarImage src={user?.image ?? undefined} alt="" />
+					<AvatarFallback className="font-medium text-xs">
+						{initials}
+					</AvatarFallback>
+				</Avatar>
+				<div className="min-w-0 flex-1">
+					<MentionTextarea
+						placeholder="Share something with the lobby…"
+						value={body}
+						onValueChange={setBody}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSubmit) {
+								e.preventDefault();
+								void onSubmit();
+							}
+						}}
+						rows={isDialog ? 3 : 2}
+						disabled={create.isPending}
+						className={cn(
+							"[&_textarea]:max-h-72 [&_textarea]:min-h-12 [&_textarea]:py-2.5 [&_textarea]:text-[15px] [&_textarea]:max-sm:min-h-12",
+							isDialog &&
+								"border-0 bg-transparent shadow-none focus-visible:ring-0 [&_textarea]:px-0",
+						)}
+					/>
 				</div>
-			) : null}
-			<MentionTextarea
-				placeholder="Share something with the lobby…"
-				value={body}
-				onValueChange={setBody}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSubmit) {
-						e.preventDefault();
-						void onSubmit();
-					}
-				}}
-				rows={isDialog ? 4 : 3}
-				disabled={create.isPending}
-				className={cn(
-					"min-h-[4.5rem] resize-none",
-					isDialog &&
-						"border-0 bg-transparent shadow-none focus-visible:ring-0",
-				)}
-			/>
+			</div>
 
 			{previewUrl ? (
-				<div className="relative overflow-hidden rounded-lg border bg-muted/40">
+				<div className="relative flex max-h-[20rem] min-h-[10rem] items-center justify-center overflow-hidden border border-border bg-muted/20">
 					<img
 						src={previewUrl}
 						alt=""
-						className="max-h-64 w-full object-contain"
+						className="max-h-[20rem] max-w-full object-contain"
 					/>
 					<button
 						type="button"
-						className="absolute top-2 right-2 inline-flex size-9 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:bg-muted"
+						className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-md border border-border bg-background/95 text-muted-foreground shadow-sm transition-colors hover:bg-background hover:text-foreground"
 						onClick={() => setFile(null)}
 						disabled={create.isPending}
 						aria-label="Remove image"
@@ -129,16 +154,11 @@ export const CreatePostComposer = forwardRef<
 				</div>
 			) : null}
 
-			<div
-				className={cn(
-					"flex flex-wrap items-center gap-2 pt-3",
-					!isDialog && "border-border border-t",
-				)}
-			>
+			<div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
 				<label className="cursor-pointer">
-					<span className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/50">
+					<span className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-muted-foreground text-sm transition-colors hover:border-primary/40 hover:bg-muted/50 hover:text-foreground">
 						<ImageIcon className="size-4 shrink-0" strokeWidth={1.75} />
-						Photo
+						{file ? "Change photo" : "Add photo"}
 					</span>
 					<input
 						className="sr-only"
@@ -154,31 +174,47 @@ export const CreatePostComposer = forwardRef<
 					</span>
 				) : null}
 
-				<Button
-					type="button"
-					className="ml-auto gap-2"
-					size="sm"
-					disabled={!canSubmit}
-					onClick={() => void onSubmit()}
-				>
-					{create.isPending ? (
-						<Loader2Icon className="size-4 animate-spin" />
+				<div className="ml-auto flex items-center gap-3">
+					{showCount ? (
+						<span
+							className={cn(
+								"text-xs tabular-nums",
+								overLimit
+									? "font-medium text-destructive"
+									: remaining < 100
+										? "text-amber-600 dark:text-amber-500"
+										: "text-muted-foreground",
+							)}
+						>
+							{remaining}
+						</span>
 					) : (
-						<SendIcon className="size-4" />
+						<span className="hidden text-[11px] text-muted-foreground sm:inline">
+							⌘ Enter to post
+						</span>
 					)}
-					Post
-				</Button>
+					<Button
+						type="button"
+						className="gap-2"
+						size="sm"
+						disabled={!canSubmit}
+						onClick={() => void onSubmit()}
+					>
+						{create.isPending ? (
+							<Loader2Icon className="size-4 animate-spin" />
+						) : (
+							<SendIcon className="size-4" />
+						)}
+						Post
+					</Button>
+				</div>
 			</div>
-
-			<p className="text-[10px] text-muted-foreground">
-				Tip: press ⌘ Enter / Ctrl Enter to post.
-			</p>
 		</>
 	);
 
 	return (
-		<div ref={ref} className={cn(isDialog && "space-y-3")}>
-			{isDialog ? inner : <Card className="space-y-3 border p-4">{inner}</Card>}
+		<div ref={ref} className={cn(isDialog && "space-y-4")}>
+			{isDialog ? inner : <Card className="space-y-4 border p-4">{inner}</Card>}
 		</div>
 	);
 });

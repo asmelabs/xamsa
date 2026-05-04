@@ -24,14 +24,21 @@ function visiblePackWhere(
 	return { AND: [{ status: "published" }, { visibility: "public" }] };
 }
 
+function snippetText(s: string, maxLen: number): string {
+	const t = s.replace(/\s+/g, " ").trim();
+	if (t.length <= maxLen) return t;
+	return `${t.slice(0, Math.max(0, maxLen - 1)).trim()}…`;
+}
+
 function interleave(
 	users: HomeSearchItemType[],
 	packs: HomeSearchItemType[],
 	topics: HomeSearchItemType[],
 	games: HomeSearchItemType[],
+	posts: HomeSearchItemType[],
 	max: number,
 ): HomeSearchItemType[] {
-	const buckets = [users, packs, topics, games];
+	const buckets = [users, packs, topics, games, posts];
 	const out: HomeSearchItemType[] = [];
 	let round = 0;
 	while (out.length < max) {
@@ -66,64 +73,82 @@ export async function homeSearch(
 		{ username: { contains: q, mode: "insensitive" as const } },
 	];
 
-	const [userRows, packRows, topicRows, gameRows] = await Promise.all([
-		prisma.user.findMany({
-			where: {
-				AND: [
-					{ OR: textOr },
-					...(viewerUserId ? [{ NOT: { id: viewerUserId } }] : []),
-				],
-			},
-			take: FETCH_PER_KIND,
-			orderBy: { username: "asc" },
-			select: { username: true, name: true },
-		}),
-		prisma.pack.findMany({
-			where: {
-				AND: [
-					packWhere,
-					{
-						OR: [
-							{ name: { contains: q, mode: "insensitive" } },
-							{ description: { contains: q, mode: "insensitive" } },
-						],
-					},
-				],
-			},
-			take: FETCH_PER_KIND,
-			orderBy: { slug: "asc" },
-			select: { slug: true, name: true, description: true },
-		}),
-		prisma.topic.findMany({
-			where: {
-				AND: [
-					{
-						pack: { is: packWhere },
-					},
-					{
-						OR: [
-							{ name: { contains: q, mode: "insensitive" } },
-							{ description: { contains: q, mode: "insensitive" } },
-						],
-					},
-				],
-			},
-			take: FETCH_PER_KIND,
-			orderBy: [{ packId: "asc" }, { order: "asc" }],
-			select: {
-				slug: true,
-				name: true,
-				description: true,
-				pack: { select: { slug: true } },
-			},
-		}),
-		prisma.game.findMany({
-			where: { code: { contains: q, mode: "insensitive" } },
-			take: FETCH_PER_KIND,
-			orderBy: { code: "asc" },
-			select: { code: true, pack: { select: { name: true } } },
-		}),
-	]);
+	const [userRows, packRows, topicRows, gameRows, postRows] = await Promise.all(
+		[
+			prisma.user.findMany({
+				where: {
+					AND: [
+						{ OR: textOr },
+						...(viewerUserId ? [{ NOT: { id: viewerUserId } }] : []),
+					],
+				},
+				take: FETCH_PER_KIND,
+				orderBy: { username: "asc" },
+				select: { username: true, name: true },
+			}),
+			prisma.pack.findMany({
+				where: {
+					AND: [
+						packWhere,
+						{
+							OR: [
+								{ name: { contains: q, mode: "insensitive" } },
+								{ description: { contains: q, mode: "insensitive" } },
+							],
+						},
+					],
+				},
+				take: FETCH_PER_KIND,
+				orderBy: { slug: "asc" },
+				select: { slug: true, name: true, description: true },
+			}),
+			prisma.topic.findMany({
+				where: {
+					AND: [
+						{
+							pack: { is: packWhere },
+						},
+						{
+							OR: [
+								{ name: { contains: q, mode: "insensitive" } },
+								{ description: { contains: q, mode: "insensitive" } },
+							],
+						},
+					],
+				},
+				take: FETCH_PER_KIND,
+				orderBy: [{ packId: "asc" }, { order: "asc" }],
+				select: {
+					slug: true,
+					name: true,
+					description: true,
+					pack: { select: { slug: true } },
+				},
+			}),
+			prisma.game.findMany({
+				where: { code: { contains: q, mode: "insensitive" } },
+				take: FETCH_PER_KIND,
+				orderBy: { code: "asc" },
+				select: { code: true, pack: { select: { name: true } } },
+			}),
+			prisma.post.findMany({
+				where: {
+					AND: [
+						{ body: { not: null } },
+						{ NOT: { body: "" } },
+						{ body: { contains: q, mode: "insensitive" } },
+					],
+				},
+				take: FETCH_PER_KIND,
+				orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+				select: {
+					slug: true,
+					body: true,
+					author: { select: { username: true, name: true } },
+				},
+			}),
+		],
+	);
 
 	const users: HomeSearchItemType[] = userRows.map((r) => ({
 		kind: "user" as const,
@@ -154,7 +179,21 @@ export async function homeSearch(
 		description: r.pack.name,
 	}));
 
+	const posts: HomeSearchItemType[] = postRows.map((r) => {
+		const blob = snippetText(r.body ?? "", 140);
+		const who =
+			(r.author.name?.trim()?.length ?? 0) > 0
+				? r.author.name
+				: r.author.username;
+		return {
+			kind: "post" as const,
+			slug: r.slug,
+			title: snippetText(blob, 72),
+			description: `@${r.author.username} · ${who}`,
+		};
+	});
+
 	return {
-		items: interleave(users, packs, topics, games, limit),
+		items: interleave(users, packs, topics, games, posts, limit),
 	};
 }

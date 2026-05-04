@@ -10,12 +10,11 @@ import {
 	DialogTitle,
 } from "@xamsa/ui/components/dialog";
 import { cn } from "@xamsa/ui/lib/utils";
-import { type PointerEvent, useEffect, useRef, useState } from "react";
+import { SmilePlusIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { invalidateHomePostFeed } from "@/lib/home-post-feed-query";
 import { orpc } from "@/utils/orpc";
-
-const LONG_PRESS_MS = 430;
 
 const ALL_REACTIONS: ReactionType[] = [
 	"heart",
@@ -147,47 +146,77 @@ function ReactionBreakdownDialog({
 	open,
 	onOpenChange,
 	local,
-	title = "Reactions",
 }: {
 	open: boolean;
 	onOpenChange: (v: boolean) => void;
 	local: LocalRx;
-	title?: string;
 }) {
 	const counts = countsMapFromLocal(local);
+	const used = ALL_REACTIONS.filter((t) => (counts.get(t) ?? 0) > 0).sort(
+		(a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0),
+	);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogPopup className="max-w-md p-0" showCloseButton>
-				<DialogHeader className="border-border border-b px-4 py-3 text-left">
-					<DialogTitle>{title}</DialogTitle>
-					<p className="font-normal text-muted-foreground text-sm">
-						<span className="font-medium text-foreground">{local.total}</span>
-						{local.total === 1 ? " reaction" : " reactions"} total
+			<DialogPopup className="max-w-sm p-0" showCloseButton>
+				<DialogHeader className="border-border border-b px-5 py-4 text-left">
+					<DialogTitle className="font-semibold text-base">
+						Reactions
+					</DialogTitle>
+					<p className="font-normal text-muted-foreground text-xs">
+						<span className="font-semibold text-foreground tabular-nums">
+							{local.total}
+						</span>
+						{local.total === 1 ? " reaction" : " reactions"} from the lobby
 					</p>
 				</DialogHeader>
-				<DialogPanel className="max-h-96 px-0 py-0">
-					<ul className="divide-y divide-border">
-						{ALL_REACTIONS.map((type) => {
-							const n = counts.get(type) ?? 0;
-							return (
-								<li
-									key={type}
-									className="flex items-center gap-3 px-4 py-3 text-sm"
-								>
-									<span className="text-xl" aria-hidden>
-										{reactionEmoji(type)}
-									</span>
-									<span className="flex-1 font-medium">
-										{reactionLabel(type)}
-									</span>
-									<span className="text-muted-foreground tabular-nums">
-										{n}
-									</span>
-								</li>
-							);
-						})}
-					</ul>
+				<DialogPanel className="max-h-[min(80vh,28rem)] px-0 py-2">
+					{used.length === 0 ? (
+						<p className="px-5 py-8 text-center text-muted-foreground text-sm">
+							No reactions yet.
+						</p>
+					) : (
+						<ul className="divide-y divide-border/60">
+							{used.map((type) => {
+								const n = counts.get(type) ?? 0;
+								const pct = local.total > 0 ? (n / local.total) * 100 : 0;
+								const isMine = local.my === type;
+								return (
+									<li
+										key={type}
+										className={cn("relative", isMine && "bg-primary/[0.04]")}
+									>
+										<span
+											aria-hidden
+											className="absolute inset-y-0 left-0 bg-primary/[0.07]"
+											style={{ width: `${Math.max(2, pct)}%` }}
+										/>
+										<div className="relative z-10 flex items-center gap-3 px-5 py-3">
+											<span className="text-2xl leading-none" aria-hidden>
+												{reactionEmoji(type)}
+											</span>
+											<div className="min-w-0 flex-1">
+												<p className="font-semibold text-foreground text-sm leading-tight">
+													{reactionLabel(type)}
+													{isMine ? (
+														<span className="ml-2 inline-flex items-center rounded-md border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-medium text-[10px] text-primary uppercase tracking-wider">
+															You
+														</span>
+													) : null}
+												</p>
+												<p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+													{pct.toFixed(0)}% of all reactions
+												</p>
+											</div>
+											<span className="font-semibold text-base text-foreground tabular-nums">
+												{n}
+											</span>
+										</div>
+									</li>
+								);
+							})}
+						</ul>
+					)}
 				</DialogPanel>
 			</DialogPopup>
 		</Dialog>
@@ -202,10 +231,7 @@ export function PostReactionBar({
 	sessionUserId: string | undefined;
 }) {
 	const qc = useQueryClient();
-	const anchorRef = useRef<HTMLButtonElement>(null);
-	const pickerOpenRef = useRef(false);
-	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const openedByHoldRef = useRef(false);
+	const addAnchorRef = useRef<HTMLButtonElement>(null);
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [breakdownOpen, setBreakdownOpen] = useState(false);
 	const [pickerPos, setPickerPos] = useState({ left: 0, top: 0 });
@@ -216,10 +242,6 @@ export function PostReactionBar({
 		by: [...post.reactionsByType],
 	}));
 	const localRef = useRef(local);
-
-	useEffect(() => {
-		pickerOpenRef.current = pickerOpen;
-	}, [pickerOpen]);
 
 	useEffect(() => {
 		const next = {
@@ -260,129 +282,107 @@ export function PostReactionBar({
 		}),
 	);
 
-	const clearTimer = () => {
-		if (timerRef.current != null) {
-			clearTimeout(timerRef.current);
-			timerRef.current = null;
-		}
+	const commitType = (t: ReactionType | null) => {
+		setRx.mutate({
+			postId: post.id,
+			type: t,
+		});
+		setPickerOpen(false);
 	};
 
-	useEffect(() => {
-		return () => {
-			if (timerRef.current != null) {
-				clearTimeout(timerRef.current);
-				timerRef.current = null;
-			}
-		};
-	}, []);
+	const onChipClick = (t: ReactionType) => {
+		if (!sessionUserId) return;
+		commitType(local.my === t ? null : t);
+	};
 
-	const openPickerAtAnchor = () => {
-		const el = anchorRef.current;
+	const openPicker = () => {
+		const el = addAnchorRef.current;
 		if (el) {
 			const r = el.getBoundingClientRect();
 			setPickerPos({
 				left: r.left + r.width / 2,
-				top: r.top - 8,
+				top: r.top - 6,
 			});
 		}
 		setPickerOpen(true);
 	};
 
-	const commitType = (t: ReactionType | null) => {
-		const toggleOff = t !== null && local.my === t;
-		setRx.mutate({
-			postId: post.id,
-			type: toggleOff ? null : t,
-		});
-		setPickerOpen(false);
-	};
-
-	const onHeartTap = () => {
-		if (pickerOpenRef.current) return;
-		commitType("heart");
-	};
-
-	const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
-		try {
-			e.currentTarget.setPointerCapture(e.pointerId);
-		} catch {
-			/* capture unsupported */
-		}
-		openedByHoldRef.current = false;
-		clearTimer();
-		timerRef.current = setTimeout(() => {
-			openedByHoldRef.current = true;
-			openPickerAtAnchor();
-			clearTimer();
-		}, LONG_PRESS_MS);
-	};
-
-	const releaseCapture = (
-		el: HTMLButtonElement,
-		pointerId: number | undefined,
-	) => {
-		if (
-			pointerId != null &&
-			typeof el.hasPointerCapture === "function" &&
-			el.hasPointerCapture(pointerId)
-		) {
-			try {
-				el.releasePointerCapture(pointerId);
-			} catch {
-				/* ignore */
-			}
-		}
-	};
-
-	const onPointerUp = (e: PointerEvent<HTMLButtonElement>) => {
-		releaseCapture(e.currentTarget, e.pointerId);
-		clearTimer();
-		if (openedByHoldRef.current) {
-			openedByHoldRef.current = false;
-			return;
-		}
-		if (!pickerOpenRef.current) {
-			onHeartTap();
-		}
-	};
-
-	const onPointerCancel = (e: PointerEvent<HTMLButtonElement>) => {
-		releaseCapture(e.currentTarget, e.pointerId);
-		clearTimer();
-	};
-
-	const countsLine =
+	const breakdownLink =
 		local.total > 0 ? (
 			<button
 				type="button"
 				onClick={() => setBreakdownOpen(true)}
-				className="flex min-h-11 w-fit max-w-full items-center rounded-lg px-0 py-2 text-left text-muted-foreground text-xs transition-colors hover:text-foreground"
+				className="text-muted-foreground text-xs leading-none transition-colors hover:text-foreground hover:underline"
 			>
-				<span className="hover:underline">
-					<strong className="font-medium text-foreground tabular-nums">
-						{local.total}
-					</strong>
-					{local.total === 1 ? " reaction" : " reactions"}
-					<span className="text-muted-foreground"> — view breakdown</span>
+				<span className="font-medium text-foreground tabular-nums">
+					{local.total}
 				</span>
+				{local.total === 1 ? " reaction" : " reactions"}
 			</button>
 		) : null;
 
-	const breakdownDialog = (
-		<ReactionBreakdownDialog
-			open={breakdownOpen}
-			onOpenChange={setBreakdownOpen}
-			local={local}
-		/>
-	);
-
-	if (!sessionUserId) {
+	const renderChip = (type: ReactionType, count: number) => {
+		const isMine = local.my === type;
+		const interactive = Boolean(sessionUserId);
 		return (
-			<div className="mt-3 space-y-2">
-				{countsLine}
+			<button
+				key={type}
+				type="button"
+				disabled={!interactive || setRx.isPending}
+				aria-pressed={isMine}
+				aria-label={`${reactionLabel(type)} (${count})${isMine ? " — your reaction, click to remove" : ""}`}
+				onClick={() => onChipClick(type)}
+				className={cn(
+					"inline-flex h-8 min-w-9 items-center gap-1.5 rounded-md border px-2 text-xs leading-none transition-colors",
+					isMine
+						? "border-primary/55 bg-primary/10 text-foreground"
+						: "border-border bg-card text-foreground",
+					interactive
+						? "hover:border-primary/35 hover:bg-muted/60"
+						: "cursor-default opacity-90",
+					setRx.isPending && interactive && "opacity-70",
+				)}
+			>
+				<span className="text-base leading-none" aria-hidden>
+					{reactionEmoji(type)}
+				</span>
+				<span className="font-medium tabular-nums">{count}</span>
+			</button>
+		);
+	};
+
+	return (
+		<div className="flex select-none flex-wrap items-center gap-1.5">
+			{local.by.map((row) => renderChip(row.type, row.count))}
+
+			{sessionUserId ? (
+				<button
+					ref={addAnchorRef}
+					type="button"
+					onClick={openPicker}
+					disabled={setRx.isPending}
+					aria-haspopup="listbox"
+					aria-expanded={pickerOpen}
+					aria-label="Add a reaction"
+					className={cn(
+						"inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-md border border-border border-dashed px-2 text-muted-foreground text-xs transition-colors",
+						"hover:border-primary/40 hover:bg-muted/60 hover:text-foreground",
+						setRx.isPending && "opacity-70",
+					)}
+				>
+					<SmilePlusIcon className="size-4" strokeWidth={1.75} />
+					{local.by.length === 0 ? (
+						<span className="font-medium">React</span>
+					) : null}
+				</button>
+			) : null}
+
+			{breakdownLink ? <span className="ml-1">{breakdownLink}</span> : null}
+
+			{!sessionUserId && local.by.length === 0 ? (
 				<p className="text-muted-foreground text-xs">
 					<Link
-						className="underline"
+						className="underline underline-offset-2"
 						to="/auth/login"
 						search={{ redirect_url: "/" }}
 					>
@@ -390,38 +390,13 @@ export function PostReactionBar({
 					</Link>{" "}
 					to react
 				</p>
-				{breakdownDialog}
-			</div>
-		);
-	}
+			) : null}
 
-	return (
-		<div className="relative mt-3 space-y-1">
-			<button
-				ref={anchorRef}
-				type="button"
-				className={cn(
-					"inline-flex min-h-11 min-w-11 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors",
-					local.my !== undefined
-						? "border-primary/35 bg-primary/8"
-						: "border-transparent hover:bg-muted/80",
-				)}
-				onPointerDown={onPointerDown}
-				onPointerUp={onPointerUp}
-				onPointerCancel={onPointerCancel}
-				disabled={setRx.isPending}
-			>
-				<span className="text-lg leading-none" aria-hidden>
-					{local.my ? reactionEmoji(local.my) : "🤍"}
-				</span>
-				<span className="text-sm">
-					{local.my === "heart" ? "Liked" : local.my ? "Reacted" : "Like"}
-				</span>
-			</button>
-
-			{countsLine}
-
-			{breakdownDialog}
+			<ReactionBreakdownDialog
+				open={breakdownOpen}
+				onOpenChange={setBreakdownOpen}
+				local={local}
+			/>
 
 			{pickerOpen ? (
 				<>
@@ -431,41 +406,37 @@ export function PostReactionBar({
 						className="fade-in fixed inset-0 z-40 animate-in duration-150"
 						style={{ animationDuration: "120ms" }}
 						aria-label="Dismiss reaction picker"
-						onPointerDown={(e) => {
+						onClick={(e) => {
 							e.preventDefault();
 							setPickerOpen(false);
 						}}
 					/>
+					{/** biome-ignore lint/a11y/useKeyWithClickEvents: keyboard nav happens on the inner buttons */}
 					<div
 						role="listbox"
 						aria-label="Choose reaction"
-						className="fade-in zoom-in-95 fixed z-50 flex animate-in items-center gap-1 rounded-full border bg-popover p-2 pt-3 pr-4 pb-3 pl-4 text-lg shadow-xl duration-150"
+						className="fade-in zoom-in-95 fixed z-50 flex animate-in items-center gap-0.5 rounded-md border bg-popover p-1 shadow-lg duration-150"
 						style={{
 							animationDuration: "120ms",
 							left: pickerPos.left,
 							top: pickerPos.top,
 							transform: "translate(-50%, -100%)",
 						}}
-						onPointerDown={(e) => e.stopPropagation()}
+						onClick={(e) => e.stopPropagation()}
 					>
 						{ALL_REACTIONS.map((r) => (
 							<button
 								key={r}
 								type="button"
 								className={cn(
-									"flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-accent",
+									"flex size-9 shrink-0 items-center justify-center rounded-md text-lg leading-none hover:bg-accent",
 									local.my === r && "bg-accent",
 								)}
-								onPointerUp={(ev) => {
-									ev.preventDefault();
-									ev.stopPropagation();
-									commitType(r);
-								}}
+								onClick={() => commitType(r)}
+								aria-label={reactionLabel(r)}
 							>
-								<span aria-hidden className="text-2xl">
-									{reactionEmoji(r)}
-								</span>
-								<span className="sr-only">{r}</span>
+								<span aria-hidden>{reactionEmoji(r)}</span>
+								<span className="sr-only">{reactionLabel(r)}</span>
 							</button>
 						))}
 					</div>

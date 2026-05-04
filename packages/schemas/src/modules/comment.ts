@@ -155,3 +155,48 @@ export const ListPostCommentThreadsOutputSchema = z.object({
 export type ListPostCommentThreadsOutputType = z.infer<
 	typeof ListPostCommentThreadsOutputSchema
 >;
+
+export const ListPackCommentThreadsInputSchema = z.object({
+	packId: z.string().min(1),
+	limit: z.number().int().min(1).max(50).default(8),
+	cursor: z.string().min(1).optional(),
+});
+
+export type ListPackCommentThreadsInputType = z.infer<
+	typeof ListPackCommentThreadsInputSchema
+>;
+
+export const ListTopicCommentThreadsInputSchema = z.object({
+	topicId: z.string().min(1),
+	limit: z.number().int().min(1).max(50).default(8),
+	cursor: z.string().min(1).optional(),
+});
+
+export type ListTopicCommentThreadsInputType = z.infer<
+	typeof ListTopicCommentThreadsInputSchema
+>;
+
+export const ListPackCommentThreadsOutputSchema =
+	ListPostCommentThreadsOutputSchema;
+export const ListTopicCommentThreadsOutputSchema =
+	ListPostCommentThreadsOutputSchema;
+
+export type ListPackCommentThreadsOutputType = ListPostCommentThreadsOutputType;
+export type ListTopicCommentThreadsOutputType =
+	ListPostCommentThreadsOutputType;
+
+export const ListQuestionCommentThreadsInputSchema = z.object({
+	questionId: z.string().min(1),
+	limit: z.number().int().min(1).max(50).default(8),
+	cursor: z.string().min(1).optional(),
+});
+
+export type ListQuestionCommentThreadsInputType = z.infer<
+	typeof ListQuestionCommentThreadsInputSchema
+>;
+
+export const ListQuestionCommentThreadsOutputSchema =
+	ListPostCommentThreadsOutputSchema;
+
+export type ListQuestionCommentThreadsOutputType =
+	ListPostCommentThreadsOutputType;

@@ -18,10 +18,12 @@ import {
 	Star,
 	Trophy,
 } from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import { ChangePackStatusDrawer } from "@/components/change-pack-status-drawer";
 import { PackActionsMenu } from "@/components/pack-actions-menu";
 import { PackHeaderChips } from "@/components/pack-header-chips";
 import { PackNotFound } from "@/components/pack-not-found";
+import { PackTopicDiscussionSection } from "@/components/pack-topic-discussion-section";
 import { PackTopicsList } from "@/components/pack-topics-list";
 import { PacksSubpageContainer } from "@/components/packs";
 import { PublicAnalyticsSection } from "@/components/public-analytics-section";
@@ -72,6 +74,14 @@ export const Route = createFileRoute("/packs/$packSlug/")({
 function RouteComponent() {
 	const pack = Route.useLoaderData();
 	const { data: session } = authClient.useSession();
+	const [tab, setTab] = useQueryState(
+		"tab",
+		parseAsStringEnum([
+			"content",
+			"analytics",
+			"discussion",
+		] as const).withDefault("content"),
+	);
 
 	const analyticsQuery = useQuery(
 		orpc.pack.getAnalytics.queryOptions({ input: { slug: pack.slug } }),
@@ -269,26 +279,69 @@ function RouteComponent() {
 				</Button>
 			)}
 
-			<PublicAnalyticsSection
-				data={analyticsQuery.data}
-				isLoading={analyticsQuery.isLoading}
-				errorMessage={analyticsQuery.error?.message}
-			/>
+			<div className="flex flex-wrap gap-2 border-border border-b pb-2">
+				<Button
+					type="button"
+					size="sm"
+					variant={tab === "content" ? "secondary" : "ghost"}
+					onClick={() => void setTab("content")}
+				>
+					Content
+				</Button>
+				<Button
+					type="button"
+					size="sm"
+					variant={tab === "analytics" ? "secondary" : "ghost"}
+					onClick={() => void setTab("analytics")}
+				>
+					Analytics
+				</Button>
+				{pack.status === "published" ? (
+					<Button
+						type="button"
+						size="sm"
+						variant={tab === "discussion" ? "secondary" : "ghost"}
+						onClick={() => void setTab("discussion")}
+					>
+						Discussion
+					</Button>
+				) : null}
+			</div>
 
-			{pack.isAuthor && pack.status === "draft" && !canPublish && (
-				<Alert variant="info">
-					<AlertDescription>
-						You need at least {MIN_TOPICS_PER_PACK_TO_PUBLISH} topics to publish
-						this pack. Currently you have {topicCount}.
-					</AlertDescription>
-				</Alert>
-			)}
+			{tab === "analytics" ? (
+				<PublicAnalyticsSection
+					data={analyticsQuery.data}
+					isLoading={analyticsQuery.isLoading}
+					errorMessage={analyticsQuery.error?.message}
+				/>
+			) : null}
 
-			<PackTopicsList
-				isAuthor={pack.isAuthor}
-				packSlug={pack.slug}
-				packStatus={pack.status}
-			/>
+			{tab === "discussion" && pack.status === "published" ? (
+				<PackTopicDiscussionSection
+					packId={pack.id}
+					sessionUserId={session?.user?.id}
+					loginRedirect={`/packs/${pack.slug}/?tab=discussion`}
+				/>
+			) : null}
+
+			{tab === "content" ? (
+				<>
+					{pack.isAuthor && pack.status === "draft" && !canPublish && (
+						<Alert variant="info">
+							<AlertDescription>
+								You need at least {MIN_TOPICS_PER_PACK_TO_PUBLISH} topics to
+								publish this pack. Currently you have {topicCount}.
+							</AlertDescription>
+						</Alert>
+					)}
+
+					<PackTopicsList
+						isAuthor={pack.isAuthor}
+						packSlug={pack.slug}
+						packStatus={pack.status}
+					/>
+				</>
+			) : null}
 		</PacksSubpageContainer>
 	);
 }
