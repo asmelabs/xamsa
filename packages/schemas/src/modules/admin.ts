@@ -17,12 +17,18 @@ import {
 	adminClickPeriod,
 	adminClickSearch,
 	adminClickSort,
+	adminCommentPeriod,
+	adminCommentSearch,
+	adminCommentSort,
 	adminGamePeriod,
 	adminGameSearch,
 	adminGameSort,
 	adminPackPeriod,
 	adminPackSearch,
 	adminPackSort,
+	adminPostPeriod,
+	adminPostSearch,
+	adminPostSort,
 	adminQuestionPeriod,
 	adminQuestionSearch,
 	adminQuestionSort,
@@ -126,6 +132,8 @@ export const ListAdminUsersItemSchema = UserSchema.pick({
 	totalGamesHosted: true,
 	totalGamesPlayed: true,
 	totalPacksPublished: true,
+	totalPosts: true,
+	totalComments: true,
 	totalFollowers: true,
 	totalFollowing: true,
 });
@@ -355,6 +363,129 @@ export type ListAdminClicksInputType = z.infer<
 >;
 export type ListAdminClicksOutputType = z.infer<
 	typeof ListAdminClicksOutputSchema
+>;
+
+// --- Posts ---
+
+export const ListAdminPostsFiltersSchema = z.object({
+	authorUsernames: z.array(z.string().min(1)),
+	hasImage: z.boolean(),
+	hasAttachment: z.boolean(),
+	minReactions: z.number().int(),
+	maxReactions: z.number().int(),
+	minComments: z.number().int(),
+	maxComments: z.number().int(),
+});
+
+export const ListAdminPostsInputSchema = ListAdminPostsFiltersSchema.partial()
+	.extend(PaginationInputSchema.shape)
+	.extend(adminPostSort.shape())
+	.extend(adminPostSearch.shape())
+	.extend(adminPostPeriod.shape());
+
+export const ListAdminPostsItemSchema = z.object({
+	id: z.string(),
+	slug: z.string(),
+	bodyExcerpt: z.string().nullable(),
+	hasImage: z.boolean(),
+	hasAttachment: z.boolean(),
+	totalReactions: z.number().int(),
+	totalComments: z.number().int(),
+	createdAt: z.coerce.date(),
+	author: z.object({
+		id: z.string(),
+		username: z.string(),
+		name: z.string(),
+	}),
+});
+
+export const ListAdminPostsOutputSchema = PaginationOutputSchema(
+	ListAdminPostsItemSchema,
+);
+
+export type ListAdminPostsInputType = z.infer<typeof ListAdminPostsInputSchema>;
+export type ListAdminPostsOutputType = z.infer<
+	typeof ListAdminPostsOutputSchema
+>;
+
+// --- Comments ---
+
+export const AdminCommentTargetKindSchema = z.enum([
+	"post",
+	"pack",
+	"topic",
+	"question",
+]);
+
+export type AdminCommentTargetKind = z.infer<
+	typeof AdminCommentTargetKindSchema
+>;
+
+export const ListAdminCommentsFiltersSchema = z.object({
+	authorUsernames: z.array(z.string().min(1)),
+	targetKinds: z.array(AdminCommentTargetKindSchema),
+	minReactions: z.number().int(),
+	maxReactions: z.number().int(),
+	minDepth: z.number().int(),
+	maxDepth: z.number().int(),
+});
+
+export const ListAdminCommentsInputSchema =
+	ListAdminCommentsFiltersSchema.partial()
+		.extend(PaginationInputSchema.shape)
+		.extend(adminCommentSort.shape())
+		.extend(adminCommentSearch.shape())
+		.extend(adminCommentPeriod.shape());
+
+export const AdminCommentTargetSchema = z.discriminatedUnion("kind", [
+	z.object({
+		kind: z.literal("post"),
+		slug: z.string(),
+		title: z.string(),
+	}),
+	z.object({
+		kind: z.literal("pack"),
+		slug: z.string(),
+		title: z.string(),
+	}),
+	z.object({
+		kind: z.literal("topic"),
+		packSlug: z.string(),
+		slug: z.string(),
+		title: z.string(),
+	}),
+	z.object({
+		kind: z.literal("question"),
+		packSlug: z.string(),
+		topicSlug: z.string(),
+		slug: z.string(),
+		title: z.string(),
+	}),
+]);
+
+export const ListAdminCommentsItemSchema = z.object({
+	id: z.string(),
+	bodyExcerpt: z.string(),
+	depth: z.number().int(),
+	totalReactions: z.number().int(),
+	createdAt: z.coerce.date(),
+	author: z.object({
+		id: z.string(),
+		username: z.string(),
+		name: z.string(),
+	}),
+	target: AdminCommentTargetSchema.nullable(),
+});
+
+export const ListAdminCommentsOutputSchema = PaginationOutputSchema(
+	ListAdminCommentsItemSchema,
+);
+
+export type ListAdminCommentsInputType = z.infer<
+	typeof ListAdminCommentsInputSchema
+>;
+export type ListAdminCommentsOutputType = z.infer<
+	typeof ListAdminCommentsOutputSchema
 >;
 
 // --- Topic bulk jobs ---

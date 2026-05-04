@@ -5,10 +5,14 @@ import type {
 	ListAdminBadgesOutputType,
 	ListAdminClicksInputType,
 	ListAdminClicksOutputType,
+	ListAdminCommentsInputType,
+	ListAdminCommentsOutputType,
 	ListAdminGamesInputType,
 	ListAdminGamesOutputType,
 	ListAdminPacksInputType,
 	ListAdminPacksOutputType,
+	ListAdminPostsInputType,
+	ListAdminPostsOutputType,
 	ListAdminQuestionsInputType,
 	ListAdminQuestionsOutputType,
 	ListAdminTopicBulkJobsInputType,
@@ -20,8 +24,10 @@ import type {
 } from "@xamsa/schemas/modules/admin";
 import {
 	adminClickSort,
+	adminCommentSort,
 	adminGameSort,
 	adminPackSort,
+	adminPostSort,
 	adminQuestionSort,
 	adminTopicBulkJobPeriod,
 	adminTopicBulkJobSearch,
@@ -33,12 +39,22 @@ import { ALL_BADGE_IDS, getBadge } from "@xamsa/utils/badges";
 import { definePagination } from "@xamsa/utils/pagination";
 import {
 	buildAdminClicksWhere,
+	buildAdminCommentsWhere,
 	buildAdminGamesWhere,
 	buildAdminPacksWhere,
+	buildAdminPostsWhere,
 	buildAdminQuestionsWhere,
 	buildAdminTopicsWhere,
 	buildAdminUsersWhere,
 } from "./build-where";
+
+const POST_BODY_EXCERPT_LIMIT = 200;
+const COMMENT_BODY_EXCERPT_LIMIT = 200;
+
+function truncate(value: string, limit: number): string {
+	if (value.length <= limit) return value;
+	return `${value.slice(0, limit - 1).trimEnd()}…`;
+}
 
 export async function listAdminPacks(
 	input: ListAdminPacksInputType,
@@ -106,6 +122,8 @@ export async function listAdminUsers(
 				totalGamesHosted: true,
 				totalGamesPlayed: true,
 				totalPacksPublished: true,
+				totalPosts: true,
+				totalComments: true,
 				_count: {
 					select: {
 						followers: true,
@@ -466,4 +484,232 @@ export async function listAdminBadges(
 	const slice = sorted.slice(skip, skip + take);
 
 	return p.output(slice, total);
+}
+
+export async function listAdminPosts(
+	input: ListAdminPostsInputType,
+): Promise<ListAdminPostsOutputType> {
+	const { page, limit, sort, dir } = input;
+	const p = definePagination(page, limit);
+	const orderBy = adminPostSort.resolve(sort, dir);
+	const where = buildAdminPostsWhere(input);
+
+	const [rawRows, total] = await prisma.$transaction([
+		prisma.post.findMany({
+			where,
+			orderBy,
+			...p.use(),
+			select: {
+				id: true,
+				slug: true,
+				body: true,
+				image: true,
+				totalReactions: true,
+				totalComments: true,
+				createdAt: true,
+				author: {
+					select: { id: true, username: true, name: true },
+				},
+				attachment: { select: { id: true } },
+			},
+		}),
+		prisma.post.count({ where }),
+	]);
+
+	const rows = rawRows.map((row) => ({
+		id: row.id,
+		slug: row.slug,
+		bodyExcerpt:
+			row.body == null ? null : truncate(row.body, POST_BODY_EXCERPT_LIMIT),
+		hasImage: row.image != null,
+		hasAttachment: row.attachment != null,
+		totalReactions: row.totalReactions,
+		totalComments: row.totalComments,
+		createdAt: row.createdAt,
+		author: row.author,
+	}));
+
+	return p.output(rows, total);
+}
+
+type CommentTargetRowDb = Prisma.CommentGetPayload<{
+	select: {
+		id: true;
+		body: true;
+		depth: true;
+		totalReactions: true;
+		createdAt: true;
+		packId: true;
+		topicId: true;
+		questionId: true;
+		postId: true;
+		user: { select: { id: true; username: true; name: true } };
+	};
+}>;
+
+async function buildCommentTargets(
+	rows: CommentTargetRowDb[],
+): Promise<
+	Map<
+		string,
+		NonNullable<ListAdminCommentsOutputType["items"][number]["target"]>
+	>
+> {
+	const target = new Map<
+		string,
+		NonNullable<ListAdminCommentsOutputType["items"][number]["target"]>
+	>();
+
+	const postIds = new Set<string>();
+	const packIds = new Set<string>();
+	const topicIds = new Set<string>();
+	const questionIds = new Set<string>();
+
+	for (const r of rows) {
+		if (r.postId) postIds.add(r.postId);
+		else if (r.questionId) questionIds.add(r.questionId);
+		else if (r.topicId) topicIds.add(r.topicId);
+		else if (r.packId) packIds.add(r.packId);
+	}
+
+	const [posts, packs, topics, questions] = await Promise.all([
+		postIds.size > 0
+			? prisma.post.findMany({
+					where: { id: { in: [...postIds] } },
+					select: { id: true, slug: true, body: true },
+				})
+			: Promise.resolve([]),
+		packIds.size > 0
+			? prisma.pack.findMany({
+					where: { id: { in: [...packIds] } },
+					select: { id: true, slug: true, name: true },
+				})
+			: Promise.resolve([]),
+		topicIds.size > 0
+			? prisma.topic.findMany({
+					where: { id: { in: [...topicIds] } },
+					select: {
+						id: true,
+						slug: true,
+						name: true,
+						pack: { select: { slug: true } },
+					},
+				})
+			: Promise.resolve([]),
+		questionIds.size > 0
+			? prisma.question.findMany({
+					where: { id: { in: [...questionIds] } },
+					select: {
+						id: true,
+						slug: true,
+						order: true,
+						topic: {
+							select: { slug: true, pack: { select: { slug: true } } },
+						},
+					},
+				})
+			: Promise.resolve([]),
+	]);
+
+	const postById = new Map(posts.map((p) => [p.id, p]));
+	const packById = new Map(packs.map((p) => [p.id, p]));
+	const topicById = new Map(topics.map((t) => [t.id, t]));
+	const questionById = new Map(questions.map((q) => [q.id, q]));
+
+	for (const r of rows) {
+		if (r.postId) {
+			const p = postById.get(r.postId);
+			if (p) {
+				target.set(r.id, {
+					kind: "post",
+					slug: p.slug,
+					title: truncate(p.body ?? `Post ${p.slug}`, 80),
+				});
+			}
+			continue;
+		}
+		if (r.questionId) {
+			const q = questionById.get(r.questionId);
+			if (q) {
+				target.set(r.id, {
+					kind: "question",
+					packSlug: q.topic.pack.slug,
+					topicSlug: q.topic.slug,
+					slug: q.slug,
+					title: `Question #${q.order}`,
+				});
+			}
+			continue;
+		}
+		if (r.topicId) {
+			const t = topicById.get(r.topicId);
+			if (t) {
+				target.set(r.id, {
+					kind: "topic",
+					packSlug: t.pack.slug,
+					slug: t.slug,
+					title: t.name,
+				});
+			}
+			continue;
+		}
+		if (r.packId) {
+			const p = packById.get(r.packId);
+			if (p) {
+				target.set(r.id, {
+					kind: "pack",
+					slug: p.slug,
+					title: p.name,
+				});
+			}
+		}
+	}
+
+	return target;
+}
+
+export async function listAdminComments(
+	input: ListAdminCommentsInputType,
+): Promise<ListAdminCommentsOutputType> {
+	const { page, limit, sort, dir } = input;
+	const p = definePagination(page, limit);
+	const orderBy = adminCommentSort.resolve(sort, dir);
+	const where = buildAdminCommentsWhere(input);
+
+	const [rawRows, total] = await prisma.$transaction([
+		prisma.comment.findMany({
+			where,
+			orderBy,
+			...p.use(),
+			select: {
+				id: true,
+				body: true,
+				depth: true,
+				totalReactions: true,
+				createdAt: true,
+				packId: true,
+				topicId: true,
+				questionId: true,
+				postId: true,
+				user: {
+					select: { id: true, username: true, name: true },
+				},
+			},
+		}),
+		prisma.comment.count({ where }),
+	]);
+
+	const targetMap = await buildCommentTargets(rawRows);
+
+	const rows = rawRows.map((r) => ({
+		id: r.id,
+		bodyExcerpt: truncate(r.body, COMMENT_BODY_EXCERPT_LIMIT),
+		depth: r.depth,
+		totalReactions: r.totalReactions,
+		createdAt: r.createdAt,
+		author: r.user,
+		target: targetMap.get(r.id) ?? null,
+	}));
+
+	return p.output(rows, total);
 }

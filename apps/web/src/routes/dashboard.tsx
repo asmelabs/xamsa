@@ -18,6 +18,8 @@ const DASH_LINKS = [
 	{ to: "/dashboard/games" as const, label: "Games" },
 	{ to: "/dashboard/topics" as const, label: "Topics" },
 	{ to: "/dashboard/questions" as const, label: "Questions" },
+	{ to: "/dashboard/posts" as const, label: "Posts" },
+	{ to: "/dashboard/comments" as const, label: "Comments" },
 	{ to: "/dashboard/clicks" as const, label: "Clicks" },
 	{ to: "/dashboard/jobs" as const, label: "Bulk jobs" },
 ] as const;

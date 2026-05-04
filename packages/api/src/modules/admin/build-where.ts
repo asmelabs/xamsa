@@ -1,8 +1,10 @@
 import type { Prisma } from "@xamsa/db";
 import type {
 	ListAdminClicksInputType,
+	ListAdminCommentsInputType,
 	ListAdminGamesInputType,
 	ListAdminPacksInputType,
+	ListAdminPostsInputType,
 	ListAdminQuestionsInputType,
 	ListAdminTopicsInputType,
 	ListAdminUsersInputType,
@@ -10,10 +12,14 @@ import type {
 import {
 	adminClickPeriod,
 	adminClickSearch,
+	adminCommentPeriod,
+	adminCommentSearch,
 	adminGamePeriod,
 	adminGameSearch,
 	adminPackPeriod,
 	adminPackSearch,
+	adminPostPeriod,
+	adminPostSearch,
 	adminQuestionPeriod,
 	adminQuestionSearch,
 	adminTopicPeriod,
@@ -367,6 +373,142 @@ export function buildAdminClicksWhere(
 				...(posFilter ? { position: posFilter } : {}),
 				...(reactionFilter ? { reactionMs: reactionFilter } : {}),
 			},
+		],
+	};
+}
+
+export function buildAdminPostsWhere(
+	input: ListAdminPostsInputType,
+): Prisma.PostWhereInput {
+	const {
+		query,
+		from,
+		to,
+		authorUsernames,
+		hasImage,
+		hasAttachment,
+		minReactions,
+		maxReactions,
+		minComments,
+		maxComments,
+	} = input;
+	const searchWhere = adminPostSearch.resolve(query);
+	const periodWhere = adminPostPeriod.resolve(from, to);
+
+	return {
+		AND: [
+			searchWhere ?? {},
+			periodWhere ?? {},
+			...(authorUsernames?.length
+				? [{ author: { username: { in: authorUsernames } } }]
+				: []),
+			...(hasImage === true ? [{ image: { not: null } }] : []),
+			...(hasImage === false ? [{ image: null }] : []),
+			...(hasAttachment === true ? [{ attachment: { isNot: null } }] : []),
+			...(hasAttachment === false ? [{ attachment: { is: null } }] : []),
+			...(minReactions != null || maxReactions != null
+				? [
+						{
+							totalReactions: {
+								...(minReactions != null ? { gte: minReactions } : {}),
+								...(maxReactions != null ? { lte: maxReactions } : {}),
+							},
+						},
+					]
+				: []),
+			...(minComments != null || maxComments != null
+				? [
+						{
+							totalComments: {
+								...(minComments != null ? { gte: minComments } : {}),
+								...(maxComments != null ? { lte: maxComments } : {}),
+							},
+						},
+					]
+				: []),
+		],
+	};
+}
+
+export function buildAdminCommentsWhere(
+	input: ListAdminCommentsInputType,
+): Prisma.CommentWhereInput {
+	const {
+		query,
+		from,
+		to,
+		authorUsernames,
+		targetKinds,
+		minReactions,
+		maxReactions,
+		minDepth,
+		maxDepth,
+	} = input;
+	const searchWhere = adminCommentSearch.resolve(query);
+	const periodWhere = adminCommentPeriod.resolve(from, to);
+
+	const targetClause = targetKinds?.length
+		? {
+				OR: targetKinds.map((kind) => {
+					switch (kind) {
+						case "post":
+							return { postId: { not: null } };
+						case "pack":
+							return {
+								AND: [
+									{ packId: { not: null } },
+									{ topicId: null },
+									{ questionId: null },
+									{ postId: null },
+								],
+							};
+						case "topic":
+							return {
+								AND: [
+									{ topicId: { not: null } },
+									{ questionId: null },
+									{ postId: null },
+								],
+							};
+						case "question":
+							return {
+								AND: [{ questionId: { not: null } }, { postId: null }],
+							};
+						default:
+							throw new Error(`Unknown target kind: ${kind}`);
+					}
+				}),
+			}
+		: null;
+
+	return {
+		AND: [
+			searchWhere ?? {},
+			periodWhere ?? {},
+			...(authorUsernames?.length
+				? [{ user: { username: { in: authorUsernames } } }]
+				: []),
+			targetClause ?? {},
+			...(minReactions != null || maxReactions != null
+				? [
+						{
+							totalReactions: {
+								...(minReactions != null ? { gte: minReactions } : {}),
+								...(maxReactions != null ? { lte: maxReactions } : {}),
+							},
+						},
+					]
+				: []),
+			...(minDepth != null || maxDepth != null
+				? [
+						{
+							depth: {
+								...(minDepth != null ? { gte: minDepth } : {}),
+								...(maxDepth != null ? { lte: maxDepth } : {}),
+							},
+						},
+					]
+				: []),
 		],
 	};
 }

@@ -1,3 +1,4 @@
+import type { QueryKey } from "@tanstack/react-query";
 import {
 	useInfiniteQuery,
 	useMutation,
@@ -19,6 +20,7 @@ import { type ReactNode, useMemo, useState } from "react";
 
 import { MentionRichText } from "@/components/home/mention-rich-text";
 import { MentionTextarea } from "@/components/home/mention-textarea";
+import { CommentReactionBar } from "@/components/reactions/comment-reaction-bar";
 import { orpc } from "@/utils/orpc";
 
 const COMMENT_PAGE_LIMIT = 8;
@@ -32,6 +34,8 @@ function DiscussionCommentNode({
 	collapsedIds,
 	onToggleCollapsed,
 	createPending,
+	threadQueryKey,
+	loginRedirect,
 }: {
 	node: CommentThreadNodeType;
 	sessionUserId: string | undefined;
@@ -41,6 +45,8 @@ function DiscussionCommentNode({
 	collapsedIds: Set<string>;
 	onToggleCollapsed: (id: string) => void;
 	createPending: boolean;
+	threadQueryKey: QueryKey;
+	loginRedirect: string;
 }) {
 	const hasReplies = node.replies.length > 0;
 	const branchCollapsed = collapsedIds.has(node.id);
@@ -82,35 +88,43 @@ function DiscussionCommentNode({
 					<p className="mt-1.5 whitespace-pre-wrap text-[14.5px] text-foreground leading-relaxed">
 						<MentionRichText text={node.body} mentions={node.mentions} />
 					</p>
-					<div className="mt-2 flex items-center gap-3">
-						{sessionUserId && canReply ? (
-							<button
-								type="button"
-								disabled={createPending}
-								className="font-medium text-muted-foreground text-xs transition-colors hover:text-foreground disabled:opacity-50"
-								onClick={() =>
-									replyToId === node.id ? onClearReply() : onReply(node.id)
-								}
-							>
-								{replyToId === node.id ? "Cancel reply" : "Reply"}
-							</button>
-						) : null}
-						{hasReplies ? (
-							<button
-								type="button"
-								className="inline-flex items-center gap-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground"
-								onClick={() => onToggleCollapsed(node.id)}
-							>
-								<ChevronRightIcon
-									className={cn(
-										"size-3 shrink-0 transition-transform",
-										!branchCollapsed && "rotate-90",
-									)}
-								/>
-								{branchCollapsed ? "Show" : "Hide"} {node.replies.length}{" "}
-								{node.replies.length === 1 ? "reply" : "replies"}
-							</button>
-						) : null}
+					<div className="mt-2 space-y-1.5">
+						<CommentReactionBar
+							comment={node}
+							sessionUserId={sessionUserId}
+							threadQueryKey={threadQueryKey}
+							loginRedirect={loginRedirect}
+						/>
+						<div className="flex items-center gap-3">
+							{sessionUserId && canReply ? (
+								<button
+									type="button"
+									disabled={createPending}
+									className="font-medium text-muted-foreground text-xs transition-colors hover:text-foreground disabled:opacity-50"
+									onClick={() =>
+										replyToId === node.id ? onClearReply() : onReply(node.id)
+									}
+								>
+									{replyToId === node.id ? "Cancel reply" : "Reply"}
+								</button>
+							) : null}
+							{hasReplies ? (
+								<button
+									type="button"
+									className="inline-flex items-center gap-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground"
+									onClick={() => onToggleCollapsed(node.id)}
+								>
+									<ChevronRightIcon
+										className={cn(
+											"size-3 shrink-0 transition-transform",
+											!branchCollapsed && "rotate-90",
+										)}
+									/>
+									{branchCollapsed ? "Show" : "Hide"} {node.replies.length}{" "}
+									{node.replies.length === 1 ? "reply" : "replies"}
+								</button>
+							) : null}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -127,6 +141,8 @@ function DiscussionCommentNode({
 							collapsedIds={collapsedIds}
 							onToggleCollapsed={onToggleCollapsed}
 							createPending={createPending}
+							threadQueryKey={threadQueryKey}
+							loginRedirect={loginRedirect}
 						/>
 					))}
 				</div>
@@ -340,6 +356,8 @@ export function PackTopicDiscussionSection({
 									collapsedIds={collapsedIds}
 									onToggleCollapsed={toggleCollapsed}
 									createPending={create.isPending}
+									threadQueryKey={threadListOpts.queryKey}
+									loginRedirect={loginRedirect}
 								/>
 							))}
 						</div>

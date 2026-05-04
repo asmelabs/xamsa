@@ -114,3 +114,24 @@ export type BadgeEarnedMessage = z.infer<typeof BadgeEarnedMessageSchema>;
 export type BadgeEarnedBatchMessage = z.infer<
 	typeof BadgeEarnedBatchMessageSchema
 >;
+
+/**
+ * Presence payload published by every connected member on the
+ * `game:<code>` channel. `visible` reflects `document.visibilityState` so
+ * other clients can distinguish "tab is open" (green) from "tab is hidden"
+ * (orange). Members who close the page disappear from the presence set
+ * altogether — no message is published for that case.
+ */
+export const GamePresenceDataSchema = z.discriminatedUnion("kind", [
+	z.object({
+		kind: z.literal("host"),
+		visible: z.boolean(),
+	}),
+	z.object({
+		kind: z.literal("player"),
+		playerId: z.string().min(1),
+		visible: z.boolean(),
+	}),
+]);
+
+export type GamePresenceData = z.infer<typeof GamePresenceDataSchema>;

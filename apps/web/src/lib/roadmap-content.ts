@@ -88,16 +88,12 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	},
 	{
 		version: "v26.05.04",
+		implemented: true,
 		items: [
 			{
 				title: "Host lobby QR code",
 				description:
 					"Show a scannable QR on the host screen that encodes the existing join URL so in-person players can enter without typing the room code.",
-			},
-			{
-				title: "Remember per-pack default game options",
-				description:
-					"When a host starts a game, offer to reuse their last spoiler mode, topic subset, and related knobs for that pack so repeat nights need fewer taps.",
 			},
 			{
 				title: "Spoiler settings discoverability",
@@ -112,7 +108,7 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 			{
 				title: "Player presence on the game",
 				description:
-					"Show presence indicator of players for both host and other players. Presence should be updated in real time. Green means the player is currently on the game/website, orange means the player is not on the website.",
+					"Show presence indicator of players for both host and other players. Presence should be updated in real time. Green means the player is currently on the game/website, orange means the player is not on the website. Using Ably for this, would be suitable.",
 			},
 			{
 				title: "Reactions on comments",

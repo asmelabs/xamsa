@@ -714,9 +714,10 @@ export function useGameChannel(
 		const channel = client.channels.get(channels.game(code));
 		const queryKey = orpc.game.findOne.queryKey({ input: { code } });
 
-		channel.presence.enter().catch(() => {
-			// presence is best-effort; realtime state itself is what matters
-		});
+		// Presence enter/leave + visibility-aware updates are owned by
+		// `GamePresenceProvider`. Host-disconnect detection below still
+		// works because it compares `clientId` (= session user id) to
+		// `cached.hostId`, which is data-independent.
 
 		const invalidateGame = () => {
 			queryClient.invalidateQueries({ queryKey });
@@ -1063,10 +1064,6 @@ export function useGameChannel(
 			channel.presence.unsubscribe("enter", onPresenceEnter);
 
 			client.connection.off("connected", onConnectionConnected);
-
-			channel.presence.leave().catch(() => {
-				// leaving is best-effort
-			});
 		};
 	}, [code, queryClient, navigate, onBadgeEarnedCb, onBadgesEarned]);
 }

@@ -29,6 +29,7 @@ import { derivePostSlugSeedFromBody } from "@xamsa/utils/post-slug";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
 import { notifyMentionedUsersForContent } from "../../lib/mention-notifications";
 import { insertMentionsForPost } from "../../lib/mention-write";
+import { sortedReactionsByTypeFromGrouped } from "../reaction/sort";
 
 const FEED_AUTHOR = {
 	select: { id: true, username: true, name: true, image: true },
@@ -252,16 +253,6 @@ async function buildAttachmentRow(
 	}
 
 	return base;
-}
-
-function sortedReactionsByTypeFromGrouped(
-	items: readonly { type: ReactionEmoji; count: number }[],
-): PostReactionByTypeType[] {
-	return [...items]
-		.filter(({ count }) => count > 0)
-		.sort((a, b) =>
-			b.count !== a.count ? b.count - a.count : a.type.localeCompare(b.type),
-		);
 }
 
 async function toPostRow(

@@ -10,6 +10,7 @@ import {
 import { CheckIcon, CopyIcon, Share2Icon } from "lucide-react";
 import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
+import { HostLobbyQr } from "@/components/host-lobby-qr";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
 	buildGameShareBody,
@@ -149,6 +150,13 @@ export function GameShareSheet({ open, onOpenChange, context }: Props) {
 						)}
 						Copy invite link
 					</Button>
+
+					<div className="flex flex-col items-center gap-1.5 rounded-xl border border-border/80 border-dashed bg-muted/20 px-4 py-4">
+						<p className="font-medium text-foreground text-xs uppercase tracking-wide">
+							Scan to join
+						</p>
+						<HostLobbyQr joinUrl={context.inviteUrl} />
+					</div>
 
 					<div className="space-y-2">
 						<p className="text-muted-foreground text-xs uppercase tracking-wide">

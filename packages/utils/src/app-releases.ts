@@ -13,12 +13,42 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 3 } as const;
+const current = { year: 2026, month: 5, patch: 4 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-04",
+			year: 2026,
+			month: 5,
+			patch: 4,
+			title:
+				"Scan to join, calmer spoiler explainer, live presence dots, and reactions on every comment",
+			highlights: [
+				{
+					kind: "text",
+					text: "Hosts get a tappable QR right next to the invite link—point a phone, jump into the lobby, no typing room codes around the table.",
+				},
+				{
+					kind: "text",
+					text: "Spoiler-mode picks now wear a friendly explainer: hover the info dot to see who gets muted, when, and why—and players sidelined mid-round get the same plain-English reason inline next to their buzzer.",
+				},
+				{
+					kind: "text",
+					text: "Live presence dots glow on every player row and next to the host’s name—green when they’re watching, orange when their tab is hidden, quiet when they’ve stepped away—so you always know who’s really in the room.",
+				},
+				{
+					kind: "text",
+					text: "Comments cheer back: react to any reply with the same emojis you use on posts, see the breakdown at a glance, and watch the counts settle without a refresh.",
+				},
+				{
+					kind: "text",
+					text: "Recap polish too—your post-game “Play again with this pack” shortcut reads clearer on small screens, sitting above the deeper stats link.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-04",
 			year: 2026,

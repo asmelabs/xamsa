@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import prisma, { type Prisma } from "@xamsa/db";
+import type { ReactionType as ReactionEmoji } from "@xamsa/schemas/db/schemas/enums/ReactionType.schema";
 import type {
+	CommentReactionByTypeType,
 	CommentThreadNodeType,
 	CreateCommentInputType,
 	CreateCommentOutputType,
@@ -18,6 +20,7 @@ import type {
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 import { notifyMentionedUsersForContent } from "../../lib/mention-notifications";
 import { insertMentionsForCommentOnPost } from "../../lib/mention-write";
+import { sortedReactionsByTypeFromGrouped } from "../reaction/sort";
 
 const COMMENT_ROW_INCLUDE = {
 	user: {
@@ -62,6 +65,8 @@ async function usernamesForCommentMentions(
 function toCommentRowType(
 	row: CommentRowDb,
 	mentions: { username: string }[],
+	myReactionType: ReactionEmoji | null = null,
+	reactionsByType: readonly CommentReactionByTypeType[] = [],
 ): CreateCommentOutputType {
 	return {
 		id: row.id,
@@ -77,7 +82,74 @@ function toCommentRowType(
 		totalReactions: row.totalReactions,
 		user: row.user,
 		mentions,
+		myReactionType: myReactionType ?? undefined,
+		reactionsByType: [...reactionsByType],
 	};
+}
+
+/**
+ * Batch-fetches reaction breakdown + the viewer's reaction for a set of
+ * comment ids. Mirrors the post listing pattern so comment threads can
+ * render the same per-emoji counts and "your reaction" highlight.
+ */
+async function reactionsForComments(
+	commentIds: string[],
+	viewerUserId?: string,
+): Promise<{
+	myByCommentId: Map<string, ReactionEmoji>;
+	breakdownByCommentId: Map<string, CommentReactionByTypeType[]>;
+}> {
+	if (commentIds.length === 0) {
+		return {
+			myByCommentId: new Map(),
+			breakdownByCommentId: new Map(),
+		};
+	}
+
+	const myByCommentId = new Map<string, ReactionEmoji>();
+	if (viewerUserId) {
+		const mine = await prisma.reaction.findMany({
+			where: {
+				userId: viewerUserId,
+				commentId: { in: commentIds },
+			},
+			select: { commentId: true, type: true },
+		});
+		for (const r of mine) {
+			if (r.commentId == null) continue;
+			myByCommentId.set(r.commentId, r.type);
+		}
+	}
+
+	const grouped = await prisma.reaction.groupBy({
+		by: ["commentId", "type"],
+		where: { commentId: { in: commentIds } },
+		_count: { _all: true },
+	});
+
+	const rawBreakdown = new Map<
+		string,
+		{ type: ReactionEmoji; count: number }[]
+	>();
+	for (const g of grouped) {
+		const cid = g.commentId;
+		if (cid == null) continue;
+		const n = g._count._all;
+		if (n <= 0) continue;
+		const bucket = rawBreakdown.get(cid);
+		if (bucket) {
+			bucket.push({ type: g.type, count: n });
+		} else {
+			rawBreakdown.set(cid, [{ type: g.type, count: n }]);
+		}
+	}
+
+	const breakdownByCommentId = new Map<string, CommentReactionByTypeType[]>();
+	for (const [cid, items] of rawBreakdown) {
+		breakdownByCommentId.set(cid, sortedReactionsByTypeFromGrouped(items));
+	}
+
+	return { myByCommentId, breakdownByCommentId };
 }
 
 function encodePostThreadRootCursor(row: {
@@ -589,6 +661,7 @@ function threadsMemberWhereForTarget(
 async function listCommentThreadsForTarget(
 	target: CommentThreadTarget,
 	input: { limit: number; cursor?: string },
+	viewerUserId?: string,
 ): Promise<ListPostCommentThreadsOutputType> {
 	const limit = input.limit ?? 8;
 	const decoded = input.cursor
@@ -642,11 +715,23 @@ async function listCommentThreadsForTarget(
 
 	const allIds = threadRows.map((r) => r.id);
 	const mentionMap = await usernamesForCommentMentions(allIds);
+	const { myByCommentId, breakdownByCommentId } = await reactionsForComments(
+		allIds,
+		viewerUserId,
+	);
 
 	const nodes = new Map<string, CommentThreadNodeType>();
 	for (const r of threadRows) {
 		const mentions = mentionMap.get(r.id) ?? [];
-		nodes.set(r.id, { ...toCommentRowType(r, mentions), replies: [] });
+		nodes.set(r.id, {
+			...toCommentRowType(
+				r,
+				mentions,
+				myByCommentId.get(r.id) ?? null,
+				breakdownByCommentId.get(r.id) ?? [],
+			),
+			replies: [],
+		});
 	}
 
 	const forest: CommentThreadNodeType[] = [];
@@ -679,42 +764,51 @@ async function listCommentThreadsForTarget(
 
 export async function listPostCommentThreads(
 	input: ListPostCommentThreadsInputType,
+	viewerUserId?: string,
 ): Promise<ListPostCommentThreadsOutputType> {
 	return listCommentThreadsForTarget(
 		{ kind: "post", postId: input.postId },
 		{ limit: input.limit ?? 8, cursor: input.cursor },
+		viewerUserId,
 	);
 }
 
 export async function listPackCommentThreads(
 	input: ListPackCommentThreadsInputType,
+	viewerUserId?: string,
 ): Promise<ListPostCommentThreadsOutputType> {
 	return listCommentThreadsForTarget(
 		{ kind: "pack", packId: input.packId },
 		{ limit: input.limit ?? 8, cursor: input.cursor },
+		viewerUserId,
 	);
 }
 
 export async function listTopicCommentThreads(
 	input: ListTopicCommentThreadsInputType,
+	viewerUserId?: string,
 ): Promise<ListPostCommentThreadsOutputType> {
 	return listCommentThreadsForTarget(
 		{ kind: "topic", topicId: input.topicId },
 		{ limit: input.limit ?? 8, cursor: input.cursor },
+		viewerUserId,
 	);
 }
 
 export async function listQuestionCommentThreads(
 	input: ListQuestionCommentThreadsInputType,
+	viewerUserId?: string,
 ): Promise<ListPostCommentThreadsOutputType> {
 	return listCommentThreadsForTarget(
 		{ kind: "question", questionId: input.questionId },
 		{ limit: input.limit ?? 8, cursor: input.cursor },
+		viewerUserId,
 	);
 }
 
 export async function listCommentsByTarget(
 	input: ListCommentsByTargetInputType,
+	viewerUserId?: string,
 ): Promise<ListCommentsByTargetOutputType> {
 	let where:
 		| { packId: string }
@@ -746,11 +840,21 @@ export async function listCommentsByTarget(
 		include: COMMENT_ROW_INCLUDE,
 	});
 
-	const mentionMap = await usernamesForCommentMentions(raw.map((r) => r.id));
-	const enriched = raw.map((r) => ({
-		...r,
-		mentions: mentionMap.get(r.id) ?? [],
-	}));
+	const ids = raw.map((r) => r.id);
+	const mentionMap = await usernamesForCommentMentions(ids);
+	const { myByCommentId, breakdownByCommentId } = await reactionsForComments(
+		ids,
+		viewerUserId,
+	);
+
+	const enriched = raw.map((r) =>
+		toCommentRowType(
+			r,
+			mentionMap.get(r.id) ?? [],
+			myByCommentId.get(r.id) ?? null,
+			breakdownByCommentId.get(r.id) ?? [],
+		),
+	);
 
 	return pag.output(enriched, (r) => r.id);
 }

@@ -14,11 +14,13 @@ import {
 import { EllipsisIcon, UserMinusIcon } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { toast } from "sonner";
+import { useGamePresence } from "@/hooks/use-game-presence";
 import type { GamePlayer } from "@/lib/game-types";
 import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { LoadingButton } from "./loading-button";
+import { PresenceDot } from "./presence-dot";
 import { ProfileImageLightbox } from "./profile-image-lightbox";
 
 interface PlayerRowProps {
@@ -35,6 +37,8 @@ export function PlayerRow({
 	gameCode,
 }: PlayerRowProps) {
 	const queryClient = useQueryClient();
+	const presence = useGamePresence();
+	const playerPresence = presence.getPlayerPresence(player.id);
 
 	const [kickTarget, setKickTarget] = useQueryState(
 		"kick-player",
@@ -102,7 +106,10 @@ export function PlayerRow({
 			</ProfileImageLightbox>
 
 			<div className="min-w-0 flex-1">
-				<p className="truncate font-medium text-sm">{player.user.name}</p>
+				<div className="flex items-center gap-1.5">
+					<p className="truncate font-medium text-sm">{player.user.name}</p>
+					<PresenceDot state={playerPresence} size="sm" />
+				</div>
 				<p className="text-muted-foreground text-xs">
 					{player.score.toLocaleString()} pts
 				</p>
