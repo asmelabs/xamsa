@@ -281,6 +281,7 @@ export async function findOnePack(
 	const rating = ratings[0]?.rating;
 
 	return {
+		id: packId,
 		...rest,
 		status,
 		isAuthor,

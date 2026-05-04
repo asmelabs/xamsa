@@ -4,12 +4,22 @@ import {
 	DeletePostInputSchema,
 	DeletePostOutputSchema,
 	FindOnePostInputSchema,
+	ListBookmarkedPostsInputSchema,
 	ListPostsInputSchema,
 	ListPostsOutputSchema,
 	PostRowSchema,
+	SetPostBookmarkInputSchema,
+	SetPostBookmarkOutputSchema,
 } from "@xamsa/schemas/modules/post";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { createPost, deletePost, findOnePost, listPosts } from "./service";
+import {
+	createPost,
+	deletePost,
+	findOnePost,
+	listBookmarkedPosts,
+	listPosts,
+	setPostBookmark,
+} from "./service";
 
 export const postRouter = {
 	findOne: publicProcedure
@@ -35,5 +45,17 @@ export const postRouter = {
 		.output(DeletePostOutputSchema)
 		.handler(({ input, context }) =>
 			deletePost(input, context.session.user.id),
+		),
+	setBookmark: protectedProcedure
+		.input(SetPostBookmarkInputSchema)
+		.output(SetPostBookmarkOutputSchema)
+		.handler(({ input, context }) =>
+			setPostBookmark(input, context.session.user.id),
+		),
+	listBookmarked: protectedProcedure
+		.input(ListBookmarkedPostsInputSchema)
+		.output(ListPostsOutputSchema)
+		.handler(({ input, context }) =>
+			listBookmarkedPosts(input, context.session.user.id),
 		),
 };

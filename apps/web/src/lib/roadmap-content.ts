@@ -47,6 +47,7 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	},
 	{
 		version: "v26.05.03",
+		implemented: true,
 		items: [
 			{
 				title: "Better post card, comment section and post page",
@@ -107,6 +108,11 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				title: "“Play again” from recap",
 				description:
 					"From the finished-game screen, one control to spin up a fresh lobby with the same pack (and sensible defaults) so groups can chain sessions quickly.",
+			},
+			{
+				title: "Player presence on the game",
+				description:
+					"Show presence indicator of players for both host and other players. Presence should be updated in real time. Green means the player is currently on the game/website, orange means the player is not on the website.",
 			},
 		],
 	},

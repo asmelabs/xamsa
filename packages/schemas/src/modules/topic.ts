@@ -223,6 +223,7 @@ export const FindOneTopicInputSchema = TopicSchema.pick({
 });
 
 export const FindOneTopicOutputSchema = TopicSchema.pick({
+	id: true,
 	slug: true,
 	name: true,
 	order: true,

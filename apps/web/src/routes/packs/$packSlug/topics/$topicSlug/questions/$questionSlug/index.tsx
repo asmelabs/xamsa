@@ -18,7 +18,8 @@ import {
 	EyeOffIcon,
 	PencilIcon,
 } from "lucide-react";
-import { parseAsBoolean, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsStringEnum, useQueryState } from "nuqs";
+import { PackTopicDiscussionSection } from "@/components/pack-topic-discussion-section";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
 import { PublicAnalyticsSection } from "@/components/public-analytics-section";
 import { authClient } from "@/lib/auth-client";
@@ -110,6 +111,12 @@ function RouteComponent() {
 		}),
 		enabled: !!session?.user,
 	});
+	const [tab, setTab] = useQueryState(
+		"tab",
+		parseAsStringEnum(["analytics", "discussion"] as const).withDefault(
+			"analytics",
+		),
+	);
 	const [answerVisible, setAnswerVisible] = useQueryState(
 		"answer_visible",
 		parseAsBoolean.withDefault(false),
@@ -261,14 +268,6 @@ function RouteComponent() {
 				)}
 			</div>
 
-			{session?.user ? (
-				<PublicAnalyticsSection
-					data={analyticsQuery.data}
-					isLoading={analyticsQuery.isLoading}
-					errorMessage={analyticsQuery.error?.message}
-				/>
-			) : null}
-
 			<Frame>
 				<FrameHeader>
 					<div className="flex items-center justify-between gap-3">
@@ -317,6 +316,58 @@ function RouteComponent() {
 					)}
 				</FramePanel>
 			</Frame>
+
+			<div className="flex flex-wrap gap-2 border-border border-b pb-2">
+				<Button
+					type="button"
+					size="sm"
+					variant={tab === "analytics" ? "secondary" : "ghost"}
+					onClick={() => void setTab("analytics")}
+				>
+					Analytics
+				</Button>
+				{question.pack.status === "published" ? (
+					<Button
+						type="button"
+						size="sm"
+						variant={tab === "discussion" ? "secondary" : "ghost"}
+						onClick={() => void setTab("discussion")}
+					>
+						Discussion
+					</Button>
+				) : null}
+			</div>
+
+			{tab === "analytics" ? (
+				session?.user ? (
+					<PublicAnalyticsSection
+						data={analyticsQuery.data}
+						isLoading={analyticsQuery.isLoading}
+						errorMessage={analyticsQuery.error?.message}
+					/>
+				) : (
+					<p className="text-muted-foreground text-sm">
+						<Link
+							to="/auth/login"
+							search={{
+								redirect_url: `/packs/${packSlug}/topics/${topicSlug}/questions/${question.slug}/?tab=analytics`,
+							}}
+							className="underline"
+						>
+							Sign in
+						</Link>{" "}
+						to view play analytics for this question.
+					</p>
+				)
+			) : null}
+
+			{tab === "discussion" && question.pack.status === "published" ? (
+				<PackTopicDiscussionSection
+					questionId={question.id}
+					sessionUserId={session?.user?.id}
+					loginRedirect={`/packs/${packSlug}/topics/${topicSlug}/questions/${question.slug}/?tab=discussion`}
+				/>
+			) : null}
 		</PacksSubpageContainer>
 	);
 }

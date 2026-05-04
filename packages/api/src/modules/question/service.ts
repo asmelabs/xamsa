@@ -198,6 +198,7 @@ export async function findOneQuestion(
 ): Promise<FindOneQuestionOutputType> {
 	const question = await prisma.question.findFirst({
 		select: {
+			id: true,
 			slug: true,
 			acceptableAnswers: true,
 			answer: true,

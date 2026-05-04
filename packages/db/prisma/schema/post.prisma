@@ -35,10 +35,25 @@ model Post {
   reactions  Reaction[]
   mentions                  Mention[]
   mentionEmailNotifications MentionEmailNotification[]
+  bookmarks                 PostBookmark[]
 
   @@index([userId])
   @@index([createdAt, id])
   @@map("post")
+}
+
+model PostBookmark {
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("post_bookmark")
 }
 
 model PostAttachment {

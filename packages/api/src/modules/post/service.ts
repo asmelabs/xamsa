@@ -9,11 +9,14 @@ import type {
 	DeletePostInputType,
 	DeletePostOutputType,
 	FindOnePostInputType,
+	ListBookmarkedPostsInputType,
 	ListPostsInputType,
 	ListPostsOutputType,
 	PostAttachmentRowType,
 	PostReactionByTypeType,
 	PostRowType,
+	SetPostBookmarkInputType,
+	SetPostBookmarkOutputType,
 } from "@xamsa/schemas/modules/post";
 import {
 	destroyImageByPublicId,
@@ -60,6 +63,45 @@ function decodePostCursor(cursor: string): { c: string; id: string } | null {
 	} catch {
 		return null;
 	}
+}
+
+function encodeBookmarkCursor(row: {
+	createdAt: Date;
+	postId: string;
+}): string {
+	return Buffer.from(
+		JSON.stringify({ c: row.createdAt.toISOString(), p: row.postId }),
+		"utf8",
+	).toString("base64url");
+}
+
+function decodeBookmarkCursor(cursor: string): { c: string; p: string } | null {
+	try {
+		const raw = Buffer.from(cursor, "base64url").toString("utf8");
+		const o = JSON.parse(raw) as { c?: string; p?: string };
+		if (
+			typeof o.c !== "string" ||
+			typeof o.p !== "string" ||
+			Number.isNaN(Date.parse(o.c))
+		) {
+			return null;
+		}
+		return { c: o.c, p: o.p };
+	} catch {
+		return null;
+	}
+}
+
+async function postIdsBookmarkedBy(
+	userId: string | undefined,
+	postIds: string[],
+): Promise<Set<string>> {
+	if (!userId || postIds.length === 0) return new Set();
+	const rows = await prisma.postBookmark.findMany({
+		where: { userId, postId: { in: postIds } },
+		select: { postId: true },
+	});
+	return new Set(rows.map((r) => r.postId));
 }
 
 async function usernamesForPostMentions(
@@ -227,6 +269,7 @@ async function toPostRow(
 	myReactionType?: ReactionEmoji | null,
 	reactionsByType: readonly PostReactionByTypeType[] = [],
 	mentions: readonly { username: string }[] = [],
+	myBookmarked?: boolean,
 ): Promise<PostRowType> {
 	const attachmentRow = p.attachment
 		? await buildAttachmentRow(p.attachment)
@@ -244,6 +287,7 @@ async function toPostRow(
 		myReactionType: myReactionType ?? undefined,
 		reactionsByType: [...reactionsByType],
 		mentions: [...mentions],
+		...(myBookmarked !== undefined ? { myBookmarked } : {}),
 	};
 }
 
@@ -540,11 +584,23 @@ export async function findOnePost(
 
 	const mentionMap = await usernamesForPostMentions([row.id]);
 
+	let myBookmarked: boolean | undefined;
+	if (viewerUserId) {
+		const bm = await prisma.postBookmark.findUnique({
+			where: {
+				userId_postId: { userId: viewerUserId, postId: row.id },
+			},
+			select: { postId: true },
+		});
+		myBookmarked = bm != null;
+	}
+
 	return toPostRow(
 		row as PostWithRelations,
 		myReactionType,
 		reactionsByType,
 		mentionMap.get(row.id) ?? [],
+		myBookmarked,
 	);
 }
 
@@ -562,21 +618,50 @@ export async function listPosts(
 
 	const decoded = cursorDecoded;
 
+	const followingFeed = !input.authorUsername && input.feed === "following";
+	if (followingFeed && !currentUserId) {
+		throw new ORPCError("UNAUTHORIZED", {
+			message: "Sign in to see posts from people you follow.",
+		});
+	}
+
+	const parts: Prisma.PostWhereInput[] = [];
+
+	if (input.authorUsername != null) {
+		parts.push({ author: { username: input.authorUsername } });
+	} else if (followingFeed && currentUserId) {
+		parts.push({
+			author: {
+				followers: {
+					some: {
+						followerId: currentUserId,
+						status: "accepted",
+					},
+				},
+			},
+		});
+	}
+
+	if (decoded != null) {
+		parts.push({
+			OR: [
+				{ createdAt: { lt: new Date(decoded.c) } },
+				{
+					AND: [{ createdAt: new Date(decoded.c) }, { id: { lt: decoded.id } }],
+				},
+			],
+		});
+	}
+
+	const where: Prisma.PostWhereInput =
+		parts.length === 0
+			? {}
+			: parts.length === 1
+				? (parts[0] ?? {})
+				: { AND: parts };
+
 	const rows = await prisma.post.findMany({
-		where:
-			decoded != null
-				? {
-						OR: [
-							{ createdAt: { lt: new Date(decoded.c) } },
-							{
-								AND: [
-									{ createdAt: new Date(decoded.c) },
-									{ id: { lt: decoded.id } },
-								],
-							},
-						],
-					}
-				: {},
+		where,
 		orderBy: [{ createdAt: "desc" }, { id: "desc" }],
 		take: limit + 1,
 		include: { author: FEED_AUTHOR, attachment: true },
@@ -629,6 +714,11 @@ export async function listPosts(
 
 	const mentionMap = await usernamesForPostMentions(page.map((p) => p.id));
 
+	const bookmarked = await postIdsBookmarkedBy(
+		currentUserId,
+		page.map((p) => p.id),
+	);
+
 	const items = await Promise.all(
 		page.map((p) =>
 			toPostRow(
@@ -636,6 +726,152 @@ export async function listPosts(
 				reactionByPost.get(p.id) ?? null,
 				sortedReactionsByTypeFromGrouped(breakdownByPostId.get(p.id) ?? []),
 				mentionMap.get(p.id) ?? [],
+				currentUserId ? bookmarked.has(p.id) : undefined,
+			),
+		),
+	);
+
+	return {
+		items,
+		metadata: {
+			cursor: input.cursor,
+			limit,
+			nextCursor,
+			hasMore,
+		},
+	};
+}
+
+export async function setPostBookmark(
+	input: SetPostBookmarkInputType,
+	userId: string,
+): Promise<SetPostBookmarkOutputType> {
+	const post = await prisma.post.findUnique({
+		where: { id: input.postId },
+		select: { id: true },
+	});
+	if (!post) {
+		throw new ORPCError("NOT_FOUND", { message: "Post not found." });
+	}
+
+	if (input.bookmarked) {
+		await prisma.postBookmark.upsert({
+			where: {
+				userId_postId: { userId, postId: input.postId },
+			},
+			create: { userId, postId: input.postId },
+			update: {},
+		});
+	} else {
+		await prisma.postBookmark.deleteMany({
+			where: { userId, postId: input.postId },
+		});
+	}
+
+	return { ok: true as const, bookmarked: input.bookmarked };
+}
+
+export async function listBookmarkedPosts(
+	input: ListBookmarkedPostsInputType,
+	userId: string,
+): Promise<ListPostsOutputType> {
+	const limit = input.limit ?? 10;
+
+	let cursorDecoded: { c: string; p: string } | null = null;
+	if (input.cursor) {
+		cursorDecoded = decodeBookmarkCursor(input.cursor);
+		if (!cursorDecoded) {
+			throw new ORPCError("BAD_REQUEST", { message: "Invalid cursor." });
+		}
+	}
+
+	const marks = await prisma.postBookmark.findMany({
+		where: {
+			userId,
+			...(cursorDecoded != null
+				? {
+						OR: [
+							{ createdAt: { lt: new Date(cursorDecoded.c) } },
+							{
+								AND: [
+									{ createdAt: new Date(cursorDecoded.c) },
+									{ postId: { lt: cursorDecoded.p } },
+								],
+							},
+						],
+					}
+				: {}),
+		},
+		orderBy: [{ createdAt: "desc" }, { postId: "desc" }],
+		take: limit + 1,
+		include: {
+			post: { include: { author: FEED_AUTHOR, attachment: true } },
+		},
+	});
+
+	const hasMore = marks.length > limit;
+	const pageMarks = hasMore ? marks.slice(0, limit) : marks;
+	const page = pageMarks.map((m) => m.post);
+
+	const nextLastMark = pageMarks[pageMarks.length - 1];
+	const nextCursor =
+		hasMore && nextLastMark
+			? encodeBookmarkCursor({
+					createdAt: nextLastMark.createdAt,
+					postId: nextLastMark.postId,
+				})
+			: null;
+
+	let reactionByPost = new Map<string, ReactionEmoji>();
+	if (page.length > 0) {
+		const mine = await prisma.reaction.findMany({
+			where: {
+				userId,
+				postId: { in: page.map((p) => p.id) },
+			},
+			select: { postId: true, type: true },
+		});
+		reactionByPost = new Map(
+			mine
+				.filter((r): r is typeof r & { postId: string } => r.postId != null)
+				.map((r) => [r.postId, r.type]),
+		);
+	}
+
+	const breakdownByPostId = new Map<
+		string,
+		{ type: ReactionEmoji; count: number }[]
+	>();
+	if (page.length > 0) {
+		const grouped = await prisma.reaction.groupBy({
+			by: ["postId", "type"],
+			where: { postId: { in: page.map((p) => p.id) } },
+			_count: { _all: true },
+		});
+		for (const row of grouped) {
+			const pid = row.postId;
+			if (pid == null) continue;
+			const n = row._count._all;
+			if (n <= 0) continue;
+			const bucket = breakdownByPostId.get(pid);
+			if (bucket) {
+				bucket.push({ type: row.type, count: n });
+			} else {
+				breakdownByPostId.set(pid, [{ type: row.type, count: n }]);
+			}
+		}
+	}
+
+	const mentionMap = await usernamesForPostMentions(page.map((p) => p.id));
+
+	const items = await Promise.all(
+		page.map((p) =>
+			toPostRow(
+				p as PostWithRelations,
+				reactionByPost.get(p.id) ?? null,
+				sortedReactionsByTypeFromGrouped(breakdownByPostId.get(p.id) ?? []),
+				mentionMap.get(p.id) ?? [],
+				true,
 			),
 		),
 	);

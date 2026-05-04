@@ -5,15 +5,24 @@ import {
 	DeleteCommentOutputSchema,
 	ListCommentsByTargetInputSchema,
 	ListCommentsByTargetOutputSchema,
+	ListPackCommentThreadsInputSchema,
+	ListPackCommentThreadsOutputSchema,
 	ListPostCommentThreadsInputSchema,
 	ListPostCommentThreadsOutputSchema,
+	ListQuestionCommentThreadsInputSchema,
+	ListQuestionCommentThreadsOutputSchema,
+	ListTopicCommentThreadsInputSchema,
+	ListTopicCommentThreadsOutputSchema,
 } from "@xamsa/schemas/modules/comment";
 import { protectedProcedure, publicProcedure } from "../../procedures";
 import {
 	createComment,
 	deleteComment,
 	listCommentsByTarget,
+	listPackCommentThreads,
 	listPostCommentThreads,
+	listQuestionCommentThreads,
+	listTopicCommentThreads,
 } from "./service";
 
 export const commentRouter = {
@@ -37,4 +46,16 @@ export const commentRouter = {
 		.input(ListPostCommentThreadsInputSchema)
 		.output(ListPostCommentThreadsOutputSchema)
 		.handler(async ({ input }) => listPostCommentThreads(input)),
+	listThreadsByPack: publicProcedure
+		.input(ListPackCommentThreadsInputSchema)
+		.output(ListPackCommentThreadsOutputSchema)
+		.handler(async ({ input }) => listPackCommentThreads(input)),
+	listThreadsByTopic: publicProcedure
+		.input(ListTopicCommentThreadsInputSchema)
+		.output(ListTopicCommentThreadsOutputSchema)
+		.handler(async ({ input }) => listTopicCommentThreads(input)),
+	listThreadsByQuestion: publicProcedure
+		.input(ListQuestionCommentThreadsInputSchema)
+		.output(ListQuestionCommentThreadsOutputSchema)
+		.handler(async ({ input }) => listQuestionCommentThreads(input)),
 };
