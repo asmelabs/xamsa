@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhatsNewIndexRouteImport } from './routes/whats-new/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as RoadmapIndexRouteImport } from './routes/roadmap/index'
 import { Route as PlayIndexRouteImport } from './routes/play/index'
 import { Route as PacksIndexRouteImport } from './routes/packs/index'
 import { Route as LeaderboardIndexRouteImport } from './routes/leaderboard/index'
@@ -108,6 +109,11 @@ const WhatsNewIndexRoute = WhatsNewIndexRouteImport.update({
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapIndexRoute = RoadmapIndexRouteImport.update({
+  id: '/roadmap/',
+  path: '/roadmap/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayIndexRoute = PlayIndexRouteImport.update({
@@ -437,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard/': typeof LeaderboardIndexRoute
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
+  '/roadmap/': typeof RoadmapIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/whats-new/': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -502,6 +509,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardIndexRoute
   '/packs': typeof PacksIndexRoute
   '/play': typeof PlayIndexRoute
+  '/roadmap': typeof RoadmapIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/whats-new': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -570,6 +578,7 @@ export interface FileRoutesById {
   '/leaderboard/': typeof LeaderboardIndexRoute
   '/packs/': typeof PacksIndexRoute
   '/play/': typeof PlayIndexRoute
+  '/roadmap/': typeof RoadmapIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/whats-new/': typeof WhatsNewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -639,6 +648,7 @@ export interface FileRouteTypes {
     | '/leaderboard/'
     | '/packs/'
     | '/play/'
+    | '/roadmap/'
     | '/settings/'
     | '/whats-new/'
     | '/api/auth/$'
@@ -704,6 +714,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/packs'
     | '/play'
+    | '/roadmap'
     | '/settings'
     | '/whats-new'
     | '/api/auth/$'
@@ -771,6 +782,7 @@ export interface FileRouteTypes {
     | '/leaderboard/'
     | '/packs/'
     | '/play/'
+    | '/roadmap/'
     | '/settings/'
     | '/whats-new/'
     | '/api/auth/$'
@@ -834,6 +846,7 @@ export interface RootRouteChildren {
   LeaderboardIndexRoute: typeof LeaderboardIndexRoute
   PacksIndexRoute: typeof PacksIndexRoute
   PlayIndexRoute: typeof PlayIndexRoute
+  RoadmapIndexRoute: typeof RoadmapIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   WhatsNewIndexRoute: typeof WhatsNewIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -920,6 +933,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmap/': {
+      id: '/roadmap/'
+      path: '/roadmap'
+      fullPath: '/roadmap/'
+      preLoaderRoute: typeof RoadmapIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play/': {
@@ -1394,6 +1414,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardIndexRoute: LeaderboardIndexRoute,
   PacksIndexRoute: PacksIndexRoute,
   PlayIndexRoute: PlayIndexRoute,
+  RoadmapIndexRoute: RoadmapIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   WhatsNewIndexRoute: WhatsNewIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

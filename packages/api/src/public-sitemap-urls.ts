@@ -15,6 +15,7 @@ export const PUBLIC_SITEMAP_STATIC_PATHS = [
 	"/badges/",
 	"/legal/privacy-policy",
 	"/legal/terms-of-service",
+	"/roadmap/",
 ] as const;
 
 export type PublicSitemapEntry = {

@@ -50,6 +50,7 @@ export const RESERVED_CONTENT_SLUG_LIST = [
 	"question",
 	"questions",
 	"register",
+	"roadmap",
 	"robots",
 	"rpc",
 	"search",
