@@ -126,16 +126,6 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 		version: "v26.05.05",
 		items: [
 			{
-				title: "Pack tags in the directory",
-				description:
-					"Optional author-defined tags and matching filters on the packs directory so sets are easier to browse without building playlist collections.",
-			},
-			{
-				title: "Duplicate topic inside a pack",
-				description:
-					"Let authors clone an existing topic (including its five questions) inside the same pack to iterate on themes or language variants faster.",
-			},
-			{
 				title: "Export pack and topic to files",
 				description:
 					"Download a pack or single topic in formats aligned with import—e.g. CSV, JSON, TXT, and Markdown—using the same validation shape as the import studio.",
@@ -144,6 +134,21 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				title: "Profile “draft packs” lane",
 				description:
 					"A compact strip or section on the profile for drafts and in-progress work, jumping straight into edit or publish flows.",
+			},
+			{
+				title: "Better stats of users on home, and profile page",
+				description:
+					"Not only the design of the stats (which can be more compact while revealing more info) but also the actual stats itself must be improved. Better analytics with the data we have. Averages, totals, for games, hosting, playing, answering, clicking, per packs, topics, questions, rooms etc.",
+			},
+			{
+				title: "Better badges section on badges page, and profile page",
+				description:
+					"Badges page currently just list down badges (and have search). And individual badge page just list down earners. There are no filtering, sorting, or ranking etc. We need these features on both pages. Also better design for the profile badges section, when there will be 40-50 badges, the profile page will be huge. Also an individual badge earn page, to share an earning badge with friends.",
+			},
+			{
+				title: "Update roles on /dashboard/users",
+				description:
+					"Admins (not moderators) must be able to update the role of other users (not admins). They can make users/moderators -> users/moderators/admins. When a role of a user updated, he/she should be logged out from any session.",
 			},
 		],
 	},
