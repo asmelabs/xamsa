@@ -114,6 +114,16 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Show presence indicator of players for both host and other players. Presence should be updated in real time. Green means the player is currently on the game/website, orange means the player is not on the website.",
 			},
+			{
+				title: "Reactions on comments",
+				description:
+					"Currently we can react to posts, but not to comments. Just like posts, we should be able to react to comments and replies.",
+			},
+			{
+				title: "Posts and Comments info on dashboard",
+				description:
+					"Add Posts and Comments sections to /dashboard (/dashboard/posts and /dashboard/comments). Show proper info on columns. Also, add total posts count and total comments count on user table columns (also sorting by these counts).",
+			},
 		],
 	},
 	{
