@@ -8,6 +8,8 @@ export type RoadmapItem = {
 
 export type RoadmapVersionBlock = {
 	version: string;
+	/** When true, this patch is shipped and running in production (show on the roadmap page). */
+	implemented?: boolean;
 	items: RoadmapItem[];
 };
 
@@ -19,6 +21,7 @@ export const ROADMAP_INTRO_PARAGRAPHS = [
 export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	{
 		version: "v26.05.02",
+		implemented: true,
 		items: [
 			{
 				title: "@-mentions in posts and comments",
@@ -46,9 +49,14 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 		version: "v26.05.03",
 		items: [
 			{
+				title: "Better post card, comment section and post page",
+				description:
+					"Currently the design of the post card, post page and comment thread is not good looking. We need to improve the design (both ui and ux) of these components and pages. On post page make the post wider, and also comment section, currently they have very narrow width. Better reaction bar design (remove user selectable text, because when user holds to react it selects the text), better reactors list and dialog. Make reaction button smaller etc. Fix most of the ui and ux of these sections.",
+			},
+			{
 				title: "“Following” home feed tab",
 				description:
-					"Add a filter on the home timeline so logged-in users can choose “Everyone” vs “People I follow,” reusing follow relationships already in the product.",
+					"Add a filter on the home timeline so logged-in users can choose “Everyone” vs “People I follow,” reusing follow relationships already in the product. On following tab, query must have feed=following sync with nuqs.",
 			},
 			{
 				title: "Pack and topic discussion sections",
@@ -58,12 +66,22 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 			{
 				title: "Search posts from home search",
 				description:
-					"Extend the glass search with a dedicated post result type: recent public posts with icons, snippets, and deep links, capped for performance.",
+					"Extend the glass search with a dedicated post result type: recent public posts with icons, snippets, and deep links, capped for performance. Posts will be searched by their 'body'.",
 			},
 			{
 				title: "Bookmark posts",
 				description:
-					"Let logged-in users save posts from the feed to revisit later via a simple list (e.g. profile or settings)—no moderation pipeline required.",
+					"Let logged-in users save posts from the feed to revisit later via a simple list (e.g. profile or settings)—no moderation pipeline required. Bookmarking should be optimistically updated on the ui.",
+			},
+			{
+				title: "Better profile page",
+				description:
+					"The profile page is getting bigger and bigger. We need to implement tabs for the profile pages of users. Currently on profile page there are - Header (user info, follow/settings buttons), badges section, progress section, my packs section, stats section, published packs section, recent games section and sign out button at the end. Keep the sign out button on all tabs footers (likely in layout) and header, also make the progress section below the header and always visible. Then create badges, stats, packs, and games tabs. Tabs must be synced with query tab=... with nuqs. And most importantly Feed tab (at the first place) where people see user's posts.",
+			},
+			{
+				title: "Better pack/topic/question pages",
+				description:
+					"Like profile pages, packs/topics/questions pages also need tabs. Keeb the header, main stats and play button. Add analytics and content tab. (content is topics for pack, questions for topic - question itself won't have content), and new tab Discussion which we will implement comments for.",
 			},
 		],
 	},

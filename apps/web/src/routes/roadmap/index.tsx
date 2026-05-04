@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Badge } from "@xamsa/ui/components/badge";
 import { collectionPageJsonLd } from "@/lib/json-ld";
 import {
 	ROADMAP_INTRO_PARAGRAPHS,
@@ -60,12 +61,19 @@ function RoadmapPage() {
 						const id = roadmapVersionAnchorId(block.version);
 						return (
 							<li key={block.version}>
-								<a
-									className="text-muted-foreground text-sm underline decoration-muted-foreground/40 underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
-									href={`#${id}`}
-								>
-									{block.version}
-								</a>
+								<span className="flex flex-wrap items-center gap-2">
+									<a
+										className="text-muted-foreground text-sm underline decoration-muted-foreground/40 underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+										href={`#${id}`}
+									>
+										{block.version}
+									</a>
+									{block.implemented ? (
+										<Badge variant="success" size="sm" title="Shipped and live">
+											Live
+										</Badge>
+									) : null}
+								</span>
 							</li>
 						);
 					})}
@@ -83,10 +91,15 @@ function RoadmapPage() {
 							id={id}
 						>
 							<h2
-								className="font-semibold text-foreground text-xl tracking-tight md:text-2xl"
+								className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-foreground text-xl tracking-tight md:text-2xl"
 								id={`${id}-heading`}
 							>
-								{block.version}
+								<span>{block.version}</span>
+								{block.implemented ? (
+									<Badge variant="success" size="sm" title="Shipped and live">
+										Live now
+									</Badge>
+								) : null}
 							</h2>
 							<ul className="mt-6 space-y-8 border-border border-l-2 pl-5 md:pl-6">
 								{block.items.map((item, itemIdx) => (
