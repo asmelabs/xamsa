@@ -23,6 +23,8 @@ import type {
 	ListFollowersOutputType,
 	ListFollowingInputType,
 	ListFollowingOutputType,
+	MentionCandidatesInputType,
+	MentionCandidatesOutputType,
 	RecentGameRow,
 	RemoveUserAvatarOutputType,
 	SetUserAvatarInputType,
@@ -759,4 +761,72 @@ export async function listFollowing(
 			: null;
 
 	return { items, nextCursor };
+}
+
+export async function mentionCandidates(
+	input: MentionCandidatesInputType,
+	sessionUserId: string,
+): Promise<MentionCandidatesOutputType> {
+	const prefix = input.prefix.trim().toLowerCase();
+	const limit = input.limit;
+
+	if (prefix.length < 1) {
+		const following = await prisma.userFollow.findMany({
+			where: { followerId: sessionUserId, status: "accepted" },
+			take: limit,
+			orderBy: { createdAt: "desc" },
+			select: { following: { select: { username: true, name: true } } },
+		});
+		let items = following.map((f) => f.following);
+		const seen = new Set(items.map((i) => i.username));
+
+		if (items.length < limit) {
+			const followers = await prisma.userFollow.findMany({
+				where: {
+					followingId: sessionUserId,
+					status: "accepted",
+				},
+				take: limit * 2,
+				orderBy: { createdAt: "desc" },
+				select: { follower: { select: { username: true, name: true } } },
+			});
+			for (const f of followers) {
+				if (items.length >= limit) {
+					break;
+				}
+				const u = f.follower;
+				if (!seen.has(u.username)) {
+					seen.add(u.username);
+					items.push(u);
+				}
+			}
+		}
+
+		if (items.length < limit) {
+			const fill = await prisma.user.findMany({
+				where: {
+					NOT: { id: sessionUserId },
+					...(seen.size > 0 ? { username: { notIn: [...seen] } } : {}),
+				},
+				take: limit - items.length,
+				orderBy: { username: "asc" },
+				select: { username: true, name: true },
+			});
+			items = [...items, ...fill];
+		}
+
+		return { items };
+	}
+
+	const rows = await prisma.user.findMany({
+		where: {
+			username: { startsWith: prefix },
+			NOT: { id: sessionUserId },
+		},
+		take: limit,
+		orderBy: { username: "asc" },
+		select: { username: true, name: true },
+	});
+
+	return { items: rows };
 }

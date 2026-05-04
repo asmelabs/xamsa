@@ -5,6 +5,7 @@ import {
 	mockGameOg,
 	mockLeaderboardOg,
 	mockPackOg,
+	mockPostOg,
 	mockReleaseOg,
 	mockTopicOg,
 	mockUserOg,
@@ -16,6 +17,7 @@ import { JoinOg } from "@/lib/og/templates/join";
 import { LeaderboardOg } from "@/lib/og/templates/leaderboard";
 import { PackOg } from "@/lib/og/templates/pack";
 import { PlayOg } from "@/lib/og/templates/play";
+import { PostOg } from "@/lib/og/templates/post";
 import { ReleaseOg } from "@/lib/og/templates/release";
 import { TopicOg } from "@/lib/og/templates/topic";
 import { UserOg } from "@/lib/og/templates/user";
@@ -61,6 +63,8 @@ export const Route = createFileRoute("/api/dev/og-preview/$kind/og.png")({
 						return ogImageResponse(<BadgeOg data={mockBadgeOg} />, preview);
 					case "release":
 						return ogImageResponse(<ReleaseOg data={mockReleaseOg} />, preview);
+					case "post":
+						return ogImageResponse(<PostOg data={mockPostOg} />, preview);
 					default: {
 						const _exhaustive: never = kind;
 						return _exhaustive;

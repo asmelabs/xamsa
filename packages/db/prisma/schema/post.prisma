@@ -33,6 +33,8 @@ model Post {
   attachment PostAttachment?
   comments   Comment[]
   reactions  Reaction[]
+  mentions                  Mention[]
+  mentionEmailNotifications MentionEmailNotification[]
 
   @@index([userId])
   @@index([createdAt, id])
@@ -83,4 +85,44 @@ model Reaction {
   @@index([postId])
   @@index([commentId])
   @@map("reaction")
+}
+
+/// @username tags on a post body; one row per distinct mentioned user per post.
+model Mention {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  mentionedUserId String @map("mentioned_user_id")
+  mentionedUser   User   @relation("MentionsReceived", fields: [mentionedUserId], references: [id], onDelete: Cascade)
+
+  createdByUserId String @map("created_by_user_id")
+  createdByUser   User   @relation("MentionsCreated", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  postId String? @map("post_id")
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  commentId String?  @map("comment_id")
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([mentionedUserId])
+  @@index([postId])
+  @@index([commentId])
+  @@index([createdByUserId])
+  @@map("mention")
+}
+
+/// Recent mention emails per recipient+post for burst dedupe (same-window skips).
+model MentionEmailNotification {
+  id String @id @default(uuid())
+
+  sentAt DateTime @default(now()) @map("sent_at")
+
+  recipientUserId String @map("recipient_user_id")
+  recipient       User   @relation("MentionEmailNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  postId String @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, postId, sentAt])
+  @@map("mention_email_notification")
 }

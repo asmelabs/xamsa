@@ -139,6 +139,10 @@ export const PostReactionByTypeSchema = z.object({
 
 export type PostReactionByTypeType = z.infer<typeof PostReactionByTypeSchema>;
 
+export const MentionUsernameSchema = z.object({
+	username: z.string(),
+});
+
 export const PostRowSchema = PostSchema.pick({
 	id: true,
 	slug: true,
@@ -152,6 +156,7 @@ export const PostRowSchema = PostSchema.pick({
 	attachment: PostAttachmentRowSchema.nullable(),
 	myReactionType: ReactionTypeSchema.nullish(),
 	reactionsByType: z.array(PostReactionByTypeSchema),
+	mentions: z.array(MentionUsernameSchema),
 });
 
 export type PostRowType = z.infer<typeof PostRowSchema>;
@@ -179,3 +184,9 @@ export const ListPostsOutputSchema = z.object({
 });
 
 export type ListPostsOutputType = z.infer<typeof ListPostsOutputSchema>;
+
+export const FindOnePostInputSchema = z.object({
+	slug: z.string().min(1),
+});
+
+export type FindOnePostInputType = z.infer<typeof FindOnePostInputSchema>;

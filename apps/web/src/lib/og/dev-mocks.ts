@@ -2,6 +2,7 @@ import type { BadgeOgData } from "./templates/badge";
 import type { GameOgData } from "./templates/game";
 import type { LeaderboardOgData } from "./templates/leaderboard";
 import type { PackOgData } from "./templates/pack";
+import type { PostOgData } from "./templates/post";
 import type { ReleaseOgData } from "./templates/release";
 import type { TopicOgData } from "./templates/topic";
 import type { UserOgData } from "./templates/user";
@@ -17,6 +18,7 @@ export const OG_PREVIEW_KINDS = [
 	"game",
 	"badge",
 	"release",
+	"post",
 ] as const;
 
 export type OgPreviewKind = (typeof OG_PREVIEW_KINDS)[number];
@@ -78,6 +80,16 @@ export const mockReleaseOg: ReleaseOgData = {
 	releasedAt: "27 Apr 2026",
 };
 
+export const mockPostOg: PostOgData = {
+	bodyPreview:
+		"We crushed three packs tonight — @alexquiz your movie round is lethal. Same time next Friday?",
+	authorName: "Jamie Chen",
+	authorUsername: "jamiechen",
+	hasImage: true,
+	reactionCount: 14,
+	commentCount: 6,
+};
+
 export const mockLeaderboardOg: LeaderboardOgData = {
 	board: "elo",
 	top: [
@@ -115,6 +127,7 @@ export const OG_PREVIEW_LABELS: Record<OgPreviewKind, string> = {
 	game: "Live game",
 	badge: "Badge",
 	release: "What’s new",
+	post: "Home post",
 };
 
 /** Short copy for the dev preview lightbox (what this OG represents in production). */
@@ -128,4 +141,5 @@ export const OG_PREVIEW_DESCRIPTIONS: Record<OgPreviewKind, string> = {
 	game: "Active or waiting game room — code, pack name, status, player count.",
 	badge: "Achievement detail — name and description for a badge page.",
 	release: "What’s new entry — version label, title line, and release date.",
+	post: "Feed post — author, snippet, comments and reactions from mocks.",
 };

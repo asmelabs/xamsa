@@ -28,6 +28,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as WhatsNewLatestRouteImport } from './routes/whats-new/latest'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
+import { Route as PPostSlugRouteImport } from './routes/p/$postSlug'
 import { Route as LegalTermsOfServiceRouteImport } from './routes/legal/terms-of-service'
 import { Route as LegalPrivacyPolicyRouteImport } from './routes/legal/privacy-policy'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -60,11 +61,13 @@ import { Route as PlayNewPackSlugIndexRouteImport } from './routes/play/new/$pac
 import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
 import { Route as GCodeStatsIndexRouteImport } from './routes/g/$code/stats/index'
+import { Route as UUsernamePPostSlugRouteImport } from './routes/u/$username/p/$postSlug'
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
 import { Route as PacksPackSlugTopicsBulkIndexRouteImport } from './routes/packs/$packSlug/topics/bulk/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
 import { Route as ApiOgWhatsNewVersionOgDotpngRouteImport } from './routes/api/og/whats-new/$version/og[.]png'
 import { Route as ApiOgUserUsernameOgDotpngRouteImport } from './routes/api/og/user/$username/og[.]png'
+import { Route as ApiOgPostPostSlugOgDotpngRouteImport } from './routes/api/og/post/$postSlug/og[.]png'
 import { Route as ApiOgPackSlugOgDotpngRouteImport } from './routes/api/og/pack/$slug/og[.]png'
 import { Route as ApiOgGameCodeOgDotpngRouteImport } from './routes/api/og/game/$code/og[.]png'
 import { Route as ApiOgBadgesBadgeIdOgDotpngRouteImport } from './routes/api/og/badges/$badgeId/og[.]png'
@@ -169,6 +172,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
 const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
   id: '/settings/security',
   path: '/settings/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PPostSlugRoute = PPostSlugRouteImport.update({
+  id: '/p/$postSlug',
+  path: '/p/$postSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalTermsOfServiceRoute = LegalTermsOfServiceRouteImport.update({
@@ -332,6 +340,11 @@ const GCodeStatsIndexRoute = GCodeStatsIndexRouteImport.update({
   path: '/g/$code/stats/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUsernamePPostSlugRoute = UUsernamePPostSlugRouteImport.update({
+  id: '/p/$postSlug',
+  path: '/p/$postSlug',
+  getParentRoute: () => UUsernameRoute,
+} as any)
 const PacksPackSlugTopicsNewIndexRoute =
   PacksPackSlugTopicsNewIndexRouteImport.update({
     id: '/packs/$packSlug/topics/new/',
@@ -360,6 +373,12 @@ const ApiOgUserUsernameOgDotpngRoute =
   ApiOgUserUsernameOgDotpngRouteImport.update({
     id: '/api/og/user/$username/og.png',
     path: '/api/og/user/$username/og.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiOgPostPostSlugOgDotpngRoute =
+  ApiOgPostPostSlugOgDotpngRouteImport.update({
+    id: '/api/og/post/$postSlug/og.png',
+    path: '/api/og/post/$postSlug/og.png',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiOgPackSlugOgDotpngRoute = ApiOgPackSlugOgDotpngRouteImport.update({
@@ -432,8 +451,9 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
+  '/p/$postSlug': typeof PPostSlugRoute
   '/settings/security': typeof SettingsSecurityRoute
-  '/u/$username': typeof UUsernameRoute
+  '/u/$username': typeof UUsernameRouteWithChildren
   '/whats-new/latest': typeof WhatsNewLatestRoute
   '/auth/': typeof AuthIndexRoute
   '/badges/': typeof BadgesIndexRoute
@@ -469,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/whats-new/$version/': typeof WhatsNewVersionIndexRoute
+  '/u/$username/p/$postSlug': typeof UUsernamePPostSlugRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
@@ -477,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
   '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
   '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
+  '/api/og/post/$postSlug/og.png': typeof ApiOgPostPostSlugOgDotpngRoute
   '/api/og/user/$username/og.png': typeof ApiOgUserUsernameOgDotpngRoute
   '/api/og/whats-new/$version/og.png': typeof ApiOgWhatsNewVersionOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
@@ -498,8 +520,9 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
+  '/p/$postSlug': typeof PPostSlugRoute
   '/settings/security': typeof SettingsSecurityRoute
-  '/u/$username': typeof UUsernameRoute
+  '/u/$username': typeof UUsernameRouteWithChildren
   '/whats-new/latest': typeof WhatsNewLatestRoute
   '/auth': typeof AuthIndexRoute
   '/badges': typeof BadgesIndexRoute
@@ -535,6 +558,7 @@ export interface FileRoutesByTo {
   '/packs/bulk-new': typeof PacksBulkNewIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
   '/whats-new/$version': typeof WhatsNewVersionIndexRoute
+  '/u/$username/p/$postSlug': typeof UUsernamePPostSlugRoute
   '/g/$code/stats': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics': typeof PacksPackSlugTopicsIndexRoute
@@ -543,6 +567,7 @@ export interface FileRoutesByTo {
   '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
   '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
   '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
+  '/api/og/post/$postSlug/og.png': typeof ApiOgPostPostSlugOgDotpngRoute
   '/api/og/user/$username/og.png': typeof ApiOgUserUsernameOgDotpngRoute
   '/api/og/whats-new/$version/og.png': typeof ApiOgWhatsNewVersionOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug': typeof PacksPackSlugTopicsTopicSlugIndexRoute
@@ -567,8 +592,9 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
+  '/p/$postSlug': typeof PPostSlugRoute
   '/settings/security': typeof SettingsSecurityRoute
-  '/u/$username': typeof UUsernameRoute
+  '/u/$username': typeof UUsernameRouteWithChildren
   '/whats-new/latest': typeof WhatsNewLatestRoute
   '/auth/': typeof AuthIndexRoute
   '/badges/': typeof BadgesIndexRoute
@@ -604,6 +630,7 @@ export interface FileRoutesById {
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/whats-new/$version/': typeof WhatsNewVersionIndexRoute
+  '/u/$username/p/$postSlug': typeof UUsernamePPostSlugRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
   '/packs/$packSlug/topics/': typeof PacksPackSlugTopicsIndexRoute
@@ -612,6 +639,7 @@ export interface FileRoutesById {
   '/api/og/badges/$badgeId/og.png': typeof ApiOgBadgesBadgeIdOgDotpngRoute
   '/api/og/game/$code/og.png': typeof ApiOgGameCodeOgDotpngRoute
   '/api/og/pack/$slug/og.png': typeof ApiOgPackSlugOgDotpngRoute
+  '/api/og/post/$postSlug/og.png': typeof ApiOgPostPostSlugOgDotpngRoute
   '/api/og/user/$username/og.png': typeof ApiOgUserUsernameOgDotpngRoute
   '/api/og/whats-new/$version/og.png': typeof ApiOgWhatsNewVersionOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/': typeof PacksPackSlugTopicsTopicSlugIndexRoute
@@ -637,6 +665,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/legal/privacy-policy'
     | '/legal/terms-of-service'
+    | '/p/$postSlug'
     | '/settings/security'
     | '/u/$username'
     | '/whats-new/latest'
@@ -674,6 +703,7 @@ export interface FileRouteTypes {
     | '/packs/bulk-new/'
     | '/packs/new/'
     | '/whats-new/$version/'
+    | '/u/$username/p/$postSlug'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
@@ -682,6 +712,7 @@ export interface FileRouteTypes {
     | '/api/og/badges/$badgeId/og.png'
     | '/api/og/game/$code/og.png'
     | '/api/og/pack/$slug/og.png'
+    | '/api/og/post/$postSlug/og.png'
     | '/api/og/user/$username/og.png'
     | '/api/og/whats-new/$version/og.png'
     | '/packs/$packSlug/topics/$topicSlug/'
@@ -703,6 +734,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/legal/privacy-policy'
     | '/legal/terms-of-service'
+    | '/p/$postSlug'
     | '/settings/security'
     | '/u/$username'
     | '/whats-new/latest'
@@ -740,6 +772,7 @@ export interface FileRouteTypes {
     | '/packs/bulk-new'
     | '/packs/new'
     | '/whats-new/$version'
+    | '/u/$username/p/$postSlug'
     | '/g/$code/stats'
     | '/packs/$packSlug/edit'
     | '/packs/$packSlug/topics'
@@ -748,6 +781,7 @@ export interface FileRouteTypes {
     | '/api/og/badges/$badgeId/og.png'
     | '/api/og/game/$code/og.png'
     | '/api/og/pack/$slug/og.png'
+    | '/api/og/post/$postSlug/og.png'
     | '/api/og/user/$username/og.png'
     | '/api/og/whats-new/$version/og.png'
     | '/packs/$packSlug/topics/$topicSlug'
@@ -771,6 +805,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/legal/privacy-policy'
     | '/legal/terms-of-service'
+    | '/p/$postSlug'
     | '/settings/security'
     | '/u/$username'
     | '/whats-new/latest'
@@ -808,6 +843,7 @@ export interface FileRouteTypes {
     | '/packs/bulk-new/'
     | '/packs/new/'
     | '/whats-new/$version/'
+    | '/u/$username/p/$postSlug'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
     | '/packs/$packSlug/topics/'
@@ -816,6 +852,7 @@ export interface FileRouteTypes {
     | '/api/og/badges/$badgeId/og.png'
     | '/api/og/game/$code/og.png'
     | '/api/og/pack/$slug/og.png'
+    | '/api/og/post/$postSlug/og.png'
     | '/api/og/user/$username/og.png'
     | '/api/og/whats-new/$version/og.png'
     | '/packs/$packSlug/topics/$topicSlug/'
@@ -837,8 +874,9 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   LegalPrivacyPolicyRoute: typeof LegalPrivacyPolicyRoute
   LegalTermsOfServiceRoute: typeof LegalTermsOfServiceRoute
+  PPostSlugRoute: typeof PPostSlugRoute
   SettingsSecurityRoute: typeof SettingsSecurityRoute
-  UUsernameRoute: typeof UUsernameRoute
+  UUsernameRoute: typeof UUsernameRouteWithChildren
   WhatsNewLatestRoute: typeof WhatsNewLatestRoute
   BadgesIndexRoute: typeof BadgesIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
@@ -871,6 +909,7 @@ export interface RootRouteChildren {
   ApiOgBadgesBadgeIdOgDotpngRoute: typeof ApiOgBadgesBadgeIdOgDotpngRoute
   ApiOgGameCodeOgDotpngRoute: typeof ApiOgGameCodeOgDotpngRoute
   ApiOgPackSlugOgDotpngRoute: typeof ApiOgPackSlugOgDotpngRoute
+  ApiOgPostPostSlugOgDotpngRoute: typeof ApiOgPostPostSlugOgDotpngRoute
   ApiOgUserUsernameOgDotpngRoute: typeof ApiOgUserUsernameOgDotpngRoute
   ApiOgWhatsNewVersionOgDotpngRoute: typeof ApiOgWhatsNewVersionOgDotpngRoute
   PacksPackSlugTopicsTopicSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugIndexRoute
@@ -1017,6 +1056,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/security'
       fullPath: '/settings/security'
       preLoaderRoute: typeof SettingsSecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$postSlug': {
+      id: '/p/$postSlug'
+      path: '/p/$postSlug'
+      fullPath: '/p/$postSlug'
+      preLoaderRoute: typeof PPostSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/terms-of-service': {
@@ -1243,6 +1289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GCodeStatsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$username/p/$postSlug': {
+      id: '/u/$username/p/$postSlug'
+      path: '/p/$postSlug'
+      fullPath: '/u/$username/p/$postSlug'
+      preLoaderRoute: typeof UUsernamePPostSlugRouteImport
+      parentRoute: typeof UUsernameRoute
+    }
     '/packs/$packSlug/topics/new/': {
       id: '/packs/$packSlug/topics/new/'
       path: '/packs/$packSlug/topics/new'
@@ -1276,6 +1329,13 @@ declare module '@tanstack/react-router' {
       path: '/api/og/user/$username/og.png'
       fullPath: '/api/og/user/$username/og.png'
       preLoaderRoute: typeof ApiOgUserUsernameOgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/post/$postSlug/og.png': {
+      id: '/api/og/post/$postSlug/og.png'
+      path: '/api/og/post/$postSlug/og.png'
+      fullPath: '/api/og/post/$postSlug/og.png'
+      preLoaderRoute: typeof ApiOgPostPostSlugOgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/og/pack/$slug/og.png': {
@@ -1397,6 +1457,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface UUsernameRouteChildren {
+  UUsernamePPostSlugRoute: typeof UUsernamePPostSlugRoute
+}
+
+const UUsernameRouteChildren: UUsernameRouteChildren = {
+  UUsernamePPostSlugRoute: UUsernamePPostSlugRoute,
+}
+
+const UUsernameRouteWithChildren = UUsernameRoute._addFileChildren(
+  UUsernameRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
@@ -1405,8 +1477,9 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   LegalPrivacyPolicyRoute: LegalPrivacyPolicyRoute,
   LegalTermsOfServiceRoute: LegalTermsOfServiceRoute,
+  PPostSlugRoute: PPostSlugRoute,
   SettingsSecurityRoute: SettingsSecurityRoute,
-  UUsernameRoute: UUsernameRoute,
+  UUsernameRoute: UUsernameRouteWithChildren,
   WhatsNewLatestRoute: WhatsNewLatestRoute,
   BadgesIndexRoute: BadgesIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,
@@ -1439,6 +1512,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOgBadgesBadgeIdOgDotpngRoute: ApiOgBadgesBadgeIdOgDotpngRoute,
   ApiOgGameCodeOgDotpngRoute: ApiOgGameCodeOgDotpngRoute,
   ApiOgPackSlugOgDotpngRoute: ApiOgPackSlugOgDotpngRoute,
+  ApiOgPostPostSlugOgDotpngRoute: ApiOgPostPostSlugOgDotpngRoute,
   ApiOgUserUsernameOgDotpngRoute: ApiOgUserUsernameOgDotpngRoute,
   ApiOgWhatsNewVersionOgDotpngRoute: ApiOgWhatsNewVersionOgDotpngRoute,
   PacksPackSlugTopicsTopicSlugIndexRoute:

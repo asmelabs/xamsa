@@ -13,12 +13,38 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 1 } as const;
+const current = { year: 2026, month: 5, patch: 2 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-02",
+			year: 2026,
+			month: 5,
+			patch: 2,
+			title:
+				"Tag your crew, thread the chatter, and share posts that travel beautifully",
+			highlights: [
+				{
+					kind: "text",
+					text: "Drop @handles in posts and comments—when friends are named, their names light up with a friendly path to their profile so nobody’s left guessing who you meant.",
+				},
+				{
+					kind: "text",
+					text: "Get a gentle ping by email when someone’s talking about you, with enough context to know it’s real and a button that lands you right on the moment—quietly capped so your inbox doesn’t hum with repeats.",
+				},
+				{
+					kind: "text",
+					text: "Every post has a calm, permanent home on the web: copy its link, send it anywhere, and chats will unfurl a proper preview card with the author’s voice up front.",
+				},
+				{
+					kind: "text",
+					text: "Comments now branch the way real conversations do—reply inline, tuck noisy side-threads out of sight, and keep the banter readable without losing the spark.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-01",
 			year: 2026,

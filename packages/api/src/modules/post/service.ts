@@ -8,6 +8,7 @@ import type {
 	CreatePostOutputType,
 	DeletePostInputType,
 	DeletePostOutputType,
+	FindOnePostInputType,
 	ListPostsInputType,
 	ListPostsOutputType,
 	PostAttachmentRowType,
@@ -23,6 +24,8 @@ import {
 } from "@xamsa/upload";
 import { derivePostSlugSeedFromBody } from "@xamsa/utils/post-slug";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
+import { notifyMentionedUsersForContent } from "../../lib/mention-notifications";
+import { insertMentionsForPost } from "../../lib/mention-write";
 
 const FEED_AUTHOR = {
 	select: { id: true, username: true, name: true, image: true },
@@ -57,6 +60,31 @@ function decodePostCursor(cursor: string): { c: string; id: string } | null {
 	} catch {
 		return null;
 	}
+}
+
+async function usernamesForPostMentions(
+	postIds: string[],
+): Promise<Map<string, { username: string }[]>> {
+	if (postIds.length === 0) {
+		return new Map();
+	}
+	const rows = await prisma.mention.findMany({
+		where: { postId: { in: postIds }, commentId: null },
+		select: {
+			postId: true,
+			mentionedUser: { select: { username: true } },
+		},
+	});
+	const map = new Map<string, { username: string }[]>();
+	for (const r of rows) {
+		if (r.postId == null) {
+			continue;
+		}
+		const arr = map.get(r.postId) ?? [];
+		arr.push({ username: r.mentionedUser.username });
+		map.set(r.postId, arr);
+	}
+	return map;
 }
 
 async function validateAttachmentCreateInput(
@@ -198,6 +226,7 @@ async function toPostRow(
 	p: PostWithRelations,
 	myReactionType?: ReactionEmoji | null,
 	reactionsByType: readonly PostReactionByTypeType[] = [],
+	mentions: readonly { username: string }[] = [],
 ): Promise<PostRowType> {
 	const attachmentRow = p.attachment
 		? await buildAttachmentRow(p.attachment)
@@ -214,6 +243,7 @@ async function toPostRow(
 		attachment: attachmentRow,
 		myReactionType: myReactionType ?? undefined,
 		reactionsByType: [...reactionsByType],
+		mentions: [...mentions],
 	};
 }
 
@@ -277,39 +307,75 @@ export async function createPost(
 
 	let transactionFailedAfterUpload = false;
 	try {
-		const created = await prisma.$transaction(async (tx) => {
-			const attachUnchecked = input.attachment
-				? await validateAttachmentCreateInput(tx, input.attachment)
-				: null;
+		const { created, mentionedUserIds } = await prisma.$transaction(
+			async (tx) => {
+				const attachUnchecked = input.attachment
+					? await validateAttachmentCreateInput(tx, input.attachment)
+					: null;
 
-			await tx.post.create({
-				data: {
-					id: postId,
-					slug,
+				await tx.post.create({
+					data: {
+						id: postId,
+						slug,
+						body: trimmedBody,
+						image: imageUrl,
+						imagePublicId: imagePidStored,
+						userId,
+						...(attachUnchecked != null && {
+							attachment: {
+								create: attachUnchecked,
+							},
+						}),
+					},
+				});
+
+				await tx.user.update({
+					where: { id: userId },
+					data: { totalPosts: { increment: 1 } },
+				});
+
+				const row = await tx.post.findUniqueOrThrow({
+					where: { id: postId },
+					include: { author: FEED_AUTHOR, attachment: true },
+				});
+
+				const mentionedUserIds = await insertMentionsForPost(tx, {
+					postId,
 					body: trimmedBody,
-					image: imageUrl,
-					imagePublicId: imagePidStored,
-					userId,
-					...(attachUnchecked != null && {
-						attachment: {
-							create: attachUnchecked,
-						},
-					}),
-				},
-			});
+					createdByUserId: userId,
+				});
 
-			await tx.user.update({
-				where: { id: userId },
-				data: { totalPosts: { increment: 1 } },
-			});
+				return { created: row, mentionedUserIds };
+			},
+		);
 
-			return tx.post.findUniqueOrThrow({
-				where: { id: postId },
-				include: { author: FEED_AUTHOR, attachment: true },
-			});
+		const mentionUsernames = await prisma.mention.findMany({
+			where: { postId: created.id, commentId: null },
+			select: { mentionedUser: { select: { username: true } } },
 		});
+		const mentions = mentionUsernames.map((m) => ({
+			username: m.mentionedUser.username,
+		}));
 
-		return toPostRow(created, null, []);
+		if (mentionedUserIds.length > 0) {
+			const actorName =
+				created.author.name.trim().length > 0
+					? created.author.name
+					: created.author.username;
+			void notifyMentionedUsersForContent({
+				postId: created.id,
+				postSlug: created.slug,
+				actorUserId: userId,
+				actorDisplayName: actorName,
+				mentionedUserIds,
+				source: "post",
+				body: trimmedBody ?? "",
+			}).catch((err) => {
+				console.error("[createPost] mention notify", err);
+			});
+		}
+
+		return toPostRow(created, null, [], mentions);
 	} catch (e) {
 		transactionFailedAfterUpload = !!imagePidStored;
 		if (transactionFailedAfterUpload && imagePidStored) {
@@ -432,6 +498,56 @@ export async function deletePost(
 	return { ok: true as const };
 }
 
+export async function findOnePost(
+	input: FindOnePostInputType,
+	viewerUserId?: string,
+): Promise<PostRowType> {
+	const row = await prisma.post.findFirst({
+		where: { slug: input.slug },
+		include: { author: FEED_AUTHOR, attachment: true },
+	});
+
+	if (!row) {
+		throw new ORPCError("NOT_FOUND", { message: "Post not found." });
+	}
+
+	let myReactionType: ReactionEmoji | null = null;
+	if (viewerUserId) {
+		const mine = await prisma.reaction.findFirst({
+			where: { userId: viewerUserId, postId: row.id },
+			select: { type: true },
+		});
+		myReactionType = mine?.type ?? null;
+	}
+
+	const grouped = await prisma.reaction.groupBy({
+		by: ["postId", "type"],
+		where: { postId: row.id },
+		_count: { _all: true },
+	});
+
+	const reactionsByType = sortedReactionsByTypeFromGrouped(
+		grouped
+			.map((g) => {
+				const pid = g.postId;
+				if (pid == null) {
+					return null;
+				}
+				return { type: g.type, count: g._count._all };
+			})
+			.filter((x): x is { type: ReactionEmoji; count: number } => x != null),
+	);
+
+	const mentionMap = await usernamesForPostMentions([row.id]);
+
+	return toPostRow(
+		row as PostWithRelations,
+		myReactionType,
+		reactionsByType,
+		mentionMap.get(row.id) ?? [],
+	);
+}
+
 export async function listPosts(
 	input: ListPostsInputType,
 	currentUserId?: string,
@@ -511,12 +627,15 @@ export async function listPosts(
 		}
 	}
 
+	const mentionMap = await usernamesForPostMentions(page.map((p) => p.id));
+
 	const items = await Promise.all(
 		page.map((p) =>
 			toPostRow(
 				p as PostWithRelations,
 				reactionByPost.get(p.id) ?? null,
 				sortedReactionsByTypeFromGrouped(breakdownByPostId.get(p.id) ?? []),
+				mentionMap.get(p.id) ?? [],
 			),
 		),
 	);

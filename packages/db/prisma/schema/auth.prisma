@@ -98,6 +98,10 @@ model User {
   posts Post[]
   reactions Reaction[]
 
+  mentionsReceived          Mention[]                   @relation("MentionsReceived")
+  mentionsCreated           Mention[]                   @relation("MentionsCreated")
+  mentionEmailNotifications MentionEmailNotification[] @relation("MentionEmailNotifications")
+
   @@index([elo])
   @@index([xp])
   @@index([totalWins])

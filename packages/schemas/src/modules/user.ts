@@ -342,6 +342,27 @@ export const ListFollowingOutputSchema = ListFollowersOutputSchema;
 export type ListFollowingInputType = z.infer<typeof ListFollowingInputSchema>;
 export type ListFollowingOutputType = z.infer<typeof ListFollowingOutputSchema>;
 
+export const MentionCandidatesInputSchema = z.object({
+	prefix: z.string().max(30),
+	limit: z.number().int().min(1).max(12).default(8),
+});
+
+export const MentionCandidatesOutputSchema = z.object({
+	items: z.array(
+		z.object({
+			username: UserSchema.shape.username,
+			name: UserSchema.shape.name,
+		}),
+	),
+});
+
+export type MentionCandidatesInputType = z.infer<
+	typeof MentionCandidatesInputSchema
+>;
+export type MentionCandidatesOutputType = z.infer<
+	typeof MentionCandidatesOutputSchema
+>;
+
 /**
  * GLOBAL LEADERBOARD
  *
