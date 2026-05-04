@@ -38,6 +38,16 @@ export type FinalizeGameOptions = {
 };
 
 /**
+ * Prisma interactive transactions default to a 5s timeout; {@link finalizeGame}
+ * runs many queries (stats rollups, pack bump) and can exceed that on a cold DB
+ * or busy games (P2028).
+ */
+export const FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS = {
+	maxWait: 15_000,
+	timeout: 120_000,
+} as const;
+
+/**
  * FINALIZE GAME
  *
  * The single source of truth for closing out a game. Called by:

@@ -12,7 +12,10 @@ import type {
 } from "@xamsa/schemas/modules/player";
 import { MAX_PLAYERS_PER_GAME } from "@xamsa/utils/constants";
 import { publishBadgeEarnedMany } from "../badge/publish";
-import { finalizeGame } from "../game/finalize-game";
+import {
+	FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS,
+	finalizeGame,
+} from "../game/finalize-game";
 import { scheduleGameWinnerEmailIfNeeded } from "../game/notify-game-winner-email";
 
 export async function joinPlayer(
@@ -364,7 +367,7 @@ export async function leavePlayer(
 				expiredClickId: expiredId,
 				triggeredFinalize: finalizeResult,
 			};
-		});
+		}, FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS);
 
 	const channel = ablyRest.channels.get(channels.game(input.code));
 	await channel.publish(GAME_EVENTS.PLAYER_LEFT, {

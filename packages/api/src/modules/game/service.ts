@@ -37,7 +37,11 @@ import {
 	userIdsWhoSawQuestionInPriorCompletedGames,
 } from "./duplicate-question-policy";
 import { finalizeGameQuestion, finalizeGameTopic } from "./finalize";
-import { completeLobbyOnlyGame, finalizeGame } from "./finalize-game";
+import {
+	completeLobbyOnlyGame,
+	FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS,
+	finalizeGame,
+} from "./finalize-game";
 import { resolveSessionTopicPackOrders } from "./included-topics";
 import { scheduleGameWinnerEmailIfNeeded } from "./notify-game-winner-email";
 import { generateUniqueGameCode } from "./utils";
@@ -1537,8 +1541,9 @@ export async function completeGame(
 
 	const now = new Date();
 
-	const finalResult = await prisma.$transaction(async (tx) =>
-		finalizeGame(tx, game.id, { now }),
+	const finalResult = await prisma.$transaction(
+		async (tx) => finalizeGame(tx, game.id, { now }),
+		FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS,
 	);
 
 	if (finalResult.badgeEvents.length > 0) {
@@ -1649,9 +1654,10 @@ export async function handleHostDisconnect(
 		};
 	}
 
-	const finalResult = await prisma.$transaction(async (tx) => {
-		return finalizeGame(tx, game.id, { force: true });
-	});
+	const finalResult = await prisma.$transaction(
+		async (tx) => finalizeGame(tx, game.id, { force: true }),
+		FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS,
+	);
 
 	if (!finalResult.wasAlreadyCompleted) {
 		if (finalResult.badgeEvents.length > 0) {
@@ -1706,7 +1712,7 @@ export async function leaveAsHost(
 			return completeLobbyOnlyGame(tx, game.id, now);
 		}
 		return finalizeGame(tx, game.id, { now, force: true });
-	});
+	}, FINALIZE_GAME_INTERACTIVE_TRANSACTION_OPTIONS);
 
 	if (finalResult.badgeEvents.length > 0) {
 		await publishBadgeEarnedMany(input.code, finalResult.badgeEvents);
