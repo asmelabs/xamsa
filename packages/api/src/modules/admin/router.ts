@@ -3,10 +3,14 @@ import {
 	ListAdminBadgesOutputSchema,
 	ListAdminClicksInputSchema,
 	ListAdminClicksOutputSchema,
+	ListAdminCommentsInputSchema,
+	ListAdminCommentsOutputSchema,
 	ListAdminGamesInputSchema,
 	ListAdminGamesOutputSchema,
 	ListAdminPacksInputSchema,
 	ListAdminPacksOutputSchema,
+	ListAdminPostsInputSchema,
+	ListAdminPostsOutputSchema,
 	ListAdminQuestionsInputSchema,
 	ListAdminQuestionsOutputSchema,
 	ListAdminTopicBulkJobsInputSchema,
@@ -20,8 +24,10 @@ import { moderatorProcedure } from "../../procedures";
 import {
 	listAdminBadges,
 	listAdminClicks,
+	listAdminComments,
 	listAdminGames,
 	listAdminPacks,
+	listAdminPosts,
 	listAdminQuestions,
 	listAdminTopicBulkJobs,
 	listAdminTopics,
@@ -61,4 +67,12 @@ export const adminRouter = {
 		.input(ListAdminTopicBulkJobsInputSchema)
 		.output(ListAdminTopicBulkJobsOutputSchema)
 		.handler(async ({ input }) => await listAdminTopicBulkJobs(input)),
+	listPosts: moderatorProcedure
+		.input(ListAdminPostsInputSchema)
+		.output(ListAdminPostsOutputSchema)
+		.handler(async ({ input }) => await listAdminPosts(input)),
+	listComments: moderatorProcedure
+		.input(ListAdminCommentsInputSchema)
+		.output(ListAdminCommentsOutputSchema)
+		.handler(async ({ input }) => await listAdminComments(input)),
 };

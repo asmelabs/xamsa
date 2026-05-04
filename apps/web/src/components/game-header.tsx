@@ -21,6 +21,7 @@ import {
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useGamePresence } from "@/hooks/use-game-presence";
 import type { GameData } from "@/lib/game-types";
 import { getJoinInviteAbsoluteUrl } from "@/lib/join-invite-url";
 import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
@@ -29,6 +30,7 @@ import { orpc } from "@/utils/orpc";
 import { BetterDialog } from "./better-dialog";
 import { GameShareSheet } from "./game-share-sheet";
 import { LoadingButton } from "./loading-button";
+import { PresenceDot } from "./presence-dot";
 
 const statusConfig = {
 	waiting: { label: "Waiting for players", variant: "outline" as const },
@@ -44,6 +46,7 @@ interface GameHeaderProps {
 export function GameHeader({ game }: GameHeaderProps) {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
+	const presence = useGamePresence();
 
 	const [endGameOpen, setEndGameOpen] = useQueryState(
 		"end-game",
@@ -107,9 +110,22 @@ export function GameHeader({ game }: GameHeaderProps) {
 							{status.label}
 						</Badge>
 					</div>
-					{topicProgressLine ? (
-						<p className="text-muted-foreground text-xs">{topicProgressLine}</p>
-					) : null}
+					<div className="mt-0.5 flex items-center gap-1.5 text-muted-foreground text-xs">
+						<PresenceDot state={presence.hostPresence} size="sm" />
+						<span>
+							{game.isHost
+								? "You're hosting"
+								: `Host ${presence.hostPresence === "online" ? "online" : presence.hostPresence === "away" ? "away" : "offline"}`}
+						</span>
+						{topicProgressLine ? (
+							<>
+								<span aria-hidden className="text-muted-foreground/50">
+									·
+								</span>
+								<span>{topicProgressLine}</span>
+							</>
+						) : null}
+					</div>
 				</div>
 			</div>
 

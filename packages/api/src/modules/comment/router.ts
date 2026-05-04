@@ -41,21 +41,31 @@ export const commentRouter = {
 	listByTarget: publicProcedure
 		.input(ListCommentsByTargetInputSchema)
 		.output(ListCommentsByTargetOutputSchema)
-		.handler(async ({ input }) => listCommentsByTarget(input)),
+		.handler(async ({ input, context }) =>
+			listCommentsByTarget(input, context.session?.user?.id),
+		),
 	listThreadsByPost: publicProcedure
 		.input(ListPostCommentThreadsInputSchema)
 		.output(ListPostCommentThreadsOutputSchema)
-		.handler(async ({ input }) => listPostCommentThreads(input)),
+		.handler(async ({ input, context }) =>
+			listPostCommentThreads(input, context.session?.user?.id),
+		),
 	listThreadsByPack: publicProcedure
 		.input(ListPackCommentThreadsInputSchema)
 		.output(ListPackCommentThreadsOutputSchema)
-		.handler(async ({ input }) => listPackCommentThreads(input)),
+		.handler(async ({ input, context }) =>
+			listPackCommentThreads(input, context.session?.user?.id),
+		),
 	listThreadsByTopic: publicProcedure
 		.input(ListTopicCommentThreadsInputSchema)
 		.output(ListTopicCommentThreadsOutputSchema)
-		.handler(async ({ input }) => listTopicCommentThreads(input)),
+		.handler(async ({ input, context }) =>
+			listTopicCommentThreads(input, context.session?.user?.id),
+		),
 	listThreadsByQuestion: publicProcedure
 		.input(ListQuestionCommentThreadsInputSchema)
 		.output(ListQuestionCommentThreadsOutputSchema)
-		.handler(async ({ input }) => listQuestionCommentThreads(input)),
+		.handler(async ({ input, context }) =>
+			listQuestionCommentThreads(input, context.session?.user?.id),
+		),
 };

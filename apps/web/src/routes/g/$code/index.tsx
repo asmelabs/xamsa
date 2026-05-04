@@ -11,6 +11,7 @@ import { EndGameScreen } from "@/components/end-game-screen";
 import { HostView } from "@/components/host-view";
 import { PlayerView } from "@/components/player-view";
 import { useGameChannel } from "@/hooks/use-game-channel";
+import { GamePresenceProvider } from "@/hooks/use-game-presence";
 import { gameRoomPageJsonLd } from "@/lib/json-ld";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -122,12 +123,14 @@ function RouteComponent() {
 	}
 
 	return (
-		<div className="min-h-screen bg-muted/30">
-			<BadgeCelebrationOverlay
-				batchQueue={badgeBatches}
-				onConsume={consumeBadgeBatch}
-			/>
-			{game.isHost ? <HostView game={game} /> : <PlayerView game={game} />}
-		</div>
+		<GamePresenceProvider game={game}>
+			<div className="min-h-screen bg-muted/30">
+				<BadgeCelebrationOverlay
+					batchQueue={badgeBatches}
+					onConsume={consumeBadgeBatch}
+				/>
+				{game.isHost ? <HostView game={game} /> : <PlayerView game={game} />}
+			</div>
+		</GamePresenceProvider>
 	);
 }

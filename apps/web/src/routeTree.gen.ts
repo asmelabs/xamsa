@@ -45,9 +45,11 @@ import { Route as DevOgPreviewIndexRouteImport } from './routes/dev/og-preview/i
 import { Route as DashboardUsersIndexRouteImport } from './routes/dashboard/users/index'
 import { Route as DashboardTopicsIndexRouteImport } from './routes/dashboard/topics/index'
 import { Route as DashboardQuestionsIndexRouteImport } from './routes/dashboard/questions/index'
+import { Route as DashboardPostsIndexRouteImport } from './routes/dashboard/posts/index'
 import { Route as DashboardPacksIndexRouteImport } from './routes/dashboard/packs/index'
 import { Route as DashboardJobsIndexRouteImport } from './routes/dashboard/jobs/index'
 import { Route as DashboardGamesIndexRouteImport } from './routes/dashboard/games/index'
+import { Route as DashboardCommentsIndexRouteImport } from './routes/dashboard/comments/index'
 import { Route as DashboardClicksIndexRouteImport } from './routes/dashboard/clicks/index'
 import { Route as DashboardBadgesIndexRouteImport } from './routes/dashboard/badges/index'
 import { Route as BadgesBadgeIdIndexRouteImport } from './routes/badges/$badgeId/index'
@@ -259,6 +261,11 @@ const DashboardQuestionsIndexRoute = DashboardQuestionsIndexRouteImport.update({
   path: '/questions/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardPostsIndexRoute = DashboardPostsIndexRouteImport.update({
+  id: '/posts/',
+  path: '/posts/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardPacksIndexRoute = DashboardPacksIndexRouteImport.update({
   id: '/packs/',
   path: '/packs/',
@@ -272,6 +279,11 @@ const DashboardJobsIndexRoute = DashboardJobsIndexRouteImport.update({
 const DashboardGamesIndexRoute = DashboardGamesIndexRouteImport.update({
   id: '/games/',
   path: '/games/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCommentsIndexRoute = DashboardCommentsIndexRouteImport.update({
+  id: '/comments/',
+  path: '/comments/',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardClicksIndexRoute = DashboardClicksIndexRouteImport.update({
@@ -475,9 +487,11 @@ export interface FileRoutesByFullPath {
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
   '/dashboard/badges/': typeof DashboardBadgesIndexRoute
   '/dashboard/clicks/': typeof DashboardClicksIndexRoute
+  '/dashboard/comments/': typeof DashboardCommentsIndexRoute
   '/dashboard/games/': typeof DashboardGamesIndexRoute
   '/dashboard/jobs/': typeof DashboardJobsIndexRoute
   '/dashboard/packs/': typeof DashboardPacksIndexRoute
+  '/dashboard/posts/': typeof DashboardPostsIndexRoute
   '/dashboard/questions/': typeof DashboardQuestionsIndexRoute
   '/dashboard/topics/': typeof DashboardTopicsIndexRoute
   '/dashboard/users/': typeof DashboardUsersIndexRoute
@@ -544,9 +558,11 @@ export interface FileRoutesByTo {
   '/badges/$badgeId': typeof BadgesBadgeIdIndexRoute
   '/dashboard/badges': typeof DashboardBadgesIndexRoute
   '/dashboard/clicks': typeof DashboardClicksIndexRoute
+  '/dashboard/comments': typeof DashboardCommentsIndexRoute
   '/dashboard/games': typeof DashboardGamesIndexRoute
   '/dashboard/jobs': typeof DashboardJobsIndexRoute
   '/dashboard/packs': typeof DashboardPacksIndexRoute
+  '/dashboard/posts': typeof DashboardPostsIndexRoute
   '/dashboard/questions': typeof DashboardQuestionsIndexRoute
   '/dashboard/topics': typeof DashboardTopicsIndexRoute
   '/dashboard/users': typeof DashboardUsersIndexRoute
@@ -616,9 +632,11 @@ export interface FileRoutesById {
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
   '/dashboard/badges/': typeof DashboardBadgesIndexRoute
   '/dashboard/clicks/': typeof DashboardClicksIndexRoute
+  '/dashboard/comments/': typeof DashboardCommentsIndexRoute
   '/dashboard/games/': typeof DashboardGamesIndexRoute
   '/dashboard/jobs/': typeof DashboardJobsIndexRoute
   '/dashboard/packs/': typeof DashboardPacksIndexRoute
+  '/dashboard/posts/': typeof DashboardPostsIndexRoute
   '/dashboard/questions/': typeof DashboardQuestionsIndexRoute
   '/dashboard/topics/': typeof DashboardTopicsIndexRoute
   '/dashboard/users/': typeof DashboardUsersIndexRoute
@@ -689,9 +707,11 @@ export interface FileRouteTypes {
     | '/badges/$badgeId/'
     | '/dashboard/badges/'
     | '/dashboard/clicks/'
+    | '/dashboard/comments/'
     | '/dashboard/games/'
     | '/dashboard/jobs/'
     | '/dashboard/packs/'
+    | '/dashboard/posts/'
     | '/dashboard/questions/'
     | '/dashboard/topics/'
     | '/dashboard/users/'
@@ -758,9 +778,11 @@ export interface FileRouteTypes {
     | '/badges/$badgeId'
     | '/dashboard/badges'
     | '/dashboard/clicks'
+    | '/dashboard/comments'
     | '/dashboard/games'
     | '/dashboard/jobs'
     | '/dashboard/packs'
+    | '/dashboard/posts'
     | '/dashboard/questions'
     | '/dashboard/topics'
     | '/dashboard/users'
@@ -829,9 +851,11 @@ export interface FileRouteTypes {
     | '/badges/$badgeId/'
     | '/dashboard/badges/'
     | '/dashboard/clicks/'
+    | '/dashboard/comments/'
     | '/dashboard/games/'
     | '/dashboard/jobs/'
     | '/dashboard/packs/'
+    | '/dashboard/posts/'
     | '/dashboard/questions/'
     | '/dashboard/topics/'
     | '/dashboard/users/'
@@ -1177,6 +1201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardQuestionsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/posts/': {
+      id: '/dashboard/posts/'
+      path: '/posts'
+      fullPath: '/dashboard/posts/'
+      preLoaderRoute: typeof DashboardPostsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/packs/': {
       id: '/dashboard/packs/'
       path: '/packs'
@@ -1196,6 +1227,13 @@ declare module '@tanstack/react-router' {
       path: '/games'
       fullPath: '/dashboard/games/'
       preLoaderRoute: typeof DashboardGamesIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/comments/': {
+      id: '/dashboard/comments/'
+      path: '/comments'
+      fullPath: '/dashboard/comments/'
+      preLoaderRoute: typeof DashboardCommentsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/clicks/': {
@@ -1433,9 +1471,11 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardBadgesIndexRoute: typeof DashboardBadgesIndexRoute
   DashboardClicksIndexRoute: typeof DashboardClicksIndexRoute
+  DashboardCommentsIndexRoute: typeof DashboardCommentsIndexRoute
   DashboardGamesIndexRoute: typeof DashboardGamesIndexRoute
   DashboardJobsIndexRoute: typeof DashboardJobsIndexRoute
   DashboardPacksIndexRoute: typeof DashboardPacksIndexRoute
+  DashboardPostsIndexRoute: typeof DashboardPostsIndexRoute
   DashboardQuestionsIndexRoute: typeof DashboardQuestionsIndexRoute
   DashboardTopicsIndexRoute: typeof DashboardTopicsIndexRoute
   DashboardUsersIndexRoute: typeof DashboardUsersIndexRoute
@@ -1445,9 +1485,11 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardBadgesIndexRoute: DashboardBadgesIndexRoute,
   DashboardClicksIndexRoute: DashboardClicksIndexRoute,
+  DashboardCommentsIndexRoute: DashboardCommentsIndexRoute,
   DashboardGamesIndexRoute: DashboardGamesIndexRoute,
   DashboardJobsIndexRoute: DashboardJobsIndexRoute,
   DashboardPacksIndexRoute: DashboardPacksIndexRoute,
+  DashboardPostsIndexRoute: DashboardPostsIndexRoute,
   DashboardQuestionsIndexRoute: DashboardQuestionsIndexRoute,
   DashboardTopicsIndexRoute: DashboardTopicsIndexRoute,
   DashboardUsersIndexRoute: DashboardUsersIndexRoute,

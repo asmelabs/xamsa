@@ -1,5 +1,6 @@
 import z from "zod";
 import { CursorPaginationInputSchema } from "../common/pagination";
+import { ReactionTypeSchema } from "../db/schemas/enums/ReactionType.schema";
 import { CommentSchema, UserSchema } from "../db/schemas/models";
 import { MentionUsernameSchema } from "./post";
 
@@ -84,6 +85,16 @@ export const CommentAuthorSchema = UserSchema.pick({
 	image: true,
 });
 
+/** Per emoji-type reaction counts on a comment row (non-zero totals only). */
+export const CommentReactionByTypeSchema = z.object({
+	type: ReactionTypeSchema,
+	count: z.number().int().min(1),
+});
+
+export type CommentReactionByTypeType = z.infer<
+	typeof CommentReactionByTypeSchema
+>;
+
 export const CommentRowSchema = CommentSchema.pick({
 	id: true,
 	createdAt: true,
@@ -99,6 +110,8 @@ export const CommentRowSchema = CommentSchema.pick({
 }).extend({
 	user: CommentAuthorSchema,
 	mentions: z.array(MentionUsernameSchema),
+	myReactionType: ReactionTypeSchema.nullish(),
+	reactionsByType: z.array(CommentReactionByTypeSchema),
 });
 
 export type CommentRowType = z.infer<typeof CommentRowSchema>;

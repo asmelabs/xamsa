@@ -297,7 +297,7 @@ export function EndGameScreen({ game }: EndGameScreenProps) {
 							}
 						>
 							<PlayIcon />
-							Play again
+							Play again with this pack
 						</Button>
 					)}
 				</div>

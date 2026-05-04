@@ -17,36 +17,13 @@ import {
 import { PlayIcon, UsersIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DuplicatePolicyExplainerLink } from "@/components/duplicate-policy-explainer";
 import { formatDifficultyDr } from "@/lib/difficulty-display";
+import { DUPLICATE_POLICY_OPTIONS } from "@/lib/duplicate-policy-options";
 import type { GameData, GamePlayer } from "@/lib/game-types";
 import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
 import { LoadingButton } from "./loading-button";
-
-const DUPLICATE_POLICY_OPTIONS: {
-	value: DuplicateQuestionPolicy;
-	label: string;
-	description: string;
-}[] = [
-	{
-		value: "none",
-		label: "No replay restriction",
-		description:
-			"Everyone can buzz even if they played this pack in a finished game before.",
-	},
-	{
-		value: "block_individuals",
-		label: "Block repeat players only",
-		description:
-			"If you saw this question in a past finished game with this pack, you cannot buzz.",
-	},
-	{
-		value: "block_room",
-		label: "Block room if anyone has seen it",
-		description:
-			"If anyone in this room saw this question in a past finished game with this pack, nobody can buzz.",
-	},
-];
 
 interface StartGameCardProps {
 	game: GameData;
@@ -273,12 +250,19 @@ export function StartGameCard({ game, activePlayers }: StartGameCardProps) {
 				)}
 
 				<div className="w-full max-w-md space-y-2 text-left">
-					<Label
-						className="text-muted-foreground text-xs"
-						htmlFor="duplicate-policy"
-					>
-						Replay / duplicate questions
-					</Label>
+					<div className="flex items-center justify-between gap-2">
+						<Label
+							className="text-muted-foreground text-xs"
+							htmlFor="duplicate-policy"
+						>
+							Replay / duplicate questions
+						</Label>
+						<DuplicatePolicyExplainerLink
+							current={duplicateQuestionPolicy}
+							variant="link"
+							label="How modes differ"
+						/>
+					</div>
 					<Select
 						value={duplicateQuestionPolicy}
 						onValueChange={(v) =>

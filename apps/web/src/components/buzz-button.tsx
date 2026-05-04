@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { channels, GAME_EVENTS } from "@xamsa/ably/channels";
 import { CheckIcon, ClockIcon, PauseIcon, XIcon } from "lucide-react";
+import { DuplicatePolicyExplainerLink } from "@/components/duplicate-policy-explainer";
 import { applyBuzzIntentToGame } from "@/hooks/use-game-channel";
 import { getAblyClient } from "@/lib/ably";
 import type { GameData } from "@/lib/game-types";
@@ -172,6 +173,7 @@ export function BuzzButton({ game }: BuzzButtonProps) {
 						? "You already played this question in a finished game with this pack — buzzing is disabled."
 						: "Someone in this room already played this question in a finished game with this pack — buzzing is disabled for everyone."}
 				</p>
+				<DuplicatePolicyExplainerLink variant="link" label="Why am I muted?" />
 			</div>
 		);
 	}

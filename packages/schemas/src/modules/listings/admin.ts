@@ -41,6 +41,8 @@ export const adminUserSort =
 			xp: { xp: "desc" },
 			elo: { elo: "desc" },
 			packs: { totalPacksPublished: "desc" },
+			posts: { totalPosts: "desc" },
+			comments: { totalComments: "desc" },
 			followers: { followers: { _count: "desc" } },
 			following: { following: { _count: "desc" } },
 		},
@@ -152,6 +154,47 @@ export const adminClickSearch = defineSearch<Prisma.ClickWhereInput>([
 
 export const adminClickPeriod =
 	definePeriod<Prisma.ClickWhereInput>("clickedAt");
+
+/** Admin: post list */
+export const adminPostSort =
+	defineSorting<Prisma.PostOrderByWithRelationInput>()({
+		values: {
+			newest: { createdAt: "desc" },
+			oldest: { createdAt: "asc" },
+			reactions: { totalReactions: "desc" },
+			comments: { totalComments: "desc" },
+		},
+		default: "newest",
+	});
+
+export const adminPostSearch = defineSearch<Prisma.PostWhereInput>([
+	"body",
+	"slug",
+	"author.username",
+	"author.name",
+]);
+
+export const adminPostPeriod = definePeriod<Prisma.PostWhereInput>("createdAt");
+
+/** Admin: comment list */
+export const adminCommentSort =
+	defineSorting<Prisma.CommentOrderByWithRelationInput>()({
+		values: {
+			newest: { createdAt: "desc" },
+			oldest: { createdAt: "asc" },
+			reactions: { totalReactions: "desc" },
+		},
+		default: "newest",
+	});
+
+export const adminCommentSearch = defineSearch<Prisma.CommentWhereInput>([
+	"body",
+	"user.username",
+	"user.name",
+]);
+
+export const adminCommentPeriod =
+	definePeriod<Prisma.CommentWhereInput>("createdAt");
 
 /** Admin: topic bulk job list */
 export const adminTopicBulkJobSort =

@@ -12,6 +12,12 @@ const SECTIONS = [
 	{ to: "/dashboard/games", title: "Games", hint: "Sessions and codes" },
 	{ to: "/dashboard/topics", title: "Topics", hint: "Across all packs" },
 	{ to: "/dashboard/questions", title: "Questions", hint: "Across all topics" },
+	{ to: "/dashboard/posts", title: "Posts", hint: "Community feed posts" },
+	{
+		to: "/dashboard/comments",
+		title: "Comments",
+		hint: "All comments + replies",
+	},
 	{ to: "/dashboard/clicks", title: "Clicks", hint: "Buzzer events" },
 	{ to: "/dashboard/jobs", title: "Bulk jobs", hint: "Topic import jobs" },
 ] as const;
