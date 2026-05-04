@@ -63,3 +63,34 @@ export async function sendNewFollowerEmail(params: {
 		html,
 	});
 }
+
+/** Mention alerts; deduped in API via mention_email_notification within a short window per post. */
+export async function sendMentionEmail(params: {
+	email: string;
+	name: string;
+	actorName: string;
+	contextLine: string;
+	href: string;
+}) {
+	const { email, name, actorName, contextLine, href } = params;
+	const html = buildTransactionalHtml({
+		title: "You were mentioned on Xamsa",
+		introHtml: `
+<p style="margin:0 0 12px;">Hi ${escapeHtml(name)},</p>
+<p style="margin:0 0 12px;"><strong>${escapeHtml(actorName)}</strong> mentioned you: ${escapeHtml(contextLine)}</p>
+`,
+		primaryButton: { href, label: "Open the conversation" },
+		footerLinks: transactionalFooterLinks(),
+	});
+	if (!shouldSendNotificationMail()) {
+		console.log("=== mention email (dev) ===");
+		console.log("To:", email);
+		console.log("Link:", href);
+		return;
+	}
+	await sendEmail({
+		to: { email, name },
+		subject: `${actorName} mentioned you on Xamsa`,
+		html,
+	});
+}

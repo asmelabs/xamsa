@@ -4,7 +4,13 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	notFound,
+	Outlet,
+	useMatch,
+} from "@tanstack/react-router";
 import { Badge } from "@xamsa/ui/components/badge";
 import { Button } from "@xamsa/ui/components/button";
 import {
@@ -148,6 +154,14 @@ function formatPlayTimeSeconds(totalSeconds: number): string {
 }
 
 function RouteComponent() {
+	const postChildMatch = useMatch({
+		from: "/u/$username/p/$postSlug",
+		shouldThrow: false,
+	});
+	if (postChildMatch) {
+		return <Outlet />;
+	}
+
 	const { username } = Route.useParams();
 	const { profile: loaderProfile, user, isOwner } = Route.useLoaderData();
 	const qc = useQueryClient();

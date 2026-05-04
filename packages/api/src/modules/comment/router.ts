@@ -5,9 +5,16 @@ import {
 	DeleteCommentOutputSchema,
 	ListCommentsByTargetInputSchema,
 	ListCommentsByTargetOutputSchema,
+	ListPostCommentThreadsInputSchema,
+	ListPostCommentThreadsOutputSchema,
 } from "@xamsa/schemas/modules/comment";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { createComment, deleteComment, listCommentsByTarget } from "./service";
+import {
+	createComment,
+	deleteComment,
+	listCommentsByTarget,
+	listPostCommentThreads,
+} from "./service";
 
 export const commentRouter = {
 	create: protectedProcedure
@@ -26,4 +33,8 @@ export const commentRouter = {
 		.input(ListCommentsByTargetInputSchema)
 		.output(ListCommentsByTargetOutputSchema)
 		.handler(async ({ input }) => listCommentsByTarget(input)),
+	listThreadsByPost: publicProcedure
+		.input(ListPostCommentThreadsInputSchema)
+		.output(ListPostCommentThreadsOutputSchema)
+		.handler(async ({ input }) => listPostCommentThreads(input)),
 };

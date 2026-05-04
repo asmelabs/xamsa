@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@xamsa/ui/components/button";
 import { Card } from "@xamsa/ui/components/card";
-import { Textarea } from "@xamsa/ui/components/textarea";
 import { cn } from "@xamsa/ui/lib/utils";
 import { ImageIcon, Loader2Icon, SendIcon, XIcon } from "lucide-react";
 import { forwardRef, useEffect, useState } from "react";
 
+import { MentionTextarea } from "@/components/home/mention-textarea";
 import { invalidateHomePostFeed } from "@/lib/home-post-feed-query";
 import { orpc } from "@/utils/orpc";
 
@@ -91,10 +91,10 @@ export const CreatePostComposer = forwardRef<
 					<p className="font-medium text-sm">Create a post</p>
 				</div>
 			) : null}
-			<Textarea
+			<MentionTextarea
 				placeholder="Share something with the lobby…"
 				value={body}
-				onChange={(e) => setBody(e.target.value)}
+				onValueChange={setBody}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSubmit) {
 						e.preventDefault();

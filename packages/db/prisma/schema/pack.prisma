@@ -182,6 +182,7 @@ model Comment {
   totalReactions Int @default(0) @map("total_reactions")
 
   reactions Reaction[]
+  mentions  Mention[]
 
   @@index([packId, createdAt])
   @@index([topicId, createdAt])

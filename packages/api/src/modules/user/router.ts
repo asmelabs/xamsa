@@ -26,6 +26,8 @@ import {
 	ListFollowersOutputSchema,
 	ListFollowingInputSchema,
 	ListFollowingOutputSchema,
+	MentionCandidatesInputSchema,
+	MentionCandidatesOutputSchema,
 	RemoveUserAvatarInputSchema,
 	RemoveUserAvatarOutputSchema,
 	SetUserAvatarInputSchema,
@@ -50,6 +52,7 @@ import {
 	getRecentGames,
 	listFollowers,
 	listFollowing,
+	mentionCandidates,
 	removeUserAvatar,
 	setUserAvatar,
 	unfollowUser,
@@ -89,6 +92,12 @@ export const userRouter = {
 		.output(HomeSearchOutputSchema)
 		.handler(async ({ input, context }) =>
 			homeSearch(input, context.session?.user?.id),
+		),
+	mentionCandidates: protectedProcedure
+		.input(MentionCandidatesInputSchema)
+		.output(MentionCandidatesOutputSchema)
+		.handler(async ({ input, context }) =>
+			mentionCandidates(input, context.session.user.id),
 		),
 	update: protectedProcedure
 		.input(UpdateProfileInputSchema)

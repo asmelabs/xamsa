@@ -3,13 +3,21 @@ import {
 	CreatePostOutputSchema,
 	DeletePostInputSchema,
 	DeletePostOutputSchema,
+	FindOnePostInputSchema,
 	ListPostsInputSchema,
 	ListPostsOutputSchema,
+	PostRowSchema,
 } from "@xamsa/schemas/modules/post";
 import { protectedProcedure, publicProcedure } from "../../procedures";
-import { createPost, deletePost, listPosts } from "./service";
+import { createPost, deletePost, findOnePost, listPosts } from "./service";
 
 export const postRouter = {
+	findOne: publicProcedure
+		.input(FindOnePostInputSchema)
+		.output(PostRowSchema)
+		.handler(({ input, context }) =>
+			findOnePost(input, context.session?.user?.id),
+		),
 	list: publicProcedure
 		.input(ListPostsInputSchema)
 		.output(ListPostsOutputSchema)

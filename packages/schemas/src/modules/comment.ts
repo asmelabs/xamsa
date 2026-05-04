@@ -1,6 +1,7 @@
 import z from "zod";
 import { CursorPaginationInputSchema } from "../common/pagination";
 import { CommentSchema, UserSchema } from "../db/schemas/models";
+import { MentionUsernameSchema } from "./post";
 
 const OptionalTargetSchema = z.object({
 	packId: z.string().min(1).optional(),
@@ -97,9 +98,19 @@ export const CommentRowSchema = CommentSchema.pick({
 	totalReactions: true,
 }).extend({
 	user: CommentAuthorSchema,
+	mentions: z.array(MentionUsernameSchema),
 });
 
 export type CommentRowType = z.infer<typeof CommentRowSchema>;
+
+export type CommentThreadNodeType = CommentRowType & {
+	replies: CommentThreadNodeType[];
+};
+
+export const CommentThreadNodeSchema: z.ZodType<CommentThreadNodeType> =
+	CommentRowSchema.extend({
+		replies: z.lazy(() => z.array(CommentThreadNodeSchema)),
+	});
 
 export const CreateCommentOutputSchema = CommentRowSchema;
 export type CreateCommentOutputType = z.infer<typeof CreateCommentOutputSchema>;
@@ -121,4 +132,26 @@ export const ListCommentsByTargetOutputSchema = z.object({
 
 export type ListCommentsByTargetOutputType = z.infer<
 	typeof ListCommentsByTargetOutputSchema
+>;
+
+export const ListPostCommentThreadsInputSchema = z.object({
+	postId: z.string().min(1),
+	limit: z.number().int().min(1).max(50).default(8),
+	cursor: z.string().min(1).optional(),
+});
+
+export type ListPostCommentThreadsInputType = z.infer<
+	typeof ListPostCommentThreadsInputSchema
+>;
+
+export const ListPostCommentThreadsOutputSchema = z.object({
+	roots: z.array(CommentThreadNodeSchema),
+	metadata: z.object({
+		nextCursor: z.string().nullable(),
+		hasMore: z.boolean(),
+	}),
+});
+
+export type ListPostCommentThreadsOutputType = z.infer<
+	typeof ListPostCommentThreadsOutputSchema
 >;

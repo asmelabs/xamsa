@@ -24,5 +24,7 @@ export { CommentSchema } from './Comment.schema';
 export { PostSchema } from './Post.schema';
 export { PostAttachmentSchema } from './PostAttachment.schema';
 export { ReactionSchema } from './Reaction.schema';
+export { MentionSchema } from './Mention.schema';
+export { MentionEmailNotificationSchema } from './MentionEmailNotification.schema';
 export { TopicBulkJobSchema } from './TopicBulkJob.schema';
 export { UserTsualPackageImportSchema } from './UserTsualPackageImport.schema';

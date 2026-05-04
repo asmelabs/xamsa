@@ -196,3 +196,45 @@ export async function getLeaderboardOgData(): Promise<LeaderboardOgRow[]> {
 		elo: r.elo,
 	}));
 }
+
+export interface PostOgPayload {
+	bodyPreview: string | null;
+	authorName: string;
+	authorUsername: string;
+	hasImage: boolean;
+	reactionCount: number;
+	commentCount: number;
+}
+
+export async function getPostOgData(
+	slug: string,
+): Promise<PostOgPayload | null> {
+	const post = await prisma.post.findFirst({
+		where: { slug },
+		select: {
+			body: true,
+			image: true,
+			totalComments: true,
+			totalReactions: true,
+			author: { select: { name: true, username: true } },
+		},
+	});
+	if (!post) {
+		return null;
+	}
+	const raw = post.body?.trim();
+	const bodyPreview =
+		raw && raw.length > 0
+			? raw.length > 220
+				? `${raw.slice(0, 219)}…`
+				: raw
+			: null;
+	return {
+		bodyPreview,
+		authorName: post.author.name,
+		authorUsername: post.author.username,
+		hasImage: post.image != null && post.image.length > 0,
+		reactionCount: post.totalReactions,
+		commentCount: post.totalComments,
+	};
+}
