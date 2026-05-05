@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { EditPackForm } from "@/components/edit-pack-form";
+import { PackExportMenu } from "@/components/export-menu";
 import {
 	PacksBreadcrumb,
 	PacksSubpageContainer,
@@ -61,6 +62,7 @@ function RouteComponent() {
 				description="Update how this pack appears to others, who can see it, and the description shown on the pack page."
 				eyebrow="Pack settings"
 				title="Edit pack"
+				actions={<PackExportMenu packSlug={pack.slug} />}
 			/>
 			<EditPackForm
 				packData={{

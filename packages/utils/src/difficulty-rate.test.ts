@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+	computeQdrSkipUpdate,
 	computeQdrUpdate,
 	ELO_AT_GAME_START_FALLBACK,
 	expectedCorrect,
+	K_SKIP,
 	K0,
+	MIN_ELO_FOR_SKIP_SIGNAL,
 	N0,
 	normalizeToQdr,
 	recomputePdr,
@@ -124,5 +127,61 @@ describe("recomputePdr", () => {
 
 	it("empty", () => {
 		expect(recomputePdr([])).toBe(4.5);
+	});
+});
+
+describe("computeQdrSkipUpdate", () => {
+	it("high-Elo skip nudges question harder", () => {
+		const a = computeQdrSkipUpdate({
+			qdrEloEquiv: 1000,
+			qdrScoredAttempts: 0,
+			userEloAtGameStart: 1500,
+		});
+		expect(a.qdrEloEquiv).toBeGreaterThan(1000);
+	});
+
+	it("low-Elo skip is ignored (below MIN_ELO_FOR_SKIP_SIGNAL)", () => {
+		const a = computeQdrSkipUpdate({
+			qdrEloEquiv: 1000,
+			qdrScoredAttempts: 0,
+			userEloAtGameStart: MIN_ELO_FOR_SKIP_SIGNAL - 1,
+		});
+		expect(a.qdrEloEquiv).toBe(1000);
+	});
+
+	it("skip moves less than wrong (smaller K)", () => {
+		const skipDelta =
+			computeQdrSkipUpdate({
+				qdrEloEquiv: 1000,
+				qdrScoredAttempts: 0,
+				userEloAtGameStart: 1500,
+			}).qdrEloEquiv - 1000;
+		const wrongDelta =
+			computeQdrUpdate({
+				qdrEloEquiv: 1000,
+				qdrScoredAttempts: 0,
+				userEloAtGameStart: 1500,
+				outcome: 0,
+			}).qdrEloEquiv - 1000;
+		expect(skipDelta).toBeGreaterThan(0);
+		expect(wrongDelta).toBeGreaterThan(skipDelta);
+	});
+
+	it("K_SKIP exposed and smaller than K0", () => {
+		expect(K_SKIP).toBeLessThan(K0);
+	});
+
+	it("null userElo uses fallback", () => {
+		const a = computeQdrSkipUpdate({
+			qdrEloEquiv: 1000,
+			qdrScoredAttempts: 0,
+			userEloAtGameStart: null,
+		});
+		const b = computeQdrSkipUpdate({
+			qdrEloEquiv: 1000,
+			qdrScoredAttempts: 0,
+			userEloAtGameStart: ELO_AT_GAME_START_FALLBACK,
+		});
+		expect(a).toEqual(b);
 	});
 });

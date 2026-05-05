@@ -64,6 +64,7 @@ import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$pa
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
 import { Route as GCodeStatsIndexRouteImport } from './routes/g/$code/stats/index'
 import { Route as UUsernamePPostSlugRouteImport } from './routes/u/$username/p/$postSlug'
+import { Route as BadgesBadgeIdAwardsAwardIdRouteImport } from './routes/badges/$badgeId/awards/$awardId'
 import { Route as PacksPackSlugTopicsNewIndexRouteImport } from './routes/packs/$packSlug/topics/new/index'
 import { Route as PacksPackSlugTopicsBulkIndexRouteImport } from './routes/packs/$packSlug/topics/bulk/index'
 import { Route as PacksPackSlugTopicsTopicSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/index'
@@ -78,6 +79,7 @@ import { Route as PacksPackSlugTopicsEditReorderIndexRouteImport } from './route
 import { Route as PacksPackSlugTopicsTopicSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/edit/index'
 import { Route as ApiOgTopicPackSlugTopicSlugOgDotpngRouteImport } from './routes/api/og/topic/$packSlug/$topicSlug/og[.]png'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/index'
+import { Route as ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRouteImport } from './routes/api/og/badges/$badgeId/awards/$awardId/og[.]png'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/index'
 import { Route as PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRouteImport } from './routes/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/index'
 
@@ -357,6 +359,12 @@ const UUsernamePPostSlugRoute = UUsernamePPostSlugRouteImport.update({
   path: '/p/$postSlug',
   getParentRoute: () => UUsernameRoute,
 } as any)
+const BadgesBadgeIdAwardsAwardIdRoute =
+  BadgesBadgeIdAwardsAwardIdRouteImport.update({
+    id: '/badges/$badgeId/awards/$awardId',
+    path: '/badges/$badgeId/awards/$awardId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PacksPackSlugTopicsNewIndexRoute =
   PacksPackSlugTopicsNewIndexRouteImport.update({
     id: '/packs/$packSlug/topics/new/',
@@ -439,6 +447,12 @@ const PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute =
     path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute =
+  ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRouteImport.update({
+    id: '/api/og/badges/$badgeId/awards/$awardId/og.png',
+    path: '/api/og/badges/$badgeId/awards/$awardId/og.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute =
   PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRouteImport.update({
     id: '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/',
@@ -503,6 +517,7 @@ export interface FileRoutesByFullPath {
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/whats-new/$version/': typeof WhatsNewVersionIndexRoute
+  '/badges/$badgeId/awards/$awardId': typeof BadgesBadgeIdAwardsAwardIdRoute
   '/u/$username/p/$postSlug': typeof UUsernamePPostSlugRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
@@ -521,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/api/og/topic/$packSlug/$topicSlug/og.png': typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/api/og/badges/$badgeId/awards/$awardId/og.png': typeof ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/': typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
@@ -574,6 +590,7 @@ export interface FileRoutesByTo {
   '/packs/bulk-new': typeof PacksBulkNewIndexRoute
   '/packs/new': typeof PacksNewIndexRoute
   '/whats-new/$version': typeof WhatsNewVersionIndexRoute
+  '/badges/$badgeId/awards/$awardId': typeof BadgesBadgeIdAwardsAwardIdRoute
   '/u/$username/p/$postSlug': typeof UUsernamePPostSlugRoute
   '/g/$code/stats': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit': typeof PacksPackSlugEditIndexRoute
@@ -592,6 +609,7 @@ export interface FileRoutesByTo {
   '/api/og/topic/$packSlug/$topicSlug/og.png': typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/edit': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/api/og/badges/$badgeId/awards/$awardId/og.png': typeof ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder': typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
@@ -648,6 +666,7 @@ export interface FileRoutesById {
   '/packs/bulk-new/': typeof PacksBulkNewIndexRoute
   '/packs/new/': typeof PacksNewIndexRoute
   '/whats-new/$version/': typeof WhatsNewVersionIndexRoute
+  '/badges/$badgeId/awards/$awardId': typeof BadgesBadgeIdAwardsAwardIdRoute
   '/u/$username/p/$postSlug': typeof UUsernamePPostSlugRoute
   '/g/$code/stats/': typeof GCodeStatsIndexRoute
   '/packs/$packSlug/edit/': typeof PacksPackSlugEditIndexRoute
@@ -666,6 +685,7 @@ export interface FileRoutesById {
   '/api/og/topic/$packSlug/$topicSlug/og.png': typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/edit/': typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   '/packs/$packSlug/topics/edit/reorder/': typeof PacksPackSlugTopicsEditReorderIndexRoute
+  '/api/og/badges/$badgeId/awards/$awardId/og.png': typeof ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/': typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
   '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/': typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
@@ -723,6 +743,7 @@ export interface FileRouteTypes {
     | '/packs/bulk-new/'
     | '/packs/new/'
     | '/whats-new/$version/'
+    | '/badges/$badgeId/awards/$awardId'
     | '/u/$username/p/$postSlug'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
@@ -741,6 +762,7 @@ export interface FileRouteTypes {
     | '/api/og/topic/$packSlug/$topicSlug/og.png'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
+    | '/api/og/badges/$badgeId/awards/$awardId/og.png'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/'
     | '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/'
@@ -794,6 +816,7 @@ export interface FileRouteTypes {
     | '/packs/bulk-new'
     | '/packs/new'
     | '/whats-new/$version'
+    | '/badges/$badgeId/awards/$awardId'
     | '/u/$username/p/$postSlug'
     | '/g/$code/stats'
     | '/packs/$packSlug/edit'
@@ -812,6 +835,7 @@ export interface FileRouteTypes {
     | '/api/og/topic/$packSlug/$topicSlug/og.png'
     | '/packs/$packSlug/topics/$topicSlug/edit'
     | '/packs/$packSlug/topics/edit/reorder'
+    | '/api/og/badges/$badgeId/awards/$awardId/og.png'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit'
     | '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder'
@@ -867,6 +891,7 @@ export interface FileRouteTypes {
     | '/packs/bulk-new/'
     | '/packs/new/'
     | '/whats-new/$version/'
+    | '/badges/$badgeId/awards/$awardId'
     | '/u/$username/p/$postSlug'
     | '/g/$code/stats/'
     | '/packs/$packSlug/edit/'
@@ -885,6 +910,7 @@ export interface FileRouteTypes {
     | '/api/og/topic/$packSlug/$topicSlug/og.png'
     | '/packs/$packSlug/topics/$topicSlug/edit/'
     | '/packs/$packSlug/topics/edit/reorder/'
+    | '/api/og/badges/$badgeId/awards/$awardId/og.png'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
     | '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/edit/'
     | '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/'
@@ -925,6 +951,7 @@ export interface RootRouteChildren {
   PacksBulkNewIndexRoute: typeof PacksBulkNewIndexRoute
   PacksNewIndexRoute: typeof PacksNewIndexRoute
   WhatsNewVersionIndexRoute: typeof WhatsNewVersionIndexRoute
+  BadgesBadgeIdAwardsAwardIdRoute: typeof BadgesBadgeIdAwardsAwardIdRoute
   GCodeStatsIndexRoute: typeof GCodeStatsIndexRoute
   PacksPackSlugEditIndexRoute: typeof PacksPackSlugEditIndexRoute
   PacksPackSlugTopicsIndexRoute: typeof PacksPackSlugTopicsIndexRoute
@@ -942,6 +969,7 @@ export interface RootRouteChildren {
   ApiOgTopicPackSlugTopicSlugOgDotpngRoute: typeof ApiOgTopicPackSlugTopicSlugOgDotpngRoute
   PacksPackSlugTopicsTopicSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugEditIndexRoute
   PacksPackSlugTopicsEditReorderIndexRoute: typeof PacksPackSlugTopicsEditReorderIndexRoute
+  ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute: typeof ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute
   PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute
   PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute
   PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsEditReorderIndexRoute
@@ -1334,6 +1362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernamePPostSlugRouteImport
       parentRoute: typeof UUsernameRoute
     }
+    '/badges/$badgeId/awards/$awardId': {
+      id: '/badges/$badgeId/awards/$awardId'
+      path: '/badges/$badgeId/awards/$awardId'
+      fullPath: '/badges/$badgeId/awards/$awardId'
+      preLoaderRoute: typeof BadgesBadgeIdAwardsAwardIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/packs/$packSlug/topics/new/': {
       id: '/packs/$packSlug/topics/new/'
       path: '/packs/$packSlug/topics/new'
@@ -1430,6 +1465,13 @@ declare module '@tanstack/react-router' {
       path: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug'
       fullPath: '/packs/$packSlug/topics/$topicSlug/questions/$questionSlug/'
       preLoaderRoute: typeof PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og/badges/$badgeId/awards/$awardId/og.png': {
+      id: '/api/og/badges/$badgeId/awards/$awardId/og.png'
+      path: '/api/og/badges/$badgeId/awards/$awardId/og.png'
+      fullPath: '/api/og/badges/$badgeId/awards/$awardId/og.png'
+      preLoaderRoute: typeof ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packs/$packSlug/topics/$topicSlug/questions/edit/reorder/': {
@@ -1546,6 +1588,7 @@ const rootRouteChildren: RootRouteChildren = {
   PacksBulkNewIndexRoute: PacksBulkNewIndexRoute,
   PacksNewIndexRoute: PacksNewIndexRoute,
   WhatsNewVersionIndexRoute: WhatsNewVersionIndexRoute,
+  BadgesBadgeIdAwardsAwardIdRoute: BadgesBadgeIdAwardsAwardIdRoute,
   GCodeStatsIndexRoute: GCodeStatsIndexRoute,
   PacksPackSlugEditIndexRoute: PacksPackSlugEditIndexRoute,
   PacksPackSlugTopicsIndexRoute: PacksPackSlugTopicsIndexRoute,
@@ -1567,6 +1610,8 @@ const rootRouteChildren: RootRouteChildren = {
     PacksPackSlugTopicsTopicSlugEditIndexRoute,
   PacksPackSlugTopicsEditReorderIndexRoute:
     PacksPackSlugTopicsEditReorderIndexRoute,
+  ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute:
+    ApiOgBadgesBadgeIdAwardsAwardIdOgDotpngRoute,
   PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute:
     PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugIndexRoute,
   PacksPackSlugTopicsTopicSlugQuestionsQuestionSlugEditIndexRoute:

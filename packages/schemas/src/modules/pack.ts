@@ -104,6 +104,33 @@ export type DeletePackInputType = z.infer<typeof DeletePackInputSchema>;
 export type DeletePackOutputType = z.infer<typeof DeletePackOutputSchema>;
 
 /**
+ * EXPORT — full pack to file (mirrors import formats).
+ * Author/staff guarded server-side.
+ */
+export const ExportPackFormatSchema = z.enum([
+	"json",
+	"yaml",
+	"xml",
+	"csv",
+	"txt",
+]);
+
+export const ExportPackInputSchema = z.object({
+	slug: PackSchema.shape.slug,
+	format: ExportPackFormatSchema,
+});
+
+export const ExportPackOutputSchema = z.object({
+	filename: z.string().min(1),
+	mimeType: z.string().min(1),
+	body: z.string(),
+});
+
+export type ExportPackFormatType = z.infer<typeof ExportPackFormatSchema>;
+export type ExportPackInputType = z.infer<typeof ExportPackInputSchema>;
+export type ExportPackOutputType = z.infer<typeof ExportPackOutputSchema>;
+
+/**
  * FIND ONE
  */
 export const FindOnePackInputSchema = PackSchema.pick({

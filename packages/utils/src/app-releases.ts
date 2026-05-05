@@ -13,12 +13,62 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 4 } as const;
+const current = { year: 2026, month: 5, patch: 5 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-05",
+			year: 2026,
+			month: 5,
+			patch: 5,
+			title:
+				"Take packs to go, profile drafts shelf, stats that read at a glance, sharper badges, Elo that remembers every game, and reactions you can finally name",
+			highlights: [
+				{
+					kind: "text",
+					text: "Authors can finally pack up their work to share offline—export a pack or single topic straight from the more-actions menu (or topic page) as JSON, YAML, XML, CSV, or TXT, ready to re-import anywhere you need it.",
+				},
+				{
+					kind: "text",
+					text: "Your profile’s “packs” tab now keeps a Drafts shelf only you can see—half-finished ideas and archived sets sit beside your published gems with a clear status badge, one tap from continuing the edit.",
+				},
+				{
+					kind: "text",
+					text: "Home and profile stats grew up: a calmer compact grid with the headline numbers up front, win and accuracy rates beside totals, and a friendly Elo line chart on your profile that walks you through the climbs and dips game by game.",
+				},
+				{
+					kind: "text",
+					text: "Badges directory now sorts and filters the way collectors want, and rarity is computed live from how many players actually own each one—chase a “Legendary” today and watch it slip toward “Rare” as the community catches up.",
+				},
+				{
+					kind: "text",
+					text: "Profile badges section split into Earned and Not yet tabs with a recent strip up top and tidy categories below, so the wall stays scannable even with 40+ accolades.",
+				},
+				{
+					kind: "text",
+					text: "Every badge earn now has its own celebratory page and share preview—drop the link in a chat and friends see your name, the badge, the pack, and the night it happened. The earners list on each badge page is tappable straight through to that share page, with filters for username, game code, and earned-date.",
+				},
+				{
+					kind: "text",
+					text: "Admins can re-rank teammates safely from the dashboard: pick a new role from a dropdown, confirm in a dialog that names the change in plain English, and we revoke their open sessions automatically so new permissions take effect on the very next request.",
+				},
+				{
+					kind: "text",
+					text: "Elo got smarter and stickier: every gain or loss now considers each opponent’s rating, your finishing rank, and how clean your buzzes were—and we keep the before/after numbers on every game so trends never get fuzzy.",
+				},
+				{
+					kind: "text",
+					text: "Difficulty Rate listens harder: when a high-Elo player politely sits a question out, we count that quiet skip as another vote that the prompt was tough—forward only, so old games keep their existing scores.",
+				},
+				{
+					kind: "text",
+					text: "Reaction breakdowns finally show people, not just numbers—tap any emoji row (or the new “See everyone” shortcut) to scroll the actual reactors with their avatar, display name, and a one-tap path to their profile.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-04",
 			year: 2026,

@@ -157,6 +157,11 @@ model Player {
   /// User.elo at game start for in-lobby players; late joiners: snapshot at join/rejoin. Used for QDR. ///
   eloAtGameStart Int? @map("elo_at_game_start")
 
+  /// Per-game Elo history snapshot (set during finalizeGame for ranked sessions with 2+ players). ///
+  eloRatingBefore Int? @map("elo_rating_before")
+  eloRatingAfter  Int? @map("elo_rating_after")
+  eloDelta        Int? @map("elo_delta")
+
   winningGame  Game?              @relation("GameWinner")
   clicks       Click[]
   questionWins GameQuestion[]     @relation("QuestionWinner")

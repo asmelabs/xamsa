@@ -26,10 +26,19 @@ export type BadgeId = z.infer<typeof BadgeIdSchema>;
 
 export const ListBadgeEarnersInputSchema = CursorPaginationInputSchema.extend({
 	badgeId: BadgeIdSchema,
+	/** Optional case-insensitive substring match on earner username. */
+	username: z.string().min(1).max(64).optional(),
+	/** Optional exact match on the game's join code. */
+	gameCode: z.string().min(1).max(32).optional(),
+	/** Inclusive lower bound on `earnedAt`. */
+	from: z.coerce.date().optional(),
+	/** Inclusive upper bound on `earnedAt`. */
+	to: z.coerce.date().optional(),
 });
 
 export const BadgeEarnerRowSchema = z.object({
 	id: z.string(),
+	badgeId: BadgeIdSchema,
 	earnedAt: z.coerce.date(),
 	user: UserSchema.pick({
 		username: true,
@@ -99,4 +108,70 @@ export type ListPublicAwardsByUsernameInputType = z.infer<
 >;
 export type ListPublicAwardsByUsernameOutputType = z.infer<
 	typeof ListPublicAwardsByUsernameOutputSchema
+>;
+
+// --- getCatalogStats ---
+
+/**
+ * Total earns + unique earners per badge id, for the badges directory's
+ * "Total earns" / "Unique earners" sort columns. Cached briefly on the client
+ * since the catalog rarely changes faster than minute-to-minute.
+ */
+export const BadgeCatalogStatsRowSchema = z.object({
+	badgeId: BadgeIdSchema,
+	totalEarns: z.number().int().min(0),
+	uniqueEarners: z.number().int().min(0),
+});
+
+export const GetBadgeCatalogStatsOutputSchema = z.object({
+	rows: z.array(BadgeCatalogStatsRowSchema),
+	/**
+	 * Players who could have earned at least one badge — currently anyone with
+	 * `User.totalGamesPlayed > 0`. Used by the directory to compute rarity from
+	 * `uniqueEarners / totalEligibleUsers`.
+	 */
+	totalEligibleUsers: z.number().int().min(0),
+});
+
+export type GetBadgeCatalogStatsOutputType = z.infer<
+	typeof GetBadgeCatalogStatsOutputSchema
+>;
+export type BadgeCatalogStatsRow = z.infer<typeof BadgeCatalogStatsRowSchema>;
+
+// --- findAward ---
+
+/**
+ * Single award by id. Used by the per-award share page and OG.
+ * Returns 404 if the award is private (game not visible) or missing.
+ */
+export const FindBadgeAwardInputSchema = z.object({
+	awardId: z.string().uuid(),
+});
+
+export const FindBadgeAwardOutputSchema = z.object({
+	id: z.string(),
+	badgeId: BadgeIdSchema,
+	earnedAt: z.coerce.date(),
+	user: UserSchema.pick({
+		username: true,
+		name: true,
+		image: true,
+	}),
+	game: z.object({
+		code: z.string(),
+		pack: z.object({ slug: z.string(), name: z.string() }),
+	}),
+	topic: z
+		.object({
+			order: z.number().int(),
+			slug: z.string(),
+			name: z.string(),
+		})
+		.nullable(),
+	questionOrder: z.number().int().nullable(),
+});
+
+export type FindBadgeAwardInputType = z.infer<typeof FindBadgeAwardInputSchema>;
+export type FindBadgeAwardOutputType = z.infer<
+	typeof FindBadgeAwardOutputSchema
 >;

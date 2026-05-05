@@ -1,9 +1,12 @@
 import { ORPCError } from "@orpc/server";
 import prisma, { type Prisma } from "@xamsa/db";
 import type {
+	ListReactorsInputType,
+	ListReactorsOutputType,
 	SetReactionInputType,
 	SetReactionOutputType,
 } from "@xamsa/schemas/modules/reaction";
+import { defineCursorPagination } from "@xamsa/utils/pagination";
 
 function bumpTargetTotals(
 	tx: Prisma.TransactionClient,
@@ -101,4 +104,48 @@ export async function setReaction(
 		});
 		return { ok: true as const, type: input.type };
 	});
+}
+
+/**
+ * Paginated list of reactors on a post or comment, newest reaction first.
+ * Optionally filtered to a single reaction type so the breakdown dialog can
+ * show "who clapped this :heart:".
+ */
+export async function listReactors(
+	input: ListReactorsInputType,
+): Promise<ListReactorsOutputType> {
+	const pag = defineCursorPagination(input, input.limit);
+	const cursorArgs = pag.use("id");
+
+	const where: Prisma.ReactionWhereInput = {};
+	if (input.postId) where.postId = input.postId;
+	if (input.commentId) where.commentId = input.commentId;
+	if (input.type) where.type = input.type;
+
+	const rows = await prisma.reaction.findMany({
+		where,
+		...cursorArgs,
+		orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+		select: {
+			id: true,
+			type: true,
+			createdAt: true,
+			user: {
+				select: { username: true, name: true, image: true },
+			},
+		},
+	});
+
+	const items = rows.map((row) => ({
+		id: row.id,
+		type: row.type,
+		createdAt: row.createdAt,
+		user: {
+			username: row.user.username,
+			name: row.user.name ?? "",
+			image: row.user.image,
+		},
+	}));
+
+	return pag.output(items, (r) => r.id);
 }

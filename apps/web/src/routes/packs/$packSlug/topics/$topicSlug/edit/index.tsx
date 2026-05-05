@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { EditTopicForm } from "@/components/edit-topic-form";
+import { TopicExportMenu } from "@/components/export-menu";
 import {
 	PacksBreadcrumb,
 	PacksSubpageContainer,
@@ -78,6 +79,9 @@ function RouteComponent() {
 				description="Change the topic title and description. Question text is edited from each question or the topic page."
 				eyebrow="Pack editor"
 				title="Edit topic"
+				actions={
+					<TopicExportMenu packSlug={topic.pack.slug} topicSlug={topic.slug} />
+				}
 			/>
 			<EditTopicForm
 				topicData={{

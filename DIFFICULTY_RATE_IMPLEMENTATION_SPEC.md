@@ -24,3 +24,17 @@
 ## Tuning checkpoint
 
 Revisit `K0`, `N0`, and normalization anchors after several weeks of production traffic.
+
+## v26.05.05 — Non-click signal
+
+When a question closes (`isQuestionRevealed` flips true via `resolveClick`), every
+active player whose pre-game Elo is at or above `MIN_ELO_FOR_SKIP_SIGNAL` (1000)
+but who never produced a `Click` row contributes a **skip** signal that nudges
+the question harder. Strength is `K_SKIP = K0 / 4`; the skip update **does not**
+increment `qdrScoredAttempts` so TDR's "questions with at least one resolved
+click" gate remains unchanged.
+
+- Forward-only: no historical backfill in this release. Old finished games keep
+  their existing QDR/TDR/PDR until they're played again or a future backfill
+  script is added.
+- Helpers: `computeQdrSkipUpdate` in [`packages/utils/src/difficulty-rate.ts`](./packages/utils/src/difficulty-rate.ts).
