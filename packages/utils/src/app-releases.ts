@@ -13,12 +13,42 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 5 } as const;
+const current = { year: 2026, month: 5, patch: 6 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-06",
+			year: 2026,
+			month: 5,
+			patch: 6,
+			title:
+				"Two new end-of-game stories, ladders that reset on a schedule, gentle pings when posts light up, and a real cockpit for staff",
+			highlights: [
+				{
+					kind: "text",
+					text: "Two new badges land at the buzzer-beater of every competitive night: Dominator crowns the winner who finishes at least double the runner-up, and Survivor celebrates the clutch closer who edged out second place by 500 points or fewer—both unlock when the table seats three or more and the pack runs at least five topics deep.",
+				},
+				{
+					kind: "text",
+					text: "Leaderboards grew a calendar: flick between This week, This month, This year, and All time without losing the lifetime board you’re proud of—Elo turns into a gain/loss line, wins and plays become fresh-since-Monday tallies, and the URL travels with you so brag clips link straight to the right window.",
+				},
+				{
+					kind: "text",
+					text: "Posts now whisper in your inbox when they get attention—someone reacts to your post, drops the first comment on it, or replies to your thread, and we send a tidy little email with a one-tap link back to the conversation; bursts get gently grouped so your inbox doesn’t hum.",
+				},
+				{
+					kind: "text",
+					text: "Staff dashboard turned into an actual dashboard: KPI tiles for users, packs, games, posts, comments, badges and more (with 7-day deltas), a 14-day activity chart, top creators and top players side-by-side, recent games at a glance, bulk-import job health, and the old quick-links shelf still there at the bottom.",
+				},
+				{
+					kind: "text",
+					text: "Search shortcuts grew: ⌘ K leaderboard:week, leaderboard:elo:month, or any combo opens the board you mean exactly where you want it.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-05",
 			year: 2026,

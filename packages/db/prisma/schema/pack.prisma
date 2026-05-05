@@ -181,8 +181,9 @@ model Comment {
 
   totalReactions Int @default(0) @map("total_reactions")
 
-  reactions Reaction[]
-  mentions  Mention[]
+  reactions               Reaction[]
+  mentions                Mention[]
+  replyEmailNotifications ReplyEmailNotification[]
 
   @@index([packId, createdAt])
   @@index([topicId, createdAt])

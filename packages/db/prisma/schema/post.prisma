@@ -33,9 +33,11 @@ model Post {
   attachment PostAttachment?
   comments   Comment[]
   reactions  Reaction[]
-  mentions                  Mention[]
-  mentionEmailNotifications MentionEmailNotification[]
-  bookmarks                 PostBookmark[]
+  mentions                   Mention[]
+  mentionEmailNotifications  MentionEmailNotification[]
+  reactionEmailNotifications ReactionEmailNotification[]
+  commentEmailNotifications  CommentEmailNotification[]
+  bookmarks                  PostBookmark[]
 
   @@index([userId])
   @@index([createdAt, id])
@@ -140,4 +142,52 @@ model MentionEmailNotification {
 
   @@index([recipientUserId, postId, sentAt])
   @@map("mention_email_notification")
+}
+
+/// Recent reaction-on-post emails per recipient+post for burst dedupe (same-window skips).
+model ReactionEmailNotification {
+  id String @id @default(uuid())
+
+  sentAt DateTime @default(now()) @map("sent_at")
+
+  recipientUserId String @map("recipient_user_id")
+  recipient       User   @relation("ReactionEmailNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  postId String @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, postId, sentAt])
+  @@map("reaction_email_notification")
+}
+
+/// Recent top-level-comment emails per recipient+post for burst dedupe (same-window skips).
+model CommentEmailNotification {
+  id String @id @default(uuid())
+
+  sentAt DateTime @default(now()) @map("sent_at")
+
+  recipientUserId String @map("recipient_user_id")
+  recipient       User   @relation("CommentEmailNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  postId String @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, postId, sentAt])
+  @@map("comment_email_notification")
+}
+
+/// Recent reply-to-comment emails per recipient+parent comment for burst dedupe (same-window skips).
+model ReplyEmailNotification {
+  id String @id @default(uuid())
+
+  sentAt DateTime @default(now()) @map("sent_at")
+
+  recipientUserId String @map("recipient_user_id")
+  recipient       User   @relation("ReplyEmailNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  parentCommentId String  @map("parent_comment_id")
+  parentComment   Comment @relation(fields: [parentCommentId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, parentCommentId, sentAt])
+  @@map("reply_email_notification")
 }

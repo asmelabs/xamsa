@@ -459,7 +459,7 @@ export async function finalizeGame(
 
 		const appendGameBadgeEvent = async (
 			playerId: string,
-			badgeId: "genius" | "dunce",
+			badgeId: "genius" | "dunce" | "dominator" | "survivor",
 		) => {
 			const existing = await tx.playerBadgeAward.findFirst({
 				where: {
@@ -521,6 +521,29 @@ export async function finalizeGame(
 			}
 			if (dunceOk) {
 				await appendGameBadgeEvent(p.id, "dunce");
+			}
+		}
+
+		// Dominator / Survivor: end-of-game ranking badges that compare the
+		// winner's score against the runner-up's. Both require at least 3
+		// players and 5 played topics so they stay rare-but-achievable.
+		if (ranked.length >= 3 && gameTopicsForBadges.length >= 5) {
+			const winner = ranked[0];
+			const runnerUp = ranked[1];
+			if (winner && runnerUp && winnerId === winner.id) {
+				const margin = winner.score - runnerUp.score;
+				const dominatorOk =
+					runnerUp.score <= 0
+						? winner.score > 0
+						: winner.score >= 2 * runnerUp.score;
+				const survivorOk = margin >= 0 && margin <= 500;
+
+				if (dominatorOk) {
+					await appendGameBadgeEvent(winner.id, "dominator");
+				}
+				if (survivorOk) {
+					await appendGameBadgeEvent(winner.id, "survivor");
+				}
 			}
 		}
 	}

@@ -237,6 +237,46 @@ export const badges = {
 		category: "struggle",
 		assignment: "player",
 	},
+
+	dominator: {
+		id: "dominator",
+		name: "Dominator",
+		description:
+			"Awarded to a winner who finishes at least twice the runner-up's score on a competitive night — a clean lap of the field with room to spare.",
+		requirements: [
+			"Game must have at least 3 players (any status counted)",
+			"Game must have at least 5 played topics (GameTopic rows)",
+			"Player must finish ranked first after standings tie-breakers",
+			"Winner's final score must be at least 2x the runner-up's score (with runner-up score > 0); a positive winner score over a non-positive runner-up also qualifies",
+			"Awarded when the game is finalized",
+		],
+		color: "crimson",
+		icon: "🏆",
+		period: "game",
+		type: "ranking",
+		category: "skill",
+		assignment: "player",
+	},
+
+	survivor: {
+		id: "survivor",
+		name: "Survivor",
+		description:
+			"Awarded to a winner who edges out second place by 500 points or fewer — the kind of finish you replay in your head for a week.",
+		requirements: [
+			"Game must have at least 3 players (any status counted)",
+			"Game must have at least 5 played topics (GameTopic rows)",
+			"Player must finish ranked first after standings tie-breakers",
+			"Winner's final score must be at most 500 points ahead of the runner-up (margin between 0 and 500 inclusive)",
+			"Awarded when the game is finalized",
+		],
+		color: "emerald",
+		icon: "🛟",
+		period: "game",
+		type: "ranking",
+		category: "moment",
+		assignment: "player",
+	},
 } as const satisfies Record<string, Badge>;
 
 export type BadgeId = keyof typeof badges;
@@ -260,6 +300,8 @@ const BADGE_ID_ZOD_TUPLE = [
 	"abomination",
 	"genius",
 	"dunce",
+	"dominator",
+	"survivor",
 ] as const;
 
 export const BadgeIdSchema = z.enum(BADGE_ID_ZOD_TUPLE);

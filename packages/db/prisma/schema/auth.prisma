@@ -99,9 +99,12 @@ model User {
   postBookmarks PostBookmark[]
   reactions Reaction[]
 
-  mentionsReceived          Mention[]                   @relation("MentionsReceived")
-  mentionsCreated           Mention[]                   @relation("MentionsCreated")
-  mentionEmailNotifications MentionEmailNotification[] @relation("MentionEmailNotifications")
+  mentionsReceived           Mention[]                   @relation("MentionsReceived")
+  mentionsCreated            Mention[]                   @relation("MentionsCreated")
+  mentionEmailNotifications  MentionEmailNotification[]  @relation("MentionEmailNotifications")
+  reactionEmailNotifications ReactionEmailNotification[] @relation("ReactionEmailNotifications")
+  commentEmailNotifications  CommentEmailNotification[]  @relation("CommentEmailNotifications")
+  replyEmailNotifications    ReplyEmailNotification[]    @relation("ReplyEmailNotifications")
 
   @@index([elo])
   @@index([xp])

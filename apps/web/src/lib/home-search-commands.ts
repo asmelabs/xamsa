@@ -1,6 +1,9 @@
 import { BadgeIdSchema } from "@xamsa/schemas/modules/badge";
 import type { HomeSearchItemType } from "@xamsa/schemas/modules/search";
-import type { GlobalLeaderboardBoardType } from "@xamsa/schemas/modules/user";
+import type {
+	GlobalLeaderboardBoardType,
+	LeaderboardPeriodType,
+} from "@xamsa/schemas/modules/user";
 import { parseCalverParam } from "@xamsa/utils/app-release-calver";
 import { getCurrentCalverString } from "@/lib/app-release";
 
@@ -28,8 +31,19 @@ const LEADERBOARD_BOARDS = [
 	"plays",
 ] as const satisfies readonly GlobalLeaderboardBoardType[];
 
+const LEADERBOARD_PERIODS = [
+	"week",
+	"month",
+	"year",
+	"all",
+] as const satisfies readonly LeaderboardPeriodType[];
+
 function isLeaderboardBoard(tab: string): tab is GlobalLeaderboardBoardType {
 	return (LEADERBOARD_BOARDS as readonly string[]).includes(tab);
+}
+
+function isLeaderboardPeriod(p: string): p is LeaderboardPeriodType {
+	return (LEADERBOARD_PERIODS as readonly string[]).includes(p);
 }
 
 export function pageItem(
@@ -222,8 +236,8 @@ export function analyzeHomeSearchQuery(
 				],
 			};
 		}
-		const tabPart = n.slice("leaderboard:".length).trim();
-		if (!tabPart || !isLeaderboardBoard(tabPart)) {
+		const rest = n.slice("leaderboard:".length).trim();
+		if (!rest) {
 			return {
 				...empty,
 				staticItems: [
@@ -231,12 +245,43 @@ export function analyzeHomeSearchQuery(
 				],
 			};
 		}
+		// Accept `leaderboard:<board>`, `leaderboard:<period>`, or `leaderboard:<board>:<period>`.
+		const parts = rest
+			.split(":")
+			.map((s) => s.trim())
+			.filter(Boolean);
+		let board: GlobalLeaderboardBoardType | null = null;
+		let period: LeaderboardPeriodType | null = null;
+		for (const piece of parts) {
+			if (!board && isLeaderboardBoard(piece)) {
+				board = piece;
+				continue;
+			}
+			if (!period && isLeaderboardPeriod(piece)) {
+				period = piece;
+			}
+		}
+		if (!board && !period) {
+			return {
+				...empty,
+				staticItems: [
+					pageItem("Leaderboard", "Global rankings", "/leaderboard/"),
+				],
+			};
+		}
+		const search: Record<string, string> = {};
+		if (board) search.tab = board;
+		if (period) search.period = period;
+		const labelBits = [board, period].filter(Boolean).join(" · ");
 		return {
 			...empty,
 			staticItems: [
-				pageItem(`Leaderboard (${tabPart})`, "Open rankings", "/leaderboard/", {
-					tab: tabPart,
-				}),
+				pageItem(
+					`Leaderboard (${labelBits})`,
+					"Open rankings",
+					"/leaderboard/",
+					search,
+				),
 			],
 		};
 	}

@@ -18,6 +18,8 @@ export const BadgeIdSchema = z.enum([
 	"abomination",
 	"genius",
 	"dunce",
+	"dominator",
+	"survivor",
 ]);
 
 export type BadgeId = z.infer<typeof BadgeIdSchema>;
