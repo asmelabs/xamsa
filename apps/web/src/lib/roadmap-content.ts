@@ -179,17 +179,22 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 			{
 				title: "“Dominator” badge",
 				description:
-					"Award when the winner’s score is materially ahead of second place (tune thresholds from real game distributions so it stays rare but achievable).",
+					"Award when the winner’s score is materially ahead of second place (tune thresholds from real game distributions so it stays rare but achievable). When the first place is 2x more than second place, it should be awarded. Requirements: There must be at least 3 players, and minimum 5 topics played.",
 			},
 			{
 				title: "“Survivor” badge",
 				description:
-					"Award when the winner edges out second place by a very small margin—celebrate clutch finishes without encouraging sandbagging.",
+					"Award when the winner edges out second place by a very small margin—celebrate clutch finishes without encouraging sandbagging. When the first place is 500 points more than second place (500 included), it should be awarded. Requirements: There must be at least 3 players, and minimum 5 topics played.",
 			},
 			{
 				title: "Weekly or seasonal leaderboard snapshot",
 				description:
-					"Optional time-boxed ladder (e.g. “this week’s XP”) that resets on a schedule, without erasing lifetime boards.",
+					"Optional time-boxed ladder (e.g. “this week’s XP”) that resets on a schedule, without erasing lifetime boards. Snapshots by Week/Month/Year/All Time.",
+			},
+			{
+				title: "Send Email Notifications for Reactions and Comments/Replies",
+				description:
+					"Send email notifications when someone reacted to your post (not comment). Send email notifications when someone commented on your post (for posts, only 1st level comments get notifications), or replied to your comment/reply.",
 			},
 		],
 	},
