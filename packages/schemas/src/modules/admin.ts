@@ -618,3 +618,91 @@ export type UpdateUserRoleInputType = z.infer<typeof UpdateUserRoleInputSchema>;
 export type UpdateUserRoleOutputType = z.infer<
 	typeof UpdateUserRoleOutputSchema
 >;
+
+// --- Overview ---
+
+/**
+ * Site-wide moderator dashboard snapshot. All counters reflect *every* row
+ * in each table (no visibility filter), since the overview lives behind a
+ * staff-only route. The window for `recent7d` is the rolling 7 days
+ * preceding the request time.
+ */
+export const AdminOverviewTotalsSchema = z.object({
+	users: z.number().int().min(0),
+	packs: z.number().int().min(0),
+	topics: z.number().int().min(0),
+	questions: z.number().int().min(0),
+	games: z.number().int().min(0),
+	posts: z.number().int().min(0),
+	comments: z.number().int().min(0),
+	reactions: z.number().int().min(0),
+	clicks: z.number().int().min(0),
+	badgeAwards: z.number().int().min(0),
+});
+
+export const AdminOverviewRecentSchema = z.object({
+	users: z.number().int().min(0),
+	games: z.number().int().min(0),
+	posts: z.number().int().min(0),
+	comments: z.number().int().min(0),
+	badgeAwards: z.number().int().min(0),
+});
+
+export const AdminOverviewTopCreatorSchema = z.object({
+	username: z.string(),
+	name: z.string(),
+	image: z.string().nullable(),
+	publishedPacks: z.number().int().min(0),
+	totalPlays: z.number().int().min(0),
+});
+
+export const AdminOverviewTopPlayerSchema = z.object({
+	username: z.string(),
+	name: z.string(),
+	image: z.string().nullable(),
+	elo: z.number().int(),
+	totalWins: z.number().int().min(0),
+});
+
+export const AdminOverviewRecentGameSchema = z.object({
+	id: z.string(),
+	finishedAt: z.coerce.date(),
+	hostUsername: z.string(),
+	hostName: z.string(),
+	packName: z.string().nullable(),
+	playerCount: z.number().int().min(0),
+	winnerUsername: z.string().nullable(),
+});
+
+export const AdminOverviewActivityPointSchema = z.object({
+	date: z.string(), // ISO date (YYYY-MM-DD), UTC
+	games: z.number().int().min(0),
+	users: z.number().int().min(0),
+	posts: z.number().int().min(0),
+});
+
+export const AdminOverviewJobsSchema = z.object({
+	topicBulkPending: z.number().int().min(0),
+	topicBulkRunning: z.number().int().min(0),
+	topicBulkFailed24h: z.number().int().min(0),
+});
+
+export const AdminOverviewRoleBreakdownSchema = z.object({
+	role: RoleSchema,
+	count: z.number().int().min(0),
+});
+
+export const GetAdminOverviewOutputSchema = z.object({
+	totals: AdminOverviewTotalsSchema,
+	recent7d: AdminOverviewRecentSchema,
+	topCreators: z.array(AdminOverviewTopCreatorSchema).max(10),
+	topPlayers: z.array(AdminOverviewTopPlayerSchema).max(10),
+	recentGames: z.array(AdminOverviewRecentGameSchema).max(10),
+	activity14d: z.array(AdminOverviewActivityPointSchema).max(60),
+	jobs: AdminOverviewJobsSchema,
+	roles: z.array(AdminOverviewRoleBreakdownSchema),
+});
+
+export type GetAdminOverviewOutputType = z.infer<
+	typeof GetAdminOverviewOutputSchema
+>;

@@ -175,6 +175,7 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	},
 	{
 		version: "v26.05.06",
+		implemented: true,
 		items: [
 			{
 				title: "“Dominator” badge",

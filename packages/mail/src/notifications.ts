@@ -94,3 +94,101 @@ export async function sendMentionEmail(params: {
 		html,
 	});
 }
+
+/** Reaction-on-post alerts; deduped in API via reaction_email_notification within a short window per post. */
+export async function sendReactionEmail(params: {
+	email: string;
+	name: string;
+	actorName: string;
+	reactionEmoji: string;
+	postSnippet: string;
+	href: string;
+}) {
+	const { email, name, actorName, reactionEmoji, postSnippet, href } = params;
+	const html = buildTransactionalHtml({
+		title: "Someone reacted to your post",
+		introHtml: `
+<p style="margin:0 0 12px;">Hi ${escapeHtml(name)},</p>
+<p style="margin:0 0 12px;"><strong>${escapeHtml(actorName)}</strong> reacted ${escapeHtml(reactionEmoji)} to your post: ${escapeHtml(postSnippet)}</p>
+`,
+		primaryButton: { href, label: "Open the post" },
+		footerLinks: transactionalFooterLinks(),
+	});
+	if (!shouldSendNotificationMail()) {
+		console.log("=== reaction email (dev) ===");
+		console.log("To:", email);
+		console.log("Link:", href);
+		return;
+	}
+	await sendEmail({
+		to: { email, name },
+		subject: `${actorName} reacted to your post on Xamsa`,
+		html,
+	});
+}
+
+/** Top-level comment-on-post alerts; deduped in API via comment_email_notification within a short window per post. */
+export async function sendCommentEmail(params: {
+	email: string;
+	name: string;
+	actorName: string;
+	postSnippet: string;
+	commentSnippet: string;
+	href: string;
+}) {
+	const { email, name, actorName, postSnippet, commentSnippet, href } = params;
+	const html = buildTransactionalHtml({
+		title: "New comment on your post",
+		introHtml: `
+<p style="margin:0 0 12px;">Hi ${escapeHtml(name)},</p>
+<p style="margin:0 0 12px;"><strong>${escapeHtml(actorName)}</strong> commented on your post: ${escapeHtml(postSnippet)}</p>
+<p style="margin:0 0 12px;color:#545454;">"${escapeHtml(commentSnippet)}"</p>
+`,
+		primaryButton: { href, label: "Open the conversation" },
+		footerLinks: transactionalFooterLinks(),
+	});
+	if (!shouldSendNotificationMail()) {
+		console.log("=== comment email (dev) ===");
+		console.log("To:", email);
+		console.log("Link:", href);
+		return;
+	}
+	await sendEmail({
+		to: { email, name },
+		subject: `${actorName} commented on your post on Xamsa`,
+		html,
+	});
+}
+
+/** Reply-to-comment alerts; deduped in API via reply_email_notification within a short window per parent comment. */
+export async function sendReplyEmail(params: {
+	email: string;
+	name: string;
+	actorName: string;
+	parentSnippet: string;
+	replySnippet: string;
+	href: string;
+}) {
+	const { email, name, actorName, parentSnippet, replySnippet, href } = params;
+	const html = buildTransactionalHtml({
+		title: "New reply to your comment",
+		introHtml: `
+<p style="margin:0 0 12px;">Hi ${escapeHtml(name)},</p>
+<p style="margin:0 0 12px;"><strong>${escapeHtml(actorName)}</strong> replied to your comment: ${escapeHtml(parentSnippet)}</p>
+<p style="margin:0 0 12px;color:#545454;">"${escapeHtml(replySnippet)}"</p>
+`,
+		primaryButton: { href, label: "Open the conversation" },
+		footerLinks: transactionalFooterLinks(),
+	});
+	if (!shouldSendNotificationMail()) {
+		console.log("=== reply email (dev) ===");
+		console.log("To:", email);
+		console.log("Link:", href);
+		return;
+	}
+	await sendEmail({
+		to: { email, name },
+		subject: `${actorName} replied to your comment on Xamsa`,
+		html,
+	});
+}

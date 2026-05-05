@@ -1,6 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { GlobalLeaderboardBoardType } from "@xamsa/schemas/modules/user";
+import type {
+	GlobalLeaderboardBoardType,
+	LeaderboardPeriodType,
+} from "@xamsa/schemas/modules/user";
 import {
 	Alert,
 	AlertDescription,
@@ -40,31 +43,56 @@ const BOARD_IDS = [
 	"plays",
 ] as const satisfies readonly GlobalLeaderboardBoardType[];
 
+const PERIOD_IDS = [
+	"week",
+	"month",
+	"year",
+	"all",
+] as const satisfies readonly LeaderboardPeriodType[];
+
+const PERIODS: { id: (typeof PERIOD_IDS)[number]; label: string }[] = [
+	{ id: "week", label: "This week" },
+	{ id: "month", label: "This month" },
+	{ id: "year", label: "This year" },
+	{ id: "all", label: "All time" },
+];
+
 const BOARDS: {
 	id: (typeof BOARD_IDS)[number];
 	label: string;
 	hint: string;
+	hintWindowed: string;
 }[] = [
 	{
 		id: "elo",
 		label: "Elo",
 		hint: "Competitive rating (after at least one game as a player)",
+		hintWindowed:
+			"Net Elo gained or lost from finished games inside the window",
 	},
 	{
 		id: "xp",
 		label: "XP",
 		hint: "Progression from playing and hosting",
+		hintWindowed: "Hosting XP from finished games inside the window",
 	},
-	{ id: "wins", label: "Wins", hint: "First-place finishes" },
+	{
+		id: "wins",
+		label: "Wins",
+		hint: "First-place finishes",
+		hintWindowed: "First-place finishes inside the window",
+	},
 	{
 		id: "hosts",
 		label: "Hosts",
 		hint: "Total sessions hosted",
+		hintWindowed: "Sessions hosted inside the window",
 	},
 	{
 		id: "plays",
 		label: "Plays",
 		hint: "Total sessions joined as a player",
+		hintWindowed: "Sessions joined as a player inside the window",
 	},
 ];
 
@@ -96,12 +124,18 @@ function RouteComponent() {
 		"tab",
 		parseAsStringLiteral(BOARD_IDS).withDefault("elo"),
 	);
+	const [period, setPeriod] = useQueryState(
+		"period",
+		parseAsStringLiteral(PERIOD_IDS).withDefault("all"),
+	);
 	const [onlyFollowingParam, setOnlyFollowingParam] = useQueryState(
 		"only-followers",
 		parseAsBoolean.withDefault(false),
 	);
 	const effectiveOnlyFollowing = !!session?.user && onlyFollowingParam;
-	const currentHint = BOARDS.find((b) => b.id === tab)?.hint ?? "";
+	const currentBoard = BOARDS.find((b) => b.id === tab);
+	const currentHint =
+		(period === "all" ? currentBoard?.hint : currentBoard?.hintWindowed) ?? "";
 
 	return (
 		<div className="container mx-auto max-w-5xl space-y-6 px-4 py-8">
@@ -113,9 +147,33 @@ function RouteComponent() {
 					</h1>
 				</div>
 				<p className="text-muted-foreground text-sm sm:text-base">
-					Global rankings from finished games. Elo updates on ranked sessions
-					with at least two players; XP includes hosting bonuses.
+					Global rankings from finished games. Switch the time window to see
+					this week's, month's, year's, or lifetime ladders side by side.
 				</p>
+			</div>
+
+			<div
+				role="tablist"
+				aria-label="Leaderboard period"
+				className="flex flex-wrap gap-1 rounded-lg border border-border/80 bg-card p-1"
+			>
+				{PERIODS.map((p) => (
+					<button
+						key={p.id}
+						type="button"
+						role="tab"
+						aria-selected={period === p.id}
+						onClick={() => void setPeriod(p.id)}
+						className={cn(
+							"flex-1 rounded-md px-3 py-1.5 text-sm transition-colors",
+							period === p.id
+								? "bg-primary/12 font-semibold text-foreground"
+								: "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+						)}
+					>
+						{p.label}
+					</button>
+				))}
 			</div>
 
 			<div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
@@ -157,6 +215,7 @@ function RouteComponent() {
 					</div>
 					<LeaderboardBoard
 						board={tab}
+						period={period}
 						onlyFollowing={effectiveOnlyFollowing}
 					/>
 				</div>
@@ -192,9 +251,11 @@ function rankDisplay(rank: number) {
 
 function LeaderboardBoard({
 	board,
+	period,
 	onlyFollowing,
 }: {
 	board: GlobalLeaderboardBoardType;
+	period: LeaderboardPeriodType;
 	onlyFollowing: boolean;
 }) {
 	const {
@@ -208,6 +269,7 @@ function LeaderboardBoard({
 		...orpc.user.getGlobalLeaderboard.infiniteOptions({
 			input: (pageParam: string | undefined) => ({
 				board,
+				period,
 				limit: 50,
 				cursor: pageParam,
 				onlyFollowing,
@@ -259,21 +321,41 @@ function LeaderboardBoard({
 			<p className="py-12 text-center text-muted-foreground text-sm">
 				{onlyFollowing
 					? "No one you follow appears on this board yet, or you are not following anyone."
-					: "No players on this board yet. Finish a few games to appear here."}
+					: period !== "all"
+						? "No qualifying activity in this window yet. Try a longer period or come back later."
+						: "No players on this board yet. Finish a few games to appear here."}
 			</p>
 		);
 	}
 
 	const metricHead =
-		board === "elo"
-			? "Elo"
-			: board === "xp"
-				? "Lv / XP"
-				: board === "wins"
-					? "Wins"
-					: board === "hosts"
-						? "Hosted"
-						: "Plays";
+		period !== "all"
+			? board === "elo"
+				? "Elo Δ"
+				: board === "xp"
+					? "XP gained"
+					: board === "wins"
+						? "Wins"
+						: board === "hosts"
+							? "Hosted"
+							: "Plays"
+			: board === "elo"
+				? "Elo"
+				: board === "xp"
+					? "Lv / XP"
+					: board === "wins"
+						? "Wins"
+						: board === "hosts"
+							? "Hosted"
+							: "Plays";
+
+	const formatPeriodValue = (value: number) => {
+		if (board === "elo") {
+			const sign = value > 0 ? "+" : value < 0 ? "" : "";
+			return `${sign}${value.toLocaleString()}`;
+		}
+		return value.toLocaleString();
+	};
 
 	return (
 		<div className="space-y-4">
@@ -323,7 +405,20 @@ function LeaderboardBoard({
 								</div>
 							</TableCell>
 							<TableCell className="tabular-nums">
-								{board === "elo" ? (
+								{period !== "all" ? (
+									<span
+										className={cn(
+											"font-medium text-sm",
+											board === "elo" && row.periodValue > 0
+												? "text-emerald-600 dark:text-emerald-400"
+												: board === "elo" && row.periodValue < 0
+													? "text-red-600 dark:text-red-400"
+													: undefined,
+										)}
+									>
+										{formatPeriodValue(row.periodValue)}
+									</span>
+								) : board === "elo" ? (
 									row.elo.toLocaleString()
 								) : board === "xp" ? (
 									<span className="text-sm">

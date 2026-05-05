@@ -20,6 +20,10 @@ import type {
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 import { notifyMentionedUsersForContent } from "../../lib/mention-notifications";
 import { insertMentionsForCommentOnPost } from "../../lib/mention-write";
+import {
+	notifyCommentEmail,
+	notifyReplyEmail,
+} from "../../lib/post-engagement-notifications";
 import { sortedReactionsByTypeFromGrouped } from "../reaction/sort";
 
 const COMMENT_ROW_INCLUDE = {
@@ -313,8 +317,8 @@ export async function createComment(
 	input: CreateCommentInputType,
 	userId: string,
 ): Promise<CreateCommentOutputType> {
-	const { created, mentionedUserIds, anchorPostId } = await prisma.$transaction(
-		async (tx) => {
+	const { created, mentionedUserIds, anchorPostId, parentCommentId } =
+		await prisma.$transaction(async (tx) => {
 			if (input.parentId) {
 				const parent = await tx.comment.findUnique({
 					where: { id: input.parentId },
@@ -406,6 +410,7 @@ export async function createComment(
 					created,
 					mentionedUserIds,
 					anchorPostId: inferred.postId,
+					parentCommentId: parent.id as string | null,
 				};
 			}
 
@@ -467,9 +472,9 @@ export async function createComment(
 				created,
 				mentionedUserIds,
 				anchorPostId: postId,
+				parentCommentId: null as string | null,
 			};
-		},
-	);
+		});
 
 	const mentionRows = await prisma.mention.findMany({
 		where: { commentId: created.id },
@@ -508,6 +513,30 @@ export async function createComment(
 				console.error("[createComment] mention notify", err);
 			});
 		}
+	}
+
+	// Top-level comment on a post → notify the post owner.
+	if (anchorPostId && parentCommentId === null) {
+		void notifyCommentEmail({
+			postId: anchorPostId,
+			commentId: created.id,
+			commentBody: input.body,
+			actorUserId: userId,
+		}).catch((err) => {
+			console.error("[createComment] notifyCommentEmail", err);
+		});
+	}
+
+	// Reply to a comment (any depth) → notify the parent comment's author.
+	if (parentCommentId) {
+		void notifyReplyEmail({
+			parentCommentId,
+			replyCommentId: created.id,
+			replyBody: input.body,
+			actorUserId: userId,
+		}).catch((err) => {
+			console.error("[createComment] notifyReplyEmail", err);
+		});
 	}
 
 	return toCommentRowType(created, mentions);

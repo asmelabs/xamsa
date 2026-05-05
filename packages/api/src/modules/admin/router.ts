@@ -1,4 +1,5 @@
 import {
+	GetAdminOverviewOutputSchema,
 	ListAdminBadgesInputSchema,
 	ListAdminBadgesOutputSchema,
 	ListAdminClicksInputSchema,
@@ -23,6 +24,7 @@ import {
 	UpdateUserRoleOutputSchema,
 } from "@xamsa/schemas/modules/admin";
 import { adminProcedure, moderatorProcedure } from "../../procedures";
+import { getAdminOverview } from "./overview";
 import {
 	listAdminBadges,
 	listAdminClicks,
@@ -38,6 +40,9 @@ import {
 import { updateUserRole } from "./update-user-role";
 
 export const adminRouter = {
+	getOverview: moderatorProcedure
+		.output(GetAdminOverviewOutputSchema)
+		.handler(async () => await getAdminOverview()),
 	listBadges: moderatorProcedure
 		.input(ListAdminBadgesInputSchema)
 		.output(ListAdminBadgesOutputSchema)

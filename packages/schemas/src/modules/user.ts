@@ -430,8 +430,17 @@ export const GlobalLeaderboardBoardSchema = z.enum([
 	"plays",
 ]);
 
+/**
+ * Time window for the leaderboard. `all` keeps lifetime aggregates from
+ * `User` columns; `week`/`month`/`year` switch to a live-query path that
+ * sums per-game contributions from `Player`/`Game` rows where
+ * `Game.finishedAt` falls inside the rolling window (UTC).
+ */
+export const LeaderboardPeriodSchema = z.enum(["week", "month", "year", "all"]);
+
 export const GetGlobalLeaderboardInputSchema = z.object({
 	board: GlobalLeaderboardBoardSchema.default("elo"),
+	period: LeaderboardPeriodSchema.default("all"),
 	limit: z.number().int().min(1).max(100).default(50),
 	cursor: z.string().optional(),
 	/** When true, only users the signed-in viewer follows. Requires auth (API returns UNAUTHORIZED if absent). */
@@ -450,6 +459,13 @@ export const GlobalLeaderboardRowSchema = z.object({
 	totalGamesHosted: z.number().int(),
 	totalGamesPlayed: z.number().int(),
 	totalPointsEarned: z.number().int(),
+	/**
+	 * Value used to rank this row for the active board+period. For lifetime
+	 * (`period: "all"`) this matches the corresponding lifetime column; for
+	 * windowed periods it's the sum of in-window contributions (e.g. Elo
+	 * delta sum, wins/plays/hosts count, host XP from finalized games).
+	 */
+	periodValue: z.number().int(),
 });
 
 export const GetGlobalLeaderboardOutputSchema = z.object({
@@ -460,6 +476,7 @@ export const GetGlobalLeaderboardOutputSchema = z.object({
 export type GlobalLeaderboardBoardType = z.infer<
 	typeof GlobalLeaderboardBoardSchema
 >;
+export type LeaderboardPeriodType = z.infer<typeof LeaderboardPeriodSchema>;
 export type GetGlobalLeaderboardInputType = z.infer<
 	typeof GetGlobalLeaderboardInputSchema
 >;

@@ -7,6 +7,7 @@ import type {
 	SetReactionOutputType,
 } from "@xamsa/schemas/modules/reaction";
 import { defineCursorPagination } from "@xamsa/utils/pagination";
+import { notifyReactionEmail } from "../../lib/post-engagement-notifications";
 
 function bumpTargetTotals(
 	tx: Prisma.TransactionClient,
@@ -50,7 +51,7 @@ export async function setReaction(
 			throw new ORPCError("NOT_FOUND", { message: "Comment not found." });
 	}
 
-	return prisma.$transaction(async (tx) => {
+	const result = await prisma.$transaction(async (tx) => {
 		const whereUserTarget =
 			postId != null ? { userId, postId } : { userId, commentId: commentId! };
 
@@ -61,14 +62,19 @@ export async function setReaction(
 		const target = postId != null ? { postId } : { commentId: commentId! };
 
 		if (input.type === null) {
-			if (!existing) return { ok: true as const, type: undefined };
+			if (!existing) {
+				return {
+					result: { ok: true as const, type: undefined },
+					created: false,
+				};
+			}
 			await tx.reaction.delete({ where: { id: existing.id } });
 			await tx.user.update({
 				where: { id: userId },
 				data: { totalReactions: { decrement: 1 } },
 			});
 			await bumpTargetTotals(tx, target, -1);
-			return { ok: true as const, type: undefined };
+			return { result: { ok: true as const, type: undefined }, created: false };
 		}
 
 		if (!existing) {
@@ -85,7 +91,7 @@ export async function setReaction(
 				data: { totalReactions: { increment: 1 } },
 			});
 			await bumpTargetTotals(tx, target, 1);
-			return { ok: true as const, type: input.type };
+			return { result: { ok: true as const, type: input.type }, created: true };
 		}
 
 		if (existing.type === input.type) {
@@ -95,15 +101,26 @@ export async function setReaction(
 				data: { totalReactions: { decrement: 1 } },
 			});
 			await bumpTargetTotals(tx, target, -1);
-			return { ok: true as const, type: undefined };
+			return { result: { ok: true as const, type: undefined }, created: false };
 		}
 
 		await tx.reaction.update({
 			where: { id: existing.id },
 			data: { type: input.type },
 		});
-		return { ok: true as const, type: input.type };
+		return { result: { ok: true as const, type: input.type }, created: false };
 	});
+
+	// Fire-and-forget reaction email when a *new* reaction lands on a post.
+	// Skip toggle-off and type-change. Comment reactions don't send emails
+	// (post owner email is the only configured target for v26.05.06).
+	if (result.created && postId) {
+		void notifyReactionEmail({ postId, actorUserId: userId }).catch((err) => {
+			console.error("[setReaction] notifyReactionEmail", err);
+		});
+	}
+
+	return result.result;
 }
 
 /**
