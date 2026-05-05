@@ -1,6 +1,9 @@
 import { ORPCError } from "@orpc/server";
 import prisma, { type Prisma } from "@xamsa/db";
 import type {
+	FindBadgeAwardInputType,
+	FindBadgeAwardOutputType,
+	GetBadgeCatalogStatsOutputType,
 	GetPublicBadgeSummaryByUsernameInputType,
 	GetPublicBadgeSummaryByUsernameOutputType,
 	ListBadgeEarnersInputType,
@@ -51,6 +54,7 @@ const BADGE_EARNER_SELECT = {
 
 function mapBadgeSelectRow(row: {
 	id: string;
+	badgeId: string;
 	earnedAt: Date;
 	gameTopic: {
 		order: number;
@@ -67,7 +71,7 @@ function mapBadgeSelectRow(row: {
 		user: { username: string; name: string | null; image: string | null };
 		game: { code: string; pack: { slug: string; name: string } };
 	};
-}): ListBadgeEarnersOutputType["items"][number] {
+}): ListBadgeEarnersOutputType["items"][number] | null {
 	const topicFromGt = row.gameTopic;
 	const gq = row.gameQuestion;
 	const topicFromGq = gq?.gameTopic;
@@ -85,8 +89,11 @@ function mapBadgeSelectRow(row: {
 				}
 			: null;
 
+	if (!isBadgeId(row.badgeId)) return null;
+
 	return {
 		id: row.id,
+		badgeId: row.badgeId as BadgeId,
 		earnedAt: row.earnedAt,
 		user: {
 			...row.player.user,
@@ -104,14 +111,33 @@ export async function listBadgeEarners(
 	const pag = defineCursorPagination(input, input.limit);
 	const cursorArgs = pag.use("id");
 
+	const earnedAtFilter: { gte?: Date; lte?: Date } = {};
+	if (input.from) earnedAtFilter.gte = input.from;
+	if (input.to) earnedAtFilter.lte = input.to;
+	const playerFilter: Prisma.PlayerWhereInput = {};
+	if (input.username) {
+		playerFilter.user = {
+			username: { contains: input.username, mode: "insensitive" },
+		};
+	}
+	if (input.gameCode) {
+		playerFilter.game = { code: input.gameCode };
+	}
+
+	const where: Prisma.PlayerBadgeAwardWhereInput = { badgeId: input.badgeId };
+	if (Object.keys(earnedAtFilter).length > 0) where.earnedAt = earnedAtFilter;
+	if (Object.keys(playerFilter).length > 0) where.player = playerFilter;
+
 	const raw = await prisma.playerBadgeAward.findMany({
-		where: { badgeId: input.badgeId },
+		where,
 		...cursorArgs,
 		orderBy: [{ earnedAt: "desc" }, { id: "desc" }],
 		select: BADGE_EARNER_SELECT,
 	});
 
-	const items = raw.map((row) => mapBadgeSelectRow(row));
+	const items = raw
+		.map((row) => mapBadgeSelectRow(row))
+		.filter((r): r is NonNullable<typeof r> => r !== null);
 
 	return pag.output(items, (r) => r.id);
 }
@@ -133,7 +159,9 @@ export async function listPublicAwardsByUsername(
 		select: BADGE_EARNER_SELECT,
 	});
 
-	const items = raw.map((row) => mapBadgeSelectRow(row));
+	const items = raw
+		.map((row) => mapBadgeSelectRow(row))
+		.filter((r): r is NonNullable<typeof r> => r !== null);
 
 	return pag.output(items, (r) => r.id);
 }
@@ -162,6 +190,69 @@ export async function getPublicBadgeSummaryByUsername(
 		.filter((r) => r !== null);
 
 	return { rows };
+}
+
+/**
+ * Catalog stats: total awards + unique earners per badge id. Used by the
+ * /badges directory's "Total earns" / "Unique earners" sort columns. Two
+ * cheap queries — a `groupBy` for total + a raw count(distinct user_id) for
+ * uniques. Cached client-side; no live updates needed.
+ */
+export async function getBadgeCatalogStats(): Promise<GetBadgeCatalogStatsOutputType> {
+	const [totals, uniques, totalEligibleUsers] = await Promise.all([
+		prisma.playerBadgeAward.groupBy({
+			by: ["badgeId"],
+			_count: { _all: true },
+		}),
+		prisma.$queryRaw<{ badgeId: string; uniqueUsers: bigint }[]>`
+			SELECT pba.badge_id AS "badgeId",
+			       COUNT(DISTINCT p.user_id) AS "uniqueUsers"
+			FROM player_badge_award pba
+			JOIN player p ON p.id = pba.player_id
+			GROUP BY pba.badge_id
+		`,
+		prisma.user.count({ where: { totalGamesPlayed: { gt: 0 } } }),
+	]);
+
+	const totalById = new Map<string, number>();
+	for (const t of totals) totalById.set(t.badgeId, t._count._all);
+
+	const uniqueById = new Map<string, number>();
+	for (const u of uniques) uniqueById.set(u.badgeId, Number(u.uniqueUsers));
+
+	const ids = new Set<string>([...totalById.keys(), ...uniqueById.keys()]);
+
+	const rows: GetBadgeCatalogStatsOutputType["rows"] = [];
+	for (const id of ids) {
+		if (!isBadgeId(id)) continue;
+		rows.push({
+			badgeId: id as BadgeId,
+			totalEarns: totalById.get(id) ?? 0,
+			uniqueEarners: uniqueById.get(id) ?? 0,
+		});
+	}
+
+	return { rows, totalEligibleUsers };
+}
+
+/**
+ * Single award by id. Used by the per-award share page and OG.
+ */
+export async function findBadgeAward(
+	input: FindBadgeAwardInputType,
+): Promise<FindBadgeAwardOutputType> {
+	const row = await prisma.playerBadgeAward.findUnique({
+		where: { id: input.awardId },
+		select: BADGE_EARNER_SELECT,
+	});
+
+	const mapped = row ? mapBadgeSelectRow(row) : null;
+	if (!mapped) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Badge award not found",
+		});
+	}
+	return mapped;
 }
 
 type CreatePlayerBadgeAwardInput = {

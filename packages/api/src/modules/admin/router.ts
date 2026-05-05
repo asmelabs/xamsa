@@ -19,8 +19,10 @@ import {
 	ListAdminTopicsOutputSchema,
 	ListAdminUsersInputSchema,
 	ListAdminUsersOutputSchema,
+	UpdateUserRoleInputSchema,
+	UpdateUserRoleOutputSchema,
 } from "@xamsa/schemas/modules/admin";
-import { moderatorProcedure } from "../../procedures";
+import { adminProcedure, moderatorProcedure } from "../../procedures";
 import {
 	listAdminBadges,
 	listAdminClicks,
@@ -33,6 +35,7 @@ import {
 	listAdminTopics,
 	listAdminUsers,
 } from "./service";
+import { updateUserRole } from "./update-user-role";
 
 export const adminRouter = {
 	listBadges: moderatorProcedure
@@ -75,4 +78,11 @@ export const adminRouter = {
 		.input(ListAdminCommentsInputSchema)
 		.output(ListAdminCommentsOutputSchema)
 		.handler(async ({ input }) => await listAdminComments(input)),
+	updateUserRole: adminProcedure
+		.input(UpdateUserRoleInputSchema)
+		.output(UpdateUserRoleOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await updateUserRole(input, context.session.user.id),
+		),
 };

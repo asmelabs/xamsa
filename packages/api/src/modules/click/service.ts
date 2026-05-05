@@ -10,7 +10,10 @@ import type {
 	ClickResolveOutputType,
 } from "@xamsa/schemas/modules/click";
 import {
+	computeQdrSkipUpdate,
 	computeQdrUpdate,
+	MIN_ELO_FOR_SKIP_SIGNAL,
+	normalizeToQdr,
 	recomputePdr,
 	recomputeTdr,
 } from "@xamsa/utils/difficulty-rate";
@@ -532,6 +535,86 @@ export async function resolveClick(
 		}
 
 		const willFlipReveal = shouldReveal && !game.isQuestionRevealed;
+
+		// 4b. Non-click QDR signal — when the question closes, every active
+		//     high-Elo player who never produced a Click row contributes a small
+		//     "skip" signal nudging the question harder. This catches cases where
+		//     strong players sat the question out because it looked obscure.
+		if (willFlipReveal && game.pack.status !== "archived") {
+			const [qSnapshot, allClickerIds, candidateNonClickers] =
+				await Promise.all([
+					tx.question.findUnique({
+						where: { id: currentQuestion.id },
+						select: { qdrEloEquiv: true, topicId: true },
+					}),
+					tx.click.findMany({
+						where: {
+							gameId: game.id,
+							questionId: currentQuestion.id,
+						},
+						select: { playerId: true },
+					}),
+					tx.player.findMany({
+						where: {
+							gameId: game.id,
+							status: "playing",
+							eloAtGameStart: { gte: MIN_ELO_FOR_SKIP_SIGNAL },
+						},
+						select: { id: true, eloAtGameStart: true },
+					}),
+				]);
+
+			if (qSnapshot && candidateNonClickers.length > 0) {
+				const clickerIds = new Set(allClickerIds.map((c) => c.playerId));
+				const skippers = candidateNonClickers.filter(
+					(p) => !clickerIds.has(p.id),
+				);
+
+				if (skippers.length > 0) {
+					let runningEloEquiv = qSnapshot.qdrEloEquiv;
+					for (const s of skippers) {
+						const next = computeQdrSkipUpdate({
+							qdrEloEquiv: runningEloEquiv,
+							qdrScoredAttempts: 0,
+							userEloAtGameStart: s.eloAtGameStart,
+						});
+						runningEloEquiv = next.qdrEloEquiv;
+					}
+					if (runningEloEquiv !== qSnapshot.qdrEloEquiv) {
+						await tx.question.update({
+							where: { id: currentQuestion.id },
+							data: {
+								qdrEloEquiv: runningEloEquiv,
+								qdr: normalizeToQdr(runningEloEquiv),
+								qdrUpdatedAt: now,
+							},
+						});
+						// Re-roll TDR/PDR after the skip nudge.
+						const topicQuestions = await tx.question.findMany({
+							where: { topicId: qSnapshot.topicId },
+							select: { qdr: true, qdrScoredAttempts: true },
+						});
+						const newTdr = recomputeTdr(
+							topicQuestions.map((q) => q.qdr),
+							topicQuestions.map((q) => q.qdrScoredAttempts),
+						);
+						await tx.topic.update({
+							where: { id: qSnapshot.topicId },
+							data: { tdr: newTdr, tdrUpdatedAt: now },
+						});
+						const packTopics = await tx.topic.findMany({
+							where: { packId: game.packId },
+							select: { tdr: true },
+						});
+						const newPdr = recomputePdr(packTopics.map((t) => t.tdr));
+						await tx.pack.update({
+							where: { id: game.packId },
+							data: { pdr: newPdr, pdrUpdatedAt: now },
+						});
+					}
+				}
+			}
+		}
 
 		// 5. update game totals (+ optional reveal flip)
 		const expiredCount = expiredClickIds.length;

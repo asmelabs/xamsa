@@ -369,7 +369,8 @@ export async function finalizeGame(
 	const maxStandingsRank =
 		standingsRanks.length > 0 ? Math.max(...standingsRanks) : 0;
 
-	// 4. Persist per-player rank + click stats.
+	// 4. Persist per-player rank + click stats. Elo snapshots are written in step 5
+	//    (we need the per-user delta computed below).
 	for (let i = 0; i < ranked.length; i++) {
 		const p = ranked[i];
 		if (!p) continue;
@@ -546,13 +547,15 @@ export async function finalizeGame(
 	// (including host-ended games with force) when 2+ players, not only completeGame.
 	const rankedUserIds = ranked.map((p) => p.userId);
 	const ratingByUserId = new Map<string, number>();
+	const gamesPlayedByUserId = new Map<string, number>();
 	if (rankedUserIds.length >= 2) {
 		const usersForElo = await tx.user.findMany({
 			where: { id: { in: rankedUserIds } },
-			select: { id: true, elo: true },
+			select: { id: true, elo: true, totalGamesPlayed: true },
 		});
 		for (const u of usersForElo) {
 			ratingByUserId.set(u.id, u.elo);
+			gamesPlayedByUserId.set(u.id, u.totalGamesPlayed);
 		}
 	}
 	const eloRows =
@@ -562,6 +565,10 @@ export async function finalizeGame(
 					rank: standingsRanks[i] ?? i + 1,
 					score: p.score,
 					ratingBefore: ratingByUserId.get(p.userId) ?? 1000,
+					gamesPlayedBefore: gamesPlayedByUserId.get(p.userId) ?? 0,
+					correctAnswers: p.correctAnswers,
+					incorrectAnswers: p.incorrectAnswers,
+					expiredAnswers: p.expiredClicks,
 				}))
 			: [];
 	const eloDeltas =
@@ -593,6 +600,14 @@ export async function finalizeGame(
 				peakElo: Math.max(currentUser.peakElo, nextElo),
 				lowestElo: Math.min(currentUser.lowestElo, nextElo),
 			};
+			await tx.player.update({
+				where: { id: p.id },
+				data: {
+					eloRatingBefore: currentUser.elo,
+					eloRatingAfter: nextElo,
+					eloDelta,
+				},
+			});
 		}
 
 		await tx.user.update({

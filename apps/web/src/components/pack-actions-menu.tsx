@@ -1,6 +1,8 @@
+import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { PackStatus } from "@xamsa/schemas/db/schemas/enums/PackStatus.schema";
 import type { PackVisibility } from "@xamsa/schemas/db/schemas/enums/PackVisibility.schema";
+import type { ExportPackFormatType } from "@xamsa/schemas/modules/pack";
 import { Button } from "@xamsa/ui/components/button";
 import {
 	Menu,
@@ -9,11 +11,14 @@ import {
 	MenuItem,
 	MenuPopup,
 	MenuSeparator,
+	MenuSub,
+	MenuSubPopup,
+	MenuSubTrigger,
 	MenuTrigger,
 } from "@xamsa/ui/components/menu";
 import {
+	DownloadIcon,
 	EllipsisIcon,
-	ExternalLinkIcon,
 	GlobeIcon,
 	LayoutGridIcon,
 	LinkIcon,
@@ -29,8 +34,33 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { orpc } from "@/utils/orpc";
 import { ChangePackVisibilityDialog } from "./change-pack-visibility-dialog";
 import { DeletePackDialog } from "./delete-pack-dialog";
+
+const EXPORT_FORMATS: { value: ExportPackFormatType; label: string }[] = [
+	{ value: "json", label: "JSON" },
+	{ value: "yaml", label: "YAML" },
+	{ value: "xml", label: "XML" },
+	{ value: "csv", label: "CSV" },
+	{ value: "txt", label: "TXT" },
+];
+
+function triggerBrowserDownload(
+	body: string,
+	filename: string,
+	mimeType: string,
+) {
+	const blob = new Blob([body], { type: mimeType });
+	const url = URL.createObjectURL(blob);
+	const anchor = document.createElement("a");
+	anchor.href = url;
+	anchor.download = filename;
+	document.body.appendChild(anchor);
+	anchor.click();
+	document.body.removeChild(anchor);
+	URL.revokeObjectURL(url);
+}
 
 interface PackActionsMenuProps {
 	packSlug: string;
@@ -56,9 +86,24 @@ export function PackActionsMenu({
 	);
 	const isPrivate = visibility === "private";
 
+	const exportMutation = useMutation(orpc.pack.export.mutationOptions());
+
 	const handleCopyLink = () => {
 		copy(`${window.location.origin}/packs/${packSlug}`);
 		toast.success("Link copied to clipboard");
+	};
+
+	const handleExport = async (format: ExportPackFormatType) => {
+		try {
+			const result = await exportMutation.mutateAsync({
+				slug: packSlug,
+				format,
+			});
+			triggerBrowserDownload(result.body, result.filename, result.mimeType);
+			toast.success(`Pack exported as ${format.toUpperCase()}`);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Export failed");
+		}
 	};
 
 	const openVisibilityChange = (next: PackVisibility) => {
@@ -158,21 +203,24 @@ export function PackActionsMenu({
 							<LinkIcon />
 							Copy link
 						</MenuItem>
-						{status === "published" && !isPrivate && (
-							<MenuItem
-								render={
-									<Link
-										to={"/packs/$packSlug"}
-										params={{ packSlug }}
-										target="_blank"
-										rel="noopener noreferrer"
-									/>
-								}
-							>
-								<ExternalLinkIcon />
-								Open in new tab
-							</MenuItem>
-						)}
+						<MenuSub>
+							<MenuSubTrigger disabled={exportMutation.isPending}>
+								<DownloadIcon />
+								Export pack
+							</MenuSubTrigger>
+							<MenuSubPopup>
+								{EXPORT_FORMATS.map((format) => (
+									<MenuItem
+										key={format.value}
+										onClick={() => {
+											void handleExport(format.value);
+										}}
+									>
+										{format.label}
+									</MenuItem>
+								))}
+							</MenuSubPopup>
+						</MenuSub>
 					</MenuGroup>
 
 					<MenuSeparator />

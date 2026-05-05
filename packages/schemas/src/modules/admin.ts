@@ -594,3 +594,27 @@ export type ListAdminBadgesInputType = z.infer<
 export type ListAdminBadgesOutputType = z.infer<
 	typeof ListAdminBadgesOutputSchema
 >;
+
+// --- Update user role ---
+
+/**
+ * Admin-only role update for the dashboard. Targeting another `admin` or
+ * yourself is rejected server-side. Successful updates also revoke every
+ * Session for the target user so the new permissions take effect on next
+ * request (cookie becomes invalid).
+ */
+export const UpdateUserRoleInputSchema = z.object({
+	userId: z.string().uuid(),
+	role: RoleSchema,
+});
+
+export const UpdateUserRoleOutputSchema = z.object({
+	userId: z.string(),
+	role: RoleSchema,
+	sessionsRevoked: z.number().int().min(0),
+});
+
+export type UpdateUserRoleInputType = z.infer<typeof UpdateUserRoleInputSchema>;
+export type UpdateUserRoleOutputType = z.infer<
+	typeof UpdateUserRoleOutputSchema
+>;

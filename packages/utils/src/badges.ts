@@ -33,11 +33,18 @@ export const BADGE_ASSIGNMENTS = [
 	"author", // earned by the pack author (separate from host since hosts can be non-authors in future)
 ] as const;
 
+/**
+ * Rarity tiers, computed at runtime from the share of *eligible* players who
+ * own a badge. Predefined per-badge tiers were misleading once the catalog
+ * grew (a badge marked `legendary` could become commonplace, and vice versa)
+ * — we now derive these buckets from `uniqueEarners / totalEligibleUsers` in
+ * `computeBadgeRarity`.
+ */
 export const BADGE_RARITIES = [
-	"common", // earned in most games
-	"uncommon", // takes some skill or play
-	"rare", // meaningful accomplishment
-	"legendary", // show-off tier
+	"common", // earned by a large share of eligible players
+	"uncommon", // earned by some players
+	"rare", // earned by few
+	"legendary", // earned by almost no one
 ] as const;
 
 export type BadgePeriod = (typeof BADGE_PERIODS)[number];
@@ -57,7 +64,6 @@ export type Badge = {
 	type: BadgeType;
 	category: BadgeCategory;
 	assignment: BadgeAssignment;
-	rarity: BadgeRarity;
 };
 
 import z from "zod";
@@ -80,7 +86,6 @@ export const badges = {
 		type: "answer",
 		category: "skill",
 		assignment: "player",
-		rarity: "rare",
 	},
 
 	scavenger: {
@@ -102,7 +107,6 @@ export const badges = {
 		type: "buzz",
 		category: "moment",
 		assignment: "player",
-		rarity: "rare",
 	},
 
 	ghost: {
@@ -122,7 +126,6 @@ export const badges = {
 		type: "buzz",
 		category: "struggle",
 		assignment: "player",
-		rarity: "uncommon",
 	},
 
 	jackpot: {
@@ -141,7 +144,6 @@ export const badges = {
 		type: "score",
 		category: "skill",
 		assignment: "player",
-		rarity: "uncommon",
 	},
 
 	magnificent: {
@@ -160,7 +162,6 @@ export const badges = {
 		type: "ranking",
 		category: "skill",
 		assignment: "player",
-		rarity: "rare",
 	},
 
 	bankrupt: {
@@ -180,7 +181,6 @@ export const badges = {
 		type: "score",
 		category: "struggle",
 		assignment: "player",
-		rarity: "uncommon",
 	},
 
 	abomination: {
@@ -200,7 +200,6 @@ export const badges = {
 		type: "answer",
 		category: "struggle",
 		assignment: "player",
-		rarity: "rare",
 	},
 
 	genius: {
@@ -219,7 +218,6 @@ export const badges = {
 		type: "score",
 		category: "skill",
 		assignment: "player",
-		rarity: "rare",
 	},
 
 	dunce: {
@@ -238,7 +236,6 @@ export const badges = {
 		type: "score",
 		category: "struggle",
 		assignment: "player",
-		rarity: "uncommon",
 	},
 } as const satisfies Record<string, Badge>;
 
@@ -286,7 +283,6 @@ export function filterBadges(filters: {
 	type?: BadgeType;
 	category?: BadgeCategory;
 	assignment?: BadgeAssignment;
-	rarity?: BadgeRarity;
 }): Badge[] {
 	return Object.values(badges).filter((badge) => {
 		if (filters.period && badge.period !== filters.period) return false;
@@ -294,7 +290,42 @@ export function filterBadges(filters: {
 		if (filters.category && badge.category !== filters.category) return false;
 		if (filters.assignment && badge.assignment !== filters.assignment)
 			return false;
-		if (filters.rarity && badge.rarity !== filters.rarity) return false;
 		return true;
 	});
 }
+
+/**
+ * Bucket thresholds (share of *eligible* players who own the badge):
+ *   < 2% → legendary
+ *   < 10% → rare
+ *   < 30% → uncommon
+ *   ≥ 30% → common
+ *
+ * If `totalEligibleUsers` is 0 we cannot tell — treat the badge as `legendary`
+ * (only happens on a fresh install).
+ */
+export const BADGE_RARITY_THRESHOLDS = {
+	legendary: 0.02,
+	rare: 0.1,
+	uncommon: 0.3,
+} as const;
+
+export function computeBadgeRarity(
+	uniqueEarners: number,
+	totalEligibleUsers: number,
+): BadgeRarity {
+	if (totalEligibleUsers <= 0 || uniqueEarners <= 0) return "legendary";
+	const share = uniqueEarners / totalEligibleUsers;
+	if (share < BADGE_RARITY_THRESHOLDS.legendary) return "legendary";
+	if (share < BADGE_RARITY_THRESHOLDS.rare) return "rare";
+	if (share < BADGE_RARITY_THRESHOLDS.uncommon) return "uncommon";
+	return "common";
+}
+
+/** Numeric rank for sorting (legendary first when ascending). */
+export const BADGE_RARITY_RANK: Record<BadgeRarity, number> = {
+	legendary: 0,
+	rare: 1,
+	uncommon: 2,
+	common: 3,
+};

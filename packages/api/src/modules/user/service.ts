@@ -8,6 +8,8 @@ import type {
 	FollowUserInputType,
 	FollowUserOutputType,
 	GetActiveGameOutputType,
+	GetEloHistoryInputType,
+	GetEloHistoryOutputType,
 	GetFollowStateInputType,
 	GetFollowStateOutputType,
 	GetMyStatsOutputType,
@@ -295,10 +297,16 @@ export async function getActiveGame(
 	});
 }
 
+function ratio(num: number, den: number): number | null {
+	if (!den || den <= 0) return null;
+	return num / den;
+}
+
 /**
  * Returns the handful of user-level aggregates rendered on the home
- * dashboard stats strip. Separated from `findOneProfile` so public profile
- * payloads stay lean.
+ * dashboard stats strip and the profile Stats tab. Includes a `derived`
+ * block of pre-computed ratios so the UI doesn't repeat divide-by-zero
+ * guards everywhere.
  */
 export async function getMyStats(
 	userId: string,
@@ -308,6 +316,9 @@ export async function getMyStats(
 		select: {
 			level: true,
 			xp: true,
+			elo: true,
+			peakElo: true,
+			lowestElo: true,
 			totalGamesPlayed: true,
 			totalGamesHosted: true,
 			totalWins: true,
@@ -332,7 +343,86 @@ export async function getMyStats(
 		});
 	}
 
-	return user;
+	const totalAnswers =
+		user.totalCorrectAnswers +
+		user.totalIncorrectAnswers +
+		user.totalExpiredAnswers;
+	const derived = {
+		correctAnswerRate: ratio(user.totalCorrectAnswers, totalAnswers),
+		firstClickRate: ratio(user.totalFirstClicks, user.totalQuestionsPlayed),
+		pointsPerGame: ratio(user.totalPointsEarned, user.totalGamesPlayed),
+		winRate: ratio(user.totalWins, user.totalGamesPlayed),
+		podiumRate: ratio(user.totalPodiums, user.totalGamesPlayed),
+		avgPlayMinutes: ratio(
+			user.totalTimeSpentPlaying / 60,
+			user.totalGamesPlayed,
+		),
+		avgHostMinutes: ratio(
+			user.totalTimeSpentHosting / 60,
+			user.totalGamesHosted,
+		),
+		avgQuestionsPerGame: ratio(
+			user.totalQuestionsPlayed,
+			user.totalGamesPlayed,
+		),
+	};
+
+	return { ...user, derived };
+}
+
+/**
+ * Per-game Elo history (snapshots persisted on `Player` during finalizeGame).
+ * Returns the most recent N rows so charts can plot them oldest-to-newest.
+ */
+export async function getEloHistory(
+	input: GetEloHistoryInputType,
+): Promise<GetEloHistoryOutputType> {
+	const userId = await requireUserIdByUsername(input.username);
+	const rows = await prisma.player.findMany({
+		where: {
+			userId,
+			eloDelta: { not: null },
+			eloRatingBefore: { not: null },
+			eloRatingAfter: { not: null },
+			game: {
+				status: "completed",
+				finishedAt: { not: null },
+			},
+		},
+		select: {
+			eloRatingBefore: true,
+			eloRatingAfter: true,
+			eloDelta: true,
+			rank: true,
+			score: true,
+			game: {
+				select: {
+					id: true,
+					code: true,
+					finishedAt: true,
+					pack: { select: { slug: true, name: true } },
+				},
+			},
+		},
+		orderBy: { game: { finishedAt: "desc" } },
+		take: input.limit,
+	});
+
+	const items: GetEloHistoryOutputType["items"] = rows.map((r) => ({
+		gameId: r.game.id,
+		gameCode: r.game.code,
+		finishedAt: r.game.finishedAt as Date,
+		packSlug: r.game.pack.slug,
+		packName: r.game.pack.name,
+		rank: r.rank ?? null,
+		score: r.score,
+		// Non-null filtered above.
+		ratingBefore: r.eloRatingBefore as number,
+		ratingAfter: r.eloRatingAfter as number,
+		delta: r.eloDelta as number,
+	}));
+
+	return { items };
 }
 
 /**

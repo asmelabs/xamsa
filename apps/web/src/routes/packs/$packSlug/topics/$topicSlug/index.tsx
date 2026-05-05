@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { DeleteTopicDialog } from "@/components/delete-topic-dialog";
+import { TopicExportMenu } from "@/components/export-menu";
 import { PackTopicDiscussionSection } from "@/components/pack-topic-discussion-section";
 import { PacksBreadcrumb, PacksSubpageContainer } from "@/components/packs";
 import { PublicAnalyticsSection } from "@/components/public-analytics-section";
@@ -147,6 +148,7 @@ function RouteComponent() {
 						<ArrowUpDown />
 						Reorder questions
 					</Button>
+					<TopicExportMenu packSlug={packSlug} topicSlug={topic.slug} />
 					<DeleteTopicDialog
 						className="shrink-0"
 						onDeleted={() => {

@@ -12,6 +12,7 @@ import {
 	type AdminSortOption,
 } from "@/components/admin/admin-list-toolbar";
 import { useAdminUsersFilterUI } from "@/components/admin/filters/admin-users-filters";
+import { UserRoleCell } from "@/components/admin/user-role-cell";
 import { useAdminListInput } from "@/hooks/use-admin-list-input";
 import { pageSeo } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -81,7 +82,16 @@ function RouteComponent() {
 			}),
 			col.accessor("email", { header: "Email" }),
 			col.accessor("name", { header: "Name" }),
-			col.accessor("role", { header: "Role" }),
+			col.accessor("role", {
+				header: "Role",
+				cell: (c) => (
+					<UserRoleCell
+						userId={c.row.original.id}
+						username={c.row.original.username}
+						role={c.getValue()}
+					/>
+				),
+			}),
 			col.accessor("xp", { header: "XP" }),
 			col.accessor("level", { header: "Level" }),
 			col.accessor("elo", { header: "Elo" }),

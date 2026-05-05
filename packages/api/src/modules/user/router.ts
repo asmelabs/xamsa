@@ -9,6 +9,8 @@ import {
 	FollowUserInputSchema,
 	FollowUserOutputSchema,
 	GetActiveGameOutputSchema,
+	GetEloHistoryInputSchema,
+	GetEloHistoryOutputSchema,
 	GetFollowStateInputSchema,
 	GetFollowStateOutputSchema,
 	GetGlobalLeaderboardInputSchema,
@@ -44,6 +46,7 @@ import {
 	findOneProfile,
 	followUser,
 	getActiveGame,
+	getEloHistory,
 	getFollowState,
 	getMyStats,
 	getPublicGameActivity,
@@ -72,6 +75,10 @@ export const userRouter = {
 		.input(GetPublicGameActivityInputSchema)
 		.output(GetPublicGameActivityOutputSchema)
 		.handler(async ({ input }) => await getPublicGameActivity(input)),
+	getEloHistory: publicProcedure
+		.input(GetEloHistoryInputSchema)
+		.output(GetEloHistoryOutputSchema)
+		.handler(async ({ input }) => await getEloHistory(input)),
 	getPublicRecentGames: publicProcedure
 		.input(GetPublicRecentGamesInputSchema)
 		.output(GetPublicRecentGamesOutputSchema)

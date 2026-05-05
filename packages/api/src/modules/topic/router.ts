@@ -6,6 +6,8 @@ import {
 	CreateTopicOutputSchema,
 	DeleteTopicInputSchema,
 	DeleteTopicOutputSchema,
+	ExportTopicInputSchema,
+	ExportTopicOutputSchema,
 	FindOneTopicInputSchema,
 	FindOneTopicOutputSchema,
 	GenerateTopicInputSchema,
@@ -38,6 +40,7 @@ import {
 	getAiTopicQuota,
 } from "./ai.service";
 import { getBulkCreateJob, startBulkCreateJob } from "./bulk-job.service";
+import { exportTopic } from "./export";
 import { previewStructuredImportFromRemoteUrl } from "./fetch-import-url";
 import {
 	bulkCreateTopics,
@@ -147,5 +150,12 @@ export const topicRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await deleteTopic(input, context.session.user.id),
+		),
+	export: verifiedProcedure
+		.input(ExportTopicInputSchema)
+		.output(ExportTopicOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await exportTopic(input, context.session.user.id),
 		),
 };

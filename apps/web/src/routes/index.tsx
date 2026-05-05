@@ -11,7 +11,6 @@ import {
 import { Skeleton } from "@xamsa/ui/components/skeleton";
 import {
 	ArrowRightIcon,
-	CrownIcon,
 	FlameIcon,
 	GamepadIcon,
 	HistoryIcon,
@@ -20,6 +19,7 @@ import {
 	PencilLineIcon,
 	Play,
 	SparklesIcon,
+	SwordsIcon,
 	TargetIcon,
 	TrendingUpIcon,
 	TrophyIcon,
@@ -30,8 +30,9 @@ import { useEffect, useRef, useState } from "react";
 import { CreatePostComposer, HomeMixedFeed } from "@/components/home/home-feed";
 import { HomeGlobalSearch } from "@/components/home/home-global-search";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
-import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
+import { StatCard } from "@/components/stats/stat-card";
+import { formatRatio, StatsGrid } from "@/components/stats/stats-grid";
 import { getUser } from "@/functions/get-user";
 import {
 	homePostListInfiniteOptions,
@@ -300,31 +301,64 @@ function SignedInHome({ userId, userName }: SignedInHomeProps) {
 	) : null;
 
 	const statsSection = stats ? (
-		<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-			<StatTile
+		<StatsGrid columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+			<StatCard
 				icon={ZapIcon}
 				label="Level"
 				value={stats.level}
-				hint={`${stats.xp} XP`}
+				hint={`${stats.xp.toLocaleString()} XP`}
 			/>
-			<StatTile
+			<StatCard
+				icon={SwordsIcon}
+				label="Elo"
+				value={stats.elo.toLocaleString()}
+				hint={`peak ${stats.peakElo.toLocaleString()}`}
+			/>
+			<StatCard
 				icon={GamepadIcon}
 				label="Played"
 				value={stats.totalGamesPlayed}
+				hint={
+					stats.derived.winRate != null
+						? `${formatRatio(stats.derived.winRate, { asPercent: true })} win`
+						: undefined
+				}
 			/>
-			<StatTile icon={TrophyIcon} label="Wins" value={stats.totalWins} />
-			<StatTile icon={CrownIcon} label="Podiums" value={stats.totalPodiums} />
-			<StatTile
+			<StatCard
+				icon={TrophyIcon}
+				label="Wins"
+				value={stats.totalWins}
+				hint={
+					stats.derived.podiumRate != null
+						? `${formatRatio(stats.derived.podiumRate, { asPercent: true })} podium`
+						: undefined
+				}
+			/>
+			<StatCard
+				icon={TargetIcon}
+				label="Correct"
+				value={
+					stats.derived.correctAnswerRate != null
+						? formatRatio(stats.derived.correctAnswerRate, { asPercent: true })
+						: stats.totalCorrectAnswers
+				}
+				hint={`${stats.totalCorrectAnswers.toLocaleString()} of ${(
+					stats.totalCorrectAnswers +
+						stats.totalIncorrectAnswers +
+						stats.totalExpiredAnswers
+				).toLocaleString()}`}
+			/>
+			<StatCard
 				icon={FlameIcon}
 				label="Hosted"
 				value={stats.totalGamesHosted}
+				hint={
+					stats.derived.avgHostMinutes != null
+						? `${formatRatio(stats.derived.avgHostMinutes, { digits: 0, suffix: "m" })} avg`
+						: undefined
+				}
 			/>
-			<StatTile
-				icon={TargetIcon}
-				label="Correct"
-				value={stats.totalCorrectAnswers}
-			/>
-		</div>
+		</StatsGrid>
 	) : statsPending ? (
 		<StatsGridSkeleton />
 	) : null;

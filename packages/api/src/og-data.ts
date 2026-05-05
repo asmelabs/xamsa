@@ -1,4 +1,5 @@
 import prisma from "@xamsa/db";
+import { getBadge, isBadgeId } from "@xamsa/utils/badges";
 
 export interface PackOgPayload {
 	name: string;
@@ -236,5 +237,55 @@ export async function getPostOgData(
 		hasImage: post.image != null && post.image.length > 0,
 		reactionCount: post.totalReactions,
 		commentCount: post.totalComments,
+	};
+}
+
+export interface BadgeAwardOgPayload {
+	badgeId: string;
+	badgeName: string;
+	badgeDescription: string;
+	username: string;
+	displayName: string;
+	packName: string;
+	gameCode: string;
+	earnedAtIso: string;
+}
+
+export async function getBadgeAwardOgData(
+	awardId: string,
+): Promise<BadgeAwardOgPayload | null> {
+	const award = await prisma.playerBadgeAward.findUnique({
+		where: { id: awardId },
+		select: {
+			badgeId: true,
+			earnedAt: true,
+			player: {
+				select: {
+					user: { select: { username: true, name: true } },
+					game: {
+						select: {
+							code: true,
+							pack: { select: { name: true } },
+						},
+					},
+				},
+			},
+		},
+	});
+	if (!award || !isBadgeId(award.badgeId)) return null;
+
+	const badge = getBadge(award.badgeId);
+	const displayName =
+		award.player.user.name?.trim() || award.player.user.username;
+
+	return {
+		badgeId: badge.id,
+		badgeName: badge.name,
+		badgeDescription: badge.description,
+		username: award.player.user.username,
+		displayName,
+		packName: award.player.game.pack.name,
+		gameCode: award.player.game.code,
+		earnedAtIso: award.earnedAt.toISOString(),
 	};
 }

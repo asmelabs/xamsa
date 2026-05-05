@@ -124,6 +124,7 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	},
 	{
 		version: "v26.05.05",
+		implemented: true,
 		items: [
 			{
 				title: "Export pack and topic to files",
@@ -150,6 +151,26 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Admins (not moderators) must be able to update the role of other users (not admins). They can make users/moderators -> users/moderators/admins. When a role of a user updated, he/she should be logged out from any session.",
 			},
+			{
+				title: "Badge detail share previews",
+				description:
+					"Improve Open Graph and in-app share for individual badges so clips and group chats show the right art and description.",
+			},
+			{
+				title: "Better ELO system",
+				description:
+					"In this task, there are two important sections. The first one is that, each individual ELO gain/loss must be stored on game data for user, so on the profile he/she can analyze the ups and downs through time or per game his ELO, also on game stats players can see other players' gains/losses. And second thing is the calculation of ELO. Gaining or losing ELO must be dependent on the each opponent's ELO, correct/incorrect answers, ranking, score etc.",
+			},
+			{
+				title: "Better xDR system",
+				description:
+					"DR (Difficulty Rate) for packs, topics and questions must be radically improved. DR of a pack and topic is easy. They are just average of their individual content. DR of a question is important. The ELO of answerers, correct/incorrect answers, and even not-clicked players. If a player with high ELO did not click to the question, it means that question is somewhat difficult.",
+			},
+			{
+				title: "See who reacted on a post or comment",
+				description:
+					"Reaction breakdown dialog must list the actual reactors (avatar, name, @username, reaction emoji) — both an aggregated 'everyone' view and per-emoji filters that link straight to each profile.",
+			},
 		],
 	},
 	{
@@ -169,11 +190,6 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				title: "Weekly or seasonal leaderboard snapshot",
 				description:
 					"Optional time-boxed ladder (e.g. “this week’s XP”) that resets on a schedule, without erasing lifetime boards.",
-			},
-			{
-				title: "Badge detail share previews",
-				description:
-					"Improve Open Graph and in-app share for individual badges so clips and group chats show the right art and description.",
 			},
 		],
 	},

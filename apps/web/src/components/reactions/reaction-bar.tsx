@@ -1,6 +1,16 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ReactionType } from "@xamsa/schemas/db/schemas/enums/ReactionType.schema";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@xamsa/ui/components/avatar";
+import { Button } from "@xamsa/ui/components/button";
 import {
 	Dialog,
 	DialogHeader,
@@ -8,8 +18,9 @@ import {
 	DialogPopup,
 	DialogTitle,
 } from "@xamsa/ui/components/dialog";
+import { Spinner } from "@xamsa/ui/components/spinner";
 import { cn } from "@xamsa/ui/lib/utils";
-import { SmilePlusIcon } from "lucide-react";
+import { ChevronLeftIcon, SmilePlusIcon } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { orpc } from "@/utils/orpc";
@@ -152,83 +163,238 @@ function countsMapFromLocal(local: LocalRx): Map<ReactionType, number> {
 	return base;
 }
 
+function ReactorList({
+	target,
+	type,
+}: {
+	target: ReactionTarget;
+	type: ReactionType | "all";
+}) {
+	const targetInput =
+		target.kind === "post" ? { postId: target.id } : { commentId: target.id };
+	const typeInput = type === "all" ? {} : { type };
+
+	const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+		useInfiniteQuery({
+			...orpc.reaction.listReactors.infiniteOptions({
+				input: (pageParam: string | undefined) => ({
+					...targetInput,
+					...typeInput,
+					limit: 20,
+					cursor: pageParam,
+				}),
+				initialPageParam: undefined as string | undefined,
+				getNextPageParam: (lastPage) =>
+					lastPage.metadata.nextCursor ?? undefined,
+			}),
+		});
+
+	const items = data?.pages.flatMap((p) => p.items) ?? [];
+
+	if (isLoading) {
+		return (
+			<div className="flex justify-center py-8">
+				<Spinner />
+			</div>
+		);
+	}
+
+	if (items.length === 0) {
+		return (
+			<p className="px-5 py-8 text-center text-muted-foreground text-sm">
+				No one has reacted with this yet.
+			</p>
+		);
+	}
+
+	return (
+		<div>
+			<ul className="divide-y divide-border/60">
+				{items.map((row) => {
+					const display = row.user.name || row.user.username;
+					return (
+						<li key={row.id}>
+							<Link
+								to="/u/$username"
+								params={{ username: row.user.username }}
+								className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-muted/40"
+							>
+								<Avatar className="size-8 shrink-0">
+									<AvatarImage src={row.user.image ?? undefined} />
+									<AvatarFallback>
+										{display.slice(0, 1).toUpperCase()}
+									</AvatarFallback>
+								</Avatar>
+								<div className="min-w-0 flex-1">
+									<p className="truncate font-medium text-sm leading-tight">
+										{display}
+									</p>
+									<p className="truncate text-muted-foreground text-xs">
+										@{row.user.username}
+									</p>
+								</div>
+								<span
+									className="text-lg leading-none"
+									aria-label={reactionLabel(row.type)}
+								>
+									{reactionEmoji(row.type)}
+								</span>
+							</Link>
+						</li>
+					);
+				})}
+			</ul>
+			{hasNextPage ? (
+				<div className="flex justify-center py-3">
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={() => {
+							void fetchNextPage();
+						}}
+						disabled={isFetchingNextPage}
+					>
+						{isFetchingNextPage ? "Loading…" : "Load more"}
+					</Button>
+				</div>
+			) : null}
+		</div>
+	);
+}
+
+type DialogView =
+	| { kind: "summary" }
+	| { kind: "reactors"; type: ReactionType | "all" };
+
 function ReactionBreakdownDialog({
 	open,
 	onOpenChange,
 	local,
 	subjectLabel,
+	target,
 }: {
 	open: boolean;
 	onOpenChange: (v: boolean) => void;
 	local: LocalRx;
 	subjectLabel: string;
+	target: ReactionTarget;
 }) {
+	const [view, setView] = useState<DialogView>({ kind: "summary" });
 	const counts = countsMapFromLocal(local);
 	const used = ALL_REACTIONS.filter((t) => (counts.get(t) ?? 0) > 0).sort(
 		(a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0),
 	);
 
+	useEffect(() => {
+		if (!open) setView({ kind: "summary" });
+	}, [open]);
+
+	const headerCopy =
+		view.kind === "summary"
+			? local.total === 1
+				? "1 reaction"
+				: `${local.total} reactions`
+			: view.type === "all"
+				? `${local.total} reactor${local.total === 1 ? "" : "s"}`
+				: `${counts.get(view.type) ?? 0} ${reactionLabel(view.type).toLowerCase()} reactor${(counts.get(view.type) ?? 0) === 1 ? "" : "s"}`;
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogPopup className="max-w-sm p-0" showCloseButton>
 				<DialogHeader className="border-border border-b px-5 py-4 text-left">
-					<DialogTitle className="font-semibold text-base">
-						Reactions
-					</DialogTitle>
+					<div className="flex items-center gap-2">
+						{view.kind === "reactors" ? (
+							<button
+								type="button"
+								onClick={() => setView({ kind: "summary" })}
+								className="-ml-1 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+								aria-label="Back to reaction breakdown"
+							>
+								<ChevronLeftIcon className="size-4" />
+							</button>
+						) : null}
+						<DialogTitle className="font-semibold text-base">
+							{view.kind === "summary"
+								? "Reactions"
+								: view.type === "all"
+									? "Everyone who reacted"
+									: `${reactionLabel(view.type)} reactions`}
+						</DialogTitle>
+					</div>
 					<p className="font-normal text-muted-foreground text-xs">
 						<span className="font-semibold text-foreground tabular-nums">
-							{local.total}
+							{headerCopy}
 						</span>
-						{local.total === 1 ? " reaction" : " reactions"} on this{" "}
-						{subjectLabel}
+						{view.kind === "summary"
+							? ` on this ${subjectLabel}`
+							: " · tap any name to visit their profile"}
 					</p>
 				</DialogHeader>
-				<DialogPanel className="max-h-[min(80vh,28rem)] px-0 py-2">
-					{used.length === 0 ? (
-						<p className="px-5 py-8 text-center text-muted-foreground text-sm">
-							No reactions yet.
-						</p>
+				<DialogPanel className="max-h-[min(80vh,28rem)] overflow-y-auto px-0 py-0">
+					{view.kind === "summary" ? (
+						used.length === 0 ? (
+							<p className="px-5 py-8 text-center text-muted-foreground text-sm">
+								No reactions yet.
+							</p>
+						) : (
+							<>
+								<button
+									type="button"
+									onClick={() => setView({ kind: "reactors", type: "all" })}
+									className="w-full border-border/60 border-b bg-muted/30 px-5 py-2.5 text-left text-muted-foreground text-xs uppercase tracking-wider transition-colors hover:bg-muted/60 hover:text-foreground"
+								>
+									See everyone ({local.total})
+								</button>
+								<ul className="divide-y divide-border/60">
+									{used.map((type) => {
+										const n = counts.get(type) ?? 0;
+										const pct = local.total > 0 ? (n / local.total) * 100 : 0;
+										const isMine = local.my === type;
+										return (
+											<li
+												key={type}
+												className={cn("relative", isMine && "bg-primary/4")}
+											>
+												<span
+													aria-hidden
+													className="absolute inset-y-0 left-0 bg-primary/[0.07]"
+													style={{ width: `${Math.max(2, pct)}%` }}
+												/>
+												<button
+													type="button"
+													onClick={() => setView({ kind: "reactors", type })}
+													className="relative z-10 flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40"
+												>
+													<span className="text-2xl leading-none" aria-hidden>
+														{reactionEmoji(type)}
+													</span>
+													<div className="min-w-0 flex-1">
+														<p className="font-semibold text-foreground text-sm leading-tight">
+															{reactionLabel(type)}
+															{isMine ? (
+																<span className="ml-2 inline-flex items-center rounded-md border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-medium text-[10px] text-primary uppercase tracking-wider">
+																	You
+																</span>
+															) : null}
+														</p>
+														<p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+															{pct.toFixed(0)}% of all reactions · tap to see
+															reactors
+														</p>
+													</div>
+													<span className="font-semibold text-base text-foreground tabular-nums">
+														{n}
+													</span>
+												</button>
+											</li>
+										);
+									})}
+								</ul>
+							</>
+						)
 					) : (
-						<ul className="divide-y divide-border/60">
-							{used.map((type) => {
-								const n = counts.get(type) ?? 0;
-								const pct = local.total > 0 ? (n / local.total) * 100 : 0;
-								const isMine = local.my === type;
-								return (
-									<li
-										key={type}
-										className={cn("relative", isMine && "bg-primary/4")}
-									>
-										<span
-											aria-hidden
-											className="absolute inset-y-0 left-0 bg-primary/[0.07]"
-											style={{ width: `${Math.max(2, pct)}%` }}
-										/>
-										<div className="relative z-10 flex items-center gap-3 px-5 py-3">
-											<span className="text-2xl leading-none" aria-hidden>
-												{reactionEmoji(type)}
-											</span>
-											<div className="min-w-0 flex-1">
-												<p className="font-semibold text-foreground text-sm leading-tight">
-													{reactionLabel(type)}
-													{isMine ? (
-														<span className="ml-2 inline-flex items-center rounded-md border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-medium text-[10px] text-primary uppercase tracking-wider">
-															You
-														</span>
-													) : null}
-												</p>
-												<p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
-													{pct.toFixed(0)}% of all reactions
-												</p>
-											</div>
-											<span className="font-semibold text-base text-foreground tabular-nums">
-												{n}
-											</span>
-										</div>
-									</li>
-								);
-							})}
-						</ul>
+						<ReactorList target={target} type={view.type} />
 					)}
 				</DialogPanel>
 			</DialogPopup>
@@ -459,6 +625,7 @@ export function ReactionBar({
 				onOpenChange={setBreakdownOpen}
 				local={local}
 				subjectLabel={subjectLabel ?? target.kind}
+				target={target}
 			/>
 
 			{pickerOpen ? (

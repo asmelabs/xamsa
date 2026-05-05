@@ -5,6 +5,8 @@ import {
 	CreatePackOutputSchema,
 	DeletePackInputSchema,
 	DeletePackOutputSchema,
+	ExportPackInputSchema,
+	ExportPackOutputSchema,
 	FindOnePackInputSchema,
 	FindOnePackOutputSchema,
 	ListPacksInputSchema,
@@ -16,6 +18,7 @@ import {
 } from "@xamsa/schemas/modules/pack";
 import { PackAnalyticsOutputSchema } from "@xamsa/schemas/modules/public-analytics";
 import { publicProcedure, verifiedProcedure } from "../../procedures";
+import { exportPack } from "./export";
 import {
 	bulkCreatePacks,
 	createPack,
@@ -83,5 +86,12 @@ export const packRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await deletePack(input, context.session.user.id),
+		),
+	export: verifiedProcedure
+		.input(ExportPackInputSchema)
+		.output(ExportPackOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await exportPack(input, context.session.user.id),
 		),
 };

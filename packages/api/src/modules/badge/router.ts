@@ -1,4 +1,7 @@
 import {
+	FindBadgeAwardInputSchema,
+	FindBadgeAwardOutputSchema,
+	GetBadgeCatalogStatsOutputSchema,
 	GetPublicBadgeSummaryByUsernameInputSchema,
 	GetPublicBadgeSummaryByUsernameOutputSchema,
 	ListBadgeEarnersInputSchema,
@@ -8,6 +11,8 @@ import {
 } from "@xamsa/schemas/modules/badge";
 import { publicProcedure } from "../../procedures";
 import {
+	findBadgeAward,
+	getBadgeCatalogStats,
 	getPublicBadgeSummaryByUsername,
 	listBadgeEarners,
 	listPublicAwardsByUsername,
@@ -26,4 +31,11 @@ export const badgeRouter = {
 		.input(ListPublicAwardsByUsernameInputSchema)
 		.output(ListPublicAwardsByUsernameOutputSchema)
 		.handler(async ({ input }) => await listPublicAwardsByUsername(input)),
+	getCatalogStats: publicProcedure
+		.output(GetBadgeCatalogStatsOutputSchema)
+		.handler(async () => await getBadgeCatalogStats()),
+	findAward: publicProcedure
+		.input(FindBadgeAwardInputSchema)
+		.output(FindBadgeAwardOutputSchema)
+		.handler(async ({ input }) => await findBadgeAward(input)),
 };

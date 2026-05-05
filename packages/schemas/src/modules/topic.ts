@@ -153,6 +153,31 @@ export const GetBulkCreateJobOutputSchema = z.object({
 	updatedAt: z.coerce.date(),
 });
 
+/**
+ * EXPORT — pack/topic to file
+ *
+ * Mirrors the supported import formats. CSV/TXT use the same `;`-row "blocks"
+ * layout the import parser already accepts; JSON / YAML / XML use the same
+ * topic shape (`{ topics: [...] }`). Author/staff guarded server-side.
+ */
+export const ExportFormatSchema = z.enum(["json", "yaml", "xml", "csv", "txt"]);
+
+export const ExportTopicInputSchema = z.object({
+	packSlug: PackSchema.shape.slug,
+	slug: TopicSchema.shape.slug,
+	format: ExportFormatSchema,
+});
+
+export const ExportTopicOutputSchema = z.object({
+	filename: z.string().min(1),
+	mimeType: z.string().min(1),
+	body: z.string(),
+});
+
+export type ExportFormatType = z.infer<typeof ExportFormatSchema>;
+export type ExportTopicInputType = z.infer<typeof ExportTopicInputSchema>;
+export type ExportTopicOutputType = z.infer<typeof ExportTopicOutputSchema>;
+
 export type GetBulkCreateJobInputType = z.infer<
 	typeof GetBulkCreateJobInputSchema
 >;

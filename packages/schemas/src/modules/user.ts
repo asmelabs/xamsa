@@ -142,11 +142,30 @@ export type GetActiveGameOutputType = z.infer<typeof GetActiveGameOutputSchema>;
  * GET MY STATS
  *
  * Returns user-level aggregates used on the home dashboard stats strip.
- * Only fields actually rendered are exposed to keep the payload small.
+ * `derived` carries pre-computed ratios so the UI doesn't have to repeat the
+ * "guard-against-divide-by-zero" dance everywhere.
  */
+const StatRatioSchema = z
+	.union([z.number(), z.null()])
+	.transform((v) => (v == null || Number.isNaN(v) ? null : v));
+
+export const GetMyStatsDerivedSchema = z.object({
+	correctAnswerRate: StatRatioSchema,
+	firstClickRate: StatRatioSchema,
+	pointsPerGame: StatRatioSchema,
+	winRate: StatRatioSchema,
+	podiumRate: StatRatioSchema,
+	avgPlayMinutes: StatRatioSchema,
+	avgHostMinutes: StatRatioSchema,
+	avgQuestionsPerGame: StatRatioSchema,
+});
+
 export const GetMyStatsOutputSchema = UserSchema.pick({
 	level: true,
 	xp: true,
+	elo: true,
+	peakElo: true,
+	lowestElo: true,
 	totalGamesPlayed: true,
 	totalGamesHosted: true,
 	totalWins: true,
@@ -162,9 +181,43 @@ export const GetMyStatsOutputSchema = UserSchema.pick({
 	totalTimeSpentPlaying: true,
 	totalTimeSpentHosting: true,
 	totalPacksPublished: true,
+}).extend({
+	derived: GetMyStatsDerivedSchema,
 });
 
 export type GetMyStatsOutputType = z.infer<typeof GetMyStatsOutputSchema>;
+
+/**
+ * GET ELO HISTORY
+ *
+ * Last N finalized games this user took part in as a ranked player, ordered
+ * newest first. Powers the profile Elo trend chart and per-game opponent diffs.
+ */
+export const GetEloHistoryInputSchema = z.object({
+	username: UserSchema.shape.username,
+	limit: z.number().int().min(1).max(100).default(30),
+});
+
+export const EloHistoryRowSchema = z.object({
+	gameId: z.string(),
+	gameCode: z.string(),
+	finishedAt: z.coerce.date(),
+	packSlug: z.string(),
+	packName: z.string(),
+	rank: z.number().int().nullable(),
+	score: z.number().int(),
+	ratingBefore: z.number().int(),
+	ratingAfter: z.number().int(),
+	delta: z.number().int(),
+});
+
+export const GetEloHistoryOutputSchema = z.object({
+	items: z.array(EloHistoryRowSchema),
+});
+
+export type GetEloHistoryInputType = z.infer<typeof GetEloHistoryInputSchema>;
+export type GetEloHistoryOutputType = z.infer<typeof GetEloHistoryOutputSchema>;
+export type EloHistoryRow = z.infer<typeof EloHistoryRowSchema>;
 
 /**
  * GET RECENT GAMES

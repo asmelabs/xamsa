@@ -70,11 +70,13 @@ import {
 import { toast } from "sonner";
 import { PostCard } from "@/components/home/home-feed";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
-import { StatTile } from "@/components/home/stat-tile";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { LoadingButton } from "@/components/loading-button";
 import { ProfileBadgesSection } from "@/components/profile-badges-section";
 import { ProfileImageLightbox } from "@/components/profile-image-lightbox";
+import { EloTrendChart } from "@/components/stats/elo-trend-chart";
+import { StatCard } from "@/components/stats/stat-card";
+import { formatRatio, StatsGroup } from "@/components/stats/stats-grid";
 import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -204,6 +206,12 @@ function RouteComponent() {
 		...orpc.user.getPublicGameActivity.queryOptions({ input: { username } }),
 		enabled: activeProfileTab === "stats",
 	});
+	const { data: eloHistory } = useQuery({
+		...orpc.user.getEloHistory.queryOptions({
+			input: { username, limit: 30 },
+		}),
+		enabled: activeProfileTab === "stats",
+	});
 
 	const {
 		data: gamesData,
@@ -235,6 +243,19 @@ function RouteComponent() {
 			},
 		}),
 		enabled: activeProfileTab === "packs",
+	});
+
+	const { data: draftPacksData } = useQuery({
+		...orpc.pack.list.queryOptions({
+			input: {
+				authors: [username],
+				statuses: ["draft", "archived"],
+				limit: 12,
+				sort: "newest",
+				dir: "desc",
+			},
+		}),
+		enabled: Boolean(isOwner) && activeProfileTab === "packs",
 	});
 
 	const profileFeedQuery = useInfiniteQuery({
@@ -411,6 +432,7 @@ function RouteComponent() {
 
 	const gameRows = gamesData?.pages.flatMap((p) => p.items) ?? [];
 	const packRows = packsData?.items ?? [];
+	const draftPackRows = draftPacksData?.items ?? [];
 	const sentinelRef = useRef<HTMLDivElement>(null);
 	const followSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -642,7 +664,7 @@ function RouteComponent() {
 							)}
 						</div>
 					</div>
-					<StatTile
+					<StatCard
 						icon={BarChart3Icon}
 						label="Elo"
 						value={profile.elo.toLocaleString()}
@@ -797,94 +819,162 @@ function RouteComponent() {
 				) : null}
 
 				{activeProfileTab === "stats" && publicStats && (
-					<section className="space-y-4">
+					<section className="space-y-5">
 						<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
 							Stats
 						</h2>
-						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-							<StatTile
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-base">Elo trend</CardTitle>
+								<CardDescription>
+									Rating after each ranked game (newest right). Currently{" "}
+									<span className="font-semibold">
+										{publicStats.elo.toLocaleString()}
+									</span>
+									{" · "}peak {publicStats.peakElo.toLocaleString()} · low{" "}
+									{publicStats.lowestElo.toLocaleString()}
+								</CardDescription>
+							</CardHeader>
+							<CardPanel>
+								<EloTrendChart history={eloHistory?.items ?? []} />
+							</CardPanel>
+						</Card>
+
+						<StatsGroup
+							title="Play"
+							columns="grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+						>
+							<StatCard
 								icon={GamepadIcon}
 								label="Played"
 								value={publicStats.totalGamesPlayed}
+								hint={
+									publicStats.derived.avgPlayMinutes != null
+										? `${formatRatio(publicStats.derived.avgPlayMinutes, { digits: 0, suffix: "m" })} avg`
+										: undefined
+								}
 							/>
-							<StatTile
+							<StatCard
 								icon={TrophyIcon}
 								label="Wins"
 								value={publicStats.totalWins}
+								hint={
+									publicStats.derived.winRate != null
+										? `${formatRatio(publicStats.derived.winRate, { asPercent: true })} win rate`
+										: undefined
+								}
 							/>
-							<StatTile
+							<StatCard
 								icon={CrownIcon}
 								label="Podiums"
 								value={publicStats.totalPodiums}
+								hint={
+									publicStats.derived.podiumRate != null
+										? `${formatRatio(publicStats.derived.podiumRate, { asPercent: true })} podium rate`
+										: undefined
+								}
 							/>
-							<StatTile
-								icon={FlameIcon}
-								label="Hosted"
-								value={publicStats.totalGamesHosted}
-							/>
-							<StatTile
-								icon={TargetIcon}
-								label="Correct"
-								value={publicStats.totalCorrectAnswers}
-							/>
-							<StatTile
-								icon={ZapIcon}
-								label="Points"
-								value={publicStats.totalPointsEarned.toLocaleString()}
-							/>
-						</div>
-						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-							<StatTile
-								icon={XCircleIcon}
-								label="Wrong"
-								value={publicStats.totalIncorrectAnswers}
-							/>
-							<StatTile
-								icon={TimerOffIcon}
-								label="Expired"
-								value={publicStats.totalExpiredAnswers}
-							/>
-							<StatTile
-								icon={ZapIcon}
-								label="1st buzz"
-								value={publicStats.totalFirstClicks}
-							/>
-							<StatTile
+							<StatCard
 								icon={ChartNoAxesColumnIcon}
 								label="Last place"
 								value={publicStats.totalLastPlaces}
 							/>
-							<StatTile
-								icon={BookOpenIcon}
-								label="Topics seen"
-								value={publicStats.totalTopicsPlayed}
-							/>
-						</div>
-						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-							<StatTile
+						</StatsGroup>
+
+						<StatsGroup
+							title="Accuracy"
+							columns="grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+						>
+							<StatCard
 								icon={TargetIcon}
-								label="Questions"
-								value={publicStats.totalQuestionsPlayed}
+								label="Correct rate"
+								value={
+									publicStats.derived.correctAnswerRate != null
+										? formatRatio(publicStats.derived.correctAnswerRate, {
+												asPercent: true,
+											})
+										: "—"
+								}
+								hint={`${publicStats.totalCorrectAnswers.toLocaleString()} correct`}
 							/>
-							<StatTile
-								icon={ClockIcon}
-								label="Time playing"
-								value={formatPlayTimeSeconds(publicStats.totalTimeSpentPlaying)}
+							<StatCard
+								icon={XCircleIcon}
+								label="Wrong"
+								value={publicStats.totalIncorrectAnswers}
 							/>
-							<StatTile
+							<StatCard
+								icon={TimerOffIcon}
+								label="Expired"
+								value={publicStats.totalExpiredAnswers}
+							/>
+							<StatCard
+								icon={ZapIcon}
+								label="1st buzz"
+								value={publicStats.totalFirstClicks}
+								hint={
+									publicStats.derived.firstClickRate != null
+										? `${formatRatio(publicStats.derived.firstClickRate, { asPercent: true })} of qs`
+										: undefined
+								}
+							/>
+							<StatCard
+								icon={ZapIcon}
+								label="Points/game"
+								value={
+									publicStats.derived.pointsPerGame != null
+										? Math.round(
+												publicStats.derived.pointsPerGame,
+											).toLocaleString()
+										: "—"
+								}
+								hint={`${publicStats.totalPointsEarned.toLocaleString()} total`}
+							/>
+						</StatsGroup>
+
+						<StatsGroup
+							title="Hosting"
+							columns="grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+						>
+							<StatCard
+								icon={FlameIcon}
+								label="Hosted"
+								value={publicStats.totalGamesHosted}
+								hint={
+									publicStats.derived.avgHostMinutes != null
+										? `${formatRatio(publicStats.derived.avgHostMinutes, { digits: 0, suffix: "m" })} avg`
+										: undefined
+								}
+							/>
+							<StatCard
 								icon={ClockIcon}
 								label="Time hosting"
 								value={formatPlayTimeSeconds(publicStats.totalTimeSpentHosting)}
 							/>
-						</div>
+							<StatCard
+								icon={ClockIcon}
+								label="Time playing"
+								value={formatPlayTimeSeconds(publicStats.totalTimeSpentPlaying)}
+							/>
+							<StatCard
+								icon={BookOpenIcon}
+								label="Topics seen"
+								value={publicStats.totalTopicsPlayed}
+								hint={
+									publicStats.derived.avgQuestionsPerGame != null
+										? `${formatRatio(publicStats.derived.avgQuestionsPerGame, { digits: 0 })} qs/game`
+										: undefined
+								}
+							/>
+						</StatsGroup>
+
 						{publicStats.totalPacksPublished > 0 ? (
-							<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-								<StatTile
+							<StatsGroup title="Creation" columns="grid-cols-2 sm:grid-cols-3">
+								<StatCard
 									icon={Package}
 									label="Packs published"
 									value={publicStats.totalPacksPublished}
 								/>
-							</div>
+							</StatsGroup>
 						) : null}
 
 						{(() => {
@@ -1011,6 +1101,51 @@ function RouteComponent() {
 						})()}
 					</section>
 				)}
+
+				{activeProfileTab === "packs" && isOwner && draftPackRows.length > 0 ? (
+					<section className="space-y-3">
+						<div className="flex items-center justify-between gap-2">
+							<h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wider">
+								Drafts &amp; in-progress
+							</h2>
+							<span className="text-muted-foreground text-xs">
+								{draftPackRows.length}
+							</span>
+						</div>
+						<div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+							{draftPackRows.map((pack) => (
+								<Link
+									key={pack.slug}
+									to="/packs/$packSlug"
+									params={{ packSlug: pack.slug }}
+									className="group flex w-52 shrink-0 flex-col gap-2 rounded-xl border border-border border-dashed bg-background p-3 transition-colors hover:border-primary/30 hover:bg-primary/3"
+								>
+									<div className="flex items-center justify-between gap-2">
+										<div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+											<Package className="size-4" strokeWidth={1.75} />
+										</div>
+										<span
+											className={`rounded-full px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${
+												pack.status === "draft"
+													? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+													: "bg-muted text-muted-foreground"
+											}`}
+										>
+											{pack.status}
+										</span>
+									</div>
+									<h3 className="line-clamp-2 font-medium text-sm leading-snug">
+										{pack.name}
+									</h3>
+									<div className="mt-auto text-muted-foreground text-xs">
+										{pack._count.topics}{" "}
+										{pack._count.topics === 1 ? "topic" : "topics"}
+									</div>
+								</Link>
+							))}
+						</div>
+					</section>
+				) : null}
 
 				{activeProfileTab === "packs" ? (
 					<section className="space-y-4">
