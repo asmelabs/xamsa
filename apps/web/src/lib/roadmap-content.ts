@@ -196,6 +196,11 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Send email notifications when someone reacted to your post (not comment). Send email notifications when someone commented on your post (for posts, only 1st level comments get notifications), or replied to your comment/reply.",
 			},
+			{
+				title: "Better Overview page for dashboard",
+				description:
+					"Currently dashboard has just links to other pages of dashboard. We need to improve design, and add there at least 5-6 sections (one of them can be quick links and current one), but others overall website stats on games, users, packs etc. Like a real dashboard.",
+			},
 		],
 	},
 	{
