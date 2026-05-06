@@ -6,6 +6,7 @@ import {
 	sendReactionEmail,
 	sendReplyEmail,
 } from "@xamsa/mail/notifications";
+import { shouldSendCategoryEmail } from "../modules/notification/email-gate";
 
 /** Burst dedupe window matching mention emails (15 minutes). */
 const ENGAGEMENT_EMAIL_DEDUPE_MS = 15 * 60 * 1000;
@@ -62,6 +63,13 @@ export async function notifyReactionEmail(params: {
 		select: { id: true, email: true, name: true, emailVerified: true },
 	});
 	if (!recipient?.emailVerified) return;
+
+	const allowed = await shouldSendCategoryEmail({
+		recipientUserId: recipient.id,
+		actorUserId: params.actorUserId,
+		category: "reactionOnPost",
+	});
+	if (!allowed) return;
 
 	const recent = await prisma.reactionEmailNotification.findFirst({
 		where: {
@@ -134,6 +142,13 @@ export async function notifyCommentEmail(params: {
 	});
 	if (!recipient?.emailVerified) return;
 
+	const allowed = await shouldSendCategoryEmail({
+		recipientUserId: recipient.id,
+		actorUserId: params.actorUserId,
+		category: "commentOnPost",
+	});
+	if (!allowed) return;
+
 	const recent = await prisma.commentEmailNotification.findFirst({
 		where: {
 			recipientUserId: recipient.id,
@@ -199,6 +214,13 @@ export async function notifyReplyEmail(params: {
 		select: { id: true, email: true, name: true, emailVerified: true },
 	});
 	if (!recipient?.emailVerified) return;
+
+	const allowed = await shouldSendCategoryEmail({
+		recipientUserId: recipient.id,
+		actorUserId: params.actorUserId,
+		category: "replyToComment",
+	});
+	if (!allowed) return;
 
 	const recent = await prisma.replyEmailNotification.findFirst({
 		where: {

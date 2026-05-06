@@ -8,6 +8,8 @@ export async function createTokenRequest(userId: string) {
 		clientId: userId,
 		capability: JSON.stringify({
 			"game:*": ["subscribe", "publish", "presence"],
+			// Per-user inbox: only the owner subscribes (server publishes).
+			[`user:${userId}:inbox`]: ["subscribe"],
 		}),
 	});
 }

@@ -124,19 +124,31 @@ Improve Open Graph and in-app share for individual badges so clips and group cha
 
 ### In-app notification center
 
-A single inbox for follows, mentions, game outcomes, and product notices; mark read, deep-link to entities, and respect account settings.
+A bell on home and a dedicated `/notifications` route that lists every alert: mentions, reactions, comments, replies, follows, pack publishes, game starts, and game results. Each row deep-links to the right place (post, comment, pack, or game) and respects per-user settings.
 
-### Notification preferences
+### Per-user Ably inbox channel
 
-Granular toggles per category (social vs gameplay vs marketing), with a clear “mute all except security” escape hatch.
+Server publishes to a per-user `user:<id>:inbox` channel on every create/seen/read event, scoped via Ably token capability. The bell badge updates instantly across tabs without polling, and a fresh load resyncs from the API.
 
-### Mention email quiet hours
+### Granular notification preferences
 
-Let users pick windows when mention emails are deferred so late-night games don’t wake inboxes—still surfaced in-app immediately.
+New `/settings/notifications` tab. Filterable categories (mentions, reactions on posts/comments, comments on posts, replies) carry an `all / followers / off` selector for both in-app and email; binary categories (follows, pack publishes, game start/finish) are simple in-app + email toggles.
 
-### Grouped in-app notifications
+### Master mute switch + delivery gating
 
-Collapse noisy bursts (several reacts or follows in a row) into one expandable row inside the notification center to keep the feed readable.
+A `Pause everything (except security)` kill-switch feeds the dispatcher and email helpers. Existing reaction / comment / reply / mention / follow emails now check `shouldSendCategoryEmail` before sending so prefs win immediately.
+
+### Email quiet hours with timezone + wrap-around
+
+Pick a start, end, and IANA timezone (window can wrap past midnight). Inside the window emails are dropped while the in-app row still lands so users catch up the moment they open the bell. Quiet hours only affect email — never in-app.
+
+### Grouping with optimistic seen/read
+
+Multiple raw rows with the same `groupKey` collapse into a single expandable feed row while `seenAt IS NULL`; a fresh group starts after seen. Opening the bell calls `markAllSeen` optimistically (badge clears instantly), and per-row `markRead` snapshots the list cache for instant feedback.
+
+### Cross-tab badge sync
+
+`notification:new`, `notification:seen`, and `notification:read` events keep the unread count consistent across every open tab — open the bell on one tab and the badge clears on every other.
 
 ---
 

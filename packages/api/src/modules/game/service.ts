@@ -32,6 +32,7 @@ import {
 } from "@xamsa/utils/constants";
 import { publishBadgeEarnedMany } from "../badge/publish";
 import { stripAllClicksForQuestionInTx } from "../click/remove-click";
+import { notifyGameStarted } from "../notification/dispatchers";
 import {
 	duplicateBuzzBlockedForUser,
 	userIdsWhoSawQuestionInPriorCompletedGames,
@@ -833,6 +834,12 @@ export async function startGame(
 	await channel.publish(GAME_EVENTS.GAME_STARTED, {
 		startedAt: updated.startedAt,
 	});
+
+	void notifyGameStarted({ gameId: game.id, hostUserId: userId }).catch(
+		(err) => {
+			console.error("[startGame] notifyGameStarted", err);
+		},
+	);
 
 	return updated;
 }

@@ -29,6 +29,8 @@ import { derivePostSlugSeedFromBody } from "@xamsa/utils/post-slug";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
 import { notifyMentionedUsersForContent } from "../../lib/mention-notifications";
 import { insertMentionsForPost } from "../../lib/mention-write";
+import { captureSubjectNotificationsForRemoval } from "../notification/delete";
+import { notifyMention } from "../notification/dispatchers";
 import { sortedReactionsByTypeFromGrouped } from "../reaction/sort";
 
 const FEED_AUTHOR = {
@@ -408,6 +410,14 @@ export async function createPost(
 			}).catch((err) => {
 				console.error("[createPost] mention notify", err);
 			});
+			void notifyMention({
+				mentionedUserIds,
+				actorUserId: userId,
+				source: "post",
+				postId: created.id,
+			}).catch((err) => {
+				console.error("[createPost] in-app mention notify", err);
+			});
 		}
 
 		return toPostRow(created, null, [], mentions);
@@ -473,6 +483,19 @@ export async function deletePost(
 		reactionDeltas.set(r.userId, (reactionDeltas.get(r.userId) ?? 0) + 1);
 	}
 
+	const commentIds = (
+		await prisma.comment.findMany({
+			where: { postId: post.id },
+			select: { id: true },
+		})
+	).map((c) => c.id);
+
+	const broadcastNotificationRemoval =
+		await captureSubjectNotificationsForRemoval({
+			postIds: [post.id],
+			commentIds,
+		});
+
 	await prisma.$transaction(async (tx) => {
 		await tx.reaction.deleteMany({
 			where: {
@@ -510,6 +533,10 @@ export async function deletePost(
 			where: { id: userId },
 			data: { totalPosts: { decrement: 1 } },
 		});
+	});
+
+	void broadcastNotificationRemoval().catch((err) => {
+		console.error("[deletePost] notification removal broadcast", err);
 	});
 
 	let pidToDestroy: string | null = post.imagePublicId;

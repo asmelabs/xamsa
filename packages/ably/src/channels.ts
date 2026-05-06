@@ -4,6 +4,28 @@ export const channels = {
 	game: (code: string) => `game:${code}`,
 	gameClick: (code: string) => `game:${code}:click`,
 	gameHost: (code: string) => `game:${code}:host`,
+	/**
+	 * Per-user inbox channel for in-app notifications. Server publishes;
+	 * the connected user subscribes (capability scoped server-side in
+	 * `createTokenRequest`). Other users cannot read this channel.
+	 */
+	userInbox: (userId: string) => `user:${userId}:inbox`,
+} as const;
+
+export const INBOX_EVENTS = {
+	/** A new (or freshly grouped) notification landed. */
+	NOTIFICATION_NEW: "notification:new",
+	/** Recipient opened the bell — clear the unread badge across tabs. */
+	NOTIFICATION_SEEN: "notification:seen",
+	/** A specific group/row was marked read (or "mark all read" fired). */
+	NOTIFICATION_READ: "notification:read",
+	/**
+	 * The triggering action (reaction, comment, follow…) was undone
+	 * before the recipient saw the notification, so the row was deleted
+	 * server-side. Clients should drop it from any cached list and
+	 * decrement the badge without a fetch.
+	 */
+	NOTIFICATION_REMOVED: "notification:removed",
 } as const;
 
 export const GAME_EVENTS = {
@@ -135,3 +157,41 @@ export const GamePresenceDataSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type GamePresenceData = z.infer<typeof GamePresenceDataSchema>;
+
+/**
+ * Payload published on `user:<id>:inbox` when a new notification row is
+ * persisted. The client uses `unreadCount` to update the bell instantly
+ * without re-fetching, then revalidates the list query asynchronously.
+ */
+export const InboxNewMessageSchema = z.object({
+	id: z.string().min(1),
+	groupKey: z.string().min(1),
+	type: z.string().min(1),
+	createdAt: z.string().min(1),
+	unreadCount: z.number().int().min(0),
+});
+
+export type InboxNewMessage = z.infer<typeof InboxNewMessageSchema>;
+
+export const InboxSeenMessageSchema = z.object({
+	at: z.string().min(1),
+});
+export type InboxSeenMessage = z.infer<typeof InboxSeenMessageSchema>;
+
+export const InboxReadMessageSchema = z.object({
+	groupKey: z.string().nullable(),
+	at: z.string().min(1),
+});
+export type InboxReadMessage = z.infer<typeof InboxReadMessageSchema>;
+
+/**
+ * Emitted after `deleteUnseenNotifications` purges unseen rows because
+ * the originating action was undone. The client uses `unreadCount` to
+ * resync the badge without a fetch and `groupKeys` to remove dropped
+ * rows from any open list.
+ */
+export const InboxRemovedMessageSchema = z.object({
+	groupKeys: z.array(z.string().min(1)),
+	unreadCount: z.number().int().min(0),
+});
+export type InboxRemovedMessage = z.infer<typeof InboxRemovedMessageSchema>;

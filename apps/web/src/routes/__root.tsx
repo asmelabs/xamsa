@@ -14,6 +14,7 @@ import { AppContentShell } from "@/components/app-content-shell";
 import { BottomTabMenu } from "@/components/bottom-tab-menu";
 import { DeferredPostHogProvider } from "@/components/deferred-posthog-provider";
 import { GlobalSearchProvider } from "@/components/global-search-provider";
+import { UserInboxChannelMount } from "@/components/notifications/user-inbox-channel-mount";
 import { getUser } from "@/functions/get-user";
 import { rootIconLinks } from "@/lib/seo";
 import { orpc } from "@/utils/orpc";
@@ -114,6 +115,7 @@ function RootDocument() {
 		<>
 			<NuqsAdapter>
 				<GlobalSearchProvider>
+					<UserInboxChannelMount />
 					<AppContentShell />
 					<BottomTabMenu />
 				</GlobalSearchProvider>

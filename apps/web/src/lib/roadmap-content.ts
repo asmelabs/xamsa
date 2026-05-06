@@ -206,26 +206,42 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	},
 	{
 		version: "v26.05.07",
+		implemented: true,
 		items: [
 			{
 				title: "In-app notification center",
 				description:
-					"A single inbox for follows, mentions, game outcomes, and product notices; mark read, deep-link to entities, and respect account settings.",
+					"A bell on home and a `/notifications` route that lists every alert: mentions, reactions, comments, replies, follows, pack publishes, game starts, and game results. Each row deep-links to the right place (post, comment, pack, or game) and respects per-user settings.",
 			},
 			{
-				title: "Notification preferences",
+				title: "Per-user Ably inbox channel",
 				description:
-					"Granular toggles per category (social vs gameplay vs marketing), with a clear “mute all except security” escape hatch.",
+					"Server publishes to a per-user `user:<id>:inbox` channel on every create/seen/read event, scoped via Ably token capability. The bell badge updates instantly across tabs without polling, and a fresh load resyncs from the API.",
 			},
 			{
-				title: "Mention email quiet hours",
+				title: "Granular notification preferences",
 				description:
-					"Let users pick windows when mention emails are deferred so late-night games don’t wake inboxes—still surfaced in-app immediately.",
+					"New `/settings/notifications` tab. Filterable categories (mentions, reactions on posts/comments, comments on posts, replies) carry an `all / followers / off` selector for both in-app and email; binary categories (follows, pack publishes, game start/finish) are simple in-app + email toggles.",
 			},
 			{
-				title: "Grouped in-app notifications",
+				title: "Master mute switch + delivery gating",
 				description:
-					"Collapse noisy bursts (several reacts or follows in a row) into one expandable row inside the notification center to keep the feed readable.",
+					"`Pause everything (except security)` kill-switch feeds the dispatcher and email helpers. Existing reaction / comment / reply / mention / follow emails now check `shouldSendCategoryEmail` before sending so prefs win immediately.",
+			},
+			{
+				title: "Email quiet hours with timezone + wrap-around",
+				description:
+					"Pick a start, end, and IANA timezone (window can wrap past midnight). Inside the window emails are dropped while the in-app row still lands so users catch up the moment they open the bell. Quiet hours only affect email — never in-app.",
+			},
+			{
+				title: "Grouping with optimistic seen/read",
+				description:
+					"Multiple raw rows with the same `groupKey` collapse into a single expandable feed row while `seenAt IS NULL`; a fresh group starts after seen. Opening the bell calls `markAllSeen` optimistically (badge clears instantly), and per-row `markRead` snapshots the list cache for instant feedback.",
+			},
+			{
+				title: "Cross-tab badge sync",
+				description:
+					"`notification:new`, `notification:seen`, and `notification:read` events keep the unread count consistent across every open tab — open the bell on one tab and the badge clears on every other.",
 			},
 		],
 	},

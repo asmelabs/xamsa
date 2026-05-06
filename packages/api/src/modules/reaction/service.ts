@@ -8,6 +8,8 @@ import type {
 } from "@xamsa/schemas/modules/reaction";
 import { defineCursorPagination } from "@xamsa/utils/pagination";
 import { notifyReactionEmail } from "../../lib/post-engagement-notifications";
+import { deleteReactionNotification } from "../notification/delete";
+import { notifyReaction } from "../notification/dispatchers";
 
 function bumpTargetTotals(
 	tx: Prisma.TransactionClient,
@@ -66,6 +68,7 @@ export async function setReaction(
 				return {
 					result: { ok: true as const, type: undefined },
 					created: false,
+					removed: false,
 				};
 			}
 			await tx.reaction.delete({ where: { id: existing.id } });
@@ -74,7 +77,11 @@ export async function setReaction(
 				data: { totalReactions: { decrement: 1 } },
 			});
 			await bumpTargetTotals(tx, target, -1);
-			return { result: { ok: true as const, type: undefined }, created: false };
+			return {
+				result: { ok: true as const, type: undefined },
+				created: false,
+				removed: true,
+			};
 		}
 
 		if (!existing) {
@@ -91,7 +98,11 @@ export async function setReaction(
 				data: { totalReactions: { increment: 1 } },
 			});
 			await bumpTargetTotals(tx, target, 1);
-			return { result: { ok: true as const, type: input.type }, created: true };
+			return {
+				result: { ok: true as const, type: input.type },
+				created: true,
+				removed: false,
+			};
 		}
 
 		if (existing.type === input.type) {
@@ -101,14 +112,22 @@ export async function setReaction(
 				data: { totalReactions: { decrement: 1 } },
 			});
 			await bumpTargetTotals(tx, target, -1);
-			return { result: { ok: true as const, type: undefined }, created: false };
+			return {
+				result: { ok: true as const, type: undefined },
+				created: false,
+				removed: true,
+			};
 		}
 
 		await tx.reaction.update({
 			where: { id: existing.id },
 			data: { type: input.type },
 		});
-		return { result: { ok: true as const, type: input.type }, created: false };
+		return {
+			result: { ok: true as const, type: input.type },
+			created: false,
+			removed: false,
+		};
 	});
 
 	// Fire-and-forget reaction email when a *new* reaction lands on a post.
@@ -117,6 +136,30 @@ export async function setReaction(
 	if (result.created && postId) {
 		void notifyReactionEmail({ postId, actorUserId: userId }).catch((err) => {
 			console.error("[setReaction] notifyReactionEmail", err);
+		});
+	}
+
+	// In-app notification for the post / comment owner. Burst dedupe inside
+	// the dispatcher collapses heart-toggle spam into a single feed row.
+	if (result.created) {
+		void notifyReaction({
+			postId: postId ?? undefined,
+			commentId: commentId ?? undefined,
+			actorUserId: userId,
+		}).catch((err) => {
+			console.error("[setReaction] notifyReaction in-app", err);
+		});
+	}
+
+	// Toggle-off (or clicking the same emoji to clear) — delete the
+	// owner's unseen notification so they don't see a phantom reaction.
+	if (result.removed) {
+		void deleteReactionNotification({
+			postId: postId ?? undefined,
+			commentId: commentId ?? undefined,
+			actorUserId: userId,
+		}).catch((err) => {
+			console.error("[setReaction] deleteReactionNotification", err);
 		});
 	}
 

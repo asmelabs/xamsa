@@ -13,12 +13,54 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 6 } as const;
+const current = { year: 2026, month: 5, patch: 7 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-07",
+			year: 2026,
+			month: 5,
+			patch: 7,
+			title:
+				"A bell that tells you the second something happens, an inbox that groups the noise, settings you’ll actually use, and quiet hours your inbox will thank you for",
+			highlights: [
+				{
+					kind: "text",
+					text: "Meet the bell. A friendly badge on home (and a fresh tab in the bottom nav) lights up the moment someone mentions you, reacts to your post, replies to your comment, follows you, ships a pack you’d like, or finishes a game you played in—tap it for the latest few, jump straight into the conversation, or open the full Notifications page for everything.",
+				},
+				{
+					kind: "text",
+					text: "The badge moves at the speed of the action. We open a private channel just for you so the moment someone hits send the bell ticks up across every tab you have open—no refresh, no polling, no waiting.",
+				},
+				{
+					kind: "text",
+					text: "Bursts collapse instead of pile up. Ten people heart-react to the same post in a five-minute frenzy? You’ll see one tidy row that says “Mehdi, Aytac and 8 others reacted to your post” with a count in the corner—peek inside or mark it read in one tap, and the next wave starts a fresh row only after you’ve seen this one.",
+				},
+				{
+					kind: "text",
+					text: "Open the bell once, the badge clears everywhere—even on the laptop you forgot was on. Tap a row and we mark it read instantly while the server catches up in the background, so the inbox always reflects what you’ve actually looked at.",
+				},
+				{
+					kind: "text",
+					text: "Pick exactly what reaches you. Each category—mentions, reactions on posts and comments, comments, replies—now ships with an `Everyone / Only people I follow / Off` selector for both bell and email. Follows, pack publishes, game starts and game finishes get clean in-app + email toggles each.",
+				},
+				{
+					kind: "text",
+					text: "One big switch when life calls. Hit “Pause everything (except security)” to silence the bell and the inbox for everything but account-critical messages—then flip it back when you’re ready to listen again.",
+				},
+				{
+					kind: "text",
+					text: "Email quiet hours that respect timezones and bedtime. Set a window (say 22:00 to 07:00 in your IANA timezone, midnight wraparound included) and we’ll defer emails sent inside it—the bell still updates instantly so you can catch up on your terms, no 3 a.m. inbox pings.",
+				},
+				{
+					kind: "text",
+					text: "Filter the inbox the way you read it. The full Notifications page has pills for All, Unread, Mentions, Social, and Gameplay; “Mark all read” clears the whole list in one go and stays in lockstep with the bell on every tab.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-06",
 			year: 2026,

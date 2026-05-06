@@ -55,6 +55,7 @@ model Pack {
 
   comments Comment[]
   postAttachments PostAttachment[]
+  notifications Notification[]
 
   @@index([slug])
   @@index([authorId])
@@ -106,6 +107,7 @@ model Topic {
   games     GameTopic[]
   comments  Comment[]
   postAttachments PostAttachment[]
+  notifications Notification[]
 
   @@unique([packId, order])
   @@unique([packId, slug])
@@ -184,6 +186,7 @@ model Comment {
   reactions               Reaction[]
   mentions                Mention[]
   replyEmailNotifications ReplyEmailNotification[]
+  notifications           Notification[]
 
   @@index([packId, createdAt])
   @@index([topicId, createdAt])

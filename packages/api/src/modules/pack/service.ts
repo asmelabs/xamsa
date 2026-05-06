@@ -29,6 +29,7 @@ import { computeLevelFromXp } from "@xamsa/utils/progression";
 import { generateUniqueSlug } from "@xamsa/utils/slugify";
 import { assertNonReservedContentSlug } from "../../lib/content-slug";
 import { computePackAnalytics } from "../analytics/public-stats";
+import { notifyPackPublished } from "../notification/dispatchers";
 
 export async function createPack(
 	input: CreatePackInputType,
@@ -198,6 +199,15 @@ export async function updatePackStatus(
 			slug: true,
 		},
 	});
+
+	if (isInitialPublish) {
+		void notifyPackPublished({
+			packId: pack.id,
+			authorUserId: userId,
+		}).catch((err) => {
+			console.error("[updatePackStatus] notifyPackPublished", err);
+		});
+	}
 
 	return updatedPack;
 }

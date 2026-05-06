@@ -106,6 +106,10 @@ model User {
   commentEmailNotifications  CommentEmailNotification[]  @relation("CommentEmailNotifications")
   replyEmailNotifications    ReplyEmailNotification[]    @relation("ReplyEmailNotifications")
 
+  notificationsReceived  Notification[]              @relation("NotificationsReceived")
+  notificationsCreated   Notification[]              @relation("NotificationsCreated")
+  notificationPreference UserNotificationPreference? @relation("NotificationPreference")
+
   @@index([elo])
   @@index([xp])
   @@index([totalWins])
