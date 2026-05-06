@@ -5,6 +5,7 @@ import {
 	ROADMAP_INTRO_PARAGRAPHS,
 	ROADMAP_VERSIONS,
 	roadmapVersionAnchorId,
+	unknownRoadmapItems,
 } from "@/lib/roadmap-content";
 import { pageSeo } from "@/lib/seo";
 
@@ -77,6 +78,14 @@ function RoadmapPage() {
 							</li>
 						);
 					})}
+					<li>
+						<a
+							className="text-muted-foreground text-sm underline decoration-muted-foreground/40 underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+							href="#roadmap-unscheduled"
+						>
+							No target version yet
+						</a>
+					</li>
 				</ol>
 			</nav>
 
@@ -121,6 +130,39 @@ function RoadmapPage() {
 					);
 				})}
 			</div>
+
+			<section
+				aria-labelledby="roadmap-unscheduled-heading"
+				className="scroll-mt-24 border-border border-t pt-16"
+				id="roadmap-unscheduled"
+			>
+				<h2
+					className="font-semibold text-foreground text-xl tracking-tight md:text-2xl"
+					id="roadmap-unscheduled-heading"
+				>
+					No target version yet
+				</h2>
+				<p className="mt-3 text-pretty text-muted-foreground text-sm leading-relaxed">
+					These are on the roadmap; we have not committed them to a specific
+					CalVer patch yet.
+				</p>
+				<ul className="mt-8 space-y-8 border-border border-l-2 pl-5 md:pl-6">
+					{unknownRoadmapItems.map((item, itemIdx) => (
+						<li key={`unscheduled-${itemIdx}`} className="relative">
+							<span
+								aria-hidden
+								className="absolute top-1.5 -left-[calc(1.25rem+5px)] size-2.5 bg-muted-foreground/50 md:-left-[calc(1.5rem+5px)]"
+							/>
+							<h3 className="font-medium text-base text-foreground leading-snug">
+								{item.title}
+							</h3>
+							<p className="mt-2 text-pretty text-muted-foreground text-sm leading-relaxed">
+								{item.description}
+							</p>
+						</li>
+					))}
+				</ul>
+			</section>
 
 			<footer className="mt-14 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-border border-t pt-8 text-center text-muted-foreground text-xs">
 				<Link

@@ -36,7 +36,6 @@ import {
 	SearchIcon,
 	UserIcon,
 } from "lucide-react";
-import posthog from "posthog-js";
 import {
 	createContext,
 	type KeyboardEvent as ReactKeyboardEvent,
@@ -497,7 +496,6 @@ function GlobalSearchDialog() {
 			if (item.kind === "action" && item.action === "logout") {
 				try {
 					await authClient.signOut();
-					posthog.reset();
 					toast.success("Signed out");
 					void navigate({ to: "/" });
 				} catch {

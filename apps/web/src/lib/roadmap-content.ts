@@ -384,6 +384,16 @@ export const unknownRoadmapItems: RoadmapItem[] = [
 		description:
 			"GDPR-style export: profile, posts, comments, and game history in one downloadable archive.",
 	},
+	{
+		title: "Github Login",
+		description:
+			"Add Github login to the website. Users can login with or link their Github account.",
+	},
+	{
+		title: "Apple Login",
+		description:
+			"Add Apple login to the website. Users can login with or link their Apple account.",
+	},
 ];
 
 export function roadmapVersionAnchorId(version: string): string {

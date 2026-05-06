@@ -4,6 +4,7 @@ import { env } from "@xamsa/env/web";
 import { PostHogProvider } from "posthog-js/react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { PostHogAuthSync } from "@/components/posthog-auth-sync";
 
 const postHogOptions = {
 	api_host: env.VITE_PUBLIC_POSTHOG_HOST,
@@ -61,6 +62,7 @@ export function DeferredPostHogProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<PostHogProvider apiKey={token} options={postHogOptions}>
+			<PostHogAuthSync />
 			{children}
 		</PostHogProvider>
 	);
