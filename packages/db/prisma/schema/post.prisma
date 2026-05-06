@@ -38,6 +38,7 @@ model Post {
   reactionEmailNotifications ReactionEmailNotification[]
   commentEmailNotifications  CommentEmailNotification[]
   bookmarks                  PostBookmark[]
+  notifications              Notification[]
 
   @@index([userId])
   @@index([createdAt, id])

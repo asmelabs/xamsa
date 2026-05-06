@@ -4,6 +4,7 @@ import { badgeRouter } from "./modules/badge/router";
 import { clickRouter } from "./modules/click/router";
 import { commentRouter } from "./modules/comment/router";
 import { gameRouter } from "./modules/game/router";
+import { notificationRouter } from "./modules/notification/router";
 import { packRouter } from "./modules/pack/router";
 import { packRatingRouter } from "./modules/pack-rating/router";
 import { playerRouter } from "./modules/player/router";
@@ -29,6 +30,7 @@ export const appRouter = {
 	post: postRouter,
 	reaction: reactionRouter,
 	tsual: tsualRouter,
+	notification: notificationRouter,
 };
 
 export type AppRouter = typeof appRouter;

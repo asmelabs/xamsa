@@ -2,6 +2,7 @@ import prisma from "@xamsa/db";
 import { SITE_URL } from "@xamsa/mail/footer-links";
 import { shouldSendNotificationMail } from "@xamsa/mail/mail-env";
 import { sendMentionEmail } from "@xamsa/mail/notifications";
+import { shouldSendCategoryEmail } from "../modules/notification/email-gate";
 
 /** Burst dedupe: skip another mention email to the same inbox about the same post in this window. */
 const MENTION_EMAIL_DEDUPE_MS = 15 * 60 * 1000;
@@ -51,6 +52,15 @@ export async function notifyMentionedUsersForContent(params: {
 	const recordDedupe = shouldSendNotificationMail();
 
 	for (const r of recipients) {
+		const allowed = await shouldSendCategoryEmail({
+			recipientUserId: r.id,
+			actorUserId: params.actorUserId,
+			category: "mention",
+		});
+		if (!allowed) {
+			continue;
+		}
+
 		const recent = await prisma.mentionEmailNotification.findFirst({
 			where: {
 				recipientUserId: r.id,

@@ -24,6 +24,12 @@ import {
 	notifyCommentEmail,
 	notifyReplyEmail,
 } from "../../lib/post-engagement-notifications";
+import { captureSubjectNotificationsForRemoval } from "../notification/delete";
+import {
+	notifyCommentOnPost,
+	notifyMention,
+	notifyReply,
+} from "../notification/dispatchers";
 import { sortedReactionsByTypeFromGrouped } from "../reaction/sort";
 
 const COMMENT_ROW_INCLUDE = {
@@ -512,6 +518,15 @@ export async function createComment(
 			}).catch((err) => {
 				console.error("[createComment] mention notify", err);
 			});
+			void notifyMention({
+				mentionedUserIds,
+				actorUserId: userId,
+				source: "comment",
+				postId: anchorPostId,
+				commentId: created.id,
+			}).catch((err) => {
+				console.error("[createComment] in-app mention notify", err);
+			});
 		}
 	}
 
@@ -525,6 +540,13 @@ export async function createComment(
 		}).catch((err) => {
 			console.error("[createComment] notifyCommentEmail", err);
 		});
+		void notifyCommentOnPost({
+			postId: anchorPostId,
+			commentId: created.id,
+			actorUserId: userId,
+		}).catch((err) => {
+			console.error("[createComment] notifyCommentOnPost in-app", err);
+		});
 	}
 
 	// Reply to a comment (any depth) → notify the parent comment's author.
@@ -536,6 +558,13 @@ export async function createComment(
 			actorUserId: userId,
 		}).catch((err) => {
 			console.error("[createComment] notifyReplyEmail", err);
+		});
+		void notifyReply({
+			parentCommentId,
+			replyCommentId: created.id,
+			actorUserId: userId,
+		}).catch((err) => {
+			console.error("[createComment] notifyReply in-app", err);
 		});
 	}
 
@@ -558,7 +587,7 @@ export async function deleteComment(
 		});
 	}
 
-	await prisma.$transaction(async (tx) => {
+	const broadcastNotificationRemoval = await prisma.$transaction(async (tx) => {
 		const ids = await subtreeIdsIncludingRoot(tx, input.id);
 		const rows = await tx.comment.findMany({
 			where: { id: { in: ids } },
@@ -591,6 +620,13 @@ export async function deleteComment(
 			? rows.filter((r) => r.postId === postAffected).length
 			: 0;
 
+		// Snapshot which recipients had unseen notifications referencing
+		// any of the comments about to be cascade-deleted, so we can
+		// refresh their bell after the tx commits.
+		const broadcast = await captureSubjectNotificationsForRemoval({
+			commentIds: ids,
+		});
+
 		await tx.comment.deleteMany({ where: { id: { in: ids } } });
 
 		if (postAffected && postDed > 0) {
@@ -610,6 +646,12 @@ export async function deleteComment(
 				},
 			});
 		}
+
+		return broadcast;
+	});
+
+	void broadcastNotificationRemoval().catch((err) => {
+		console.error("[deleteComment] notification removal broadcast", err);
 	});
 
 	return { ok: true as const };

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -28,6 +29,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as WhatsNewLatestRouteImport } from './routes/whats-new/latest'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
+import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications'
 import { Route as PPostSlugRouteImport } from './routes/p/$postSlug'
 import { Route as LegalTermsOfServiceRouteImport } from './routes/legal/terms-of-service'
 import { Route as LegalPrivacyPolicyRouteImport } from './routes/legal/privacy-policy'
@@ -91,6 +93,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -176,6 +183,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
 const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
   id: '/settings/security',
   path: '/settings/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
+  id: '/settings/notifications',
+  path: '/settings/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PPostSlugRoute = PPostSlugRouteImport.update({
@@ -470,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/notifications': typeof NotificationsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -478,6 +491,7 @@ export interface FileRoutesByFullPath {
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
   '/p/$postSlug': typeof PPostSlugRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRouteWithChildren
   '/whats-new/latest': typeof WhatsNewLatestRoute
@@ -543,6 +557,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/notifications': typeof NotificationsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -551,6 +566,7 @@ export interface FileRoutesByTo {
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
   '/p/$postSlug': typeof PPostSlugRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRouteWithChildren
   '/whats-new/latest': typeof WhatsNewLatestRoute
@@ -619,6 +635,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/notifications': typeof NotificationsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -627,6 +644,7 @@ export interface FileRoutesById {
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
   '/p/$postSlug': typeof PPostSlugRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRouteWithChildren
   '/whats-new/latest': typeof WhatsNewLatestRoute
@@ -696,6 +714,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/notifications'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/auth/forgot-password'
@@ -704,6 +723,7 @@ export interface FileRouteTypes {
     | '/legal/privacy-policy'
     | '/legal/terms-of-service'
     | '/p/$postSlug'
+    | '/settings/notifications'
     | '/settings/security'
     | '/u/$username'
     | '/whats-new/latest'
@@ -769,6 +789,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/notifications'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/auth/forgot-password'
@@ -777,6 +798,7 @@ export interface FileRouteTypes {
     | '/legal/privacy-policy'
     | '/legal/terms-of-service'
     | '/p/$postSlug'
+    | '/settings/notifications'
     | '/settings/security'
     | '/u/$username'
     | '/whats-new/latest'
@@ -844,6 +866,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/notifications'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/auth/forgot-password'
@@ -852,6 +875,7 @@ export interface FileRouteTypes {
     | '/legal/privacy-policy'
     | '/legal/terms-of-service'
     | '/p/$postSlug'
+    | '/settings/notifications'
     | '/settings/security'
     | '/u/$username'
     | '/whats-new/latest'
@@ -920,11 +944,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
+  NotificationsRoute: typeof NotificationsRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   LegalPrivacyPolicyRoute: typeof LegalPrivacyPolicyRoute
   LegalTermsOfServiceRoute: typeof LegalTermsOfServiceRoute
   PPostSlugRoute: typeof PPostSlugRoute
+  SettingsNotificationsRoute: typeof SettingsNotificationsRoute
   SettingsSecurityRoute: typeof SettingsSecurityRoute
   UUsernameRoute: typeof UUsernameRouteWithChildren
   WhatsNewLatestRoute: typeof WhatsNewLatestRoute
@@ -989,6 +1015,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -1108,6 +1141,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/security'
       fullPath: '/settings/security'
       preLoaderRoute: typeof SettingsSecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/notifications': {
+      id: '/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof SettingsNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$postSlug': {
@@ -1557,11 +1597,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
+  NotificationsRoute: NotificationsRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   LegalPrivacyPolicyRoute: LegalPrivacyPolicyRoute,
   LegalTermsOfServiceRoute: LegalTermsOfServiceRoute,
   PPostSlugRoute: PPostSlugRoute,
+  SettingsNotificationsRoute: SettingsNotificationsRoute,
   SettingsSecurityRoute: SettingsSecurityRoute,
   UUsernameRoute: UUsernameRouteWithChildren,
   WhatsNewLatestRoute: WhatsNewLatestRoute,

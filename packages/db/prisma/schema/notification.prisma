@@ -1,0 +1,132 @@
+/// In-app notification (v26.05.07). One row per recipient × triggering action;
+/// rows with the same `groupKey` and `seenAt IS NULL` get collapsed into one
+/// expandable feed row at read time so noisy bursts (e.g. ten reactions on
+/// the same post within minutes) read like a single alert.
+enum NotificationType {
+  mention_post // someone @-mentioned you in a post body
+  mention_comment // someone @-mentioned you in a comment / reply body
+  reaction_post // someone reacted to your post
+  reaction_comment // someone reacted to your comment / reply
+  comment_on_post // someone left a top-level comment on your post
+  reply_to_comment // someone replied to your comment / reply
+  follow // someone followed you
+  pack_published // someone you follow published a pack
+  game_started // someone you follow started hosting a game
+  game_finished // a game you played in (or hosted) finished
+  system // platform / security messages — always delivered
+}
+
+/// Per-category delivery setting. `followers` means "only when the actor is
+/// someone the recipient follows" (anti-spam knob for users with large
+/// reaches). Binary categories store `Boolean` columns instead.
+enum NotificationDeliveryLevel {
+  all
+  followers
+  none
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  type NotificationType
+
+  /// The user this row is for (always set).
+  recipientUserId String @map("recipient_user_id")
+  recipient       User   @relation("NotificationsReceived", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  /// The user who caused the notification. Null for system events.
+  actorUserId String? @map("actor_user_id")
+  actor       User?   @relation("NotificationsCreated", fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  /// Deterministic grouping key — e.g. `reaction:post:<postId>` so multiple
+  /// reactors on the same post collapse into a single feed row while
+  /// `seenAt IS NULL`. Once seen, a fresh group starts for new events.
+  groupKey String @map("group_key")
+
+  /// Polymorphic subject pointers (set the ones relevant to `type`).
+  postId    String? @map("post_id")
+  post      Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String? @map("comment_id")
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  packId    String? @map("pack_id")
+  pack      Pack?   @relation(fields: [packId], references: [id], onDelete: Cascade)
+  topicId   String? @map("topic_id")
+  topic     Topic?  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  gameId    String? @map("game_id")
+  game      Game?   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  /// Set when the recipient opened the bell; drops the unread badge to 0.
+  seenAt DateTime? @map("seen_at")
+  /// Set when the recipient clicked into the row (or hit "mark all read").
+  readAt DateTime? @map("read_at")
+
+  @@index([recipientUserId, createdAt(sort: Desc)])
+  @@index([recipientUserId, seenAt, createdAt(sort: Desc)])
+  @@index([recipientUserId, groupKey, seenAt, createdAt(sort: Desc)])
+  @@index([actorUserId])
+  @@map("notification")
+}
+
+/// Per-user delivery + quiet-hours preferences. Created lazily on first read.
+/// Columns named `<category>InApp` / `<category>Email` mirror the bell vs
+/// inbox split. `muteAllExceptSecurity` is the master kill-switch (system
+/// alerts still arrive); email quiet hours always defer email but never
+/// suppress in-app rows.
+model UserNotificationPreference {
+  userId String @id @map("user_id")
+  user   User   @relation("NotificationPreference", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Mention (post or comment) — filterable.
+  mentionInApp NotificationDeliveryLevel @default(all) @map("mention_in_app")
+  mentionEmail NotificationDeliveryLevel @default(all) @map("mention_email")
+
+  /// Reaction on your post — filterable.
+  reactionOnPostInApp NotificationDeliveryLevel @default(all) @map("reaction_on_post_in_app")
+  reactionOnPostEmail NotificationDeliveryLevel @default(all) @map("reaction_on_post_email")
+
+  /// Reaction on your comment / reply — filterable.
+  reactionOnCommentInApp NotificationDeliveryLevel @default(all) @map("reaction_on_comment_in_app")
+  reactionOnCommentEmail NotificationDeliveryLevel @default(none) @map("reaction_on_comment_email")
+
+  /// Top-level comment on your post — filterable.
+  commentOnPostInApp NotificationDeliveryLevel @default(all) @map("comment_on_post_in_app")
+  commentOnPostEmail NotificationDeliveryLevel @default(all) @map("comment_on_post_email")
+
+  /// Reply to your comment — filterable.
+  replyToCommentInApp NotificationDeliveryLevel @default(all) @map("reply_to_comment_in_app")
+  replyToCommentEmail NotificationDeliveryLevel @default(all) @map("reply_to_comment_email")
+
+  /// New follower (binary: someone followed you).
+  followInApp Boolean @default(true) @map("follow_in_app")
+  followEmail Boolean @default(true) @map("follow_email")
+
+  /// Pack publish by someone you follow.
+  packPublishedInApp Boolean @default(true) @map("pack_published_in_app")
+  packPublishedEmail Boolean @default(false) @map("pack_published_email")
+
+  /// Game started by someone you follow.
+  gameStartedInApp Boolean @default(true) @map("game_started_in_app")
+  gameStartedEmail Boolean @default(false) @map("game_started_email")
+
+  /// Game you participated in (or hosted) finished.
+  gameFinishedInApp Boolean @default(true) @map("game_finished_in_app")
+  gameFinishedEmail Boolean @default(false) @map("game_finished_email")
+
+  /// Master kill-switch: when true, only `system` notifications come through.
+  muteAllExceptSecurity Boolean @default(false) @map("mute_all_except_security")
+
+  /// Email quiet hours: when enabled, emails inside the window are dropped
+  /// (the in-app row still appears immediately). Times are minute-of-day in
+  /// the user's chosen IANA timezone; windows that wrap past midnight are
+  /// supported (start > end).
+  emailQuietHoursEnabled  Boolean @default(false) @map("email_quiet_hours_enabled")
+  emailQuietHoursStartMin Int     @default(1320) @map("email_quiet_hours_start_min") // 22:00
+  emailQuietHoursEndMin   Int     @default(420) @map("email_quiet_hours_end_min") // 07:00
+  emailQuietHoursTimezone String  @default("UTC") @map("email_quiet_hours_timezone")
+
+  @@map("user_notification_preference")
+}

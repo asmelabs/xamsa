@@ -43,6 +43,9 @@ import {
 	isManagedProfileImageUrl,
 	uploadProfileImage,
 } from "@xamsa/upload";
+import { deleteFollowNotification } from "../notification/delete";
+import { notifyFollow } from "../notification/dispatchers";
+import { shouldSendCategoryEmail } from "../notification/email-gate";
 
 export async function findOneProfile(
 	input: FindOneProfileInputType,
@@ -662,7 +665,7 @@ export async function followUser(
 
 	if (createdNewFollow) {
 		try {
-			const [follower, followee] = await Promise.all([
+			const [follower, followee, allowEmail] = await Promise.all([
 				prisma.user.findUnique({
 					where: { id: followerId },
 					select: { name: true, username: true },
@@ -671,8 +674,13 @@ export async function followUser(
 					where: { id: target.id },
 					select: { email: true, name: true },
 				}),
+				shouldSendCategoryEmail({
+					recipientUserId: target.id,
+					actorUserId: followerId,
+					category: "follow",
+				}),
 			]);
-			if (follower && followee?.email) {
+			if (allowEmail && follower && followee?.email) {
 				await sendNewFollowerEmail({
 					email: followee.email,
 					name: followee.name,
@@ -683,6 +691,13 @@ export async function followUser(
 		} catch (e) {
 			console.error("[followUser email]", e);
 		}
+
+		void notifyFollow({
+			recipientUserId: target.id,
+			actorUserId: followerId,
+		}).catch((err) => {
+			console.error("[followUser] in-app notify", err);
+		});
 	}
 
 	return { ok: true as const };
@@ -709,7 +724,7 @@ export async function unfollowUser(
 		});
 	}
 
-	await prisma.$transaction(async (tx) => {
+	const removed = await prisma.$transaction(async (tx) => {
 		const deleted = await tx.userFollow.deleteMany({
 			where: {
 				followerId,
@@ -717,7 +732,7 @@ export async function unfollowUser(
 				status: "accepted",
 			},
 		});
-		if (deleted.count === 0) return;
+		if (deleted.count === 0) return false;
 
 		await tx.user.update({
 			where: { id: followerId },
@@ -727,7 +742,17 @@ export async function unfollowUser(
 			where: { id: target.id },
 			data: { totalFollowers: { decrement: 1 } },
 		});
+		return true;
 	});
+
+	if (removed) {
+		void deleteFollowNotification({
+			recipientUserId: target.id,
+			actorUserId: followerId,
+		}).catch((err) => {
+			console.error("[unfollowUser] deleteFollowNotification", err);
+		});
+	}
 
 	return { ok: true as const };
 }
