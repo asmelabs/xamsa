@@ -247,6 +247,7 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 	},
 	{
 		version: "v26.05.08",
+		implemented: true,
 		items: [
 			{
 				title: "Pack directory advanced filters",
