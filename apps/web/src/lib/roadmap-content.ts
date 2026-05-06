@@ -319,16 +319,6 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 		version: "v26.05.11",
 		items: [
 			{
-				title: "AI-assisted practice host (experiment)",
-				description:
-					"A clearly labeled opt-in mode where an AI host advances flow, reveals prompts, marks correct or incorrect, skips when allowed, and validates free-text answers with high bar accuracy—only shippable when quality matches human hosting for the supported pack types.",
-			},
-			{
-				title: "Seasonal spotlights and weekend cups",
-				description:
-					"Time-boxed featured ladders or highlighted pack rows (without full playlist collections) to give the community recurring reasons to gather.",
-			},
-			{
 				title: "Richer stats dashboard for creators",
 				description:
 					"Authors see return players, completion funnels per topic, and difficulty trends over time on pack and topic analytics pages.",
@@ -343,16 +333,11 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Optional hero art on pack pages (upload + crop) so authors can brand listings and shares without new collection features.",
 			},
-			{
-				title: "Accessibility pass (WCAG-oriented)",
-				description:
-					"Keyboard paths for feed composer, reactions, and game host controls; focus management in dialogs; contrast fixes in charts.",
-			},
-			{
-				title: "Data export for accounts",
-				description:
-					"GDPR-style export: profile, posts, comments, and game history in one downloadable archive.",
-			},
+		],
+	},
+	{
+		version: "v26.05.12",
+		items: [
 			{
 				title: "What’s New and Post feeds RSS feed",
 				description:
@@ -363,12 +348,40 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Bottom nav or thumb-friendly patterns for feed ↔ play ↔ profile; reduce tap depth to start hosting from home.",
 			},
-			{
-				title: "Community highlights reel",
-				description:
-					"Surface a curated or algorithmic strip of standout posts, games, or packs on home for logged-out visitors—showcase energy without requiring login.",
-			},
 		],
+	},
+];
+
+export const unknownRoadmapItems: RoadmapItem[] = [
+	{
+		title: "Audio sounds",
+		description:
+			"Add audio sounds on game buzzes, correct/incorrect marks, next/skip questions, finish games etc. Make it like a real game.",
+	},
+	{
+		title: "Live stats on game",
+		description:
+			"Currently players and host can see the stats only after the game ends. Host and players should be able to see some (not whole) stats while playing the game.",
+	},
+	{
+		title: "AI-assisted practice host (experiment)",
+		description:
+			"A clearly labeled opt-in mode where an AI host advances flow, reveals prompts, marks correct or incorrect, skips when allowed, and validates free-text answers with high bar accuracy—only shippable when quality matches human hosting for the supported pack types.",
+	},
+	{
+		title: "Seasonal spotlights and weekend cups",
+		description:
+			"Time-boxed featured ladders or highlighted pack rows (without full playlist collections) to give the community recurring reasons to gather.",
+	},
+	{
+		title: "Accessibility pass (WCAG-oriented)",
+		description:
+			"Keyboard paths for feed composer, reactions, and game host controls; focus management in dialogs; contrast fixes in charts.",
+	},
+	{
+		title: "Data export for accounts",
+		description:
+			"GDPR-style export: profile, posts, comments, and game history in one downloadable archive.",
 	},
 ];
 
