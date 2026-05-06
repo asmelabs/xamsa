@@ -268,35 +268,49 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Show a compact streak or activity strip from real sessions so regular players get visible momentum without new competitive ladders.",
 			},
+			{
+				title: "Add `totalViews` to posts",
+				description:
+					"Add `totalViews` integer to posts. Add a client-side intersection observer to increment `totalViews` when the post is visible in the viewport (minimum 50% of the post must be visible [post header, body and image sections] and 1 second). Keep seen posts on sessionStorage to prevent double counting. In feed, post page, users posts etc. it should work anywhere where posts are visible.",
+			},
 		],
 	},
 	{
 		version: "v26.05.09",
 		items: [
 			{
-				title: "PWA polish",
+				title: "Header navigation bar",
 				description:
-					"Install prompt, standalone display mode, and shell caching for static assets so return visits feel app-like on phones.",
+					"Currently there is no header navigation bar (we only have bottom bar). We need to add a header (not-fixed) navigation bar. We currently display search bar and notifications bell on home page header, and because we don't have navbar we cannot show them on other pages, with navbar on layout we will be able to show them on all pages. There will be search bar, notifications bell, and hamburger menu. Hamburger menu will have: Badges (/badges), History (/history), Roadmap (/roadmap), What's New (/whats-new), Privacy Policy (/legal/privacy-policy), Terms of Service (/legal/terms-of-service), and Sign Out button (for authenticated users). Privacy policy/roadmap/whats-new and terms pages can be on footer of the menu with smaller text and muted colors.",
 			},
 			{
-				title: "Feed virtualization",
+				title: "PWA polish",
 				description:
-					"Virtualize long home timelines to keep scroll performance steady on mid-range devices during busy evenings.",
+					"Install prompt, standalone display mode, and shell caching for static assets so return visits feel app-like on phones. Better manifest. Swipe down to refresh for standalone display mode. If possible, usage of mobile features.",
 			},
 			{
 				title: "Image pipeline for posts",
 				description:
 					"Consistent max dimensions, modern formats where supported, and placeholder blur for post images to reduce layout shift.",
 			},
-			{
-				title: "Lazy-loaded game UI chunks",
-				description:
-					"Split host-only or analytics-heavy panels into async chunks so joiners on slow networks download a smaller first paint before the room goes busy.",
-			},
 		],
 	},
 	{
 		version: "v26.05.10",
+		items: [
+			{
+				title: "Posts and Comments Scoring",
+				description: "Read /POST_COMMENT_SCORING.md for the details.",
+			},
+			{
+				title: "Feed virtualization",
+				description:
+					"Virtualize long home timelines to keep scroll performance steady on mid-range devices during busy evenings. Integrate virtualization with cursor pagination.",
+			},
+		],
+	},
+	{
+		version: "v26.05.11",
 		items: [
 			{
 				title: "AI-assisted practice host (experiment)",
@@ -329,24 +343,14 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 					"Keyboard paths for feed composer, reactions, and game host controls; focus management in dialogs; contrast fixes in charts.",
 			},
 			{
-				title: "Support-ready error details",
-				description:
-					"When something fails, offer a copyable bundle (build/version, route, anonymised ids) players can paste to staff—no full session replay required.",
-			},
-			{
 				title: "Data export for accounts",
 				description:
 					"GDPR-style export: profile, posts, comments, and game history in one downloadable archive.",
 			},
 			{
-				title: "What’s New RSS feed",
+				title: "What’s New and Post feeds RSS feed",
 				description:
-					"A public RSS (or Atom) mirror of release entries so blogs and power users can follow updates outside the app.",
-			},
-			{
-				title: "Post-deploy smoke checks",
-				description:
-					"Automated probes after release—e.g. can open Play, start a dry lobby, hit auth health—so regressions surface before traffic spikes.",
+					"A public RSS mirror of release entries so blogs and power users can follow updates outside the app.",
 			},
 			{
 				title: "Mobile navigation refinements",
