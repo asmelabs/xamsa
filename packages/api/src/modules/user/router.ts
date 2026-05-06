@@ -18,6 +18,8 @@ import {
 	GetMyStatsOutputSchema,
 	GetPublicGameActivityInputSchema,
 	GetPublicGameActivityOutputSchema,
+	GetPublicPlayStreakInputSchema,
+	GetPublicPlayStreakOutputSchema,
 	GetPublicRecentGamesInputSchema,
 	GetPublicRecentGamesOutputSchema,
 	GetPublicStatsInputSchema,
@@ -50,6 +52,7 @@ import {
 	getFollowState,
 	getMyStats,
 	getPublicGameActivity,
+	getPublicPlayStreak,
 	getPublicRecentGames,
 	getPublicStats,
 	getRecentGames,
@@ -75,6 +78,10 @@ export const userRouter = {
 		.input(GetPublicGameActivityInputSchema)
 		.output(GetPublicGameActivityOutputSchema)
 		.handler(async ({ input }) => await getPublicGameActivity(input)),
+	getPublicPlayStreak: publicProcedure
+		.input(GetPublicPlayStreakInputSchema)
+		.output(GetPublicPlayStreakOutputSchema)
+		.handler(async ({ input }) => await getPublicPlayStreak(input)),
 	getEloHistory: publicProcedure
 		.input(GetEloHistoryInputSchema)
 		.output(GetEloHistoryOutputSchema)

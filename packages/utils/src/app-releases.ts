@@ -13,12 +13,46 @@ export type { AppRelease, AppReleasesManifest, ReleaseHighlight };
  * non-technical reader would recognise why it matters.
  */
 
-const current = { year: 2026, month: 5, patch: 7 } as const;
+const current = { year: 2026, month: 5, patch: 8 } as const;
 
 export const appReleasesManifest: AppReleasesManifest = {
 	productName: "Xamsa",
 	current,
 	releases: [
+		{
+			releasedAt: "2026-05-08",
+			year: 2026,
+			month: 5,
+			patch: 8,
+			title:
+				"Find your next pack faster, run live games with your fingers on the keys, tidy big packs in seconds, and see exactly how your post is landing",
+			highlights: [
+				{
+					kind: "text",
+					text: "Find your next pack faster. The packs directory grew a real filter sheet with language, difficulty bands (easy, medium, hard, expert), a minimum-topics dial, plays and ratings sliders, plus—when you’re signed in—a tidy switch that hides packs you’ve already finished as host or player. Sort and search still travel in the URL, so the link you share lands on the same shortlist.",
+				},
+				{
+					kind: "text",
+					text: "Run live games with your fingers on the keys. Hosts get a keyboard cockpit on the live game screen: Space pauses and resumes, N (or →) advances, S skips, F finishes the last question, 1–9 marks the active buzz correct, Shift+1–9 marks it wrong, and ? opens a friendly cheat sheet—available on every live room, off when you’re typing in any field.",
+				},
+				{
+					kind: "text",
+					text: "Tidy up big packs in seconds. Inside any draft pack you own, the topic list grew a Select mode. Tick the topics you want to clean up, see the count update at the top, and delete them all in one confirm dialog—the remaining topics renumber themselves so the running order stays clean.",
+				},
+				{
+					kind: "text",
+					text: "See your run of game nights at a glance. Every profile now carries a play-streak strip in the Progress section: 30 daily cells coloured by how many completed games landed on each day, a current run counter, your longest run in the last 60 days, and a tooltip per cell. It’s a calmer way to celebrate the steady players, not just the headline winners.",
+				},
+				{
+					kind: "text",
+					text: "Know when a post is reaching people. Posts now show a quiet little eye + count alongside reactions and comments. We tally a view when a post stays mostly on screen for a full second, and dedupe within your session so a quick scroll past twice doesn’t double-count. Anonymous readers count too.",
+				},
+				{
+					kind: "text",
+					text: "Authors get a tidy little stats page. Every post you write now has an Insights link in its action menu (only you can see it). Open it for headline counters—views, reactions, comments, bookmarks, plus a single engagement ratio—an emoji-by-emoji reactions chart, a top-level vs replies split, and four small leaderboards: top commenters, first reactors, first commenters, and first bookmarkers.",
+				},
+			],
+		},
 		{
 			releasedAt: "2026-05-07",
 			year: 2026,

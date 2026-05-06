@@ -381,3 +381,22 @@ export const DeleteTopicOutputSchema = TopicSchema.pick({
 
 export type DeleteTopicInputType = z.infer<typeof DeleteTopicInputSchema>;
 export type DeleteTopicOutputType = z.infer<typeof DeleteTopicOutputSchema>;
+
+/**
+ * BULK DELETE — author-only, draft packs only.
+ */
+export const BulkDeleteTopicsInputSchema = z.object({
+	pack: PackSchema.shape.slug,
+	slugs: z.array(TopicSchema.shape.slug).min(1).max(50),
+});
+
+export const BulkDeleteTopicsOutputSchema = z.object({
+	deleted: z.number().int().min(0),
+});
+
+export type BulkDeleteTopicsInputType = z.infer<
+	typeof BulkDeleteTopicsInputSchema
+>;
+export type BulkDeleteTopicsOutputType = z.infer<
+	typeof BulkDeleteTopicsOutputSchema
+>;

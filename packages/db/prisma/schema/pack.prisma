@@ -35,6 +35,7 @@ model Pack {
   averageRating Float @default(0) @map("average_rating")
   totalRatings  Int   @default(0) @map("total_ratings")
   totalPlays    Int   @default(0) @map("total_plays")
+  totalTopics   Int   @default(0) @map("total_topics")
 
   /// config ///
   allowOthersHost Boolean @default(false) @map("allow_others_host") // other people can also host a game with this pack

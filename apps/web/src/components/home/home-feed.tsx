@@ -36,10 +36,12 @@ import { Spinner } from "@xamsa/ui/components/spinner";
 import { cn } from "@xamsa/ui/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import {
+	BarChart3Icon,
 	Bookmark,
 	BookOpen,
 	ChevronDownIcon,
 	ChevronRightIcon,
+	EyeIcon,
 	Gamepad2,
 	LibraryBig,
 	Link2Icon,
@@ -62,6 +64,7 @@ import { toast } from "sonner";
 import { MentionRichText } from "@/components/home/mention-rich-text";
 import { MentionTextarea } from "@/components/home/mention-textarea";
 import { CommentReactionBar } from "@/components/reactions/comment-reaction-bar";
+import { usePostViewTracker } from "@/hooks/use-post-view-tracker";
 import {
 	adjustPostTotalCommentsInHomeFeedCache,
 	homePostListInfiniteOptions,
@@ -448,6 +451,8 @@ function PostCardInner({
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [commentsOpen, setCommentsOpen] = useState(commentsInitiallyOpen);
 	const isArticleLayout = commentsInitiallyOpen;
+	const cardRef = useRef<HTMLDivElement>(null);
+	usePostViewTracker(cardRef, post.id);
 
 	const deletePostMutation = useMutation(
 		orpc.post.delete.mutationOptions({
@@ -696,6 +701,16 @@ function PostCardInner({
 					/>
 				) : null}
 			</button>
+			<span
+				className="inline-flex h-8 shrink-0 items-center gap-1.5 px-1 text-muted-foreground text-xs"
+				title={`${post.totalViews.toLocaleString()} ${post.totalViews === 1 ? "view" : "views"}`}
+				aria-label={`${post.totalViews} views`}
+			>
+				<EyeIcon className="size-4 shrink-0" strokeWidth={1.75} />
+				<span className="font-medium tabular-nums">
+					{post.totalViews.toLocaleString()}
+				</span>
+			</span>
 			{sessionUserId ? (
 				<button
 					type="button"
@@ -778,6 +793,19 @@ function PostCardInner({
 				</DropdownMenuItem>
 				{isAuthor ? (
 					<DropdownMenuItem
+						onClick={() => {
+							void navigate({
+								to: "/p/$postSlug/insights",
+								params: { postSlug: post.slug },
+							});
+						}}
+					>
+						<BarChart3Icon className="size-4" />
+						Insights
+					</DropdownMenuItem>
+				) : null}
+				{isAuthor ? (
+					<DropdownMenuItem
 						variant="destructive"
 						onClick={() => {
 							window.setTimeout(() => {
@@ -795,6 +823,7 @@ function PostCardInner({
 	return (
 		<>
 			<Card
+				ref={cardRef}
 				className={cn(
 					"overflow-hidden border bg-card",
 					isArticleLayout ? "shadow-sm" : "p-3.5 sm:p-4",

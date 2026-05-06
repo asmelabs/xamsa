@@ -147,6 +147,7 @@ export const FindOnePackOutputSchema = PackSchema.pick({
 	averageRating: true,
 	totalPlays: true,
 	totalRatings: true,
+	totalTopics: true,
 	publishedAt: true,
 	status: true,
 	pdr: true,
@@ -170,17 +171,34 @@ export type FindOnePackOutputType = z.infer<typeof FindOnePackOutputSchema>;
 /**
  * LIST
  */
+/**
+ * Coarse difficulty buckets mapped to PDR ranges. Default PDR is 4.5 on a 0–9 scale,
+ * so bands are split evenly across that range (lower bound inclusive, upper exclusive
+ * except for `expert` which includes 9). Mapping happens in the service.
+ */
+export const PackDifficultyBandSchema = z.enum([
+	"easy",
+	"medium",
+	"hard",
+	"expert",
+]);
+export type PackDifficultyBandType = z.infer<typeof PackDifficultyBandSchema>;
+
 export const ListPacksFiltersSchema = z.object({
 	authors: z.array(UserSchema.shape.username),
 	visibilities: z.array(PackVisibilitySchema),
 	statuses: z.array(PackStatusSchema),
 	languages: z.array(PackLanguageSchema),
+	difficultyBands: z.array(PackDifficultyBandSchema),
 	minAverageRating: z.number().min(0).max(5).default(0),
 	minPlays: z.number().int().min(0).default(0),
+	minTopicCount: z.number().int().min(0).default(0),
 	hasRatings: z.boolean(),
 	onlyMyPacks: z.boolean(),
 	/** Published packs the current user may host (author, or public + allowOthersHost). Requires signed-in user; ignored when logged out. */
 	canHost: z.boolean(),
+	/** Hide packs that the viewer has already finished as host or player. Requires signed-in user; ignored when logged out. */
+	hideFinishedByMe: z.boolean(),
 });
 export const ListPacksInputSchema = ListPacksFiltersSchema.partial()
 	.extend(CursorPaginationInputSchema.shape)
@@ -196,6 +214,7 @@ export const ListPacksOutputSchema = CursorPaginationOutputSchema(
 		averageRating: true,
 		totalPlays: true,
 		totalRatings: true,
+		totalTopics: true,
 		publishedAt: true,
 		language: true,
 		status: true,

@@ -4,10 +4,14 @@ import {
 	DeletePostInputSchema,
 	DeletePostOutputSchema,
 	FindOnePostInputSchema,
+	GetPostInsightsInputSchema,
+	GetPostInsightsOutputSchema,
 	ListBookmarkedPostsInputSchema,
 	ListPostsInputSchema,
 	ListPostsOutputSchema,
 	PostRowSchema,
+	RecordPostViewInputSchema,
+	RecordPostViewOutputSchema,
 	SetPostBookmarkInputSchema,
 	SetPostBookmarkOutputSchema,
 } from "@xamsa/schemas/modules/post";
@@ -16,8 +20,10 @@ import {
 	createPost,
 	deletePost,
 	findOnePost,
+	getPostInsights,
 	listBookmarkedPosts,
 	listPosts,
+	recordPostView,
 	setPostBookmark,
 } from "./service";
 
@@ -57,5 +63,15 @@ export const postRouter = {
 		.output(ListPostsOutputSchema)
 		.handler(({ input, context }) =>
 			listBookmarkedPosts(input, context.session.user.id),
+		),
+	recordView: publicProcedure
+		.input(RecordPostViewInputSchema)
+		.output(RecordPostViewOutputSchema)
+		.handler(({ input }) => recordPostView(input)),
+	getInsights: protectedProcedure
+		.input(GetPostInsightsInputSchema)
+		.output(GetPostInsightsOutputSchema)
+		.handler(({ input, context }) =>
+			getPostInsights(input, context.session.user.id),
 		),
 };

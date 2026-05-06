@@ -15,6 +15,8 @@ import type {
 	GetMyStatsOutputType,
 	GetPublicGameActivityInputType,
 	GetPublicGameActivityOutputType,
+	GetPublicPlayStreakInputType,
+	GetPublicPlayStreakOutputType,
 	GetPublicRecentGamesInputType,
 	GetPublicRecentGamesOutputType,
 	GetPublicStatsInputType,
@@ -564,6 +566,90 @@ export async function getPublicGameActivity(
 	}
 
 	return { months };
+}
+
+/**
+ * Compact play streak for the profile Progress strip. Buckets the same
+ * "completed game where the user is host or player" rows used by
+ * `getPublicGameActivity`, but by **day** in the viewer's-naive UTC range.
+ * Returns the current streak, longest run inside the 60-day window, and one
+ * row per day so the client can draw a heatmap-style strip.
+ */
+const PUBLIC_PLAY_STREAK_DAYS = 60;
+const PUBLIC_PLAY_STREAK_GAME_CAP = 2000;
+
+function utcDateKey(date: Date): string {
+	const yyyy = date.getUTCFullYear();
+	const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+	const dd = String(date.getUTCDate()).padStart(2, "0");
+	return `${yyyy}-${mm}-${dd}`;
+}
+
+export async function getPublicPlayStreak(
+	input: GetPublicPlayStreakInputType,
+): Promise<GetPublicPlayStreakOutputType> {
+	const userId = await requireUserIdByUsername(input.username);
+
+	const since = new Date();
+	since.setUTCHours(0, 0, 0, 0);
+	since.setUTCDate(since.getUTCDate() - (PUBLIC_PLAY_STREAK_DAYS - 1));
+
+	const rows = await prisma.game.findMany({
+		where: {
+			status: "completed",
+			finishedAt: { gte: since, not: null },
+			startedAt: { not: null },
+			OR: [{ hostId: userId }, { players: { some: { userId } } }],
+		},
+		select: { finishedAt: true },
+		orderBy: { finishedAt: "desc" },
+		take: PUBLIC_PLAY_STREAK_GAME_CAP,
+	});
+
+	const countsByDay = new Map<string, number>();
+	for (const r of rows) {
+		const d = r.finishedAt;
+		if (!d) continue;
+		const key = utcDateKey(d);
+		countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
+	}
+
+	const days: GetPublicPlayStreakOutputType["last60"] = [];
+	for (let i = PUBLIC_PLAY_STREAK_DAYS - 1; i >= 0; i--) {
+		const dt = new Date();
+		dt.setUTCHours(0, 0, 0, 0);
+		dt.setUTCDate(dt.getUTCDate() - i);
+		const key = utcDateKey(dt);
+		days.push({ date: key, count: countsByDay.get(key) ?? 0 });
+	}
+
+	let longest = 0;
+	let runningStreak = 0;
+	for (const day of days) {
+		if (day.count > 0) {
+			runningStreak += 1;
+			if (runningStreak > longest) longest = runningStreak;
+		} else {
+			runningStreak = 0;
+		}
+	}
+
+	// `current` ends today (or yesterday — counting yesterday lets night-owl
+	// players keep their streak alive on early-morning loads).
+	let current = 0;
+	for (let i = days.length - 1; i >= 0; i--) {
+		const day = days[i];
+		if (!day) break;
+		if (day.count > 0) {
+			current += 1;
+			continue;
+		}
+		// allow today to be empty if yesterday is non-empty (grace day at the tail)
+		if (i === days.length - 1 && current === 0) continue;
+		break;
+	}
+
+	return { current, longest, last60: days };
 }
 
 export async function getPublicRecentGames(

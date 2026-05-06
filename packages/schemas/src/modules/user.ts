@@ -321,6 +321,35 @@ export type GetPublicGameActivityOutputType = z.infer<
 >;
 
 /**
+ * PUBLIC PROFILE — DAILY PLAY STREAK (last 60 days)
+ *
+ * `current` counts back from today (or yesterday if today has no game yet),
+ * `longest` is the longest run inside the window. `last60` is one row per day,
+ * oldest first, with `count` of completed games on that day.
+ */
+export const GetPublicPlayStreakInputSchema = UserSchema.pick({
+	username: true,
+});
+
+export const PlayStreakDaySchema = z.object({
+	date: z.string(),
+	count: z.number().int().min(0),
+});
+
+export const GetPublicPlayStreakOutputSchema = z.object({
+	current: z.number().int().min(0),
+	longest: z.number().int().min(0),
+	last60: z.array(PlayStreakDaySchema),
+});
+
+export type GetPublicPlayStreakInputType = z.infer<
+	typeof GetPublicPlayStreakInputSchema
+>;
+export type GetPublicPlayStreakOutputType = z.infer<
+	typeof GetPublicPlayStreakOutputSchema
+>;
+
+/**
  * FOLLOW — state for the signed-in user viewing a profile
  */
 export const GetFollowStateInputSchema = UserSchema.pick({

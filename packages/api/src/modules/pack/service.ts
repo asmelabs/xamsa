@@ -250,6 +250,7 @@ export async function findOnePack(
 			pdr: true,
 			totalPlays: true,
 			totalRatings: true,
+			totalTopics: true,
 			allowOthersHost: true,
 			showTopicsInfo: true,
 			ratings: {
@@ -331,6 +332,20 @@ export async function getPackAnalytics(
 	return computePackAnalytics(pack.id, pack.totalPlays);
 }
 
+/**
+ * PDR is on a 0–9 scale; default is 4.5. Bands split that range into four roughly
+ * even buckets so listings feel predictable without retuning constants in the UI.
+ */
+const PDR_BANDS: Record<
+	"easy" | "medium" | "hard" | "expert",
+	{ gte: number; lt?: number; lte?: number }
+> = {
+	easy: { gte: 0, lt: 2.25 },
+	medium: { gte: 2.25, lt: 4.5 },
+	hard: { gte: 4.5, lt: 6.75 },
+	expert: { gte: 6.75, lte: 9 },
+};
+
 export async function listPacks(
 	input: ListPacksInputType,
 	userId?: string,
@@ -347,11 +362,14 @@ export async function listPacks(
 		visibilities,
 		statuses,
 		languages,
+		difficultyBands,
 		minAverageRating,
 		minPlays,
+		minTopicCount,
 		hasRatings,
 		onlyMyPacks,
 		canHost,
+		hideFinishedByMe,
 	} = input;
 
 	const p = defineCursorPagination(cursor, limit);
@@ -378,21 +396,54 @@ export async function listPacks(
 				}
 			: undefined;
 
+	const difficultyWhere: Prisma.PackWhereInput | undefined =
+		difficultyBands && difficultyBands.length > 0
+			? {
+					OR: difficultyBands.map((band) => {
+						const range = PDR_BANDS[band];
+						return {
+							pdr: {
+								gte: range.gte,
+								...(range.lt !== undefined ? { lt: range.lt } : {}),
+								...(range.lte !== undefined ? { lte: range.lte } : {}),
+							},
+						};
+					}),
+				}
+			: undefined;
+
+	const hideFinishedWhere: Prisma.PackWhereInput | undefined =
+		hideFinishedByMe === true && userId
+			? {
+					NOT: {
+						games: {
+							some: {
+								status: "completed",
+								OR: [{ hostId: userId }, { players: { some: { userId } } }],
+							},
+						},
+					},
+				}
+			: undefined;
+
 	const where: Prisma.PackWhereInput = {
 		AND: [
 			searchWhere ?? {},
 			periodWhere ?? {},
 			...(canHostWhere ? [canHostWhere] : []),
+			...(difficultyWhere ? [difficultyWhere] : []),
+			...(hideFinishedWhere ? [hideFinishedWhere] : []),
 			{
 				...(onlyMyPacks === true && userId
 					? { authorId: userId }
 					: authors?.length
 						? { author: { username: { in: authors } } }
 						: {}),
-				language: languages ? { in: languages } : undefined,
+				language: languages?.length ? { in: languages } : undefined,
 				visibility: visibilities ? { in: visibilities } : undefined,
 				status: statuses ? { in: statuses } : undefined,
 				totalPlays: minPlays ? { gte: minPlays } : undefined,
+				totalTopics: minTopicCount ? { gte: minTopicCount } : undefined,
 				averageRating: minAverageRating ? { gte: minAverageRating } : undefined,
 				totalRatings: hasRatings ? { gte: 1 } : undefined,
 			},
@@ -417,6 +468,7 @@ export async function listPacks(
 			averageRating: true,
 			totalPlays: true,
 			totalRatings: true,
+			totalTopics: true,
 			pdr: true,
 			status: true,
 			visibility: true,

@@ -9,12 +9,17 @@ import type {
 	DeletePostInputType,
 	DeletePostOutputType,
 	FindOnePostInputType,
+	GetPostInsightsInputType,
+	GetPostInsightsOutputType,
 	ListBookmarkedPostsInputType,
 	ListPostsInputType,
 	ListPostsOutputType,
 	PostAttachmentRowType,
+	PostInsightsRosterMemberType,
 	PostReactionByTypeType,
 	PostRowType,
+	RecordPostViewInputType,
+	RecordPostViewOutputType,
 	SetPostBookmarkInputType,
 	SetPostBookmarkOutputType,
 } from "@xamsa/schemas/modules/post";
@@ -275,6 +280,7 @@ async function toPostRow(
 		image: p.image,
 		totalComments: p.totalComments,
 		totalReactions: p.totalReactions,
+		totalViews: p.totalViews,
 		author: p.author,
 		attachment: attachmentRow,
 		myReactionType: myReactionType ?? undefined,
@@ -901,6 +907,207 @@ export async function listBookmarkedPosts(
 			limit,
 			nextCursor,
 			hasMore,
+		},
+	};
+}
+
+/**
+ * Bumps `Post.totalViews` by 1. Client-side `sessionStorage` already prevents
+ * double counts within a session; we keep this lean (no per-IP table) and
+ * silently no-op when the post is missing.
+ */
+export async function recordPostView(
+	input: RecordPostViewInputType,
+): Promise<RecordPostViewOutputType> {
+	const updated = await prisma.post
+		.update({
+			where: { id: input.id },
+			data: { totalViews: { increment: 1 } },
+			select: { totalViews: true },
+		})
+		.catch(() => null);
+
+	if (!updated) {
+		return { totalViews: 0 };
+	}
+	return { totalViews: updated.totalViews };
+}
+
+const INSIGHTS_RANKING_LIMIT = 5;
+
+/**
+ * Author-only post analytics: headline counters, reaction/comment breakdowns,
+ * and small "first/top" rankings backed by `groupBy` + `findMany` queries.
+ */
+export async function getPostInsights(
+	input: GetPostInsightsInputType,
+	viewerUserId: string,
+): Promise<GetPostInsightsOutputType> {
+	const post = await prisma.post.findUnique({
+		where: { slug: input.slug },
+		select: {
+			id: true,
+			userId: true,
+			totalViews: true,
+			totalReactions: true,
+			totalComments: true,
+		},
+	});
+
+	if (!post) {
+		throw new ORPCError("NOT_FOUND", { message: "Post not found." });
+	}
+
+	if (post.userId !== viewerUserId) {
+		throw new ORPCError("FORBIDDEN", {
+			message: "Only the post author can view insights.",
+		});
+	}
+
+	const [
+		bookmarkCount,
+		reactionGroups,
+		commentParentGroups,
+		topCommenterGroups,
+		firstReactionRows,
+		firstCommentRows,
+		firstBookmarkRows,
+	] = await Promise.all([
+		prisma.postBookmark.count({ where: { postId: post.id } }),
+		prisma.reaction.groupBy({
+			by: ["type"],
+			where: { postId: post.id },
+			_count: { _all: true },
+		}),
+		prisma.comment.groupBy({
+			by: ["parentId"],
+			where: { postId: post.id },
+			_count: { _all: true },
+		}),
+		prisma.comment.groupBy({
+			by: ["userId"],
+			where: { postId: post.id },
+			_count: { _all: true },
+			orderBy: { _count: { userId: "desc" } },
+			take: INSIGHTS_RANKING_LIMIT,
+		}),
+		prisma.reaction.findMany({
+			where: { postId: post.id },
+			orderBy: { createdAt: "asc" },
+			take: INSIGHTS_RANKING_LIMIT,
+			select: {
+				createdAt: true,
+				type: true,
+				user: { select: { username: true, name: true, image: true } },
+			},
+		}),
+		prisma.comment.findMany({
+			where: { postId: post.id },
+			orderBy: { createdAt: "asc" },
+			distinct: ["userId"],
+			take: INSIGHTS_RANKING_LIMIT,
+			select: {
+				createdAt: true,
+				user: { select: { username: true, name: true, image: true } },
+			},
+		}),
+		prisma.postBookmark.findMany({
+			where: { postId: post.id },
+			orderBy: { createdAt: "asc" },
+			take: INSIGHTS_RANKING_LIMIT,
+			select: {
+				createdAt: true,
+				user: { select: { username: true, name: true, image: true } },
+			},
+		}),
+	]);
+
+	const reactionsByType = sortedReactionsByTypeFromGrouped(
+		reactionGroups.map((g) => ({
+			type: g.type,
+			count: g._count._all,
+		})),
+	);
+
+	let topLevel = 0;
+	let replies = 0;
+	for (const row of commentParentGroups) {
+		if (row.parentId === null) topLevel += row._count._all;
+		else replies += row._count._all;
+	}
+
+	const topCommenterUserIds = topCommenterGroups.map((g) => g.userId);
+	const topCommenterUsers =
+		topCommenterUserIds.length === 0
+			? []
+			: await prisma.user.findMany({
+					where: { id: { in: topCommenterUserIds } },
+					select: {
+						id: true,
+						username: true,
+						name: true,
+						image: true,
+					},
+				});
+	const topCommenterById = new Map(topCommenterUsers.map((u) => [u.id, u]));
+	const topCommenters: PostInsightsRosterMemberType[] = [];
+	for (const g of topCommenterGroups) {
+		const u = topCommenterById.get(g.userId);
+		if (!u) continue;
+		topCommenters.push({
+			username: u.username,
+			name: u.name,
+			image: u.image,
+			count: g._count._all,
+		});
+	}
+
+	const firstReactors: PostInsightsRosterMemberType[] = firstReactionRows.map(
+		(r) => ({
+			username: r.user.username,
+			name: r.user.name,
+			image: r.user.image,
+			at: r.createdAt,
+			reactionType: r.type,
+		}),
+	);
+
+	const firstCommenters: PostInsightsRosterMemberType[] = firstCommentRows.map(
+		(r) => ({
+			username: r.user.username,
+			name: r.user.name,
+			image: r.user.image,
+			at: r.createdAt,
+		}),
+	);
+
+	const firstBookmarkers: PostInsightsRosterMemberType[] =
+		firstBookmarkRows.map((r) => ({
+			username: r.user.username,
+			name: r.user.name,
+			image: r.user.image,
+			at: r.createdAt,
+		}));
+
+	const totalEngagement =
+		post.totalReactions + post.totalComments + bookmarkCount;
+	const ratio = post.totalViews > 0 ? totalEngagement / post.totalViews : 0;
+
+	return {
+		totals: {
+			views: post.totalViews,
+			reactions: post.totalReactions,
+			comments: post.totalComments,
+			bookmarks: bookmarkCount,
+			viewToEngagementRatio: Number(ratio.toFixed(4)),
+		},
+		reactionsByType,
+		commentsBreakdown: { topLevel, replies },
+		rankings: {
+			topCommenters,
+			firstReactors,
+			firstCommenters,
+			firstBookmarkers,
 		},
 	};
 }

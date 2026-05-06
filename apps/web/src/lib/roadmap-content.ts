@@ -273,6 +273,11 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 				description:
 					"Add `totalViews` integer to posts. Add a client-side intersection observer to increment `totalViews` when the post is visible in the viewport (minimum 50% of the post must be visible [post header, body and image sections] and 1 second). Keep seen posts on sessionStorage to prevent double counting. In feed, post page, users posts etc. it should work anywhere where posts are visible.",
 			},
+			{
+				title: "Post insights page",
+				description:
+					"For post authors put a link on post actions menu, Insights. On insights page post will be seen and some analytics like Total views, reactions breakdown, comments breakdown, view-to-engagement ratio, bookmarks details etc. And some rankings like top 5 commenters (users with most comments), first 5 reactors, first 5 commenters, and some other rankings.",
+			},
 		],
 	},
 	{
@@ -300,7 +305,8 @@ export const ROADMAP_VERSIONS: RoadmapVersionBlock[] = [
 		items: [
 			{
 				title: "Posts and Comments Scoring",
-				description: "Read /POST_COMMENT_SCORING.md for the details.",
+				description:
+					"Read /POST_COMMENT_SCORING.md for the details. Add scoring info to post insights as well.",
 			},
 			{
 				title: "Feed virtualization",

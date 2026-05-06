@@ -72,6 +72,7 @@ import { PostCard } from "@/components/home/home-feed";
 import { RecentGameRowItem } from "@/components/home/recent-game-row";
 import { TrendingPackTile } from "@/components/home/trending-pack-tile";
 import { LoadingButton } from "@/components/loading-button";
+import { PlayStreakStrip } from "@/components/profile/play-streak-strip";
 import { ProfileBadgesSection } from "@/components/profile-badges-section";
 import { ProfileImageLightbox } from "@/components/profile-image-lightbox";
 import { EloTrendChart } from "@/components/stats/elo-trend-chart";
@@ -205,6 +206,9 @@ function RouteComponent() {
 	const { data: gameActivity } = useQuery({
 		...orpc.user.getPublicGameActivity.queryOptions({ input: { username } }),
 		enabled: activeProfileTab === "stats",
+	});
+	const { data: playStreak } = useQuery({
+		...orpc.user.getPublicPlayStreak.queryOptions({ input: { username } }),
 	});
 	const { data: eloHistory } = useQuery({
 		...orpc.user.getEloHistory.queryOptions({
@@ -670,6 +674,7 @@ function RouteComponent() {
 						value={profile.elo.toLocaleString()}
 						hint={`Peak ${profile.peakElo.toLocaleString()} · Low ${profile.lowestElo.toLocaleString()}`}
 					/>
+					{playStreak ? <PlayStreakStrip data={playStreak} /> : null}
 				</div>
 			</section>
 
