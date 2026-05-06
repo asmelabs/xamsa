@@ -18,6 +18,7 @@ export const PackSchema = z.object({
   averageRating: z.number(),
   totalRatings: z.number().int(),
   totalPlays: z.number().int(),
+  totalTopics: z.number().int(),
   allowOthersHost: z.boolean(),
   showTopicsInfo: z.boolean().default(true),
   pdr: z.number().default(4.5),

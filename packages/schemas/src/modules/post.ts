@@ -151,6 +151,7 @@ export const PostRowSchema = PostSchema.pick({
 	image: true,
 	totalComments: true,
 	totalReactions: true,
+	totalViews: true,
 }).extend({
 	author: PostAuthorSchema,
 	attachment: PostAttachmentRowSchema.nullable(),
@@ -222,4 +223,72 @@ export const ListBookmarkedPostsInputSchema = CursorPaginationInputSchema;
 
 export type ListBookmarkedPostsInputType = z.infer<
 	typeof ListBookmarkedPostsInputSchema
+>;
+
+/**
+ * RECORD VIEW — fired by the client intersection observer when a post stays
+ * at ≥50% visible for ≥1s. Client-side `sessionStorage` already dedupes per
+ * session; the server simply increments the counter.
+ */
+export const RecordPostViewInputSchema = z.object({
+	id: z.string().min(1),
+});
+
+export type RecordPostViewInputType = z.infer<typeof RecordPostViewInputSchema>;
+
+export const RecordPostViewOutputSchema = z.object({
+	totalViews: z.number().int().min(0),
+});
+
+export type RecordPostViewOutputType = z.infer<
+	typeof RecordPostViewOutputSchema
+>;
+
+/**
+ * INSIGHTS — author-only analytics for a single post.
+ */
+export const GetPostInsightsInputSchema = z.object({
+	slug: z.string().min(1),
+});
+
+export type GetPostInsightsInputType = z.infer<
+	typeof GetPostInsightsInputSchema
+>;
+
+const InsightsRosterMemberSchema = UserSchema.pick({
+	username: true,
+	name: true,
+	image: true,
+}).extend({
+	count: z.number().int().min(0).optional(),
+	at: z.coerce.date().optional(),
+	reactionType: ReactionTypeSchema.optional(),
+});
+
+export const GetPostInsightsOutputSchema = z.object({
+	totals: z.object({
+		views: z.number().int().min(0),
+		reactions: z.number().int().min(0),
+		comments: z.number().int().min(0),
+		bookmarks: z.number().int().min(0),
+		viewToEngagementRatio: z.number().min(0),
+	}),
+	reactionsByType: z.array(PostReactionByTypeSchema),
+	commentsBreakdown: z.object({
+		topLevel: z.number().int().min(0),
+		replies: z.number().int().min(0),
+	}),
+	rankings: z.object({
+		topCommenters: z.array(InsightsRosterMemberSchema),
+		firstReactors: z.array(InsightsRosterMemberSchema),
+		firstCommenters: z.array(InsightsRosterMemberSchema),
+		firstBookmarkers: z.array(InsightsRosterMemberSchema),
+	}),
+});
+
+export type GetPostInsightsOutputType = z.infer<
+	typeof GetPostInsightsOutputSchema
+>;
+export type PostInsightsRosterMemberType = z.infer<
+	typeof InsightsRosterMemberSchema
 >;

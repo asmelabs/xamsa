@@ -56,6 +56,7 @@ import { Route as DashboardClicksIndexRouteImport } from './routes/dashboard/cli
 import { Route as DashboardBadgesIndexRouteImport } from './routes/dashboard/badges/index'
 import { Route as BadgesBadgeIdIndexRouteImport } from './routes/badges/$badgeId/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
+import { Route as PPostSlugInsightsRouteImport } from './routes/p/$postSlug/insights'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiOgPlayDotpngRouteImport } from './routes/api/og/play[.]png'
 import { Route as ApiOgLeaderboardDotpngRouteImport } from './routes/api/og/leaderboard[.]png'
@@ -320,6 +321,11 @@ const AuthResetPasswordIndexRoute = AuthResetPasswordIndexRouteImport.update({
   path: '/reset-password/',
   getParentRoute: () => AuthRoute,
 } as any)
+const PPostSlugInsightsRoute = PPostSlugInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => PPostSlugRoute,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -490,7 +496,7 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
-  '/p/$postSlug': typeof PPostSlugRoute
+  '/p/$postSlug': typeof PPostSlugRouteWithChildren
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRouteWithChildren
@@ -511,6 +517,7 @@ export interface FileRoutesByFullPath {
   '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
   '/api/og/play.png': typeof ApiOgPlayDotpngRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/p/$postSlug/insights': typeof PPostSlugInsightsRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
   '/dashboard/badges/': typeof DashboardBadgesIndexRoute
@@ -565,7 +572,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
-  '/p/$postSlug': typeof PPostSlugRoute
+  '/p/$postSlug': typeof PPostSlugRouteWithChildren
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRouteWithChildren
@@ -586,6 +593,7 @@ export interface FileRoutesByTo {
   '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
   '/api/og/play.png': typeof ApiOgPlayDotpngRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/p/$postSlug/insights': typeof PPostSlugInsightsRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId': typeof BadgesBadgeIdIndexRoute
   '/dashboard/badges': typeof DashboardBadgesIndexRoute
@@ -643,7 +651,7 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/legal/privacy-policy': typeof LegalPrivacyPolicyRoute
   '/legal/terms-of-service': typeof LegalTermsOfServiceRoute
-  '/p/$postSlug': typeof PPostSlugRoute
+  '/p/$postSlug': typeof PPostSlugRouteWithChildren
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/security': typeof SettingsSecurityRoute
   '/u/$username': typeof UUsernameRouteWithChildren
@@ -664,6 +672,7 @@ export interface FileRoutesById {
   '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
   '/api/og/play.png': typeof ApiOgPlayDotpngRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/p/$postSlug/insights': typeof PPostSlugInsightsRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
   '/dashboard/badges/': typeof DashboardBadgesIndexRoute
@@ -743,6 +752,7 @@ export interface FileRouteTypes {
     | '/api/og/leaderboard.png'
     | '/api/og/play.png'
     | '/api/rpc/$'
+    | '/p/$postSlug/insights'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
     | '/dashboard/badges/'
@@ -818,6 +828,7 @@ export interface FileRouteTypes {
     | '/api/og/leaderboard.png'
     | '/api/og/play.png'
     | '/api/rpc/$'
+    | '/p/$postSlug/insights'
     | '/auth/reset-password'
     | '/badges/$badgeId'
     | '/dashboard/badges'
@@ -895,6 +906,7 @@ export interface FileRouteTypes {
     | '/api/og/leaderboard.png'
     | '/api/og/play.png'
     | '/api/rpc/$'
+    | '/p/$postSlug/insights'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
     | '/dashboard/badges/'
@@ -949,7 +961,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   LegalPrivacyPolicyRoute: typeof LegalPrivacyPolicyRoute
   LegalTermsOfServiceRoute: typeof LegalTermsOfServiceRoute
-  PPostSlugRoute: typeof PPostSlugRoute
+  PPostSlugRoute: typeof PPostSlugRouteWithChildren
   SettingsNotificationsRoute: typeof SettingsNotificationsRoute
   SettingsSecurityRoute: typeof SettingsSecurityRoute
   UUsernameRoute: typeof UUsernameRouteWithChildren
@@ -1332,6 +1344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordIndexRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/p/$postSlug/insights': {
+      id: '/p/$postSlug/insights'
+      path: '/insights'
+      fullPath: '/p/$postSlug/insights'
+      preLoaderRoute: typeof PPostSlugInsightsRouteImport
+      parentRoute: typeof PPostSlugRoute
+    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
@@ -1581,6 +1600,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface PPostSlugRouteChildren {
+  PPostSlugInsightsRoute: typeof PPostSlugInsightsRoute
+}
+
+const PPostSlugRouteChildren: PPostSlugRouteChildren = {
+  PPostSlugInsightsRoute: PPostSlugInsightsRoute,
+}
+
+const PPostSlugRouteWithChildren = PPostSlugRoute._addFileChildren(
+  PPostSlugRouteChildren,
+)
+
 interface UUsernameRouteChildren {
   UUsernamePPostSlugRoute: typeof UUsernamePPostSlugRoute
 }
@@ -1602,7 +1633,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   LegalPrivacyPolicyRoute: LegalPrivacyPolicyRoute,
   LegalTermsOfServiceRoute: LegalTermsOfServiceRoute,
-  PPostSlugRoute: PPostSlugRoute,
+  PPostSlugRoute: PPostSlugRouteWithChildren,
   SettingsNotificationsRoute: SettingsNotificationsRoute,
   SettingsSecurityRoute: SettingsSecurityRoute,
   UUsernameRoute: UUsernameRouteWithChildren,

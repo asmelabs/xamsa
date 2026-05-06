@@ -1,4 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	notFound,
+	Outlet,
+	useMatch,
+} from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { PostCard } from "@/components/home/home-feed";
 import { pageSeo, truncateMeta } from "@/lib/seo";
@@ -42,8 +48,18 @@ export const Route = createFileRoute("/p/$postSlug")({
 });
 
 function PostPage() {
+	// Call all hooks unconditionally before any early return so the hook count
+	// stays stable when navigating between this route and its `/insights` child.
+	const insightsMatch = useMatch({
+		from: "/p/$postSlug/insights",
+		shouldThrow: false,
+	});
 	const post = Route.useLoaderData();
 	const { session } = RootRoute.useRouteContext();
+
+	if (insightsMatch) {
+		return <Outlet />;
+	}
 
 	return (
 		<div className="relative min-h-svh overflow-x-hidden">

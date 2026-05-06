@@ -11,6 +11,7 @@ export const PostSchema = z.object({
   userId: z.string(),
   totalComments: z.number().int(),
   totalReactions: z.number().int(),
+  totalViews: z.number().int(),
 });
 
 export type PostType = z.infer<typeof PostSchema>;

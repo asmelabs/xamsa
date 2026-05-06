@@ -2,6 +2,8 @@ import { TopicAnalyticsOutputSchema } from "@xamsa/schemas/modules/public-analyt
 import {
 	BulkCreateTopicsInputSchema,
 	BulkCreateTopicsOutputSchema,
+	BulkDeleteTopicsInputSchema,
+	BulkDeleteTopicsOutputSchema,
 	CreateTopicInputSchema,
 	CreateTopicOutputSchema,
 	DeleteTopicInputSchema,
@@ -44,6 +46,7 @@ import { exportTopic } from "./export";
 import { previewStructuredImportFromRemoteUrl } from "./fetch-import-url";
 import {
 	bulkCreateTopics,
+	bulkDeleteTopics,
 	createTopic,
 	deleteTopic,
 	findOneTopic,
@@ -150,6 +153,13 @@ export const topicRouter = {
 		.handler(
 			async ({ input, context }) =>
 				await deleteTopic(input, context.session.user.id),
+		),
+	bulkDelete: verifiedProcedure
+		.input(BulkDeleteTopicsInputSchema)
+		.output(BulkDeleteTopicsOutputSchema)
+		.handler(
+			async ({ input, context }) =>
+				await bulkDeleteTopics(input, context.session.user.id),
 		),
 	export: verifiedProcedure
 		.input(ExportTopicInputSchema)

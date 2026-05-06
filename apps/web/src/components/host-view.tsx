@@ -1,4 +1,5 @@
 import { PausedBanner } from "@/components/paused-banner";
+import { useHostShortcuts } from "@/hooks/use-host-shortcuts";
 import type { GameData } from "@/lib/game-types";
 import { BuzzQueueCard, BuzzQueueHostStrip } from "./buzz-queue-card";
 import { CurrentQuestionCard } from "./current-question-card";
@@ -6,6 +7,7 @@ import { GameCompletionBanner } from "./game-completion-banner";
 import { GameHeader } from "./game-header";
 import { HostControls } from "./host-controls";
 import { HostDuplicateBuzzBanner } from "./host-duplicate-buzz-banner";
+import { HostShortcutsHelp } from "./host-shortcuts-help";
 import { PlayersPanel } from "./players-panel";
 import { StartGameCard } from "./start-game-card";
 
@@ -15,6 +17,7 @@ interface HostViewProps {
 
 export function HostView({ game }: HostViewProps) {
 	const activePlayers = game.players.filter((p) => p.status === "playing");
+	const { helpOpen, openHelp, closeHelp } = useHostShortcuts(game);
 
 	return (
 		<div className="mx-auto max-w-7xl space-y-4 p-4">
@@ -30,6 +33,12 @@ export function HostView({ game }: HostViewProps) {
 						<GameCompletionBanner game={game} />
 					) : (
 						<>
+							<div className="flex items-center justify-end">
+								<HostShortcutsHelp
+									open={helpOpen}
+									onOpenChange={(o) => (o ? openHelp() : closeHelp())}
+								/>
+							</div>
 							<HostControls game={game} />
 							{game.status === "active" && (
 								<HostDuplicateBuzzBanner game={game} />
@@ -47,6 +56,15 @@ export function HostView({ game }: HostViewProps) {
 						isHostView
 						gameCode={game.code}
 					/>
+					{game.status === "active" || game.status === "paused" ? (
+						<div className="rounded-md border border-border bg-muted/30 p-3 text-muted-foreground text-xs">
+							Press{" "}
+							<kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1 font-mono text-[10px]">
+								?
+							</kbd>{" "}
+							anywhere to see host keyboard shortcuts.
+						</div>
+					) : null}
 				</div>
 			</div>
 		</div>

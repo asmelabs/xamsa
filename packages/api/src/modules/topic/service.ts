@@ -9,6 +9,8 @@ import type { TopicAnalyticsOutputType } from "@xamsa/schemas/modules/public-ana
 import type {
 	BulkCreateTopicsInputType,
 	BulkCreateTopicsOutputType,
+	BulkDeleteTopicsInputType,
+	BulkDeleteTopicsOutputType,
 	CreateTopicInputType,
 	CreateTopicOutputType,
 	CreateTopicPayloadType,
@@ -105,6 +107,11 @@ async function insertTopicWithQuestionsInTx(
 
 	await tx.question.createMany({
 		data: questionsData,
+	});
+
+	await tx.pack.update({
+		where: { id: packId },
+		data: { totalTopics: { increment: 1 } },
 	});
 
 	return { slug: topic.slug };
@@ -576,9 +583,94 @@ export async function deleteTopic(
 				data: { order: row.order - 1 },
 			});
 		}
+
+		await tx.pack.update({
+			where: { id: packId },
+			data: { totalTopics: { decrement: 1 } },
+		});
 	});
 
 	return {
 		slug: topic.slug,
 	};
+}
+
+/**
+ * Bulk-delete topics from a draft pack the caller owns. Resequences remaining
+ * topic `order`s 1..N and decrements `Pack.totalTopics`. Throws when the pack
+ * is missing, not draft, or any slug doesn't belong to the pack — the whole
+ * operation is atomic.
+ */
+export async function bulkDeleteTopics(
+	input: BulkDeleteTopicsInputType,
+	userId: string,
+): Promise<BulkDeleteTopicsOutputType> {
+	const uniqueSlugs = Array.from(new Set(input.slugs));
+
+	const pack = await prisma.pack.findFirst({
+		where: {
+			slug: input.pack,
+			authorId: userId,
+			status: "draft",
+		},
+		select: { id: true },
+	});
+
+	if (!pack) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Pack not found or you don't have permission to edit it",
+		});
+	}
+
+	const targets = await prisma.topic.findMany({
+		where: { packId: pack.id, slug: { in: uniqueSlugs } },
+		select: { id: true, slug: true },
+	});
+
+	if (targets.length !== uniqueSlugs.length) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "One or more topics do not belong to this pack",
+		});
+	}
+
+	const targetIds = targets.map((t) => t.id);
+
+	await prisma.$transaction(async (tx) => {
+		await tx.topic.deleteMany({
+			where: { id: { in: targetIds } },
+		});
+
+		const remaining = await tx.topic.findMany({
+			where: { packId: pack.id },
+			select: { id: true },
+			orderBy: { order: "asc" },
+		});
+
+		// Resequence to avoid duplicate-order writes on the unique
+		// (packId, order) constraint by parking everything in a negative range
+		// first, then assigning final values in a second pass.
+		await Promise.all(
+			remaining.map((row, idx) =>
+				tx.topic.update({
+					where: { id: row.id },
+					data: { order: -(idx + 1) },
+				}),
+			),
+		);
+		await Promise.all(
+			remaining.map((row, idx) =>
+				tx.topic.update({
+					where: { id: row.id },
+					data: { order: idx + 1 },
+				}),
+			),
+		);
+
+		await tx.pack.update({
+			where: { id: pack.id },
+			data: { totalTopics: { decrement: targets.length } },
+		});
+	});
+
+	return { deleted: targets.length };
 }

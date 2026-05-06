@@ -29,6 +29,7 @@ model Post {
 
   totalComments  Int @default(0) @map("total_comments")
   totalReactions Int @default(0) @map("total_reactions")
+  totalViews     Int @default(0) @map("total_views")
 
   attachment PostAttachment?
   comments   Comment[]

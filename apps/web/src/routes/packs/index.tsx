@@ -1,13 +1,17 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PackLanguageSchema } from "@xamsa/schemas/db/schemas/enums/PackLanguage.schema";
 import { packSort } from "@xamsa/schemas/modules/listings/pack";
+import { PackDifficultyBandSchema } from "@xamsa/schemas/modules/pack";
 import { Button } from "@xamsa/ui/components/button";
 import { Spinner } from "@xamsa/ui/components/spinner";
 import { PlusIcon } from "lucide-react";
 import {
+	parseAsArrayOf,
 	parseAsBoolean,
 	parseAsFloat,
 	parseAsInteger,
+	parseAsStringLiteral,
 	useQueryState,
 } from "nuqs";
 import { useEffect, useRef } from "react";
@@ -60,6 +64,10 @@ function RouteComponent() {
 		parseAsFloat.withDefault(0),
 	);
 	const [minPlays] = useQueryState("min_plays", parseAsInteger.withDefault(0));
+	const [minTopicCount] = useQueryState(
+		"min_topics",
+		parseAsInteger.withDefault(0),
+	);
 	const [hasRatings] = useQueryState(
 		"has_ratings",
 		parseAsBoolean.withDefault(false),
@@ -71,6 +79,22 @@ function RouteComponent() {
 	const [canHost] = useQueryState(
 		"can_host",
 		parseAsBoolean.withDefault(false),
+	);
+	const [hideFinishedByMe] = useQueryState(
+		"hide_finished",
+		parseAsBoolean.withDefault(false),
+	);
+	const [languages] = useQueryState(
+		"language",
+		parseAsArrayOf(
+			parseAsStringLiteral(PackLanguageSchema.options),
+		).withDefault([]),
+	);
+	const [difficultyBands] = useQueryState(
+		"difficulty",
+		parseAsArrayOf(
+			parseAsStringLiteral(PackDifficultyBandSchema.options),
+		).withDefault([]),
 	);
 
 	const {
@@ -91,9 +115,13 @@ function RouteComponent() {
 				dir,
 				minAverageRating,
 				minPlays,
+				minTopicCount,
 				hasRatings,
+				languages: languages.length ? languages : undefined,
+				difficultyBands: difficultyBands.length ? difficultyBands : undefined,
 				onlyMyPacks: !session ? undefined : onlyMyPacks,
 				canHost: !session ? undefined : canHost,
+				hideFinishedByMe: !session ? undefined : hideFinishedByMe,
 			}),
 			getNextPageParam: (lastPage) => lastPage.metadata.nextCursor ?? undefined,
 			initialPageParam: undefined as string | undefined,
