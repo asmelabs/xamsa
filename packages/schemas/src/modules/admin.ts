@@ -642,9 +642,14 @@ export const AdminOverviewTotalsSchema = z.object({
 
 export const AdminOverviewRecentSchema = z.object({
 	users: z.number().int().min(0),
+	packs: z.number().int().min(0),
+	topics: z.number().int().min(0),
+	questions: z.number().int().min(0),
 	games: z.number().int().min(0),
 	posts: z.number().int().min(0),
 	comments: z.number().int().min(0),
+	reactions: z.number().int().min(0),
+	clicks: z.number().int().min(0),
 	badgeAwards: z.number().int().min(0),
 });
 

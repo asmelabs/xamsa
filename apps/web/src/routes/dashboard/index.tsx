@@ -187,11 +187,27 @@ function TotalsSection({
 					value={totals.badgeAwards}
 					delta={recent7d.badgeAwards}
 				/>
-				<StatTile label="Packs" value={totals.packs} />
-				<StatTile label="Topics" value={totals.topics} />
-				<StatTile label="Questions" value={totals.questions} />
-				<StatTile label="Reactions" value={totals.reactions} />
-				<StatTile label="Clicks" value={totals.clicks} />
+				<StatTile label="Packs" value={totals.packs} delta={recent7d.packs} />
+				<StatTile
+					label="Topics"
+					value={totals.topics}
+					delta={recent7d.topics}
+				/>
+				<StatTile
+					label="Questions"
+					value={totals.questions}
+					delta={recent7d.questions}
+				/>
+				<StatTile
+					label="Reactions"
+					value={totals.reactions}
+					delta={recent7d.reactions}
+				/>
+				<StatTile
+					label="Clicks"
+					value={totals.clicks}
+					delta={recent7d.clicks}
+				/>
 			</div>
 			{roles.length > 0 ? (
 				<p className="text-muted-foreground text-xs">

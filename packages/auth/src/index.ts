@@ -7,6 +7,7 @@ import {
 	sendPasswordResetEmail,
 } from "@xamsa/mail/auth";
 import { hash, verify } from "@xamsa/utils/bcrypt";
+import { getAuthTrustedOrigins } from "@xamsa/utils/domains";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import {
@@ -24,11 +25,6 @@ import {
 	needsAutoUsername,
 } from "./oauth-google";
 
-const trustedOrigins =
-	env.NODE_ENV === "production"
-		? ["https://xamsa.site", "https://www.xamsa.site"]
-		: ["http://localhost:3000", "http://localhost:3001"];
-
 export function createAuth() {
 	const prisma = createPrismaClient();
 
@@ -43,7 +39,7 @@ export function createAuth() {
 			joins: true,
 		},
 
-		trustedOrigins,
+		trustedOrigins: getAuthTrustedOrigins(),
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,
