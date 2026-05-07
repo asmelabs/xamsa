@@ -14,6 +14,7 @@ import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
+import { useCapture } from "@/hooks/use-capture";
 import { authClient } from "@/lib/auth-client";
 import { assignPostAuthRedirect } from "@/lib/auth-redirect";
 import { ContinueWithGoogleButton } from "./continue-with-google-button";
@@ -21,6 +22,8 @@ import { LoadingButton } from "./loading-button";
 import { PasswordInput } from "./password-input";
 
 export function RegisterForm() {
+	const { capture } = useCapture();
+
 	const [showVerificationEmailSent, setShowVerificationEmailSent] =
 		useState(false);
 	const [resendCountdown, setResendCountdown] = useState(0);
@@ -66,6 +69,14 @@ export function RegisterForm() {
 			});
 			return;
 		}
+
+		capture("register_attempt", {
+			email: values.email,
+			provider: "credentials",
+			callbackURL: callbackURL || undefined,
+			name: values.name,
+			username: values.username,
+		});
 
 		setIsLoading(true);
 

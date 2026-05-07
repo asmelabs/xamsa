@@ -43,6 +43,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
+import { useCapture } from "@/hooks/use-capture";
 import { authClient } from "@/lib/auth-client";
 import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
@@ -56,6 +57,7 @@ function isModeratorOrAdmin(
 }
 
 export function CreatePackForm() {
+	const { capture } = useCapture();
 	const navigate = useNavigate();
 	const { data: session } = authClient.useSession();
 	const canImport3sual = isModeratorOrAdmin(session?.user);
@@ -138,6 +140,14 @@ export function CreatePackForm() {
 		const topicsToImport = pendingTsualTopics;
 		const tsualId = pendingTsualPackageId;
 		const withTsual = topicsToImport != null && tsualId != null;
+
+		capture("packs_create_attempt", {
+			name: values.name,
+			language: values.language,
+			visibility: values.visibility,
+			allowOthersHost: values.allowOthersHost,
+			withTsual,
+		});
 
 		setIsSubmitting(true);
 		try {

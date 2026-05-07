@@ -13,12 +13,14 @@ import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/use-app-form";
+import { useCapture } from "@/hooks/use-capture";
 import { authClient } from "@/lib/auth-client";
 import { assignPostAuthRedirect } from "@/lib/auth-redirect";
 import { ContinueWithGoogleButton } from "./continue-with-google-button";
 import { PasswordInput } from "./password-input";
 
 export function LoginForm() {
+	const { capture } = useCapture();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const [defaultEmail] = useQueryState("email", parseAsString.withDefault(""));
@@ -34,6 +36,12 @@ export function LoginForm() {
 	});
 
 	const onSubmit = form.handleSubmit(async (values) => {
+		capture("login_attempt", {
+			email: values.email,
+			provider: "credentials",
+			callbackURL: callbackURL || undefined,
+		});
+
 		setIsLoading(true);
 
 		try {
