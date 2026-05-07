@@ -48,6 +48,7 @@ import { toast } from "sonner";
 import { AcceptableAnswersChips } from "@/components/acceptable-answers-chips";
 import { LoadingButton } from "@/components/loading-button";
 import { useAppForm } from "@/hooks/use-app-form";
+import { useCapture } from "@/hooks/use-capture";
 import { authClient } from "@/lib/auth-client";
 import { toastOrpcMutationFailure } from "@/lib/orpc-email-verification-error";
 import { orpc } from "@/utils/orpc";
@@ -67,6 +68,7 @@ interface CreateTopicFormProps {
 type CreateTopicFormFieldValues = Omit<CreateTopicInputType, "pack">;
 
 export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
+	const { capture } = useCapture();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const createNavigationModeRef = useRef<"continue" | "go">("continue");
@@ -197,6 +199,12 @@ export function CreateTopicForm({ packSlug }: CreateTopicFormProps) {
 	};
 
 	const onSubmit = form.handleSubmit((values) => {
+		capture("topics_create_attempt", {
+			name: values.name,
+			description: values.description,
+			pack: packSlug,
+		});
+
 		createNavigationModeRef.current = "continue";
 		createTopic({ ...values, pack: packSlug });
 	}, onFormValidationError);
