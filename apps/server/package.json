@@ -1,0 +1,31 @@
+{
+	"name": "server",
+	"main": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"build": "tsdown",
+		"check-types": "tsc -b",
+		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+		"dev": "bun run --hot src/index.ts",
+		"start": "bun run dist/index.mjs"
+	},
+	"dependencies": {
+		"dotenv": "catalog:",
+		"zod": "catalog:",
+		"@xamsa/env": "workspace:*",
+		"@xamsa/api": "workspace:*",
+		"@xamsa/auth": "workspace:*",
+		"@xamsa/db": "workspace:*",
+		"hono": "catalog:",
+		"@orpc/server": "catalog:",
+		"@orpc/openapi": "catalog:",
+		"@orpc/zod": "catalog:",
+		"better-auth": "catalog:"
+	},
+	"devDependencies": {
+		"typescript": "^6",
+		"tsdown": "^0.21.9",
+		"@xamsa/config": "workspace:*",
+		"@types/bun": "catalog:"
+	}
+}

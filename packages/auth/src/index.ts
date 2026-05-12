@@ -1,3 +1,4 @@
+import { expo } from "@better-auth/expo";
 import { dash } from "@better-auth/infra";
 import { createPrismaClient } from "@xamsa/db";
 import { env } from "@xamsa/env/server";
@@ -13,6 +14,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import {
 	haveIBeenPwned,
 	lastLoginMethod,
+	multiSession,
 	openAPI,
 	twoFactor,
 } from "better-auth/plugins";
@@ -75,6 +77,11 @@ export function createAuth() {
 
 			database: {
 				generateId: "uuid",
+			},
+			defaultCookieAttributes: {
+				sameSite: env.NODE_ENV !== "development" ? "none" : "lax",
+				secure: env.NODE_ENV !== "development",
+				httpOnly: env.NODE_ENV !== "development",
 			},
 		},
 
@@ -175,6 +182,9 @@ export function createAuth() {
 		plugins: [
 			tanstackStartCookies(),
 			dash(),
+			multiSession({
+				maximumSessions: 5,
+			}),
 			twoFactor({
 				issuer: "Xamsa",
 			}),
@@ -184,6 +194,7 @@ export function createAuth() {
 			}),
 			openAPI(),
 			lastLoginMethod(),
+			expo(),
 		],
 	});
 }

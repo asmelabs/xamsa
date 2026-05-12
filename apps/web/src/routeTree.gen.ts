@@ -57,11 +57,9 @@ import { Route as DashboardBadgesIndexRouteImport } from './routes/dashboard/bad
 import { Route as BadgesBadgeIdIndexRouteImport } from './routes/badges/$badgeId/index'
 import { Route as AuthResetPasswordIndexRouteImport } from './routes/auth/reset-password/index'
 import { Route as PPostSlugInsightsRouteImport } from './routes/p/$postSlug/insights'
-import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiOgPlayDotpngRouteImport } from './routes/api/og/play[.]png'
 import { Route as ApiOgLeaderboardDotpngRouteImport } from './routes/api/og/leaderboard[.]png'
 import { Route as ApiOgJoinDotpngRouteImport } from './routes/api/og/join[.]png'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as PlayNewPackSlugIndexRouteImport } from './routes/play/new/$packSlug/index'
 import { Route as PacksPackSlugTopicsIndexRouteImport } from './routes/packs/$packSlug/topics/index'
 import { Route as PacksPackSlugEditIndexRouteImport } from './routes/packs/$packSlug/edit/index'
@@ -326,11 +324,6 @@ const PPostSlugInsightsRoute = PPostSlugInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => PPostSlugRoute,
 } as any)
-const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
-  id: '/api/rpc/$',
-  path: '/api/rpc/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiOgPlayDotpngRoute = ApiOgPlayDotpngRouteImport.update({
   id: '/api/og/play.png',
   path: '/api/og/play.png',
@@ -344,11 +337,6 @@ const ApiOgLeaderboardDotpngRoute = ApiOgLeaderboardDotpngRouteImport.update({
 const ApiOgJoinDotpngRoute = ApiOgJoinDotpngRouteImport.update({
   id: '/api/og/join.png',
   path: '/api/og/join.png',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayNewPackSlugIndexRoute = PlayNewPackSlugIndexRouteImport.update({
@@ -512,11 +500,9 @@ export interface FileRoutesByFullPath {
   '/roadmap/': typeof RoadmapIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/whats-new/': typeof WhatsNewIndexRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/og/join.png': typeof ApiOgJoinDotpngRoute
   '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
   '/api/og/play.png': typeof ApiOgPlayDotpngRoute
-  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/p/$postSlug/insights': typeof PPostSlugInsightsRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
@@ -588,11 +574,9 @@ export interface FileRoutesByTo {
   '/roadmap': typeof RoadmapIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/whats-new': typeof WhatsNewIndexRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/og/join.png': typeof ApiOgJoinDotpngRoute
   '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
   '/api/og/play.png': typeof ApiOgPlayDotpngRoute
-  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/p/$postSlug/insights': typeof PPostSlugInsightsRoute
   '/auth/reset-password': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId': typeof BadgesBadgeIdIndexRoute
@@ -667,11 +651,9 @@ export interface FileRoutesById {
   '/roadmap/': typeof RoadmapIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/whats-new/': typeof WhatsNewIndexRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/og/join.png': typeof ApiOgJoinDotpngRoute
   '/api/og/leaderboard.png': typeof ApiOgLeaderboardDotpngRoute
   '/api/og/play.png': typeof ApiOgPlayDotpngRoute
-  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/p/$postSlug/insights': typeof PPostSlugInsightsRoute
   '/auth/reset-password/': typeof AuthResetPasswordIndexRoute
   '/badges/$badgeId/': typeof BadgesBadgeIdIndexRoute
@@ -747,11 +729,9 @@ export interface FileRouteTypes {
     | '/roadmap/'
     | '/settings/'
     | '/whats-new/'
-    | '/api/auth/$'
     | '/api/og/join.png'
     | '/api/og/leaderboard.png'
     | '/api/og/play.png'
-    | '/api/rpc/$'
     | '/p/$postSlug/insights'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
@@ -823,11 +803,9 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/settings'
     | '/whats-new'
-    | '/api/auth/$'
     | '/api/og/join.png'
     | '/api/og/leaderboard.png'
     | '/api/og/play.png'
-    | '/api/rpc/$'
     | '/p/$postSlug/insights'
     | '/auth/reset-password'
     | '/badges/$badgeId'
@@ -901,11 +879,9 @@ export interface FileRouteTypes {
     | '/roadmap/'
     | '/settings/'
     | '/whats-new/'
-    | '/api/auth/$'
     | '/api/og/join.png'
     | '/api/og/leaderboard.png'
     | '/api/og/play.png'
-    | '/api/rpc/$'
     | '/p/$postSlug/insights'
     | '/auth/reset-password/'
     | '/badges/$badgeId/'
@@ -975,11 +951,9 @@ export interface RootRouteChildren {
   RoadmapIndexRoute: typeof RoadmapIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   WhatsNewIndexRoute: typeof WhatsNewIndexRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiOgJoinDotpngRoute: typeof ApiOgJoinDotpngRoute
   ApiOgLeaderboardDotpngRoute: typeof ApiOgLeaderboardDotpngRoute
   ApiOgPlayDotpngRoute: typeof ApiOgPlayDotpngRoute
-  ApiRpcSplatRoute: typeof ApiRpcSplatRoute
   BadgesBadgeIdIndexRoute: typeof BadgesBadgeIdIndexRoute
   DevOgPreviewIndexRoute: typeof DevOgPreviewIndexRoute
   GCodeIndexRoute: typeof GCodeIndexRoute
@@ -1351,13 +1325,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PPostSlugInsightsRouteImport
       parentRoute: typeof PPostSlugRoute
     }
-    '/api/rpc/$': {
-      id: '/api/rpc/$'
-      path: '/api/rpc/$'
-      fullPath: '/api/rpc/$'
-      preLoaderRoute: typeof ApiRpcSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/og/play.png': {
       id: '/api/og/play.png'
       path: '/api/og/play.png'
@@ -1377,13 +1344,6 @@ declare module '@tanstack/react-router' {
       path: '/api/og/join.png'
       fullPath: '/api/og/join.png'
       preLoaderRoute: typeof ApiOgJoinDotpngRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play/new/$packSlug/': {
@@ -1647,11 +1607,9 @@ const rootRouteChildren: RootRouteChildren = {
   RoadmapIndexRoute: RoadmapIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   WhatsNewIndexRoute: WhatsNewIndexRoute,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiOgJoinDotpngRoute: ApiOgJoinDotpngRoute,
   ApiOgLeaderboardDotpngRoute: ApiOgLeaderboardDotpngRoute,
   ApiOgPlayDotpngRoute: ApiOgPlayDotpngRoute,
-  ApiRpcSplatRoute: ApiRpcSplatRoute,
   BadgesBadgeIdIndexRoute: BadgesBadgeIdIndexRoute,
   DevOgPreviewIndexRoute: DevOgPreviewIndexRoute,
   GCodeIndexRoute: GCodeIndexRoute,

@@ -1,13 +1,10 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
-import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import { createIsomorphicFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
-import { createContext } from "@xamsa/api/context";
-import { appRouter } from "@xamsa/api/router";
+import type { appRouter } from "@xamsa/api/router";
+import { env } from "@xamsa/env/web";
 import { toast } from "sonner";
 import { tryToastOrpcEmailVerificationError } from "@/lib/orpc-email-verification-error";
 
@@ -27,27 +24,18 @@ export const queryClient = new QueryClient({
 	}),
 });
 
-const getORPCClient = createIsomorphicFn()
-	.server(() =>
-		createRouterClient(appRouter, {
-			context: async () => {
-				return createContext({ req: getRequest() });
-			},
-		}),
-	)
-	.client((): RouterClient<typeof appRouter> => {
-		const link = new RPCLink({
-			url: `${window.location.origin}/api/rpc`,
-			fetch(url, options) {
-				return fetch(url, {
-					...options,
-					credentials: "include",
-				});
-			},
+const link = new RPCLink({
+	url: `${env.VITE_PUBLIC_SERVER_URL}/rpc`,
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
 		});
+	},
+});
 
-		return createORPCClient(link);
-	});
+const getORPCClient = () =>
+	createORPCClient(link) as RouterClient<typeof appRouter>;
 
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 
